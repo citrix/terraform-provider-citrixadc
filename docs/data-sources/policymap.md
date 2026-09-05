@@ -35,3 +35,9 @@ In addition to the arguments, the following attributes are available:
 * `su` - Source URL. Specify all or part of the source URL, in the following format: /[[prefix] [*]] [.suffix].
 * `td` - Target domain name sent to the server. The source domain name is replaced with this domain name.
 * `tu` - Target URL. Specify the target URL in the following format: /[[prefix] [*]][.suffix].
+
+### Read-only policymap metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_policymap` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `targetname` - The expression string.

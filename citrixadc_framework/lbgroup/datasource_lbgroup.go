@@ -35,7 +35,7 @@ func (d *LbgroupDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 }
 
 func (d *LbgroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LbgroupResourceModel
+	var data LbgroupDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *LbgroupDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	lbgroupSetAttrFromGet(ctx, &data, getResponseData)
+	lbgroupDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

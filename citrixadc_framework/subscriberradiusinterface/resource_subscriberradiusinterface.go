@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,15 @@ func (r *SubscriberradiusinterfaceResource) Create(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Creating subscriberradiusinterface resource")
 
-	// subscriberradiusinterface := subscriberradiusinterfaceGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton resource - build payload and push with UpdateUnnamedResource
+	subscriberradiusinterface := subscriberradiusinterfaceGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscriberradiusinterface.Type(), &subscriberradiusinterface)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscriberradiusinterface, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Subscriberradiusinterface.Type(), &subscriberradiusinterface)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscriberradiusinterface, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("subscriberradiusinterface-config")
@@ -95,26 +97,61 @@ func (r *SubscriberradiusinterfaceResource) Read(ctx context.Context, req resour
 }
 
 func (r *SubscriberradiusinterfaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SubscriberradiusinterfaceResourceModel
+	var data, config, state SubscriberradiusinterfaceResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating subscriberradiusinterface resource")
 
-	// Create API request body from the model
-	// subscriberradiusinterface := subscriberradiusinterfaceGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Listeningservice.Equal(state.Listeningservice) {
+		tflog.Debug(ctx, "listeningservice has changed for subscriberradiusinterface")
+		hasChange = true
+	}
+	if !data.Radiusinterimasstart.Equal(state.Radiusinterimasstart) {
+		tflog.Debug(ctx, "radiusinterimasstart has changed for subscriberradiusinterface")
+		if config.Radiusinterimasstart.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "radiusinterimasstart")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscriberradiusinterface.Type(), &subscriberradiusinterface)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscriberradiusinterface, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Singleton resource - build payload and push with UpdateUnnamedResource
+		subscriberradiusinterface := subscriberradiusinterfaceGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		err := r.client.UpdateUnnamedResource(service.Subscriberradiusinterface.Type(), &subscriberradiusinterface)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscriberradiusinterface, got error: %s", err))
+			return
+		}
+	} else {
+		tflog.Debug(ctx, "No changes detected for subscriberradiusinterface resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Subscriberradiusinterface.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset subscriberradiusinterface attributes, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated subscriberradiusinterface resource")
 

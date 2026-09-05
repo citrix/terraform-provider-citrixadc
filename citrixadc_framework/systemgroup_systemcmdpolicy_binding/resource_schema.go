@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +35,42 @@ func (r *SystemgroupSystemcmdpolicyBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the systemgroup_systemcmdpolicy_binding resource.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the system group.",
 			},
 			"policyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of command policy.",
 			},
 			"priority": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The priority of the command policy.",
 			},
 		},
 	}
 }
 
-func systemgroup_systemcmdpolicy_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SystemgroupSystemcmdpolicyBindingResourceModel) system.Systemgroupsystemcmdpolicybinding {
-	tflog.Debug(ctx, "In systemgroup_systemcmdpolicy_bindingGetThePayloadFromtheConfig Function")
+func systemgroup_systemcmdpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, data *SystemgroupSystemcmdpolicyBindingResourceModel) system.Systemgroupsystemcmdpolicybinding {
+	tflog.Debug(ctx, "In systemgroup_systemcmdpolicy_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemgroup_systemcmdpolicy_binding := system.Systemgroupsystemcmdpolicybinding{}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		systemgroup_systemcmdpolicy_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		systemgroup_systemcmdpolicy_binding.Policyname = data.Policyname.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		systemgroup_systemcmdpolicy_binding.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
 

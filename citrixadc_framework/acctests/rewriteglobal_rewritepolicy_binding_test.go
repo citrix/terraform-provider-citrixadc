@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRewriteglobal_rewritepolicy_binding_basic = `
@@ -86,6 +89,69 @@ func TestAccRewriteglobal_rewritepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccRewriteglobal_rewritepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name = "tf_rewrite_policy"
+		action = "DROP"
+		rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+
+	resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
+		labelname = "tf_rewritepolicylabel"
+		transform = "http_req"
+	}
+
+	resource "citrixadc_rewriteglobal_rewritepolicy_binding" "tf_rewriteglobal_rewritepolicy_binding" {
+		policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		priority = 5
+		type = "REQ_DEFAULT"
+		globalbindtype = "SYSTEM_GLOBAL"
+		gotopriorityexpression = "END"
+		invoke = "true"
+		labelname = citrixadc_rewritepolicylabel.tf_rewritepolicylabel.labelname
+		labeltype = "policylabel"
+	}
+`
+
+func TestAccRewriteglobal_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRewriteglobal_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the binding with the last SDK v2 release (v2.2.0),
+				// which writes state using the legacy comma-separated ID format.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccRewriteglobal_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewriteglobal_rewritepolicy_bindingExist("citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "id", "tf_rewrite_policy,5,REQ_DEFAULT"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-ID state through the current
+				// (Framework) provider. Read parses the legacy ID via ParseIdString
+				// and recomputes the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRewriteglobal_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewriteglobal_rewritepolicy_bindingExist("citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "id", "policyname:tf_rewrite_policy,priority:5,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRewriteglobal_rewritepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -113,11 +179,13 @@ func testAccCheckRewriteglobal_rewritepolicy_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		policyname := idSlice[0]
-		priority := idSlice[1]
-		type_bindpoint := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"policyname", "priority", "type"}, nil)
+		if err != nil {
+			return err
+		}
+		policyname := idMap["policyname"]
+		priority := idMap["priority"]
+		type_bindpoint := idMap["type"]
 
 		argsMap := make(map[string]string)
 		argsMap["type"] = type_bindpoint
@@ -224,8 +292,34 @@ func testAccCheckRewriteglobal_rewritepolicy_bindingDestroy(s *terraform.State) 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Rewriteglobal_rewritepolicy_binding.Type(), rs.Primary.ID)
-		if err == nil {
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname", "priority", "type"}, nil)
+		if err != nil {
+			return err
+		}
+		policyname := idMap["policyname"]
+		priority := idMap["priority"]
+		type_bindpoint := idMap["type"]
+
+		argsMap := make(map[string]string)
+		argsMap["type"] = type_bindpoint
+
+		findParams := service.FindParams{
+			ResourceType: "rewriteglobal_rewritepolicy_binding",
+			ArgsMap:      argsMap,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+
+		for _, binding := range dataArr {
+			if binding["policyname"] != policyname {
+				continue
+			} else if binding["priority"] != priority {
+				continue
+			} else if binding["type"] != type_bindpoint {
+				continue
+			}
 			return fmt.Errorf("rewriteglobal_rewritepolicy_binding %s still exists", rs.Primary.ID)
 		}
 
@@ -281,7 +375,84 @@ func TestAccRewriteglobal_rewritepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "invoke", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "labelname", "tf_rewritepolicylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "labeltype", "policylabel"),
+					// Universal runtime-binding proof; read-only GET-only fields
+					// (numpol/flowtype) are context-dependent for a bindpoint binding.
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRewriteglobal_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: policyname,priority,type) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"policyname", "priority", "type"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteglobal_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewriteglobal_rewritepolicy_binding_basic},
+			{Config: testAccRewriteglobal_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccRewriteglobal_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccRewriteglobal_rewritepolicy_binding_selfHealing verifies the provider re-creates
+// the global binding when it is deleted out-of-band between apply steps (drift recovery).
+// The delete policyname/priority/type args match the resource's own Delete.
+func TestAccRewriteglobal_rewritepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteglobal_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewriteglobal_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteglobal_rewritepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Rewriteglobal_rewritepolicy_binding.Type(), "", map[string]string{"policyname": "tf_rewrite_policy", "priority": "5", "type": "REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewriteglobal_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteglobal_rewritepolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

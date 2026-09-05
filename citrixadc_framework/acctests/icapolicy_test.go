@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIcapolicy_basic = `
@@ -142,6 +145,184 @@ func testAccCheckIcapolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccIcapolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_icapolicy.tf_icapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Icapolicy.Type(), "my_ica_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIcapolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_icapolicy.tf_icapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcapolicy_basic},
+			{
+				Config:                  testAccIcapolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccIcapolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy", nil)),
+			},
+		},
+	})
+}
+
+// Unset test: step1 sets the unset-eligible mutable attributes (comment,
+// logaction) to valid non-default values; step2 removes them from config so the
+// provider issues a NITRO unset, reverting them to their defaults (absent -> "").
+const testAccIcapolicy_unset_step1 = `
+
+	resource "citrixadc_icaaction" "tf_icaaction_unset" {
+		name              = "tf_ica_action_unset"
+		accessprofilename = "default_ica_accessprofile"
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_msgaction_unset" {
+		name              = "tf_ica_msgaction_unset"
+		loglevel          = "NOTICE"
+		stringbuilderexpr = "\"ica unset test\""
+	}
+
+	resource "citrixadc_icapolicy" "tf_icapolicy_unset" {
+		name      = "tf_ica_policy_unset"
+		rule      = true
+		action    = citrixadc_icaaction.tf_icaaction_unset.name
+		comment   = "managed by terraform"
+		logaction = citrixadc_auditmessageaction.tf_msgaction_unset.name
+	}
+`
+
+const testAccIcapolicy_unset_step2 = `
+
+	resource "citrixadc_icaaction" "tf_icaaction_unset" {
+		name              = "tf_ica_action_unset"
+		accessprofilename = "default_ica_accessprofile"
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_msgaction_unset" {
+		name              = "tf_ica_msgaction_unset"
+		loglevel          = "NOTICE"
+		stringbuilderexpr = "\"ica unset test\""
+	}
+
+	resource "citrixadc_icapolicy" "tf_icapolicy_unset" {
+		name   = "tf_ica_policy_unset"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction_unset.name
+		# comment and logaction removed from config -> the provider must unset them
+		# (revert to NITRO defaults, i.e. absent / empty string).
+	}
+`
+
+func TestAccIcapolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIcapolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "comment", "managed by terraform"),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "logaction", "tf_ica_msgaction_unset"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the defaults, and the implicit post-apply plan
+				// must be empty.
+				Config: testAccIcapolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "logaction", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIcapolicyADCValue("tf_ica_policy_unset", "comment", ""),
+					testAccCheckIcapolicyADCValue("tf_ica_policy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIcapolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An absent attribute is treated as the empty string.
+func testAccCheckIcapolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Icapolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("icapolicy %s not found on appliance", name)
+		}
+		got := ""
+		if raw, ok := data[attr]; ok && raw != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", raw))
+		}
+		if got != want {
+			return fmt.Errorf("icapolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccIcapolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -154,6 +335,10 @@ func TestAccIcapolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "action", "my_ica_action_ds"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "id"),
+					// Read-only metadata exposed only by the data source. hits/undefhits
+					// are counter-style fields always populated for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "undefhits"),
 				),
 			},
 		},

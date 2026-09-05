@@ -69,3 +69,19 @@ In addition to the arguments, the following attributes are available:
 * `vserver` - Use this option to set (enable or disable) the virtual server attribute for this IP address.
 * `vserverrhilevel` - Advertise the route for the Virtual IP (VIP) address on the basis of the state of the virtual servers associated with that VIP.
 * `id` - The id of the nsip. It has the same value as the `ipaddress` attribute.
+
+### Read-only nsip metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsip` resource). They are Computed/GET-only runtime and status values, and any attribute the appliance does not return is `null`.
+
+* `flags` - The flags for this entry.
+* `hostrtgwact` - Actual gateway used for advertising the host route.
+* `ospfareaval` - The area ID of the area in which OSPF Type1 LSAs are advertised.
+* `viprtadv2bsd` - Whether this route is advertised to FreeBSD.
+* `vipvsercount` - Number of vservers bound to this VIP.
+* `vipvserdowncount` - Number of vservers bound to this VIP, which are down.
+* `vipvsrvrrhiactivecount` - Number of vservers that have RHI state ACTIVE.
+* `vipvsrvrrhiactiveupcount` - Number of vservers that have RHI state ACTIVE, which are UP.
+* `freeports` - Number of free ports available on this IP.
+* `iptype` - Type(s) of this IP. A list of strings (possible values: `SNIP`, `VIP`, `NSIP`, `HostIP`, `GSLBsiteIP`, `CLIP`).
+* `operationalarpowner` - Run time operational ARP owner.

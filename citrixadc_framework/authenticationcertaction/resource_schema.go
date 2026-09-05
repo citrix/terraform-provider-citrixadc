@@ -7,6 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -40,12 +43,16 @@ func (r *AuthenticationcertactionResource) Schema(ctx context.Context, req resou
 				Description: "Client-cert field from which the group is extracted.  Must be set to either \"\"Subject\"\" and \"\"Issuer\"\" (include both sets of double quotation marks).\nFormat: <field>:<subfield>",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the client cert authentication server profile (action).\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after certifcate action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"twofactor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enables or disables two-factor authentication.\nTwo factor authentication is client cert authentication followed by password authentication.",
 			},
 			"usernamefield": schema.StringAttribute{
@@ -57,24 +64,24 @@ func (r *AuthenticationcertactionResource) Schema(ctx context.Context, req resou
 	}
 }
 
-func authenticationcertactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationcertactionResourceModel) authentication.Authenticationcertaction {
-	tflog.Debug(ctx, "In authenticationcertactionGetThePayloadFromtheConfig Function")
+func authenticationcertactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationcertactionResourceModel) authentication.Authenticationcertaction {
+	tflog.Debug(ctx, "In authenticationcertactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationcertaction := authentication.Authenticationcertaction{}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationcertaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Groupnamefield.IsNull() {
+	if !data.Groupnamefield.IsNull() && !data.Groupnamefield.IsUnknown() {
 		authenticationcertaction.Groupnamefield = data.Groupnamefield.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationcertaction.Name = data.Name.ValueString()
 	}
-	if !data.Twofactor.IsNull() {
+	if !data.Twofactor.IsNull() && !data.Twofactor.IsUnknown() {
 		authenticationcertaction.Twofactor = data.Twofactor.ValueString()
 	}
-	if !data.Usernamefield.IsNull() {
+	if !data.Usernamefield.IsNull() && !data.Usernamefield.IsUnknown() {
 		authenticationcertaction.Usernamefield = data.Usernamefield.ValueString()
 	}
 
@@ -112,7 +119,7 @@ func authenticationcertactionSetAttrFromGet(ctx context.Context, data *Authentic
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

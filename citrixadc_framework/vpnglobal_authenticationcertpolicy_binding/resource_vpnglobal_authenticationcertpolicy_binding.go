@@ -3,6 +3,7 @@ package vpnglobal_authenticationcertpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -54,23 +55,30 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Create(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Creating vpnglobal_authenticationcertpolicy_binding resource")
-
-	// vpnglobal_authenticationcertpolicy_binding := vpnglobal_authenticationcertpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	vpnglobal_authenticationcertpolicy_binding := vpnglobal_authenticationcertpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnglobal_authenticationcertpolicy_binding.Type(), &vpnglobal_authenticationcertpolicy_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_authenticationcertpolicy_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnglobal_authenticationcertpolicy_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnglobal_authenticationcertpolicy_binding.Type(), &vpnglobal_authenticationcertpolicy_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnglobal_authenticationcertpolicy_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnglobal_authenticationcertpolicy_binding resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Policyname.ValueString()))
+
 	// Read the updated state back
 	r.readVpnglobalAuthenticationcertpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnglobal_authenticationcertpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,14 +97,25 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Read(ctx context.Cont
 	tflog.Debug(ctx, "Reading vpnglobal_authenticationcertpolicy_binding resource")
 
 	r.readVpnglobalAuthenticationcertpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnglobalAuthenticationcertpolicyBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnglobalAuthenticationcertpolicyBindingResourceModel
+	var data, state VpnglobalAuthenticationcertpolicyBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +123,39 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Update(ctx context.Co
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnglobal_authenticationcertpolicy_binding resource")
 
-	// Create API request body from the model
-	// vpnglobal_authenticationcertpolicy_binding := vpnglobal_authenticationcertpolicy_bindingGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnglobal_authenticationcertpolicy_binding.Type(), &vpnglobal_authenticationcertpolicy_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnglobal_authenticationcertpolicy_binding, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnglobal_authenticationcertpolicy_binding := vpnglobal_authenticationcertpolicy_bindingGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Binding resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Vpnglobal_authenticationcertpolicy_binding.Type(), &vpnglobal_authenticationcertpolicy_binding)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnglobal_authenticationcertpolicy_binding, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnglobal_authenticationcertpolicy_binding resource")
+		tflog.Trace(ctx, "Updated vpnglobal_authenticationcertpolicy_binding resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnglobal_authenticationcertpolicy_binding resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readVpnglobalAuthenticationcertpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "vpnglobal_authenticationcertpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +172,66 @@ func (r *VpnglobalAuthenticationcertpolicyBindingResource) Delete(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Deleting vpnglobal_authenticationcertpolicy_binding resource")
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name
+	// Single unique attribute - ID is the plain value. URL-encode the arg value so
+	// names with slashes/special characters are escaped (binding-family pattern).
+	policyname_value := data.Id.ValueString()
+	args := []string{
+		fmt.Sprintf("policyname:%s", url.QueryEscape(policyname_value)),
+	}
 
-	// For vpnglobal_authenticationcertpolicy_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnglobal_authenticationcertpolicy_binding resource from state")
+	err := r.client.DeleteResourceWithArgs(service.Vpnglobal_authenticationcertpolicy_binding.Type(), "", args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnglobal_authenticationcertpolicy_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnglobal_authenticationcertpolicy_binding binding")
 }
 
 // Helper function to read vpnglobal_authenticationcertpolicy_binding data from API
 func (r *VpnglobalAuthenticationcertpolicyBindingResource) readVpnglobalAuthenticationcertpolicyBindingFromApi(ctx context.Context, data *VpnglobalAuthenticationcertpolicyBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnglobal_authenticationcertpolicy_binding.Type(), "")
+
+	// Single unique attribute - ID is the plain policyname value (Pattern 10:
+	// do not run ParseIdString on a plain-value ID; it returns an empty map and
+	// the match loop would then reject every record).
+	policyname := data.Id.ValueString()
+
+	var dataArr []map[string]interface{}
+	var err error
+
+	findParams := service.FindParams{
+		ResourceType:             service.Vpnglobal_authenticationcertpolicy_binding.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnglobal_authenticationcertpolicy_binding, got error: %s", err))
 		return
 	}
 
-	vpnglobal_authenticationcertpolicy_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
+		return
+	}
 
+	// Iterate through results to find the one matching the policyname ID
+	foundIndex := -1
+	for i, v := range dataArr {
+		if val, ok := v["policyname"].(string); ok && val == policyname {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		data.Id = types.StringNull()
+		return
+	}
+
+	vpnglobal_authenticationcertpolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

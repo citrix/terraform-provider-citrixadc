@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *VpnportalthemeResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating vpnportaltheme resource")
 
-	// vpnportaltheme := vpnportalthemeGetThePayloadFromtheConfig(ctx, &data)
+	vpnportaltheme := vpnportalthemeGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnportaltheme.Type(), &vpnportaltheme)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnportaltheme, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnportaltheme-config")
+	// Named resource - use AddResource (SDK v2: client.AddResource)
+	vpnportalthemeName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnportaltheme.Type(), vpnportalthemeName, &vpnportaltheme)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnportaltheme, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnportaltheme resource")
 
+	// Set ID for the resource before reading state (SDK v2: d.SetId(name))
+	data.Id = types.StringValue(vpnportalthemeName)
+
 	// Read the updated state back
-	r.readVpnportalthemeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnportalthemeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnportaltheme not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *VpnportalthemeResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading vpnportaltheme resource")
 
-	r.readVpnportalthemeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnportalthemeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnportalthemeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnportalthemeResourceModel
+	var data, state VpnportalthemeResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,21 @@ func (r *VpnportalthemeResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	tflog.Debug(ctx, "Updating vpnportaltheme resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// vpnportaltheme := vpnportalthemeGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnportaltheme.Type(), &vpnportaltheme)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnportaltheme, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated vpnportaltheme resource")
+	// Update is a no-op for vpnportaltheme; all attributes (name, basetheme) are
+	// RequiresReplace (SDK v2 ForceNew), so Terraform never reaches Update with a
+	// real change and NITRO exposes no update endpoint for this resource.
+	tflog.Debug(ctx, "Update is a no-op for vpnportaltheme; all attributes are RequiresReplace")
 
 	// Read the updated state back
-	r.readVpnportalthemeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnportalthemeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnportaltheme not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +152,36 @@ func (r *VpnportalthemeResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	tflog.Debug(ctx, "Deleting vpnportaltheme resource")
+	// Named resource - delete using DeleteResource (SDK v2: client.DeleteResource)
+	vpnportalthemeName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vpnportaltheme.Type(), vpnportalthemeName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnportaltheme, got error: %s", err))
+		return
+	}
 
-	// For vpnportaltheme, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnportaltheme resource from state")
+	tflog.Trace(ctx, "Deleted vpnportaltheme resource")
 }
 
 // Helper function to read vpnportaltheme data from API
-func (r *VpnportalthemeResource) readVpnportalthemeFromApi(ctx context.Context, data *VpnportalthemeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnportaltheme.Type(), "")
+func (r *VpnportalthemeResource) readVpnportalthemeFromApi(ctx context.Context, data *VpnportalthemeResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	vpnportalthemeName := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Vpnportaltheme.Type(), vpnportalthemeName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnportaltheme, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnportalthemeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

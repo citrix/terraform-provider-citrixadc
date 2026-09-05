@@ -37,3 +37,11 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the ip6tunnel resource.
 * `local` - An IPv6 address of the local Citrix ADC used to set up the tunnel.
 * `ownergroup` - The owner node group in a Cluster for the tunnel.
+
+### Read-only ip6tunnel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_ip6tunnel` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `remoteip` - The remote IP address or subnet of the tunnel.
+* `type` - The type of this tunnel.
+* `encapip` - The effective local IP address of the tunnel. Used as the source of the encapsulated packets.

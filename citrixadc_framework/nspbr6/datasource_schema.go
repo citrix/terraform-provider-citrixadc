@@ -1,8 +1,74 @@
 package nspbr6
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// Nspbr6DataSourceModel is the data-source-specific model, decoupled from
+// Nspbr6ResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only runtime/statistics attributes the resource
+// deliberately omits (kernelstate, hits, curstate, probe counters, ...). Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type Nspbr6DataSourceModel struct {
+	Id             types.String `tfsdk:"id"`
+	Interface      types.String `tfsdk:"interface"`
+	Action         types.String `tfsdk:"action"`
+	Destipop       types.String `tfsdk:"destipop"`
+	Destipv6       types.Bool   `tfsdk:"destipv6"`
+	Destipv6val    types.String `tfsdk:"destipv6val"`
+	Destport       types.Bool   `tfsdk:"destport"`
+	Destportop     types.String `tfsdk:"destportop"`
+	Destportval    types.String `tfsdk:"destportval"`
+	Detail         types.Bool   `tfsdk:"detail"` // Required query flag
+	Iptunnel       types.String `tfsdk:"iptunnel"`
+	Monitor        types.String `tfsdk:"monitor"`
+	Msr            types.String `tfsdk:"msr"`
+	Name           types.String `tfsdk:"name"` // Required lookup key
+	Nexthop        types.Bool   `tfsdk:"nexthop"`
+	Nexthopval     types.String `tfsdk:"nexthopval"`
+	Nexthopvlan    types.Int64  `tfsdk:"nexthopvlan"`
+	Ownergroup     types.String `tfsdk:"ownergroup"`
+	Priority       types.Int64  `tfsdk:"priority"`
+	Protocol       types.String `tfsdk:"protocol"`
+	Protocolnumber types.Int64  `tfsdk:"protocolnumber"`
+	Srcipop        types.String `tfsdk:"srcipop"`
+	Srcipv6        types.Bool   `tfsdk:"srcipv6"`
+	Srcipv6val     types.String `tfsdk:"srcipv6val"`
+	Srcmac         types.String `tfsdk:"srcmac"`
+	Srcmacmask     types.String `tfsdk:"srcmacmask"`
+	Srcport        types.Bool   `tfsdk:"srcport"`
+	Srcportop      types.String `tfsdk:"srcportop"`
+	Srcportval     types.String `tfsdk:"srcportval"`
+	State          types.String `tfsdk:"state"`
+	Td             types.Int64  `tfsdk:"td"`
+	Vlan           types.Int64  `tfsdk:"vlan"`
+	Vxlan          types.Int64  `tfsdk:"vxlan"`
+	Vxlanvlanmap   types.String `tfsdk:"vxlanvlanmap"`
+
+	// Read-only (GET-only) runtime/statistics metadata from the NITRO doc
+	// read-only set (zion73x_readonly/nspbr6.json). Never settable; from GET.
+	Kernelstate       types.String `tfsdk:"kernelstate"`
+	Hits              types.Int64  `tfsdk:"hits"`
+	Curstate          types.Int64  `tfsdk:"curstate"`
+	Totalprobes       types.Int64  `tfsdk:"totalprobes"`
+	Totalfailedprobes types.Int64  `tfsdk:"totalfailedprobes"`
+	Failedprobes      types.Int64  `tfsdk:"failedprobes"`
+	Monstatcode       types.Int64  `tfsdk:"monstatcode"`
+	Monstatparam1     types.Int64  `tfsdk:"monstatparam1"`
+	Monstatparam2     types.Int64  `tfsdk:"monstatparam2"`
+	Monstatparam3     types.Int64  `tfsdk:"monstatparam3"`
+	Data              types.Bool   `tfsdk:"data"`
+}
 
 func Nspbr6DataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -173,6 +239,124 @@ func Nspbr6DataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The vlan to vxlan mapping to be applied for incoming packets over this pbr tunnel.",
 			},
+
+			// Read-only (GET-only) runtime/statistics metadata surfaced by the
+			// data source (these are intentionally NOT modeled on the resource).
+			// All Computed.
+			"kernelstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Commit status of the PBR6. Possible values = APPLIED, NOTAPPLIED, RE-APPLY, SFAPPLIED, SFNOTAPPLIED.",
+			},
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of hits of this PBR6.",
+			},
+			"curstate": schema.Int64Attribute{
+				Computed:    true,
+				Description: "If this route is UP/DOWN.",
+			},
+			"totalprobes": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The total number of probes sent.",
+			},
+			"totalfailedprobes": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The total number of failed probes.",
+			},
+			"failedprobes": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of the current failed monitoring probes.",
+			},
+			"monstatcode": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The code indicating the monitor response.",
+			},
+			"monstatparam1": schema.Int64Attribute{
+				Computed:    true,
+				Description: "First parameter for use with message code.",
+			},
+			"monstatparam2": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Second parameter for use with message code.",
+			},
+			"monstatparam3": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Third parameter for use with message code.",
+			},
+			"data": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Internal data of this route.",
+			},
 		},
 	}
+}
+
+// nspbr6DataSourceSetAttrFromGet projects a NITRO nspbr6 GET response onto the
+// data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them). The shared utils.MapGet* helpers implement that projection.
+func nspbr6DataSourceSetAttrFromGet(ctx context.Context, data *Nspbr6DataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nspbr6DataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs. NITRO returns the interface
+	// under the "Interface" key (capitalized).
+	data.Interface = utils.MapGetString(g, "Interface")
+	data.Action = utils.MapGetString(g, "action")
+	data.Destipop = utils.MapGetString(g, "destipop")
+	data.Destipv6 = utils.MapGetBool(g, "destipv6")
+	data.Destipv6val = utils.MapGetString(g, "destipv6val")
+	data.Destport = utils.MapGetBool(g, "destport")
+	data.Destportop = utils.MapGetString(g, "destportop")
+	data.Destportval = utils.MapGetString(g, "destportval")
+	data.Iptunnel = utils.MapGetString(g, "iptunnel")
+	data.Monitor = utils.MapGetString(g, "monitor")
+	data.Msr = utils.MapGetString(g, "msr")
+	data.Nexthop = utils.MapGetBool(g, "nexthop")
+	data.Nexthopval = utils.MapGetString(g, "nexthopval")
+	data.Nexthopvlan = utils.MapGetInt64(g, "nexthopvlan")
+	data.Ownergroup = utils.MapGetString(g, "ownergroup")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Protocol = utils.MapGetString(g, "protocol")
+	data.Protocolnumber = utils.MapGetInt64(g, "protocolnumber")
+	data.Srcipop = utils.MapGetString(g, "srcipop")
+	data.Srcipv6 = utils.MapGetBool(g, "srcipv6")
+	data.Srcipv6val = utils.MapGetString(g, "srcipv6val")
+	data.Srcmac = utils.MapGetString(g, "srcmac")
+	data.Srcmacmask = utils.MapGetString(g, "srcmacmask")
+	data.Srcport = utils.MapGetBool(g, "srcport")
+	data.Srcportop = utils.MapGetString(g, "srcportop")
+	data.Srcportval = utils.MapGetString(g, "srcportval")
+	data.State = utils.MapGetString(g, "state")
+	// td is a config-supplied key; NITRO omits it for the default traffic
+	// domain (0), so preserve the configured value instead of nulling it.
+	if tdv, tdok := g["td"]; tdok && tdv != nil {
+		if iv, err := utils.ConvertToInt64(tdv); err == nil {
+			data.Td = types.Int64Value(iv)
+		}
+	}
+	data.Vlan = utils.MapGetInt64(g, "vlan")
+	data.Vxlan = utils.MapGetInt64(g, "vxlan")
+	data.Vxlanvlanmap = utils.MapGetString(g, "vxlanvlanmap")
+
+	// detail is a Required query-only input the GET never echoes; preserve the
+	// value supplied in configuration (already present in data) rather than
+	// clobbering it to Null.
+
+	// Read-only runtime/statistics metadata.
+	data.Kernelstate = utils.MapGetString(g, "kernelstate")
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Curstate = utils.MapGetInt64(g, "curstate")
+	data.Totalprobes = utils.MapGetInt64(g, "totalprobes")
+	data.Totalfailedprobes = utils.MapGetInt64(g, "totalfailedprobes")
+	data.Failedprobes = utils.MapGetInt64(g, "failedprobes")
+	data.Monstatcode = utils.MapGetInt64(g, "monstatcode")
+	data.Monstatparam1 = utils.MapGetInt64(g, "monstatparam1")
+	data.Monstatparam2 = utils.MapGetInt64(g, "monstatparam2")
+	data.Monstatparam3 = utils.MapGetInt64(g, "monstatparam3")
+	data.Data = utils.MapGetBool(g, "data")
 }

@@ -34,12 +34,11 @@ The following arguments are required:
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the botpolicylabel_botpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the botpolicylabel_botpolicy_binding. It is the concatenation of the `labelname` and `policyname` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label and evaluate the specified policy label.
-* `invoke_labelname` - * If labelType is policylabel, name of the policy label to invoke. 
-* If labelType is vserver, name of the virtual server.
+* `invokelabelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is vserver, name of the virtual server.
 * `labeltype` - Type of policy label to invoke. Available settings function as follows:
-    * vserver - Invoke an unnamed policy label associated with a virtual server.
-    * policylabel - Invoke a user-defined policy label.
+  * vserver - Invoke an unnamed policy label associated with a virtual server.
+  * policylabel - Invoke a user-defined policy label.

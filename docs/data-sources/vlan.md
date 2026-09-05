@@ -37,10 +37,21 @@ In addition to the arguments, the following attributes are available:
 * `mtu` - Specifies the maximum transmission unit (MTU), in bytes. The MTU is the largest packet size, excluding 14 bytes of ethernet header and 4 bytes of crc, that can be transmitted and received over this VLAN.
 * `sharing` - If sharing is enabled, then this vlan can be shared across multiple partitions by binding it to all those partitions. If sharing is disabled, then this vlan can be bound to only one of the partitions.
 
-## Import
+### Read-only vlan metadata
 
-A vlan can be imported using its vlanid, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vlan` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_vlan.tf_vlan 40
-```
+* `linklocalipv6addr` - The link-local IP address assigned to the VLAN.
+* `rnat` - Temporary flag used for internal purpose.
+* `portbitmap` - Member interfaces of this vlan.
+* `lsbitmap` - Member linksets of this vlan.
+* `tagbitmap` - Tagged members of this vlan.
+* `lstagbitmap` - Tagged linksets of this vlan.
+* `ifaces` - Names of all member interfaces of this vlan.
+* `tagifaces` - Names of all tagged member interfaces of this vlan.
+* `ifnum` - The interface bound to the VLAN, specified in slot/port notation (for example, 1/3).
+* `tagged` - Whether the interface is an 802.1q tagged interface.
+* `vlantd` - Traffic domain associated with vlan.
+* `sdxvlan` - SDX vlan (for example `YES`, `NO`).
+* `partitionname` - Name of the Partition to which this vlan is bound.
+* `vxlan` - The VXLAN that extends this vlan.

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslfipskey_basic = `
@@ -127,6 +128,86 @@ func testAccCheckSslfipskeyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslfipskey_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslfipskey.demo_sslfipskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslfipskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslfipskey.Type(), "f1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslfipskey_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslfipskey.demo_sslfipskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslfipskeyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslfipskey_basic},
+			{
+				Config:                  testAccSslfipskey_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSslfipskey_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslfipskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist("citrixadc_sslfipskey.demo_sslfipskey", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist("citrixadc_sslfipskey.demo_sslfipskey", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSslfipskeyDataSource_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_HSM" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
@@ -141,6 +222,8 @@ func TestAccSslfipskeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "fipskeyname", "f1"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "keytype", "ECDSA"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "curve", "P_256"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslfipskey.demo_sslfipskey", "id"),
 				),
 			},
 		},

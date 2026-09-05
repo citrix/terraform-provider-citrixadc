@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -24,6 +23,7 @@ type GslbsiteResourceModel struct {
 	Id                     types.String `tfsdk:"id"`
 	Backupparentlist       types.List   `tfsdk:"backupparentlist"`
 	Clip                   types.String `tfsdk:"clip"`
+	Krpcnodesrcip          types.String `tfsdk:"krpcnodesrcip"`
 	Metricexchange         types.String `tfsdk:"metricexchange"`
 	Naptrreplacementsuffix types.String `tfsdk:"naptrreplacementsuffix"`
 	Newname                types.String `tfsdk:"newname"`
@@ -64,6 +64,11 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Cluster IP address. Specify this parameter to connect to the remote cluster site for GSLB auto-sync. Note: The cluster IP address is defined when creating the cluster.",
+			},
+			"krpcnodesrcip": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Source IP address to be used to communicate with this GSLB site. Minimum length =  1",
 			},
 			"metricexchange": schema.StringAttribute{
 				Optional:    true,
@@ -148,8 +153,6 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"sitepassword_wo_version": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
-				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
 					// GH #1436: replace only when the version is actually set in config, so the
 					// auto-populated default never forces destroy+recreate on provider upgrade.
@@ -189,6 +192,9 @@ func gslbsiteGetThePayloadFromthePlan(ctx context.Context, data *GslbsiteResourc
 	}
 	if !data.Clip.IsNull() && !data.Clip.IsUnknown() {
 		gslbsite.Clip = data.Clip.ValueString()
+	}
+	if !data.Krpcnodesrcip.IsNull() && !data.Krpcnodesrcip.IsUnknown() {
+		gslbsite.Krpcnodesrcip = data.Krpcnodesrcip.ValueString()
 	}
 	if !data.Metricexchange.IsNull() && !data.Metricexchange.IsUnknown() {
 		gslbsite.Metricexchange = data.Metricexchange.ValueString()
@@ -256,6 +262,9 @@ func gslbsiteGetTheUpdatePayloadFromthePlan(ctx context.Context, data *GslbsiteR
 		gslbsite.Backupparentlist = backupparentlistList
 	}
 	// clip is create-only (add payload only) - excluded from the set payload.
+	if !data.Krpcnodesrcip.IsNull() && !data.Krpcnodesrcip.IsUnknown() {
+		gslbsite.Krpcnodesrcip = data.Krpcnodesrcip.ValueString()
+	}
 	if !data.Metricexchange.IsNull() && !data.Metricexchange.IsUnknown() {
 		gslbsite.Metricexchange = data.Metricexchange.ValueString()
 	}
@@ -320,6 +329,11 @@ func gslbsiteSetAttrFromGet(ctx context.Context, data *GslbsiteResourceModel, ge
 		data.Clip = types.StringValue(val.(string))
 	} else {
 		data.Clip = types.StringNull()
+	}
+	if val, ok := getResponseData["krpcnodesrcip"]; ok && val != nil {
+		data.Krpcnodesrcip = types.StringValue(val.(string))
+	} else {
+		data.Krpcnodesrcip = types.StringNull()
 	}
 	if val, ok := getResponseData["metricexchange"]; ok && val != nil {
 		data.Metricexchange = types.StringValue(val.(string))

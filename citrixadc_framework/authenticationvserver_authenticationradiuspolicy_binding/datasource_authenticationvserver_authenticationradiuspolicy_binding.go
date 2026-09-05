@@ -35,14 +35,14 @@ func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Schem
 }
 
 func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel
+	var data AuthenticationvserverAuthenticationradiuspolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Lookup keys for this binding are name (parent) and policy, matching the SDK v2 identity.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,22 +66,10 @@ func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Read(
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy key
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && val == policy_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -89,11 +77,11 @@ func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Read(
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationradiuspolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationradiuspolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationradiuspolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

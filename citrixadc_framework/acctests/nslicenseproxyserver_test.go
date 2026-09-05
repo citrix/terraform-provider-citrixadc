@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNslicenseproxyserver_basic = `
@@ -62,6 +63,53 @@ func TestAccNslicenseproxyserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nslicenseproxyserver.tf_nslicenseproxyserver", "servername", "www.example.com"),
 					resource.TestCheckResourceAttr("citrixadc_nslicenseproxyserver.tf_nslicenseproxyserver", "port", "2300"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNslicenseproxyserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nslicenseproxyserver.tf_nslicenseproxyserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslicenseproxyserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseproxyserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseproxyserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nslicenseproxyserver.Type(), "www.example.com"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNslicenseproxyserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseproxyserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNslicenseproxyserver_import(t *testing.T) {
+	const resAddr = "citrixadc_nslicenseproxyserver.tf_nslicenseproxyserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslicenseproxyserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNslicenseproxyserver_basic},
+			{
+				Config:                  testAccNslicenseproxyserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -129,6 +177,30 @@ func testAccCheckNslicenseproxyserverDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNslicenseproxyserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNslicenseproxyserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNslicenseproxyserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseproxyserverExist("citrixadc_nslicenseproxyserver.tf_nslicenseproxyserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNslicenseproxyserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseproxyserverExist("citrixadc_nslicenseproxyserver.tf_nslicenseproxyserver", nil)),
+			},
+		},
+	})
 }
 
 func TestAccNslicenseproxyserverDataSource_basic(t *testing.T) {

@@ -28,6 +28,7 @@ type AaakcdaccountResourceModel struct {
 	KcdpasswordWoVersion types.Int64  `tfsdk:"kcdpassword_wo_version"`
 	Keytab               types.String `tfsdk:"keytab"`
 	Realmstr             types.String `tfsdk:"realmstr"`
+	Saltexpression       types.String `tfsdk:"saltexpression"`
 	Servicespn           types.String `tfsdk:"servicespn"`
 	Usercert             types.String `tfsdk:"usercert"`
 	Userrealm            types.String `tfsdk:"userrealm"`
@@ -90,6 +91,11 @@ func (r *AaakcdaccountResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:    true,
 				Description: "Kerberos Realm.",
 			},
+			"saltexpression": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Salt expression used by Kerberos impersonation. When configured, this expression will be used for key derivation with AES-128 or AES-256 encryption types. For RC4 encryption, the salt is not used. If the salt expression is not set, the default behavior is to derive the salt value from the Kerberos principal.",
+			},
 			"servicespn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -137,6 +143,9 @@ func aaakcdaccountGetThePayloadFromthePlan(ctx context.Context, data *Aaakcdacco
 	if !data.Realmstr.IsNull() && !data.Realmstr.IsUnknown() {
 		aaakcdaccount.Realmstr = data.Realmstr.ValueString()
 	}
+	if !data.Saltexpression.IsNull() && !data.Saltexpression.IsUnknown() {
+		aaakcdaccount.Saltexpression = data.Saltexpression.ValueString()
+	}
 	if !data.Servicespn.IsNull() && !data.Servicespn.IsUnknown() {
 		aaakcdaccount.Servicespn = data.Servicespn.ValueString()
 	}
@@ -177,6 +186,9 @@ func aaakcdaccountGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *A
 	}
 	if !data.Realmstr.IsNull() && !data.Realmstr.IsUnknown() {
 		aaakcdaccount.Realmstr = data.Realmstr.ValueString()
+	}
+	if !data.Saltexpression.IsNull() && !data.Saltexpression.IsUnknown() {
+		aaakcdaccount.Saltexpression = data.Saltexpression.ValueString()
 	}
 	if !data.Servicespn.IsNull() && !data.Servicespn.IsUnknown() {
 		aaakcdaccount.Servicespn = data.Servicespn.ValueString()
@@ -240,6 +252,11 @@ func aaakcdaccountSetAttrFromGet(ctx context.Context, data *AaakcdaccountResourc
 		data.Realmstr = types.StringValue(strings.ToLower(val.(string)))
 	} else {
 		data.Realmstr = types.StringNull()
+	}
+	if val, ok := getResponseData["saltexpression"]; ok && val != nil {
+		data.Saltexpression = types.StringValue(val.(string))
+	} else {
+		data.Saltexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["servicespn"]; ok && val != nil {
 		data.Servicespn = types.StringValue(val.(string))

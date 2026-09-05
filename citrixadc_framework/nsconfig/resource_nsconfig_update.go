@@ -40,7 +40,7 @@ type NsconfigUpdateResourceModel struct {
 	Ipaddress types.String `tfsdk:"ipaddress"`
 	Netmask   types.String `tfsdk:"netmask"`
 	Nsvlan    types.Int64  `tfsdk:"nsvlan"`
-	Ifnum     types.List   `tfsdk:"ifnum"`
+	Ifnum     types.Set    `tfsdk:"ifnum"`
 	Tagged    types.String `tfsdk:"tagged"`
 }
 
@@ -71,7 +71,7 @@ func (r *NsconfigUpdateResource) Schema(ctx context.Context, req resource.Schema
 				Computed:    true,
 				Description: "VLAN (NSVLAN) for the subnet on which the IP address resides.",
 			},
-			"ifnum": schema.ListAttribute{
+			"ifnum": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Description: "Interfaces of the appliance that must be bound to the NSVLAN.",
@@ -227,13 +227,13 @@ func (r *NsconfigUpdateResource) readFromApi(ctx context.Context, data *Nsconfig
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		if sliceVal, ok := val.([]interface{}); ok {
 			stringList := utils.ToStringList(sliceVal)
-			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
-			data.Ifnum = listValue
+			setValue, _ := types.SetValueFrom(ctx, types.StringType, stringList)
+			data.Ifnum = setValue
 		} else {
-			data.Ifnum = types.ListNull(types.StringType)
+			data.Ifnum = types.SetNull(types.StringType)
 		}
 	} else {
-		data.Ifnum = types.ListNull(types.StringType)
+		data.Ifnum = types.SetNull(types.StringType)
 	}
 	if val, ok := getResponseData["tagged"]; ok && val != nil {
 		data.Tagged = types.StringValue(val.(string))

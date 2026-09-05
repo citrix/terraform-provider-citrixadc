@@ -1,14 +1,50 @@
 package vpnvserver_authenticationradiuspolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// VpnvserverAuthenticationradiuspolicyBindingDataSourceModel is the
+// data-source-specific model, decoupled from the resource model. A data source
+// is a pure read surface (Read only; no plan/apply lifecycle), so it can expose
+// the FULL GET projection: the read/write attributes (as Computed outputs) AND
+// the read-only attributes the resource deliberately omits (acttype). Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type VpnvserverAuthenticationradiuspolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
+	Name                   types.String `tfsdk:"name"`
+	Policy                 types.String `tfsdk:"policy"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Secondary              types.Bool   `tfsdk:"secondary"`
+
+	// Read-only (GET-only) attribute from the NITRO doc read-only set
+	// (zion73x_readonly/vpnvserver_authenticationradiuspolicy_binding.json).
+	// Never settable; populated from GET.
+	Acttype types.Int64 `tfsdk:"acttype"`
+}
 
 func VpnvserverAuthenticationradiuspolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+			},
+			"bindpoint": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
@@ -38,6 +74,39 @@ func VpnvserverAuthenticationradiuspolicyBindingDataSourceSchema() schema.Schema
 				Computed:    true,
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},
+
+			// Read-only (GET-only) attribute surfaced by the data source
+			// (intentionally NOT modeled on the resource). Computed.
+			"acttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Type of the bound authentication action. Returned by the appliance on a GET; null when the appliance omits it.",
+			},
 		},
 	}
+}
+
+// vpnvserver_authenticationradiuspolicy_bindingDataSourceSetAttrFromGet projects
+// a NITRO GET response element onto the data-source model. Because a data source
+// has no plan/apply reconciliation, attributes are simply filled from the GET (or
+// left Null when the GET omits them). The shared utils.MapGet* helpers implement
+// that projection.
+func vpnvserver_authenticationradiuspolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationradiuspolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In vpnvserver_authenticationradiuspolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Groupextraction = utils.MapGetBool(g, "groupextraction")
+	data.Name = utils.MapGetString(g, "name")
+	data.Policy = utils.MapGetString(g, "policy")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Secondary = utils.MapGetBool(g, "secondary")
+
+	// Read-only GET-only attribute.
+	data.Acttype = utils.MapGetInt64(g, "acttype")
+
+	// Set ID: identity is (name, policy) matching the SDK v2 ID order.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(utils.AnyToString(data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(utils.AnyToString(data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

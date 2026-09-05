@@ -43,18 +43,18 @@ func (r *SystemcmdpolicyResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func systemcmdpolicyGetThePayloadFromtheConfig(ctx context.Context, data *SystemcmdpolicyResourceModel) system.Systemcmdpolicy {
-	tflog.Debug(ctx, "In systemcmdpolicyGetThePayloadFromtheConfig Function")
+func systemcmdpolicyGetThePayloadFromthePlan(ctx context.Context, data *SystemcmdpolicyResourceModel) system.Systemcmdpolicy {
+	tflog.Debug(ctx, "In systemcmdpolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemcmdpolicy := system.Systemcmdpolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		systemcmdpolicy.Action = data.Action.ValueString()
 	}
-	if !data.Cmdspec.IsNull() {
+	if !data.Cmdspec.IsNull() && !data.Cmdspec.IsUnknown() {
 		systemcmdpolicy.Cmdspec = data.Cmdspec.ValueString()
 	}
-	if !data.Policyname.IsNull() {
+	if !data.Policyname.IsNull() && !data.Policyname.IsUnknown() {
 		systemcmdpolicy.Policyname = data.Policyname.ValueString()
 	}
 

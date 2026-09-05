@@ -49,12 +49,3 @@ In addition to the arguments, the following attributes are available:
 * `sipsrcportrange` - Source port range for SIP_UDP and SIP_TCP.
 * `siptransportprotocol` - SIP ALG Profile transport protocol type.
 * `id` - The id of the lsnsipalgprofile. It has the same value as the `sipalgprofilename` attribute.
-
-
-## Import
-
-A lsnsipalgprofile can be imported using its sipalgprofilename, e.g.
-
-```shell
-terraform import citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile_ds my_lsn_sipalgprofile_ds
-```

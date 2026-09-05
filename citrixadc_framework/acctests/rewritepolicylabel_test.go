@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRewritepolicylabel_basic(t *testing.T) {
@@ -112,6 +113,77 @@ resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
 	comment = "Some comment"
 }
 `
+
+func TestAccRewritepolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicylabel.tf_rewritepolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Rewritepolicylabel.Type(), "tf_rewritepolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewritepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccRewritepolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicylabel.tf_rewritepolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewritepolicylabel_basic},
+			{
+				Config:                  testAccRewritepolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccRewritepolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRewritepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccRewritepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist("citrixadc_rewritepolicylabel.tf_rewritepolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRewritepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist("citrixadc_rewritepolicylabel.tf_rewritepolicylabel", nil)),
+			},
+		},
+	})
+}
 
 func TestAccRewritepolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

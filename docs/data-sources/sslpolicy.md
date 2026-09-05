@@ -29,3 +29,13 @@ In addition to the argument above, the following attributes are exported:
 * `reqaction` - The name of the action to be performed on the request. Refer to 'add ssl action' command to add a new action. Builtin actions like NOOP, RESET, DROP, CLIENTAUTH and NOCLIENTAUTH are also allowed.
 * `rule` - Expression, against which traffic is evaluated.
 * `undefaction` - Name of the action to be performed when the result of rule evaluation is undefined. Possible values for control policies: CLIENTAUTH, NOCLIENTAUTH, NOOP, RESET, DROP. Possible values for data policies: NOOP, RESET, DROP and BYPASS.
+
+### Read-only sslpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslpolicy` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of Undef hits.
+* `description` - Description of the policy.
+* `builtin` - Flag to determine if SSL policy is built-in or not. A list of strings. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.
+* `feature` - The feature to be checked while applying this config.

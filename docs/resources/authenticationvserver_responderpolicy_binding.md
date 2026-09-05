@@ -47,7 +47,7 @@ resource "citrixadc_authenticationvserver_responderpolicy_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the authenticationvserver_responderpolicy_binding. It is the concatenation of both `name` and `policy` attributes seperated by comma.
+* `id` - The id of the authenticationvserver_responderpolicy_binding. It is the concatenation of `name` and `policy` attributes separated by a comma.
 
 
 ## Import

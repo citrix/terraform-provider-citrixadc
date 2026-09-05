@@ -7,6 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,27 +30,36 @@ func (r *AuthenticationnoauthactionResource) Schema(ctx context.Context, req res
 				Description: "The ID of the authenticationnoauthaction resource.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO has no documented default for this attribute; unsetting it
+				// reverts to an empty group. A schema Default is required so that
+				// removing the attribute from config produces a plan diff (an
+				// Optional+Computed attr with no Default is sticky on removal, so
+				// Update never runs and the unset never fires).
+				Default:     stringdefault.StaticString(""),
 				Description: "This is the group that is added to user sessions that match current policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new no-authentication action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 		},
 	}
 }
 
-func authenticationnoauthactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationnoauthactionResourceModel) authentication.Authenticationnoauthaction {
-	tflog.Debug(ctx, "In authenticationnoauthactionGetThePayloadFromtheConfig Function")
+func authenticationnoauthactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationnoauthactionResourceModel) authentication.Authenticationnoauthaction {
+	tflog.Debug(ctx, "In authenticationnoauthactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationnoauthaction := authentication.Authenticationnoauthaction{}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationnoauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationnoauthaction.Name = data.Name.ValueString()
 	}
 
@@ -61,7 +73,9 @@ func authenticationnoauthactionSetAttrFromGet(ctx context.Context, data *Authent
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
 	} else {
-		data.Defaultauthenticationgroup = types.StringNull()
+		// Absent from GET (e.g. after an unset) maps to the empty-string default
+		// so state stays consistent with the schema Default.
+		data.Defaultauthenticationgroup = types.StringValue("")
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))

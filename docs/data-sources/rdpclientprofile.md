@@ -43,3 +43,10 @@ In addition to the argument, the following attributes are exported:
 * `redirectpnpdevices` - This setting corresponds to the selections for pnpdevices under More on the Local Resources tab under Options in RDC.
 * `redirectprinters` - This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC.
 * `videoplaybackmode` - This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback.
+
+### Read-only rdpclientprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_rdpclientprofile` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

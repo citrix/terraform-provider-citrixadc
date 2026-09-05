@@ -36,3 +36,9 @@ In addition to the arguments, the following attributes are available:
 * `serverurl` - Fully qualified URL of the ADFS server.
 * `username` - Name of an account in the directory that is used to authenticate the trust request from the Citrix ADC acting as a proxy.
 * `id` - The id of the authenticationadfsproxyprofile. It has the same value as the `name` attribute.
+
+### Read-only authenticationadfsproxyprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationadfsproxyprofile` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `adfstruststatus` - Describes status of ADFS trust. Possible values = `INIT`, `FAILED`, `ESTABLISHED`, `ESTABLISHED/CONFIGURED`, `ESTABLISHED_RENEW_SUCCESS`, `ESTABLISHED_RENEW_FAILED`, `RENEWED/CONFIGURED`.

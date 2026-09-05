@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_fieldconsistency_binding_basic = `
@@ -129,11 +132,13 @@ func testAccCheckAppfwprofile_fieldconsistency_bindingExist(n string, id *string
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		name := idSlice[0]
-		fieldconsistency := idSlice[1]
-		formactionurl_ffc := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "fieldconsistency", "formactionurl_ffc"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		fieldconsistency := idMap["fieldconsistency"]
+		formactionurl_ffc := idMap["formactionurl_ffc"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fieldconsistency_binding",
@@ -177,11 +182,13 @@ func testAccCheckAppfwprofile_fieldconsistency_bindingNotExist(n string, id stri
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 3)
-
-		name := idSlice[0]
-		fieldconsistency := idSlice[1]
-		formactionurl_ffc := idSlice[2]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "fieldconsistency", "formactionurl_ffc"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		fieldconsistency := idMap["fieldconsistency"]
+		formactionurl_ffc := idMap["formactionurl_ffc"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fieldconsistency_binding",
@@ -263,6 +270,75 @@ const testAccAppfwprofile_fieldconsistency_bindingDataSource_basic = `
 	}
 `
 
+const testAccAppfwprofile_fieldconsistency_binding_upgrade_basic = `
+
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_fieldconsistency_binding" "tf_binding" {
+		name              = citrixadc_appfwprofile.tf_appfwprofile.name
+		fieldconsistency  = "tf_field"
+		formactionurl_ffc = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed    = "NOTAUTODEPLOYED"
+		state             = "DISABLED"
+		alertonly         = "OFF"
+		isregex_ffc       = "REGEX"
+		comment           = "Testing"
+	}
+`
+
+// TestAccAppfwprofile_fieldconsistency_binding_sdkv2StateUpgrade verifies that a
+// binding created with the last SDK v2 release (legacy comma-separated ID) is read
+// and upgraded correctly by the current Framework provider. Step 1 provisions the
+// binding with the v2.2.0 registry provider (writing the legacy ID). Step 2 refreshes
+// that state through the current Framework provider, which recomputes the ID into the
+// new key:UrlEncode(value) format on Read.
+func TestAccAppfwprofile_fieldconsistency_binding_sdkv2StateUpgrade(t *testing.T) {
+	// Legacy SDK v2 id: name,fieldconsistency,formactionurl_ffc (see
+	// citrixadc/resource_citrixadc_appfwprofile_fieldconsistency_binding.go d.SetId).
+	legacyId := "tf_appfwprofile,tf_field,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+	// New Framework id: fieldconsistency:<enc>,formactionurl_ffc:<enc>,name:<enc>
+	// derived exactly as the resource Create/SetAttrFromGet idParts do.
+	newId := fmt.Sprintf(
+		"fieldconsistency:%s,formactionurl_ffc:%s,name:%s",
+		utils.UrlEncode("tf_field"),
+		utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+		utils.UrlEncode("tf_appfwprofile"),
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_fieldconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_fieldconsistency_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_fieldconsistency_bindingExist("citrixadc_appfwprofile_fieldconsistency_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldconsistency_binding.tf_binding", "id", legacyId),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_fieldconsistency_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_fieldconsistency_bindingExist("citrixadc_appfwprofile_fieldconsistency_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fieldconsistency_binding.tf_binding", "id", newId),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAppfwprofile_fieldconsistency_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -281,6 +357,77 @@ func TestAccAppfwprofile_fieldconsistency_bindingDataSource_basic(t *testing.T) 
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "isregex_ffc", "REGEX"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fieldconsistency_binding.tf_binding_datasource", "comment", "Testing"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_fieldconsistency_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fieldconsistency_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,fieldconsistency,formactionurl_ffc) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "fieldconsistency", "formactionurl_ffc"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fieldconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_fieldconsistency_binding_basic},
+			{Config: testAccAppfwprofile_fieldconsistency_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_fieldconsistency_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_fieldconsistency_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fieldconsistency_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fieldconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fieldconsistency_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fieldconsistency_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_fieldconsistency_binding.Type(), "tf_appfwprofile", []string{"fieldconsistency:" + utils.UrlEncode("tf_field"), "formactionurl_ffc:" + utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_fieldconsistency_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fieldconsistency_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -35,11 +35,3 @@ In addition to the arguments, the following attributes are available:
 * `ssllogclauthfailures` - log all SSL ClAuth error events. Possible values: [ ENABLED, DISABLED ]
 * `sslloghs` - log all SSL HS events. Possible values: [ ENABLED, DISABLED ]
 * `sslloghsfailures` - log all SSL HS error events. Possible values: [ ENABLED, DISABLED ]
-
-## Import
-
-A ssllogprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_ssllogprofile.demo_ssllogprofile demo_ssllogprofile
-```

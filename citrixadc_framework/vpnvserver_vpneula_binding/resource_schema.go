@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *VpnvserverVpneulaBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the vpnvserver_vpneula_binding resource.",
 			},
 			"eula": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the EULA bound to VPN vserver",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 		},
 	}
 }
 
-func vpnvserver_vpneula_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverVpneulaBindingResourceModel) vpn.Vpnvservervpneulabinding {
-	tflog.Debug(ctx, "In vpnvserver_vpneula_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_vpneula_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverVpneulaBindingResourceModel) vpn.Vpnvservervpneulabinding {
+	tflog.Debug(ctx, "In vpnvserver_vpneula_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_vpneula_binding := vpn.Vpnvservervpneulabinding{}
-	if !data.Eula.IsNull() {
+	if !data.Eula.IsNull() && !data.Eula.IsUnknown() {
 		vpnvserver_vpneula_binding.Eula = data.Eula.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_vpneula_binding.Name = data.Name.ValueString()
 	}
 

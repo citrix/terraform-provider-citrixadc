@@ -14,6 +14,8 @@ func VpnglobalSharefileserverBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+				// Datasource keeps Computed: a datasource output is read-only and never
+				// causes apply-time churn. The resource-side Computed was dropped.
 			},
 			"sharefile": schema.StringAttribute{
 				Required:    true,

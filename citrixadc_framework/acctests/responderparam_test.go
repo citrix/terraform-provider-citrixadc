@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccResponderparam_basic = `
@@ -130,6 +132,49 @@ func testAccCheckResponderparamDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccResponderparam_import(t *testing.T) {
+	const resAddr = "citrixadc_responderparam.tf_responderparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderparamDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderparam_basic},
+			{
+				Config:                  testAccResponderparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccResponderparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccResponderparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderparamExist("citrixadc_responderparam.tf_responderparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderparamExist("citrixadc_responderparam.tf_responderparam", nil)),
+			},
+		},
+	})
+}
+
 const testAccResponderparamDataSource_basic = `
 resource "citrixadc_responderparam" "tf_responderparam_ds" {
     timeout = 7
@@ -140,6 +185,80 @@ data "citrixadc_responderparam" "tf_responderparam_ds" {
   depends_on = [citrixadc_responderparam.tf_responderparam_ds]
 }
 `
+
+// step1 sets the unset-eligible attributes to valid NON-default values; step2
+// removes them so the provider must unset them (revert to NITRO defaults:
+// timeout=3900, undefaction=NOOP).
+const testAccResponderparam_unset_step1 = `
+	resource "citrixadc_responderparam" "tf_unset" {
+		timeout     = 1200
+		undefaction = "RESET"
+	}
+`
+
+const testAccResponderparam_unset_step2 = `
+	resource "citrixadc_responderparam" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccResponderparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccResponderparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderparamExist("citrixadc_responderparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderparam.tf_unset", "timeout", "1200"),
+					resource.TestCheckResourceAttr("citrixadc_responderparam.tf_unset", "undefaction", "RESET"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccResponderparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderparamExist("citrixadc_responderparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderparam.tf_unset", "timeout", "3900"),
+					resource.TestCheckResourceAttr("citrixadc_responderparam.tf_unset", "undefaction", "NOOP"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckResponderparamADCValue("timeout", "3900"),
+					testAccCheckResponderparamADCValue("undefaction", "NOOP"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckResponderparamADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckResponderparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Responderparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("responderparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("responderparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccResponderparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

@@ -2,17 +2,47 @@ package tmtrafficaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // TmtrafficactionResourceModel describes the resource data model.
 type TmtrafficactionResourceModel struct {
@@ -66,21 +96,29 @@ func (r *TmtrafficactionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"kcdaccount": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("None"),
 				Description: "Kerberos constrained delegation account name",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the traffic action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after a traffic action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"passwdexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "expression that will be evaluated to obtain password for SingleSignOn",
 			},
 			"persistentcookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Use persistent cookies for the traffic session. A persistent cookie remains on the user device and is sent with each HTTP request. The cookie becomes stale if the session ends.",
 			},
 			"samlssoprofile": schema.StringAttribute{
@@ -94,63 +132,151 @@ func (r *TmtrafficactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Use single sign-on for the resource that the user is accessing now.",
 			},
 			"userexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "expression that will be evaluated to obtain username for SingleSignOn",
 			},
 		},
 	}
 }
 
-func tmtrafficactionGetThePayloadFromtheConfig(ctx context.Context, data *TmtrafficactionResourceModel) tm.Tmtrafficaction {
-	tflog.Debug(ctx, "In tmtrafficactionGetThePayloadFromtheConfig Function")
+func tmtrafficactionGetThePayloadFromthePlan(ctx context.Context, data *TmtrafficactionResourceModel) tm.Tmtrafficaction {
+	tflog.Debug(ctx, "In tmtrafficactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	tmtrafficaction := tm.Tmtrafficaction{}
-	if !data.Apptimeout.IsNull() {
+	if !data.Apptimeout.IsNull() && !data.Apptimeout.IsUnknown() {
 		tmtrafficaction.Apptimeout = utils.IntPtr(int(data.Apptimeout.ValueInt64()))
 	}
-	if !data.Forcedtimeout.IsNull() {
+	if !data.Forcedtimeout.IsNull() && !data.Forcedtimeout.IsUnknown() {
 		tmtrafficaction.Forcedtimeout = data.Forcedtimeout.ValueString()
 	}
-	if !data.Forcedtimeoutval.IsNull() {
+	if !data.Forcedtimeoutval.IsNull() && !data.Forcedtimeoutval.IsUnknown() {
 		tmtrafficaction.Forcedtimeoutval = utils.IntPtr(int(data.Forcedtimeoutval.ValueInt64()))
 	}
-	if !data.Formssoaction.IsNull() {
+	if !data.Formssoaction.IsNull() && !data.Formssoaction.IsUnknown() {
 		tmtrafficaction.Formssoaction = data.Formssoaction.ValueString()
 	}
-	if !data.Initiatelogout.IsNull() {
+	if !data.Initiatelogout.IsNull() && !data.Initiatelogout.IsUnknown() {
 		tmtrafficaction.Initiatelogout = data.Initiatelogout.ValueString()
 	}
-	if !data.Kcdaccount.IsNull() {
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
 		tmtrafficaction.Kcdaccount = data.Kcdaccount.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		tmtrafficaction.Name = data.Name.ValueString()
 	}
-	if !data.Passwdexpression.IsNull() {
+	if !data.Passwdexpression.IsNull() && !data.Passwdexpression.IsUnknown() {
 		tmtrafficaction.Passwdexpression = data.Passwdexpression.ValueString()
 	}
-	if !data.Persistentcookie.IsNull() {
+	if !data.Persistentcookie.IsNull() && !data.Persistentcookie.IsUnknown() {
 		tmtrafficaction.Persistentcookie = data.Persistentcookie.ValueString()
 	}
-	if !data.Samlssoprofile.IsNull() {
+	if !data.Samlssoprofile.IsNull() && !data.Samlssoprofile.IsUnknown() {
 		tmtrafficaction.Samlssoprofile = data.Samlssoprofile.ValueString()
 	}
-	if !data.Sso.IsNull() {
+	if !data.Sso.IsNull() && !data.Sso.IsUnknown() {
 		tmtrafficaction.Sso = data.Sso.ValueString()
 	}
-	if !data.Userexpression.IsNull() {
+	if !data.Userexpression.IsNull() && !data.Userexpression.IsUnknown() {
 		tmtrafficaction.Userexpression = data.Userexpression.ValueString()
 	}
 
 	return tmtrafficaction
 }
 
+// tmtrafficactionSetAttrFromGet maps the NITRO GET response onto the resource
+// state model. To avoid the omit-on-default trap (NITRO omits a configured
+// value from GET), the else-branches only null a value that is still Unknown
+// (needed to resolve Computed attrs on Create); a known configured value is
+// preserved.
 func tmtrafficactionSetAttrFromGet(ctx context.Context, data *TmtrafficactionResourceModel, getResponseData map[string]interface{}) *TmtrafficactionResourceModel {
 	tflog.Debug(ctx, "In tmtrafficactionSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["apptimeout"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Apptimeout = types.Int64Value(intVal)
+		} else if data.Apptimeout.IsUnknown() {
+			data.Apptimeout = types.Int64Null()
+		}
+	} else if data.Apptimeout.IsUnknown() {
+		data.Apptimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["forcedtimeout"]; ok && val != nil {
+		data.Forcedtimeout = types.StringValue(val.(string))
+	} else if data.Forcedtimeout.IsUnknown() {
+		data.Forcedtimeout = types.StringNull()
+	}
+	if val, ok := getResponseData["forcedtimeoutval"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Forcedtimeoutval = types.Int64Value(intVal)
+		} else if data.Forcedtimeoutval.IsUnknown() {
+			data.Forcedtimeoutval = types.Int64Null()
+		}
+	} else if data.Forcedtimeoutval.IsUnknown() {
+		data.Forcedtimeoutval = types.Int64Null()
+	}
+	if val, ok := getResponseData["formssoaction"]; ok && val != nil {
+		data.Formssoaction = types.StringValue(val.(string))
+	} else if data.Formssoaction.IsUnknown() {
+		data.Formssoaction = types.StringNull()
+	}
+	if val, ok := getResponseData["initiatelogout"]; ok && val != nil {
+		data.Initiatelogout = types.StringValue(val.(string))
+	} else if data.Initiatelogout.IsUnknown() {
+		data.Initiatelogout = types.StringNull()
+	}
+	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
+		data.Kcdaccount = types.StringValue(val.(string))
+	} else if data.Kcdaccount.IsUnknown() {
+		data.Kcdaccount = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["passwdexpression"]; ok && val != nil {
+		data.Passwdexpression = types.StringValue(val.(string))
+	} else if data.Passwdexpression.IsUnknown() {
+		data.Passwdexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["persistentcookie"]; ok && val != nil {
+		data.Persistentcookie = types.StringValue(val.(string))
+	} else if data.Persistentcookie.IsUnknown() {
+		data.Persistentcookie = types.StringNull()
+	}
+	if val, ok := getResponseData["samlssoprofile"]; ok && val != nil {
+		data.Samlssoprofile = types.StringValue(val.(string))
+	} else if data.Samlssoprofile.IsUnknown() {
+		data.Samlssoprofile = types.StringNull()
+	}
+	if val, ok := getResponseData["sso"]; ok && val != nil {
+		data.Sso = types.StringValue(val.(string))
+	} else if data.Sso.IsUnknown() {
+		data.Sso = types.StringNull()
+	}
+	if val, ok := getResponseData["userexpression"]; ok && val != nil {
+		data.Userexpression = types.StringValue(val.(string))
+	} else if data.Userexpression.IsUnknown() {
+		data.Userexpression = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
+	return data
+}
+
+// tmtrafficactionSetAttrFromGetForDatasource maps the NITRO GET response onto
+// the model for the datasource, unconditionally copying every returned value
+// (nulling anything absent) and setting the ID.
+func tmtrafficactionSetAttrFromGetForDatasource(ctx context.Context, data *TmtrafficactionResourceModel, getResponseData map[string]interface{}) *TmtrafficactionResourceModel {
+	tflog.Debug(ctx, "In tmtrafficactionSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["apptimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Apptimeout = types.Int64Value(intVal)
@@ -216,9 +342,7 @@ func tmtrafficactionSetAttrFromGet(ctx context.Context, data *TmtrafficactionRes
 		data.Userexpression = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNslimitidentifier_add = `
@@ -139,6 +141,53 @@ func testAccCheckNslimitidentifierDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNslimitidentifier_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nslimitidentifier.tf_nslimitidentifier"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nslimitidentifier.Type(), "tf_nslimitidentifier"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNslimitidentifier_import(t *testing.T) {
+	const resAddr = "citrixadc_nslimitidentifier.tf_nslimitidentifier"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNslimitidentifier_add},
+			{
+				Config:                  testAccNslimitidentifier_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNslimitidentifierDataSource_basic = `
 
 	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier_ds" {
@@ -156,6 +205,117 @@ const testAccNslimitidentifierDataSource_basic = `
 	}
 `
 
+func TestAccNslimitidentifier_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_nslimitidentifier", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_nslimitidentifier", nil)),
+			},
+		},
+	})
+}
+
+// step1 sets the unset-eligible attributes to valid non-default values.
+// mode is kept as REQUEST_RATE in both steps because threshold, timeslice and
+// limittype are only meaningful in that mode (prerequisite for the appliance).
+const testAccNslimitidentifier_unset_step1 = `
+	resource "citrixadc_nslimitidentifier" "tf_unset" {
+		limitidentifier  = "tf_nslimitidentifier_unset"
+		mode             = "REQUEST_RATE"
+		limittype        = "SMOOTH"
+		threshold        = 50
+		timeslice        = 2000
+		maxbandwidth     = 100
+		trapsintimeslice = 2
+	}
+`
+
+// step2 removes all unset-eligible attributes -> the provider must unset them
+// (revert to NITRO defaults).
+const testAccNslimitidentifier_unset_step2 = `
+	resource "citrixadc_nslimitidentifier" "tf_unset" {
+		limitidentifier = "tf_nslimitidentifier_unset"
+		mode            = "REQUEST_RATE"
+	}
+`
+
+func TestAccNslimitidentifier_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNslimitidentifier_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "limittype", "SMOOTH"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "threshold", "50"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "timeslice", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "maxbandwidth", "100"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "trapsintimeslice", "2"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNslimitidentifier_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "limittype", "BURSTY"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "threshold", "1"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "timeslice", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "maxbandwidth", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "trapsintimeslice", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNslimitidentifierADCValue("tf_nslimitidentifier_unset", "limittype", "BURSTY"),
+					testAccCheckNslimitidentifierADCValue("tf_nslimitidentifier_unset", "threshold", "1"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNslimitidentifierADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckNslimitidentifierADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nslimitidentifier.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nslimitidentifier %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nslimitidentifier %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -164,6 +324,7 @@ func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNslimitidentifierDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "limitidentifier", "tf_nslimitidentifier_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "threshold", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "timeslice", "3000"),
@@ -171,6 +332,8 @@ func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "mode", "REQUEST_RATE"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "maxbandwidth", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "trapsintimeslice", "2"),
+					// Read-only rate-limit metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "referencecount"),
 				),
 			},
 		},

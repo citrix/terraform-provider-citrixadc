@@ -1,8 +1,35 @@
 package sslcertkeybundle
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslcertkeybundleDataSourceModel is the data-source-specific model, decoupled
+// from SslcertkeybundleResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only metadata attributes that the resource deliberately
+// omits. Every non-key attribute is Computed; the Framework's per-attribute
+// model <-> schema reflection requires this model to have exactly the attributes
+// the data-source schema declares, which is why it cannot reuse the resource
+// model.
+type SslcertkeybundleDataSourceModel struct {
+	Id                types.String `tfsdk:"id"`
+	Bundlefile        types.String `tfsdk:"bundlefile"`
+	Certkeybundlename types.String `tfsdk:"certkeybundlename"` // Required lookup key
+	Passplain         types.String `tfsdk:"passplain"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/sslcertkeybundle.json). Never settable; populated from
+	// GET.
+	Certkeybundledigest types.String `tfsdk:"certkeybundledigest"`
+}
 
 func SslcertkeybundleDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -22,17 +49,39 @@ func SslcertkeybundleDataSourceSchema() schema.Schema {
 			"passplain": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Pass phrase used to encrypt the private-key. Required when certificate bundle file contains encrypted private-key in PEM format.",
 			},
-			"passplain_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Pass phrase used to encrypt the private-key. Required when certificate bundle file contains encrypted private-key in PEM format.",
-			},
-			"passplain_wo_version": schema.Int64Attribute{
-				Optional:    true,
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"certkeybundledigest": schema.StringAttribute{
 				Computed:    true,
-				Description: "Increment this version to signal a passplain_wo update.",
+				Description: "Stores the digest of certificate and key bundle file.",
 			},
 		},
 	}
+}
+
+// sslcertkeybundleDataSourceSetAttrFromGet projects a NITRO sslcertkeybundle GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func sslcertkeybundleDataSourceSetAttrFromGet(ctx context.Context, data *SslcertkeybundleDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslcertkeybundleDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["certkeybundlename"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Certkeybundlename = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attribute as read-back output.
+	data.Bundlefile = utils.MapGetString(g, "bundlefile")
+
+	// passplain is a secret input the GET never returns -> Null.
+	data.Passplain = types.StringNull()
+
+	// Read-only metadata.
+	data.Certkeybundledigest = utils.MapGetString(g, "certkeybundledigest")
 }

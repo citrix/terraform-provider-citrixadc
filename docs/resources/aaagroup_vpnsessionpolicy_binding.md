@@ -31,11 +31,11 @@ resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
 
 ## Argument Reference
 
+* `groupname` - (Required) Name of the group that you are binding.
 * `policy` - (Required) The policy name.
-* `priority` - (Required) Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000. Minimum value =  0 Maximum value =  2147483647
+* `priority` - (Required) Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `groupname` - (Required) Name of the group that you are binding. Minimum length =  1
-* `type` - (Optional) Bindpoint to which the policy is bound. Possible values: [ REQUEST, UDP_REQUEST, DNS_REQUEST, ICMP_REQUEST ]
+* `type` - (Optional) Bindpoint to which the policy is bound. Defaults to `"REQUEST"`.
 
 
 ## Attribute Reference

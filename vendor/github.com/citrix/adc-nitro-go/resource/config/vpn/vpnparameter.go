@@ -346,7 +346,7 @@ type Vpnparameter struct {
 	*/
 	Icasessiontimeout string `json:"icasessiontimeout,omitempty"`
 	/**
-	* Enable or disable HTTP tracking for packets proxied via vpn vserver using GSLB connection proxy feature.
+	* Use separate TCP connections for each connection proxy request in GSLB Active-Active setups. Improves session isolation but may impact performance due to increased connections and TLS overhead. Disabled by default.
 	*/
 	Httptrackconnproxy string `json:"httptrackconnproxy,omitempty"`
 	/**
@@ -405,11 +405,16 @@ type Vpnparameter struct {
 	* Enables DTLS 1.2 for backend server handshakes
 	*/
 	Backenddtls12 string `json:"backenddtls12,omitempty"`
+	/**
+	* Clears Secure Private Access profile that may be set.
+	*/
+	Secureprivateaccessprofile string `json:"secureprivateaccessprofile,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Name string `json:"name,omitempty"`
 	Clientidletimeoutwarning string `json:"clientidletimeoutwarning,omitempty"`
+	Stricturlcheck string `json:"stricturlcheck,omitempty"`
 	Vpnsessionpolicybindtype string `json:"vpnsessionpolicybindtype,omitempty"`
 	Vpnsessionpolicycount string `json:"vpnsessionpolicycount,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`

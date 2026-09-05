@@ -1,6 +1,8 @@
 package citrixadc
 
 import (
+	"archive/tar"
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -362,6 +364,51 @@ func doSslcertkeybundlePreChecks(t *testing.T) {
 	}
 }
 
+// doWasmfilePreChecks uploads the WASM module fixture (testdata/tfwasmfile.wasm)
+// to /var/tmp on the ADC so the wasmfile Import test (src="local:tfwasmfile.wasm")
+// resolves to a real file. The fixture is a genuine, validly-signed WASM module
+// (a copy of the firmware-shipped sample /var/netscaler/wasm/ns_sigsci.wasm);
+// wasmfile's Module import does not verify the signature, so the module alone
+// suffices here.
+func doWasmfilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	if err := uploadTestdataFile(c, t, "tfwasmfile.wasm", "/var/tmp"); err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+// doWasmmodulePreChecks stages the WASM module fixture AND its cryptographic
+// signature into /var/netscaler/wasm on the ADC, which is where `add wasmmodule`
+// reads modulefile/signaturefile from. `add wasmmodule` cryptographically
+// validates the signature against the module (NITRO errorcode 1074 on mismatch),
+// so both files must be a genuine signed pair — here testdata/tfwasmfile.wasm and
+// testdata/tfwasmfile.sig, copied verbatim from a firmware-shipped sample
+// (/var/netscaler/wasm/ns_sigsci.wasm + ns_sigsci_wasm.sig). ns_sigsci is a
+// content-inspection WASM module, so this same fixture also drives the
+// contentinspectionwasmprofile test (whose wasmModule must be CI-compatible — the
+// ns_extrahop_* samples are rejected there with errorcode 278). The signature
+// validates by file *content*, so the rename to tfwasmfile.* is fine.
+func doWasmmodulePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	for _, filename := range []string{"tfwasmfile.wasm", "tfwasmfile.sig"} {
+		if err := uploadTestdataFile(c, t, filename, "/var/netscaler/wasm"); err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetDir string) error {
 	client := c.client
 
@@ -391,6 +438,46 @@ func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetD
 		}
 	}
 	return nil
+}
+
+// uploadAppfwarchiveFixture builds a minimal, well-formed tar in memory and
+// uploads it to targetDir on the ADC as filename, so that an appfwarchive Import
+// with src="local:<filename>" resolves to a real, importable archive. NITRO's
+// Import accepts any well-formed tar (it does not validate AppFW-specific archive
+// contents), which is what lets the appfwarchive / appfwarchive_export acceptance
+// tests be self-contained instead of depending on an external archive host or a
+// pre-seeded archive on the box. The upload mirrors uploadTestdataFile's
+// "File already exists" delete-then-retry handling so reruns are idempotent.
+func uploadAppfwarchiveFixture(c *NetScalerNitroClient, t *testing.T, filename, targetDir string) error {
+	client := c.client
+
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	content := []byte("terraform-provider-citrixadc appfwarchive self-test fixture\n")
+	if err := tw.WriteHeader(&tar.Header{Name: "manifest.txt", Mode: 0o644, Size: int64(len(content))}); err != nil {
+		return err
+	}
+	if _, err := tw.Write(content); err != nil {
+		return err
+	}
+	if err := tw.Close(); err != nil {
+		return err
+	}
+
+	sf := system.Systemfile{
+		Filename:     filename,
+		Filecontent:  base64.StdEncoding.EncodeToString(buf.Bytes()),
+		Filelocation: targetDir,
+	}
+	_, err := client.AddResource(service.Systemfile.Type(), filename, &sf)
+	if err != nil && strings.Contains(err.Error(), "File already exists") {
+		url_args := map[string]string{"filelocation": strings.Replace(targetDir, "/", "%2F", -1)}
+		if derr := client.DeleteResourceWithArgsMap(service.Systemfile.Type(), filename, url_args); derr != nil {
+			return derr
+		}
+		_, err = client.AddResource(service.Systemfile.Type(), filename, &sf)
+	}
+	return err
 }
 
 var helperClient *NetScalerNitroClient

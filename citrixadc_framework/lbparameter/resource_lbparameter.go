@@ -245,6 +245,14 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 			hasChange = true
 		}
 	}
+	if !data.Radiusmessageauthenticator.Equal(state.Radiusmessageauthenticator) {
+		tflog.Debug(ctx, fmt.Sprintf("radiusmessageauthenticator has changed for lbparameter"))
+		if config.Radiusmessageauthenticator.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "radiusmessageauthenticator")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.Retainservicestate.Equal(state.Retainservicestate) {
 		tflog.Debug(ctx, fmt.Sprintf("retainservicestate has changed for lbparameter"))
 		if config.Retainservicestate.IsNull() { // removed from config -> unset it

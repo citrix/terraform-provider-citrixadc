@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaauser_vpnurlpolicy_binding_basic = `
@@ -129,10 +132,12 @@ func testAccCheckAaauser_vpnurlpolicy_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		username := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"username", "policy"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		username := idMap["username"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaauser_vpnurlpolicy_binding",
@@ -280,7 +285,157 @@ func TestAccAaauser_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "policy", "new_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "priority", "100"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAaauser_vpnurlpolicy_binding_upgrade_basic reuses the same resource block +
+// prerequisites as testAccAaauser_vpnurlpolicy_binding_basic. It is valid under BOTH the
+// SDK v2 2.2.0 schema and the current Framework schema (the migration restored the SDK v2
+// attribute names), so the same config can create the resource with the last SDK v2 release
+// and then be refreshed/applied through the current Framework provider.
+const testAccAaauser_vpnurlpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_aaauser_vpnurlpolicy_binding" "tf_aaauser_vpnurlpolicy_binding" {
+	username = citrixadc_aaauser.tf_aaauser.username
+	policy    = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
+	type     = "REQUEST"
+	priority  = 100
+	}
+
+
+
+  resource "citrixadc_aaauser" "tf_aaauser" {
+	username = "user1"
+	password = "my_pass"
+	}
+  resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+	name             = "tf_vpnurlaction"
+	linkname         = "new_link"
+	actualurl        = "http://www.citrix.com"
+	applicationtype  = "CVPN"
+	clientlessaccess = "OFF"
+	comment          = "Testing"
+	ssotype          = "unifiedgateway"
+	vservername      = "vserver1"
+	}
+  resource "citrixadc_vpnurlpolicy" "tf_vpnurlpolicy" {
+	name   = "new_policy"
+	rule   = "true"
+	action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+`
+
+// TestAccAaauser_vpnurlpolicy_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated id) is correctly upgraded when refreshed and
+// applied through the current Framework provider (which re-derives the canonical key:value id
+// on Read via SetAttrFromGet).
+func TestAccAaauser_vpnurlpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (2.2.0), writing state with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaauser_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpnurlpolicy_bindingExist("citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "id", "user1,new_policy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current Framework provider.
+			// Read exercises ParseIdString on the legacy id and re-derives the new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaauser_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpnurlpolicy_bindingExist("citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding", "id", "policy:new_policy,username:user1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauser_vpnurlpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: username,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"username", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_vpnurlpolicy_binding_basic},
+			{Config: testAccAaauser_vpnurlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+			{Config: testAccAaauser_vpnurlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+		},
+	})
+}
+
+func TestAccAaauser_vpnurlpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpnurlpolicy_binding.tf_aaauser_vpnurlpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnurlpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpnurlpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaauser_vpnurlpolicy_binding.Type(), "user1", map[string]string{"policy": "new_policy", "type": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_vpnurlpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpnurlpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

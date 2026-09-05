@@ -39,10 +39,12 @@ In addition to the arguments, the following attributes are available:
 * `vtep` - IP address of the VXLAN tunnel endpoint (VTEP) through which the IPv6 address of this ND6 entry is reachable.
 * `vxlan` - ID of the VXLAN on which the IPv6 address of this ND6 entry is reachable.
 
-## Import
+### Read-only nd6 metadata
 
-A nd6 can be imported using its neighbor, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nd6` resource); they are Computed/GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_nd6.tf_nd6 2001::5
-```
+* `state` - ND6 state (INCOMPLETE, REACHABLE, STALE, DELAY, PROBE).
+* `timeout` - Time elapsed.
+* `flags` - Flag for static/permanent entry.
+* `controlplane` - Whether this nd6 entry is populated by a control plane protocol.
+* `channel` - The tunnel that is bound to a netbridge.

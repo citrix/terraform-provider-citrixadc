@@ -35,6 +35,7 @@ type Sslcertkeybundle struct {
 
 	//------- Read only Parameter ---------;
 
+	Certkeybundledigest string `json:"certkeybundledigest,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

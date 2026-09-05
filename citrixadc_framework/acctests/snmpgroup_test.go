@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSnmpgroup_basic = `
@@ -61,6 +62,34 @@ func TestAccSnmpgroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "securitylevel", "noAuthNoPriv"),
 					resource.TestCheckResourceAttr("citrixadc_snmpgroup.tf_snmpgroup", "readviewname", "test2_name"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSnmpgroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmpgroup.tf_snmpgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Snmpgroup.Type(), "test_group", []string{"securitylevel:noAuthNoPriv"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist(resAddr, nil)),
 			},
 		},
 	})
@@ -159,6 +188,49 @@ func testAccCheckSnmpgroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSnmpgroup_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpgroup.tf_snmpgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpgroup_basic},
+			{
+				Config:                  testAccSnmpgroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSnmpgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist("citrixadc_snmpgroup.tf_snmpgroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist("citrixadc_snmpgroup.tf_snmpgroup", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSnmpgroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -171,6 +243,8 @@ func TestAccSnmpgroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "name", "tf_group_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "securitylevel", "noAuthNoPriv"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "readviewname", "tf_view_ds"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "id"),
 				),
 			},
 		},

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpneula_basic = `
@@ -120,6 +121,81 @@ func testAccCheckVpneulaDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpneula_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpneula.tf_vpneula"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpneulaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpneula_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpneulaExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpneula.Type(), "tf_vpneula"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpneula_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpneulaExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpneula_import(t *testing.T) {
+	const resAddr = "citrixadc_vpneula.tf_vpneula"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpneulaDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpneula_basic},
+			{
+				Config:                  testAccVpneula_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVpneula_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpneulaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpneula_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpneulaExist("citrixadc_vpneula.tf_vpneula", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpneula_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpneulaExist("citrixadc_vpneula.tf_vpneula", nil),
+				),
+			},
+		},
+	})
 }
 
 func TestAccVpneulaDataSource_basic(t *testing.T) {

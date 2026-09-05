@@ -1,8 +1,81 @@
 package nslimitidentifier
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// NslimitidentifierDataSourceModel describes the DATASOURCE data model. It
+// mirrors the configurable attributes surfaced by the datasource PLUS the
+// read-only rate-limit metadata the NITRO `nslimitidentifier` GET returns. It is
+// decoupled from the resource model so the data source can expose the full GET
+// projection (including GET-only fields the resource intentionally omits).
+type NslimitidentifierDataSourceModel struct {
+	Id                types.String `tfsdk:"id"`
+	Limitidentifier   types.String `tfsdk:"limitidentifier"`
+	Alertsintimeslice types.Int64  `tfsdk:"alertsintimeslice"`
+	Limittype         types.String `tfsdk:"limittype"`
+	Maxbandwidth      types.Int64  `tfsdk:"maxbandwidth"`
+	Mode              types.String `tfsdk:"mode"`
+	Selectorname      types.String `tfsdk:"selectorname"`
+	Threshold         types.Int64  `tfsdk:"threshold"`
+	Timealign         types.String `tfsdk:"timealign"`
+	Timeslice         types.Int64  `tfsdk:"timeslice"`
+	Trapsintimeslice  types.Int64  `tfsdk:"trapsintimeslice"`
+
+	// Read-only (GET-only) rate-limit metadata from the NITRO doc read-only set
+	// (zion73x_readonly/nslimitidentifier.json). Never settable; from GET.
+	Ngname                    types.String `tfsdk:"ngname"`
+	Hits                      types.Int64  `tfsdk:"hits"`
+	Drop                      types.Int64  `tfsdk:"drop"`
+	Rule                      types.List   `tfsdk:"rule"`
+	Time                      types.Int64  `tfsdk:"time"`
+	Total                     types.Int64  `tfsdk:"total"`
+	Trapscomputedintimeslice  types.Int64  `tfsdk:"trapscomputedintimeslice"`
+	Computedtraptimeslice     types.Int64  `tfsdk:"computedtraptimeslice"`
+	Alertscomputedintimeslice types.Int64  `tfsdk:"alertscomputedintimeslice"`
+	Computedalerttimeslice    types.Int64  `tfsdk:"computedalerttimeslice"`
+	Referencecount            types.Int64  `tfsdk:"referencecount"`
+}
+
+// nslimitidentifierDataSourceSetAttrFromGet projects a NITRO nslimitidentifier
+// GET response onto the data-source model using the shared utils.MapGet*
+// helpers. Attributes the GET omits are left Null.
+func nslimitidentifierDataSourceSetAttrFromGet(ctx context.Context, data *NslimitidentifierDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nslimitidentifierDataSourceSetAttrFromGet Function")
+
+	data.Limitidentifier = utils.MapGetString(g, "limitidentifier")
+	data.Alertsintimeslice = utils.MapGetInt64(g, "alertsintimeslice")
+	data.Limittype = utils.MapGetString(g, "limittype")
+	data.Maxbandwidth = utils.MapGetInt64(g, "maxbandwidth")
+	data.Mode = utils.MapGetString(g, "mode")
+	data.Selectorname = utils.MapGetString(g, "selectorname")
+	data.Threshold = utils.MapGetInt64(g, "threshold")
+	data.Timealign = utils.MapGetString(g, "timealign")
+	data.Timeslice = utils.MapGetInt64(g, "timeslice")
+	data.Trapsintimeslice = utils.MapGetInt64(g, "trapsintimeslice")
+
+	// Read-only rate-limit metadata.
+	data.Ngname = utils.MapGetString(g, "ngname")
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Drop = utils.MapGetInt64(g, "drop")
+	data.Rule = utils.MapGetStringList(g, "rule")
+	data.Time = utils.MapGetInt64(g, "time")
+	data.Total = utils.MapGetInt64(g, "total")
+	data.Trapscomputedintimeslice = utils.MapGetInt64(g, "trapscomputedintimeslice")
+	data.Computedtraptimeslice = utils.MapGetInt64(g, "computedtraptimeslice")
+	data.Alertscomputedintimeslice = utils.MapGetInt64(g, "alertscomputedintimeslice")
+	data.Computedalerttimeslice = utils.MapGetInt64(g, "computedalerttimeslice")
+	data.Referencecount = utils.MapGetInt64(g, "referencecount")
+
+	// ID matches the resource: limitidentifier.
+	data.Id = types.StringValue(data.Limitidentifier.ValueString())
+}
 
 func NslimitidentifierDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -13,6 +86,11 @@ func NslimitidentifierDataSourceSchema() schema.Schema {
 			"limitidentifier": schema.StringAttribute{
 				Required:    true,
 				Description: "Name for a rate limit identifier. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters. Reserved words must not be used.",
+			},
+			"alertsintimeslice": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Number of appflow alerts to be sent in the timeslice configured. A value of 0 indicates that alerts are disabled. A value of 65535 indicates no limit on number of appflow alerts.",
 			},
 			"limittype": schema.StringAttribute{
 				Optional:    true,
@@ -39,6 +117,11 @@ func NslimitidentifierDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Maximum number of requests that are allowed in the given timeslice when requests (mode is set as REQUEST_RATE) are tracked per timeslice.\nWhen connections (mode is set as CONNECTION) are tracked, it is the total number of connections that would be let through.",
 			},
+			"timealign": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Value MINUTE will align the time windows for a configured timeslice to Minute boundary. TimeSlice values should be integrals of 60000ms when value MINUTE is choosen. Default : NONE, timeslice alignments will happen with next 10ms.",
+			},
 			"timeslice": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -48,6 +131,53 @@ func NslimitidentifierDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Number of traps to be sent in the timeslice configured. A value of 0 indicates that traps are disabled.",
+			},
+
+			// Read-only (GET-only) rate-limit metadata surfaced by the data source.
+			"ngname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Nodegroup name to which this identifier belongs. Null when the appliance omits it.",
+			},
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of times this identifier was evaluated. Null when the appliance omits it.",
+			},
+			"drop": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of times action was taken. Null when the appliance omits it.",
+			},
+			"rule": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Rule. Null when the appliance omits it.",
+			},
+			"time": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time interval considered for rate limiting. Null when the appliance omits it.",
+			},
+			"total": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Maximum number of requests permitted in the computed timeslice. Null when the appliance omits it.",
+			},
+			"trapscomputedintimeslice": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of traps that would be sent in the timeslice configured. Null when the appliance omits it.",
+			},
+			"computedtraptimeslice": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The time interval computed for sending traps. Null when the appliance omits it.",
+			},
+			"alertscomputedintimeslice": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of appflow alerts that would be sent in the timeslice configured. Null when the appliance omits it.",
+			},
+			"computedalerttimeslice": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The time interval computed for sending appflow alerts. Null when the appliance omits it.",
+			},
+			"referencecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Total number of transactions pointing to this entry. Null when the appliance omits it.",
 			},
 		},
 	}

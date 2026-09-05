@@ -48,3 +48,9 @@ In addition to the arguments, the following attributes are available:
 * `state` - Initial state of the service after binding.
 * `weight` - Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
 * `id` - The ID of the gslbservicegroup_lbmonitor_binding. It is the concatenation of the `servicegroupname` and `monitor_name` attributes separated by a comma.
+
+### Read-only gslbservicegroup_lbmonitor_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbservicegroup_lbmonitor_binding` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `monweight` - Weight of the monitor that is bound to the GSLB service group.

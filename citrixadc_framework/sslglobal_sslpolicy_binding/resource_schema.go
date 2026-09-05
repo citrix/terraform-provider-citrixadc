@@ -198,6 +198,13 @@ func sslglobal_sslpolicy_bindingSetAttrFromGet(ctx context.Context, data *Sslglo
 	}
 
 	// Pattern 6: ID is set exactly once in Create; do not recompute it here.
+
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

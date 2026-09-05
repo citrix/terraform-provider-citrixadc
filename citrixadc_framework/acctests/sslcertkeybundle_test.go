@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslcertkeybundle supports add + update (?action=update) + delete by certkeybundlename.
@@ -234,7 +234,39 @@ func TestAccSslcertkeybundleDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkeybundle.tf_sslcertkeybundle", "certkeybundlename", "tf_sslcertkeybundle"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkeybundle.tf_sslcertkeybundle", "bundlefile", "servercert1_certkeybundle.pem"),
+					// id is the universal runtime-binding proof; read-only
+					// metadata attrs are instance/config-dependent and Null when
+					// the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkeybundle.tf_sslcertkeybundle", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslcertkeybundle_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkeybundle.tf_sslcertkeybundle"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeybundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeybundleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkeybundle_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkeybundleExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcertkeybundle.Type(), "tf_sslcertkeybundle"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcertkeybundle_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkeybundleExist(resAddr, nil)),
 			},
 		},
 	})

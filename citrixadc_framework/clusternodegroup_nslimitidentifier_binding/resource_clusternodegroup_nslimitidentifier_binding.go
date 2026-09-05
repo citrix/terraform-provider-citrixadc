@@ -3,8 +3,10 @@ package clusternodegroup_nslimitidentifier_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +56,33 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Create(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Creating clusternodegroup_nslimitidentifier_binding resource")
-
-	// clusternodegroup_nslimitidentifier_binding := clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig(ctx, &data)
+	clusternodegroup_nslimitidentifier_binding := clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), &clusternodegroup_nslimitidentifier_binding)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_nslimitidentifier_binding, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("clusternodegroup_nslimitidentifier_binding-config")
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), &clusternodegroup_nslimitidentifier_binding)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_nslimitidentifier_binding, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created clusternodegroup_nslimitidentifier_binding resource")
 
+	// Set ID for the resource before reading state (new key:value format)
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("identifiername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Identifiername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	// Read the updated state back
 	r.readClusternodegroupNslimitidentifierBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "clusternodegroup_nslimitidentifier_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,14 +101,25 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Read(ctx context.Cont
 	tflog.Debug(ctx, "Reading clusternodegroup_nslimitidentifier_binding resource")
 
 	r.readClusternodegroupNslimitidentifierBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ClusternodegroupNslimitidentifierBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ClusternodegroupNslimitidentifierBindingResourceModel
+	var data, state ClusternodegroupNslimitidentifierBindingResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +127,24 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Update(ctx context.Co
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating clusternodegroup_nslimitidentifier_binding resource")
 
-	// Create API request body from the model
-	// clusternodegroup_nslimitidentifier_binding := clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), &clusternodegroup_nslimitidentifier_binding)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusternodegroup_nslimitidentifier_binding, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated clusternodegroup_nslimitidentifier_binding resource")
+	// The SDK v2 resource had no Update; all attributes are ForceNew (RequiresReplace).
+	// Nothing to update on the ADC - just refresh state.
+	tflog.Debug(ctx, "No updateable attributes for clusternodegroup_nslimitidentifier_binding resource, skipping update")
 
 	// Read the updated state back
 	r.readClusternodegroupNslimitidentifierBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "clusternodegroup_nslimitidentifier_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +161,97 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Delete(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Deleting clusternodegroup_nslimitidentifier_binding resource")
+	// Binding with parent - delete using DeleteResourceWithArgsMap
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "identifiername"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
 
-	// For clusternodegroup_nslimitidentifier_binding, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted clusternodegroup_nslimitidentifier_binding resource from state")
+	name_value, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+		return
+	}
+
+	var argsMap map[string]string = make(map[string]string)
+	if val, ok := idMap["identifiername"]; ok && val != "" {
+		argsMap["identifiername"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Clusternodegroup_nslimitidentifier_binding.Type(), name_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete clusternodegroup_nslimitidentifier_binding, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted clusternodegroup_nslimitidentifier_binding binding")
 }
 
 // Helper function to read clusternodegroup_nslimitidentifier_binding data from API
 func (r *ClusternodegroupNslimitidentifierBindingResource) readClusternodegroupNslimitidentifierBindingFromApi(ctx context.Context, data *ClusternodegroupNslimitidentifierBindingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), "")
+
+	// Case 4: Array filter with parent ID - parse from ID
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "identifiername"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+
+	var dataArr []map[string]interface{}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Clusternodegroup_nslimitidentifier_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read clusternodegroup_nslimitidentifier_binding, got error: %s", err))
 		return
 	}
 
-	clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx, data, getResponseData)
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+	if len(dataArr) == 0 {
+		data.Id = types.StringNull()
+		return
+	}
 
+	// Iterate through results to find the one with the right id
+	foundIndex := -1
+	for i, v := range dataArr {
+		match := true
+
+		// Check identifiername
+		if idVal, ok := idMap["identifiername"]; ok {
+			if val, ok := v["identifiername"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Binding not present in the returned set: signal removal via a null Id (see above).
+	if foundIndex == -1 {
+		data.Id = types.StringNull()
+		return
+	}
+
+	clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

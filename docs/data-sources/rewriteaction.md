@@ -46,3 +46,15 @@ In addition to the arguments, the following attributes are exported:
   * `insert_before_all` - Insert before all occurrences.
   * `insert_after_all` - Insert after all occurrences.
   And many more action types for various protocols and use cases.
+
+### Read-only rewriteaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_rewriteaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `referencecount` - The number of references to the action.
+* `description` - Description of the action.
+* `isdefault` - A value of true is returned if it is a default rewriteaction.
+* `builtin` - Flag to determine whether the rewrite action is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.

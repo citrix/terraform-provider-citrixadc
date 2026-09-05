@@ -94,7 +94,7 @@ func (d *NetprofileNatruleBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	netprofile_natrule_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	netprofile_natrule_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

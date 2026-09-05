@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,10 +30,12 @@ func (r *AppfwurlencodedformcontenttypeResource) Schema(ctx context.Context, req
 			},
 			"isregex": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Is urlencoded form content type a regular expression?",
 			},
 			"urlencodedformcontenttypevalue": schema.StringAttribute{
@@ -48,15 +49,15 @@ func (r *AppfwurlencodedformcontenttypeResource) Schema(ctx context.Context, req
 	}
 }
 
-func appfwurlencodedformcontenttypeGetThePayloadFromtheConfig(ctx context.Context, data *AppfwurlencodedformcontenttypeResourceModel) appfw.Appfwurlencodedformcontenttype {
-	tflog.Debug(ctx, "In appfwurlencodedformcontenttypeGetThePayloadFromtheConfig Function")
+func appfwurlencodedformcontenttypeGetThePayloadFromthePlan(ctx context.Context, data *AppfwurlencodedformcontenttypeResourceModel) appfw.Appfwurlencodedformcontenttype {
+	tflog.Debug(ctx, "In appfwurlencodedformcontenttypeGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwurlencodedformcontenttype := appfw.Appfwurlencodedformcontenttype{}
-	if !data.Isregex.IsNull() {
+	if !data.Isregex.IsNull() && !data.Isregex.IsUnknown() {
 		appfwurlencodedformcontenttype.Isregex = data.Isregex.ValueString()
 	}
-	if !data.Urlencodedformcontenttypevalue.IsNull() {
+	if !data.Urlencodedformcontenttypevalue.IsNull() && !data.Urlencodedformcontenttypevalue.IsUnknown() {
 		appfwurlencodedformcontenttype.Urlencodedformcontenttypevalue = data.Urlencodedformcontenttypevalue.ValueString()
 	}
 

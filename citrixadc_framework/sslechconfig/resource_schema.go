@@ -76,7 +76,9 @@ func (r *SslechconfigResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default:     int64default.StaticInt64(65037),
 				Description: "The version of ECH for which this configuration is used.",

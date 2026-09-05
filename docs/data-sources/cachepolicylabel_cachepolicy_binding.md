@@ -6,7 +6,7 @@ subcategory: "Integrated Caching"
 
 The cachepolicylabel_cachepolicy_binding data source allows you to retrieve information about a specific binding between a cache policy label and a cache policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_cachepolicylabel_cachepolicy_binding" "example" {
@@ -33,8 +33,8 @@ output "invoke" {
 In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `id` - The id of the cachepolicylabel_cachepolicy_binding. It is a system-generated identifier.
+* `id` - The id of the cachepolicylabel_cachepolicy_binding. It is the concatenation of `labelname` and `policyname` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
 * `invoke` - Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next-lower priority.
-* `invoke_labelname` - Name of the policy label to invoke if the current policy rule evaluates to TRUE.
+* `invokelabelname` - Name of the policy label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label to invoke: an unnamed label associated with a virtual server, or user-defined policy label.

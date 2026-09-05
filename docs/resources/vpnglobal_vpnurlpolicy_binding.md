@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_vpnurlpolicy_binding
 
-The vpnglobal_vpnurlpolicy_binding resource is used to bind vpnurlpolicy  to vpnglobal configuration.
+The vpnglobal_vpnurlpolicy_binding resource is used to bind vpnurlpolicy to vpnglobal configuration.
 
 
 ## Example usage

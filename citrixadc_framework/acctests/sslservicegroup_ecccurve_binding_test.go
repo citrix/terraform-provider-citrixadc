@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslservicegroup_ecccurve_binding_basic = `
@@ -96,10 +99,12 @@ func testAccCheckSslservicegroup_ecccurve_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicegroupname := idSlice[0]
-		ecccurvename := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "ecccurvename"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		servicegroupname := idMap["servicegroupname"]
+		ecccurvename := idMap["ecccurvename"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservicegroup_ecccurve_binding",
@@ -138,13 +143,12 @@ func testAccCheckSslservicegroup_ecccurve_bindingNotExist(n string, id string) r
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"servicegroupname", "ecccurvename"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		sslservicegroupName := idSlice[0]
-		ecccurvename := idSlice[1]
+		sslservicegroupName := idMap["servicegroupname"]
+		ecccurvename := idMap["ecccurvename"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservicegroup_ecccurve_binding",
@@ -241,6 +245,140 @@ func TestAccSslservicegroup_ecccurve_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding_ds", "servicegroupname", "tf_servicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding_ds", "ecccurvename", "P_256"),
 				),
+			},
+		},
+	})
+}
+
+// testAccSslservicegroup_ecccurve_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current Framework schema (it uses the SDK v2
+// attribute names that the migration restored). Values mirror the _basic config
+// so the shared Exist/Destroy helpers and resource addresses match.
+const testAccSslservicegroup_ecccurve_binding_upgrade_basic = `
+	resource "citrixadc_sslservicegroup_ecccurve_binding" "tf_sslservicegroup_ecccurve_binding" {
+		ecccurvename = "P_256"
+		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+	}
+
+	resource "citrixadc_servicegroup" "tf_servicegroup" {
+		servicegroupname = "tf_servicegroup"
+		servicetype = "SSL"
+	}
+`
+
+func TestAccSslservicegroup_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslservicegroup_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSslservicegroup_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_ecccurve_bindingExist("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", "id", "tf_servicegroup,P_256"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslservicegroup_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservicegroup_ecccurve_bindingExist("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", "id", "ecccurvename:P_256,servicegroupname:tf_servicegroup"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslservicegroup_ecccurve_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: servicegroupname,ecccurvename) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"servicegroupname", "ecccurvename"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservicegroup_ecccurve_binding_basic},
+			{Config: testAccSslservicegroup_ecccurve_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslservicegroup_ecccurve_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccSslservicegroup_ecccurve_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservicegroup_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservicegroup_ecccurve_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslservicegroup_ecccurve_binding.Type(), "tf_servicegroup", map[string]string{"ecccurvename": "P_256"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslservicegroup_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservicegroup_ecccurve_bindingExist(resAddr, nil)),
 			},
 		},
 	})

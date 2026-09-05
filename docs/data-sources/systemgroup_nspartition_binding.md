@@ -32,4 +32,4 @@ output "partitionname" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the systemgroup_nspartition_binding. It has the format `<groupname>,<partitionname>`.
+* `id` - The id of the systemgroup_nspartition_binding. It is the concatenation of the `groupname` and `partitionname` attributes separated by a comma.

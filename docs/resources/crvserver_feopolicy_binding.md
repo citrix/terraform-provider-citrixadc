@@ -4,22 +4,22 @@ subcategory: "Cache Redirection"
 
 # Resource: crvserver_feopolicy_binding
 
-The crvserver_feopolicy_binding resource is used to create CRvserver Foepolicy Binding.
+The crvserver_feopolicy_binding resource is used to create CRvserver Feopolicy Binding.
 
 
 ## Example usage
 
 ```hcl
 resource "citrixadc_crvserver" "crvserver" {
-	name        = "my_vserver"
-	servicetype = "HTTP"
-	arp         = "OFF"
-  }
-  resource "citrixadc_crvserver_feopolicy_binding" "crvserver_feopolicy_binding" {
-	name       = citrixadc_crvserver.crvserver.name
-	policyname = "tf_feopolicy"
-	priority   = 10
-  }
+  name        = "my_vserver"
+  servicetype = "HTTP"
+  arp         = "OFF"
+}
+resource "citrixadc_crvserver_feopolicy_binding" "crvserver_feopolicy_binding" {
+  name       = citrixadc_crvserver.crvserver.name
+  policyname = "tf_feopolicy"
+  priority   = 10
+}
 ```
 
 
@@ -31,7 +31,7 @@ resource "citrixadc_crvserver" "crvserver" {
 * `invoke` - (Optional) Invoke a policy label if this policy's rule evaluates to TRUE (valid only for default-syntax policies such as application firewall, transform, integrated cache, rewrite, responder, and content switching).
 * `labelname` - (Optional) Name of the label to be invoked.
 * `labeltype` - (Optional) Type of label to be invoked.
-* `policyname` - (Optional) Policies bound to this vserver.
+* `policyname` - (Required) Policies bound to this vserver.
 * `priority` - (Optional) The priority for the policy.
 * `targetvserver` - (Optional) Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
 
@@ -40,7 +40,7 @@ resource "citrixadc_crvserver" "crvserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_feopolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the crvserver_feopolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 
 
 ## Import

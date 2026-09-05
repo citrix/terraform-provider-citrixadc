@@ -35,3 +35,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the snmpmib. It is a unique string prefixed with "tf-snmpmib-".
 
+
+## Import
+
+A snmpmib can be imported using its ownernode, e.g.
+
+```shell
+terraform import citrixadc_snmpmib.tf_snmpmib <ownernode>
+```

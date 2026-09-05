@@ -28,3 +28,11 @@ In addition to the arguments, the following attributes are exported:
 * `group` - Name of the configured SNMPv3 group to which to bind this SNMPv3 user. The access rights (bound SNMPv3 views) and security level set for this group are assigned to this user.
 * `privpasswd` - Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter.
 * `privtype` - Encryption algorithm used by the Citrix ADC and the SNMPv3 user for encrypting the communication between them. You must specify the same encryption algorithm when you configure the SNMPv3 user in the SNMP manager.
+
+### Read-only snmpuser metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_snmpuser` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `engineid` - The context engine ID of the user.
+* `storagetype` - The storage type for this user (for example `volatile`, `nonVolatile`).
+* `status` - The status of this user (for example `active`).

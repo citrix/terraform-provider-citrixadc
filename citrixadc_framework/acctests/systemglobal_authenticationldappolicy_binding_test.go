@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystemglobal_authenticationldappolicy_binding_basic = `
@@ -201,6 +202,67 @@ func testAccCheckSystemglobal_authenticationldappolicy_bindingDestroy(s *terrafo
 	return nil
 }
 
+const testAccSystemglobal_authenticationldappolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_authenticationldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+	resource "citrixadc_systemglobal_authenticationldappolicy_binding" "tf_bind" {
+		policyname     = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		globalbindtype = "SYSTEM_GLOBAL"
+		priority       = 88
+		feature        = "SYSTEM"
+	}
+`
+
+func TestAccSystemglobal_authenticationldappolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemglobal_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (single key => plain value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSystemglobal_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationldappolicy_bindingExist("citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "id", "tf_authenticationldappolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new form. This is a
+				// single-key binding, so the new canonical id is the plain value and
+				// is identical to the legacy id.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemglobal_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemglobal_authenticationldappolicy_bindingExist("citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "id", "tf_authenticationldappolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccSystemglobal_authenticationldappolicy_binding_DataSource_basic = `
 	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 		name          = "tf_ldapaction"
@@ -241,6 +303,47 @@ func TestAccSystemglobal_authenticationldappolicy_bindingDataSource_basic(t *tes
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "globalbindtype", "SYSTEM_GLOBAL"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind", "feature", "SYSTEM"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSystemglobal_authenticationldappolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemglobal_authenticationldappolicy_binding_basic},
+			{Config: testAccSystemglobal_authenticationldappolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccSystemglobal_authenticationldappolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_authenticationldappolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_authenticationldappolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationldappolicy_binding.Type(), "", []string{"policyname:tf_authenticationldappolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemglobal_authenticationldappolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_authenticationldappolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

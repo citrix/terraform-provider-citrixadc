@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_authenticationldappolicy_binding_basic = `
@@ -121,10 +124,12 @@ func testAccCheckVpnvserver_authenticationldappolicy_bindingExist(n string, id *
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_authenticationldappolicy_binding",
@@ -257,6 +262,78 @@ const testAccVpnvserver_authenticationldappolicy_bindingDataSource_basic = `
 	}
 `
 
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// resource block and prerequisites; valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema.
+const testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "tf_ldapaction"
+		serverip      = "5.5.5.5"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationldappolicy" "tf_authenticationldappolicy" {
+		name      = "tf_ldappolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "vpn_vserver"
+		servicetype = "SSL"
+	}
+	resource "citrixadc_vpnvserver_authenticationldappolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationldappolicy.tf_authenticationldappolicy.name
+		priority  = 20
+	}
+`
+
+// TestAccVpnvserver_authenticationldappolicy_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release (legacy comma-joined id "name,policy")
+// is transparently upgraded by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through
+// the current Framework provider, whose Read parses the legacy id and recomputes it
+// to the new "name:<v>,policy:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_authenticationldappolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationldappolicy_bindingExist("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "id", "vpn_vserver,tf_ldappolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationldappolicy_bindingExist("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "id", "name:vpn_vserver,policy:tf_ldappolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_authenticationldappolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -270,6 +347,77 @@ func TestAccVpnvserver_authenticationldappolicy_bindingDataSource_basic(t *testi
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "policy", "tf_ldappolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "priority", "20"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationldappolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationldappolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationldappolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccVpnvserver_authenticationldappolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationldappolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationldappolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationldappolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnvserver_authenticationldappolicy_binding.Type(), "vpn_vserver", []string{"policy:tf_ldappolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_authenticationldappolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationldappolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

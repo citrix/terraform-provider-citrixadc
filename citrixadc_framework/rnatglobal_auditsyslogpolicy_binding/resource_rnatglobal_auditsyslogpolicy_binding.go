@@ -3,9 +3,9 @@ package rnatglobal_auditsyslogpolicy_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -68,11 +68,18 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Create(ctx context.Context,
 	tflog.Trace(ctx, "Created rnatglobal_auditsyslogpolicy_binding resource")
 
 	// Set ID for the resource before reading state
-	// Single unique attribute (policy) - plain value ID
+	// Single unique key (policy) - plain value ID (matches SDK v2 d.SetId(policy))
 	data.Id = types.StringValue(data.Policy.ValueString())
 
 	// Read the updated state back
 	r.readRnatglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "rnatglobal_auditsyslogpolicy_binding not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -91,12 +98,11 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Read(ctx context.Context, r
 	tflog.Debug(ctx, "Reading rnatglobal_auditsyslogpolicy_binding resource")
 
 	r.readRnatglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// If the resource was deleted out-of-band, remove it from state
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
 	if data.Id.IsNull() {
 		resp.State.RemoveResource(ctx)
 		return
@@ -144,6 +150,13 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Update(ctx context.Context,
 
 	// Read the updated state back
 	r.readRnatglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "rnatglobal_auditsyslogpolicy_binding not found on the ADC immediately after update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -160,12 +173,13 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Deleting rnatglobal_auditsyslogpolicy_binding resource")
-	// Global (singleton-parent) binding - delete via args=policy:<value>[,all:<value>].
-	// ID is the plain policy value (single key).
-	args := []string{fmt.Sprintf("policy:%s", utils.UrlEncode(data.Policy.ValueString()))}
-	// 'all' is a delete-only flag; include it only when explicitly set.
+	// Global binding - delete using DeleteResourceWithArgs with empty resource name.
+	// Single unique key (policy) is the plain-value ID; "all" is an optional delete arg
+	// (matches SDK v2 deleteRnatglobal_auditsyslogpolicy_bindingFunc).
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("policy:%s", url.QueryEscape(data.Policy.ValueString())))
 	if !data.All.IsNull() && !data.All.IsUnknown() && data.All.ValueBool() {
-		args = append(args, fmt.Sprintf("all:%s", utils.UrlEncode(fmt.Sprintf("%v", data.All.ValueBool()))))
+		args = append(args, fmt.Sprintf("all:%v", data.All.ValueBool()))
 	}
 
 	err := r.client.DeleteResourceWithArgs(service.Rnatglobal_auditsyslogpolicy_binding.Type(), "", args)
@@ -180,13 +194,8 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Delete(ctx context.Context,
 // Helper function to read rnatglobal_auditsyslogpolicy_binding data from API
 func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpolicyBindingFromApi(ctx context.Context, data *RnatglobalAuditsyslogpolicyBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Single key (policy). rnatglobal is a singleton global object with no parent name;
-	// the typed GET does not support args=, so read the full binding array and match
-	// on policy client-side. ID is the plain policy value.
-	policyId := data.Policy.ValueString()
-	if policyId == "" {
-		policyId = data.Id.ValueString()
-	}
+	// Single unique key (policy): the ID is the plain policy value (matches SDK v2).
+	policy := data.Id.ValueString()
 
 	var dataArr []map[string]interface{}
 
@@ -200,25 +209,24 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpo
 		return
 	}
 
-	// Resource is missing (deleted out-of-band); signal removal to Read.
+	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 	if len(dataArr) == 0 {
-		tflog.Warn(ctx, "rnatglobal_auditsyslogpolicy_binding returned empty array, removing from state")
 		data.Id = types.StringNull()
 		return
 	}
 
-	// Iterate through results to find the one matching policy
+	// Iterate through results to find the one with the matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		if val, ok := v["policy"].(string); ok && val == policyId {
+		if val, ok := v["policy"].(string); ok && val == policy {
 			foundIndex = i
 			break
 		}
 	}
 
-	// Resource is missing (deleted out-of-band); signal removal to Read.
+	// Binding not present in the returned set: signal removal via a null Id (see above).
 	if foundIndex == -1 {
-		tflog.Warn(ctx, "rnatglobal_auditsyslogpolicy_binding not found with the provided ID attributes, removing from state")
 		data.Id = types.StringNull()
 		return
 	}

@@ -107,15 +107,38 @@ func (r *GslbservicegroupResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *GslbservicegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state GslbservicegroupResourceModel
+	var data, config, state GslbservicegroupResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read raw config to detect attributes removed from config (candidates for unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Detect attributes that were removed from config and must be unset so the
+	// appliance reverts them to their defaults. Only attrs with a documented
+	// NITRO default (and a matching schema Default so config-removal produces a
+	// plan diff) are eligible.
+	attributesToUnset := []string{}
+	if !data.Appflowlog.Equal(state.Appflowlog) {
+		if config.Appflowlog.IsNull() {
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		}
+	}
+	if !data.Downstateflush.Equal(state.Downstateflush) {
+		if config.Downstateflush.IsNull() {
+			attributesToUnset = append(attributesToUnset, "downstateflush")
+		}
+	}
+	if !data.Healthmonitor.Equal(state.Healthmonitor) {
+		if config.Healthmonitor.IsNull() {
+			attributesToUnset = append(attributesToUnset, "healthmonitor")
+		}
 	}
 
 	// Preserve ID from prior state (tracks the live name).
@@ -161,6 +184,17 @@ func (r *GslbservicegroupResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	tflog.Trace(ctx, "Updated gslbservicegroup resource")
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Done after the PUT so any default the update payload carried for a
+	// removed attribute is superseded by the unset. Address the CURRENT LIVE name.
+	unsetIdPayload := map[string]interface{}{
+		"servicegroupname": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Gslbservicegroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset gslbservicegroup attributes, got error: %s", err))
+		return
+	}
 
 	// Read the current state back. SetAttrFromGet preserves the configured
 	// servicegroupname and newname; restore the plan values (belt-and-suspenders)

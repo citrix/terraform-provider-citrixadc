@@ -83,3 +83,12 @@ The following attributes are available:
 * `videoinsight` - Enable/disable the feature individually on appflow action.
 * `websaasappusagereporting` - On enabling this option, NGS will send data used by Web/saas app at the end of every HTTP transaction to configured collectors.
 * `id` - The id of the appflowparam. It is a system-generated identifier.
+
+### Read-only appflowparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appflowparam` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if the appflow param is built-in or not. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `tcpburstreporting` - TCP burst reporting enable/disable knob. Possible values: [ ENABLED, DISABLED ].
+* `tcpburstreportingthreshold` - TCP burst reporting threshold.

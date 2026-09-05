@@ -31,11 +31,3 @@ output "id" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the lsnclient. It has the same value as the `clientname` attribute.
-
-## Import
-
-A lsnclient can be imported using its clientname, e.g.
-
-```shell
-terraform import citrixadc_lsnclient.tf_lsnclient my_lsnclient
-```

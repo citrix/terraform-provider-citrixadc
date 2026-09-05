@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppflowaction_analyticsprofile_binding_basic = `
@@ -100,6 +103,49 @@ func TestAccAppflowaction_analyticsprofile_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppflowaction_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,analyticsprofile) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "analyticsprofile"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowaction_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowaction_analyticsprofile_binding_basic},
+			{Config: testAccAppflowaction_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppflowaction_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckAppflowaction_analyticsprofile_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -127,10 +173,12 @@ func testAccCheckAppflowaction_analyticsprofile_bindingExist(n string, id *strin
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		analyticsprofile := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "analyticsprofile"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		analyticsprofile := idMap["analyticsprofile"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appflowaction_analyticsprofile_binding",
@@ -276,6 +324,113 @@ func TestAccAppflowaction_analyticsprofile_bindingDataSource_basic(t *testing.T)
 					resource.TestCheckResourceAttr("data.citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding", "name", "test_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding", "analyticsprofile", "my_analyticsprofile"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppflowaction_analyticsprofile_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccAppflowaction_analyticsprofile_binding_upgrade_basic = `
+
+	resource "citrixadc_appflowaction_analyticsprofile_binding" "tf_appflowaction_analyticsprofile_binding" {
+		name             = citrixadc_appflowaction.tf_appflowaction.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name             = "my_analyticsprofile"
+		type             = "webinsight"
+		httppagetracking = "DISABLED"
+		httpurl          = "ENABLED"
+	}
+
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+		name            = "test_action"
+		collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name]
+		securityinsight = "ENABLED"
+		botinsight      = "ENABLED"
+		videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+		name      = "tf_collector"
+		ipaddress = "192.168.2.2"
+		port      = 80
+	}
+
+`
+
+// TestAccAppflowaction_analyticsprofile_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy id "test_action,my_analyticsprofile" —
+// the SDK v2 d.SetId(name,analyticsprofile)). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id; the
+// Framework recomputes the id on Read (SetAttrFromGet) into the canonical new format
+// "analyticsprofile:my_analyticsprofile,name:test_action".
+func TestAccAppflowaction_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowaction_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppflowaction_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowaction_analyticsprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "test_action,my_analyticsprofile"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppflowaction_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowaction_analyticsprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "analyticsprofile:my_analyticsprofile,name:test_action"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppflowaction_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowaction_analyticsprofile_binding.tf_appflowaction_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowaction_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowaction_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowaction_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appflowaction_analyticsprofile_binding.Type(), "test_action", map[string]string{"analyticsprofile": "my_analyticsprofile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowaction_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowaction_analyticsprofile_bindingExist(resAddr, nil)),
 			},
 		},
 	})

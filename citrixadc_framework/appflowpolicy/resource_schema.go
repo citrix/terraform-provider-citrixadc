@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -33,60 +34,92 @@ func (r *AppflowpolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the appflowpolicy resource.",
 			},
 			"action": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Name of the action to be associated with this policy.",
 			},
 			"comment": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments about this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at\n(@), equals (=), and hyphen (-) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow policy\" or 'my appflow policy').",
 			},
 			"newname": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attrs
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the policy. Must begin with an ASCII alphabetic or underscore (_)character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow policy\" or 'my appflow policy').",
 			},
 			"rule": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Expression or other value against which the traffic is evaluated. Must be a Boolean expression.\n\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.\n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
 			},
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Name of the appflow action to be associated with this policy when an undef event occurs.",
 			},
 		},
 	}
 }
 
-func appflowpolicyGetThePayloadFromtheConfig(ctx context.Context, data *AppflowpolicyResourceModel) appflow.Appflowpolicy {
-	tflog.Debug(ctx, "In appflowpolicyGetThePayloadFromtheConfig Function")
+func appflowpolicyGetThePayloadFromthePlan(ctx context.Context, data *AppflowpolicyResourceModel) appflow.Appflowpolicy {
+	tflog.Debug(ctx, "In appflowpolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appflowpolicy := appflow.Appflowpolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		appflowpolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appflowpolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appflowpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		appflowpolicy.Newname = data.Newname.ValueString()
-	}
-	if !data.Rule.IsNull() {
+	// Skip newname: rename-only parameter, not part of the add/update body
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		appflowpolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
+		appflowpolicy.Undefaction = data.Undefaction.ValueString()
+	}
+
+	return appflowpolicy
+}
+
+func appflowpolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AppflowpolicyResourceModel) appflow.Appflowpolicy {
+	tflog.Debug(ctx, "In appflowpolicyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	appflowpolicy := appflow.Appflowpolicy{}
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
+		appflowpolicy.Action = data.Action.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		appflowpolicy.Comment = data.Comment.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		appflowpolicy.Name = data.Name.ValueString()
+	}
+	// Skip newname: rename-only parameter, not part of the add/update body
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		appflowpolicy.Rule = data.Rule.ValueString()
+	}
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		appflowpolicy.Undefaction = data.Undefaction.ValueString()
 	}
 
@@ -105,13 +138,15 @@ func appflowpolicySetAttrFromGet(ctx context.Context, data *AppflowpolicyResourc
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		// Absent after unset/default -> empty string to match schema Default
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
 	} else {
 		data.Name = types.StringNull()
 	}
+	// newname is not returned by NITRO API (rename-only parameter)
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
 	} else {
@@ -125,11 +160,12 @@ func appflowpolicySetAttrFromGet(ctx context.Context, data *AppflowpolicyResourc
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
 	} else {
-		data.Undefaction = types.StringNull()
+		// Absent after unset/default -> empty string to match schema Default
+		data.Undefaction = types.StringValue("")
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAuditsyslogpolicy_basic(t *testing.T) {
@@ -50,6 +51,55 @@ func TestAccAuditsyslogpolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuditsyslogpolicyExist("citrixadc_auditsyslogpolicy.tf_syslogpolicy", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuditsyslogpolicy_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditsyslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist("citrixadc_auditsyslogpolicy.tf_syslogpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist("citrixadc_auditsyslogpolicy.tf_syslogpolicy", nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuditsyslogpolicy_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	const resAddr = "citrixadc_auditsyslogpolicy.tf_syslogpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditsyslogpolicy_basic_step1},
+			{
+				Config:                  testAccAuditsyslogpolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -123,7 +173,7 @@ const testAccAuditsyslogpolicy_basic_step1 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -144,7 +194,7 @@ const testAccAuditsyslogpolicy_basic_step2 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -170,7 +220,7 @@ const testAccAuditsyslogpolicy_basic_step3 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -191,6 +241,37 @@ resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy" {
 }
 
 `
+
+func TestAccAuditsyslogpolicy_selfHealing(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	const resAddr = "citrixadc_auditsyslogpolicy.tf_syslogpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditsyslogpolicy.Type(), "tf_auditsyslogpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
 
 func TestAccAuditsyslogpolicyDataSource_basic(t *testing.T) {
 	if isCpxRun {
@@ -217,7 +298,7 @@ const testAccAuditsyslogpolicyDataSource_basic = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction_ds" {
     name = "tf_syslogaction_ds"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",

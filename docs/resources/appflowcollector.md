@@ -26,6 +26,7 @@ resource "citrixadc_appflowcollector" "tf_appflowcollector" {
 * `netprofile` - (Optional) Netprofile to associate with the collector. The IP address defined in the profile is used as the source IP address for AppFlow traffic for this collector.  If you do not set this parameter, the Citrix ADC IP (NSIP) address is used as the source IP address.
 * `port` - (Optional) Port on which the collector listens.
 * `transport` - (Optional) Type of collector: either logstream or ipfix or rest.
+* `newname` - (Optional) New name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at(@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow coll" or 'my appflow coll').
 
 
 ## Attribute Reference

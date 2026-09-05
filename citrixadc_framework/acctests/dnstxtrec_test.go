@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnstxtrec_basic = `
@@ -119,6 +120,25 @@ func testAccCheckDnstxtrecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnstxtrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnstxtrec.dnstxtrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnstxtrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnstxtrec_basic},
+			{
+				Config:                  testAccDnstxtrec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"string"},
+			},
+		},
+	})
+}
+
 const testAccDnstxtrecDataSource_basic = `
 
 resource "citrixadc_dnstxtrec" "dnstxtrec" {
@@ -134,6 +154,30 @@ data "citrixadc_dnstxtrec" "dnstxtrec" {
 }
 `
 
+func TestAccDnstxtrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnstxtrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnstxtrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnstxtrecExist("citrixadc_dnstxtrec.dnstxtrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnstxtrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnstxtrecExist("citrixadc_dnstxtrec.dnstxtrec", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnstxtrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -144,6 +188,8 @@ func TestAccDnstxtrecDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dnstxtrec.dnstxtrec", "domain", "tfacc-ds-txtrec-test.local"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnstxtrec.dnstxtrec", "ttl", "3600"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnstxtrec.dnstxtrec", "id"),
 				),
 			},
 		},

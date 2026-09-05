@@ -134,6 +134,10 @@ type Servicegroup struct {
 	*/
 	Httpprofilename string `json:"httpprofilename,omitempty"`
 	/**
+	* Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.
+	*/
+	Aigwprofilename string `json:"aigwprofilename,omitempty"`
+	/**
 	* Name of QUIC profile which will be attached to the service group.
 	*/
 	Quicprofilename string `json:"quicprofilename,omitempty"`
@@ -181,6 +185,14 @@ type Servicegroup struct {
 	* Name of the Kafka topic.
 	*/
 	Topicname string `json:"topicname,omitempty"`
+	/**
+	* Name of MCP profile which will be attached to the servicegroup.
+	*/
+	Mcpprofilename string `json:"mcpprofilename,omitempty"`
+	/**
+	* Name of the WASM module to bind to this service.
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
 	/**
 	* Name of the server to which to bind the service group.
 	*/

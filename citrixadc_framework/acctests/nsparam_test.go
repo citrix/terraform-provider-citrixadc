@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccNsparam_basic(t *testing.T) {
@@ -196,3 +197,145 @@ const testAccNsparamDataSource_basic = `
 data "citrixadc_nsparam" "test" {
 }
 `
+
+func TestAccNsparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsparam_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsparamExist("citrixadc_nsparam.tf_nsparam", nil, nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsparam_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsparamExist("citrixadc_nsparam.tf_nsparam", nil, nil)),
+			},
+		},
+	})
+}
+
+// The nsparam unset test covers the mutable, server-defaulted attributes wired
+// into attributesToUnset. Step 1 sets each to a valid non-default value; step 2
+// removes them from config, so the provider must ?action=unset them and the
+// appliance reverts to the documented NITRO defaults.
+const testAccNsparam_unset_step1 = `
+resource "citrixadc_nsparam" "tf_unset" {
+  advancedanalyticsstats    = "ENABLED"
+  aftpallowrandomsourceport = "ENABLED"
+  securecookie              = "DISABLED"
+  tcpcip                    = "ENABLED"
+  proxyprotocol             = "ENABLED"
+  pmtumin                   = 600
+  pmtutimeout               = 20
+  grantquotamaxclient       = 20
+  exclusivequotamaxclient   = 70
+  grantquotaspillover       = 20
+  exclusivequotaspillover   = 70
+}
+`
+
+const testAccNsparam_unset_step2 = `
+resource "citrixadc_nsparam" "tf_unset" {
+  # All unset-eligible attributes removed from config -> the provider must unset
+  # them (revert to NITRO defaults).
+}
+`
+
+func TestAccNsparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "advancedanalyticsstats", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "aftpallowrandomsourceport", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "securecookie", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "tcpcip", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "proxyprotocol", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "pmtumin", "600"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "pmtutimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "grantquotamaxclient", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "exclusivequotamaxclient", "70"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "grantquotaspillover", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "exclusivequotaspillover", "70"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNsparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "advancedanalyticsstats", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "aftpallowrandomsourceport", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "securecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "tcpcip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "proxyprotocol", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "pmtumin", "576"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "pmtutimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "grantquotamaxclient", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "exclusivequotamaxclient", "80"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "grantquotaspillover", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nsparam.tf_unset", "exclusivequotaspillover", "80"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsparamADCValue("advancedanalyticsstats", "DISABLED"),
+					testAccCheckNsparamADCValue("securecookie", "ENABLED"),
+					testAccCheckNsparamADCValue("pmtumin", "576"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNsparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsparam not found on appliance")
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("nsparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccNsparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nsparam.tf_nsparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsparam_basic_step1},
+			{
+				Config:                  testAccNsparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

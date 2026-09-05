@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *DnsviewResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating dnsview resource")
 
-	// dnsview := dnsviewGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	dnsview := dnsviewGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsview.Type(), &dnsview)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsview, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsview-config")
+	// Named resource - use AddResource keyed on the primary attribute (viewname)
+	viewname_value := data.Viewname.ValueString()
+	_, err := r.client.AddResource(service.Dnsview.Type(), viewname_value, &dnsview)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsview, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsview resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Viewname.ValueString()))
+
 	// Read the updated state back
-	r.readDnsviewFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsviewFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsview not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *DnsviewResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading dnsview resource")
 
-	r.readDnsviewFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsviewFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsviewResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsviewResourceModel
+	var data, state DnsviewResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,21 @@ func (r *DnsviewResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	tflog.Debug(ctx, "Updating dnsview resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// dnsview := dnsviewGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsview.Type(), &dnsview)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsview, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated dnsview resource")
+	// dnsview has no updatable attributes: viewname is the primary key and
+	// forces replacement, so this Update path is only reached for a no-op.
+	// Mirror the SDK v2 behavior (which had no Update) by simply re-reading.
+	tflog.Debug(ctx, "Updating dnsview resource (no updatable attributes; re-reading state)")
 
 	// Read the updated state back
-	r.readDnsviewFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsviewFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsview not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +154,37 @@ func (r *DnsviewResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	tflog.Debug(ctx, "Deleting dnsview resource")
 
-	// For dnsview, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsview resource from state")
+	// Named resource - delete using DeleteResource keyed on viewname
+	viewname_value := data.Viewname.ValueString()
+	err := r.client.DeleteResource(service.Dnsview.Type(), viewname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsview, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted dnsview resource")
 }
 
-// Helper function to read dnsview data from API
-func (r *DnsviewResource) readDnsviewFromApi(ctx context.Context, data *DnsviewResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsview.Type(), "")
+// Helper function to read dnsview data from API.
+// Returns false if the resource no longer exists on the ADC.
+func (r *DnsviewResource) readDnsviewFromApi(ctx context.Context, data *DnsviewResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain viewname value
+	viewname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Dnsview.Type(), viewname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsview, got error: %s", err))
-		return
+		return false
 	}
 
 	dnsviewSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

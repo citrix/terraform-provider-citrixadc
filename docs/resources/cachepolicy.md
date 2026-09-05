@@ -30,6 +30,7 @@ resource "citrixadc_cachepolicy" "tf_cachepolicy" {
 * `invalobjects` - (Optional) Content groups(s) in which the objects will be invalidated if the action is INVAL.
 * `storeingroup` - (Optional) Name of the content group in which to store the object when the final result of policy evaluation is CACHE. The content group must exist before being mentioned here. Use the "show cache contentgroup" command to view the list of existing content groups.
 * `undefaction` - (Optional) Action to be performed when the result of rule evaluation is undefined.
+* `newname` - (Optional) New name for the cache policy. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 
 
 ## Attribute Reference

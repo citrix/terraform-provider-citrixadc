@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *FisResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	tflog.Debug(ctx, "Creating fis resource")
 
-	// fis := fisGetThePayloadFromtheConfig(ctx, &data)
+	fis := fisGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Fis.Type(), &fis)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create fis, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("fis-config")
+	// Named resource - use AddResource
+	fisName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Fis.Type(), fisName, &fis)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create fis, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created fis resource")
 
+	// Set ID for the resource before reading state.
+	// Case 2: Single unique attribute - use plain value (name) as ID
+	data.Id = types.StringValue(fisName)
+
 	// Read the updated state back
-	r.readFisFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readFisFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "fis not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *FisResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	tflog.Debug(ctx, "Reading fis resource")
 
-	r.readFisFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readFisFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *FisResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data FisResourceModel
+	var data, state FisResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,20 @@ func (r *FisResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	tflog.Debug(ctx, "Updating fis resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// fis := fisGetThePayloadFromtheConfig(ctx, &data)
+	// fis exposes no NITRO "update" operation, and both name and ownernode are
+	// ForceNew (RequiresReplace), so Terraform never reaches Update for a real
+	// change. Read the current state back defensively.
+	tflog.Debug(ctx, "Updating fis resource (no-op: all attributes require replacement)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Fis.Type(), &fis)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update fis, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated fis resource")
-
-	// Read the updated state back
-	r.readFisFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readFisFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "fis not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +152,33 @@ func (r *FisResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	tflog.Debug(ctx, "Deleting fis resource")
 
-	// For fis, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted fis resource from state")
+	// Named resource - delete using DeleteResource keyed on the name (ID)
+	fisName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Fis.Type(), fisName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete fis, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted fis resource")
 }
 
-// Helper function to read fis data from API
-func (r *FisResource) readFisFromApi(ctx context.Context, data *FisResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Fis.Type(), "")
+// Helper function to read fis data from API. Returns false when the resource no
+// longer exists on the ADC (so callers can drop it from state).
+func (r *FisResource) readFisFromApi(ctx context.Context, data *FisResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	fisName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Fis.Type(), fisName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read fis, got error: %s", err))
-		return
+		return false
 	}
 
 	fisSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

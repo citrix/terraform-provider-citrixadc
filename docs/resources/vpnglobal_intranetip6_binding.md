@@ -4,15 +4,15 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_intranetip6_binding
 
-The vpnglobal_intranetip6_binding resource is used to bind intranetip6 to vpnglobal congiguration.
+The vpnglobal_intranetip6_binding resource is used to bind an intranet IPv6 address or range to the vpnglobal configuration.
 
 
 ## Example usage
 
 ```hcl
 resource "citrixadc_vpnglobal_intranetip6_binding" "tf_bind" {
-  intranetip6 = "2.3.4.5"
-  numaddr     = "45"
+  intranetip6 = "2002::1"
+  numaddr     = 45
 }
 ```
 
@@ -36,5 +36,5 @@ In addition to the arguments, the following attributes are available:
 A vpnglobal_intranetip6_binding can be imported using its intranetip6, e.g.
 
 ```shell
-terraform import citrixadc_vpnglobal_intranetip6_binding.tf_bind 2.3.4.5
+terraform import citrixadc_vpnglobal_intranetip6_binding.tf_bind 2002::1
 ```

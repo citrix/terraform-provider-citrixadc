@@ -32,8 +32,8 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the aaauser_vpntrafficpolicy_binding. It is a system-generated identifier.
-* `type` - Bindpoint to which the policy is bound. Possible values: [ REQUEST, UDP_REQUEST, DNS_REQUEST, ICMP_REQUEST ]
+* `id` - The id of the aaauser_vpntrafficpolicy_binding. It is the concatenation of `username` and `policy` attributes separated by a comma.
+* `type` - Bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:
   * NEXT - Evaluate the policy with the next higher priority number.
   * END - End policy evaluation.
@@ -48,3 +48,9 @@ In addition to the arguments, the following attributes are available:
   * The expression evaluates to a priority number that is numerically lower than the current policy's priority.
   * The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.
 * `priority` - Integer specifying the priority of the policy.  A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies max priority is 64000.
+
+### Read-only aaauser_vpntrafficpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaauser_vpntrafficpolicy_binding` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `acttype` - Action type of the binding.

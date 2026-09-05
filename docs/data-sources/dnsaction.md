@@ -29,3 +29,12 @@ In addition to the argument, the following attributes are exported:
 * `preferredloclist` - The location list in priority order used for the given action.
 * `ttl` - Time to live, in seconds.
 * `viewname` - The view name that must be used for the given action.
+
+### Read-only dnsaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `drop` - The dns packet must be dropped. Possible values: [ YES, NO ].
+* `cachebypass` - By pass dns cache for this. Possible values: [ YES, NO ].
+* `builtin` - Flag to determine whether DNS action is default or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ].
+* `feature` - The feature to be checked while applying this config.

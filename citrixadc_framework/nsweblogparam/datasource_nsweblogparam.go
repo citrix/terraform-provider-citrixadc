@@ -35,7 +35,7 @@ func (d *NsweblogparamDataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *NsweblogparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsweblogparamResourceModel
+	var data NsweblogparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *NsweblogparamDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	nsweblogparamSetAttrFromGet(ctx, &data, getResponseData)
+	nsweblogparamDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

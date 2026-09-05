@@ -52,6 +52,10 @@ type Icaparameter struct {
 	* Enable/Disable DF Persistence
 	*/
 	Dfpersistence string `json:"dfpersistence,omitempty"`
+	/**
+	* Enable/Disable HDX Insight data to Director even if HDX Insight policy is not configured on Gateway and Network Telemtry policy is enabled on VDA.
+	*/
+	Insightonlytodirector string `json:"insightonlytodirector,omitempty"`
 
 	//------- Read only Parameter ---------;
 

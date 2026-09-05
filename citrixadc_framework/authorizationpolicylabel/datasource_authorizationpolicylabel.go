@@ -35,7 +35,7 @@ func (d *AuthorizationpolicylabelDataSource) Schema(ctx context.Context, req dat
 }
 
 func (d *AuthorizationpolicylabelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthorizationpolicylabelResourceModel
+	var data AuthorizationpolicylabelDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AuthorizationpolicylabelDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	authorizationpolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	authorizationpolicylabelDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

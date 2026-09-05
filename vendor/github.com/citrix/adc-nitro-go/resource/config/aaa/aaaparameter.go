@@ -123,6 +123,14 @@ type Aaaparameter struct {
 	*/
 	Defaultcspheader string `json:"defaultcspheader,omitempty"`
 	/**
+	* Parameter to enable/disable classic endpoints
+	*/
+	Classicendpoints string `json:"classicendpoints,omitempty"`
+	/**
+	* Parameter to enable/disable webview endpoints
+	*/
+	Webviewendpoints string `json:"webviewendpoints,omitempty"`
+	/**
 	* Parameter to set/reset HttpOnly Flag for NSC_AAAC/NSC_TMAS cookies in nfactor
 	*/
 	Httponlycookie string `json:"httponlycookie,omitempty"`

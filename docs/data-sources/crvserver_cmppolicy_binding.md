@@ -36,10 +36,17 @@ output "priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_cmppolicy_binding. It is a system-generated identifier.
+* `id` - The id of the crvserver_cmppolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
+* `bindpoint` - The bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - Invoke flag.
 * `priority` - The priority for the policy.
 * `labelname` - Name of the label invoked.
 * `labeltype` - The invocation type.
 * `targetvserver` - Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
+
+### Read-only crvserver_cmppolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_crvserver_cmppolicy_binding` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `inherited` - On State describes that policy bound is inherited from global binding. Possible values = ON, OFF.

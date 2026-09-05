@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslhpkekey is a named resource with add/delete/get CRUD and NO update -
@@ -173,6 +173,34 @@ func TestAccSslhpkekeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslhpkekey.tf_sslhpkekey", "dhkem", "X_25519"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_sslhpkekey.tf_sslhpkekey", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslhpkekey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslhpkekey.tf_sslhpkekey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhpkekeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhpkekey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslhpkekeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslhpkekey.Type(), "tf_sslhpkekey"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslhpkekey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslhpkekeyExist(resAddr, nil)),
 			},
 		},
 	})

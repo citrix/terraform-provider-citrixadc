@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBotprofile_trapinsertionurl_binding_basic = `
@@ -91,6 +94,49 @@ func TestAccBotprofile_trapinsertionurl_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccBotprofile_trapinsertionurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_trapinsertionurl_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,bot_trap_url) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "bot_trap_url"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_trapinsertionurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_trapinsertionurl_binding_basic},
+			{Config: testAccBotprofile_trapinsertionurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccBotprofile_trapinsertionurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckBotprofile_trapinsertionurl_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -118,10 +164,12 @@ func testAccCheckBotprofile_trapinsertionurl_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_trap_url := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_trap_url"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_trap_url := idMap["bot_trap_url"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_trapinsertionurl_binding",
@@ -163,10 +211,12 @@ func testAccCheckBotprofile_trapinsertionurl_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		bot_trap_url := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "bot_trap_url"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_trap_url := idMap["bot_trap_url"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_trapinsertionurl_binding",
@@ -269,6 +319,106 @@ func TestAccbotprofile_trapinsertionurl_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "bot_bind_comment", "testing"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "bot_trap_url_insertion_enabled", "OFF"),
 				),
+			},
+		},
+	})
+}
+
+// testAccBotprofile_trapinsertionurl_binding_upgrade_basic reuses the _basic config
+// values. It must be valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema, so it uses the SDK v2 attribute names (restored by the
+// migration).
+const testAccBotprofile_trapinsertionurl_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_trapinsertionurl_binding" "tf_binding" {
+		name                           = citrixadc_botprofile.tf_botprofile.name
+		trapinsertionurl               = "true"
+		bot_trap_url                   = "www.example.com"
+		bot_bind_comment               = "testing"
+		bot_trap_url_insertion_enabled = "OFF"
+	}
+`
+
+// TestAccBotprofile_trapinsertionurl_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (2.2.0, legacy comma-join ID) is upgraded in-place
+// by the current Framework provider: the Framework Read re-derives the canonical
+// key:value ID (SetAttrFromGet) without recreating the binding.
+func TestAccBotprofile_trapinsertionurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_trapinsertionurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id "name,bot_trap_url".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccBotprofile_trapinsertionurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_trapinsertionurl_bindingExist("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "id", "tf_botprofile,www.example.com"),
+				),
+			},
+			// Step 2: same config through the current Framework provider. Read runs
+			// ParseIdString on the legacy id and SetAttrFromGet recomputes the id into
+			// the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotprofile_trapinsertionurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_trapinsertionurl_bindingExist("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "id", "bot_trap_url:www.example.com,name:tf_botprofile,trapinsertionurl:true"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccBotprofile_trapinsertionurl_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccBotprofile_trapinsertionurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_trapinsertionurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_trapinsertionurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_trapinsertionurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_trapinsertionurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botprofile_trapinsertionurl_binding.Type(), "tf_botprofile", map[string]string{"bot_trap_url": "www.example.com", "trapinsertionurl": "true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_trapinsertionurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_trapinsertionurl_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_cachepolicy_binding_basic = `
@@ -140,10 +143,14 @@ func testAccCheckAuthenticationvserver_cachepolicy_bindingExist(n string, id *st
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		// ParseIdString handles both the new key:value ID format and the legacy
+		// positional "name,policy" form (migration ID-parse helper exception).
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_cachepolicy_binding",
@@ -258,6 +265,152 @@ func TestAccAuthenticationvserverCachepolicyBindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "policy", "my_cachepolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "bindpoint", "REQUEST"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_cachepolicy_binding.tf_binding", "priority", "9"),
+				),
+			},
+		},
+	})
+}
+
+// testAccauthenticationvserver_cachepolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0 schema and
+// the current Framework schema because the migration restored the SDK v2 attribute names.
+const testAccauthenticationvserver_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationvserver_cachepolicy_binding" "tf_binding" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		bindpoint = "REQUEST"
+		priority  = 9
+	}
+`
+
+// TestAccAuthenticationvserver_cachepolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider.
+// Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_authenticationvserver,my_cachepolicy"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet re-derives name:policy), the id upgrades
+// to the new "key:value" form.
+func TestAccAuthenticationvserver_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_cachepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccauthenticationvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cachepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,my_cachepolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccauthenticationvserver_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cachepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:my_cachepolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_cachepolicy_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_cachepolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAuthenticationvserver_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_cachepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_cachepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_cachepolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cachepolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Authenticationvserver_cachepolicy_binding.Type(), "tf_authenticationvserver", []string{"policy:my_cachepolicy", "bindpoint:REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_cachepolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_cachepolicy_bindingExist(resAddr, nil),
 				),
 			},
 		},

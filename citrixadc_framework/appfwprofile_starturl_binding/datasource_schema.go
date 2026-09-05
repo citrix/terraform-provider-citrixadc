@@ -34,6 +34,11 @@ func AppfwprofileStarturlBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding.",
+			},
 			"starturl": schema.StringAttribute{
 				Required:    true,
 				Description: "A regular expression that designates a URL on the Start URL list.",

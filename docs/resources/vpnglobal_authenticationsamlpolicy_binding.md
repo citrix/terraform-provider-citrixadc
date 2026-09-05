@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_authenticationsamlpolicy_binding
 
-The vpnglobal_authenticationsamlpolicy_binding resource is used ti bind authenticationsamlpolicy to vpnglobal configuration.
+The vpnglobal_authenticationsamlpolicy_binding resource is used to bind authentication samlpolicy to global configuration.
 
 
 ## Example usage

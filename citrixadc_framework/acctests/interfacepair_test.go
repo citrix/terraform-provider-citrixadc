@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccInterfacepair_basic = `
@@ -85,6 +86,80 @@ func TestAccInterfacepair_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInterfacepairExist("citrixadc_interfacepair.tf_interfacepair", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccInterfacepair_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_interfacepair.tf_interfacepair"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInterfacepairDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInterfacepair_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfacepairExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Interfacepair.Type(), "1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccInterfacepair_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfacepairExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccInterfacepair_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_interfacepair.tf_interfacepair"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInterfacepairDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccInterfacepair_basic},
+			{
+				Config:                  testAccInterfacepair_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccInterfacepair_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckInterfacepairDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccInterfacepair_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfacepairExist("citrixadc_interfacepair.tf_interfacepair", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccInterfacepair_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfacepairExist("citrixadc_interfacepair.tf_interfacepair", nil)),
 			},
 		},
 	})

@@ -35,7 +35,7 @@ func (d *TransformpolicylabelDataSource) Schema(ctx context.Context, req datasou
 }
 
 func (d *TransformpolicylabelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data TransformpolicylabelResourceModel
+	var data TransformpolicylabelDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *TransformpolicylabelDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	transformpolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	transformpolicylabelDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

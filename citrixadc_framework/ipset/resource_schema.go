@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -18,9 +19,11 @@ import (
 
 // IpsetResourceModel describes the resource data model.
 type IpsetResourceModel struct {
-	Id   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
-	Td   types.Int64  `tfsdk:"td"`
+	Id           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	Td           types.Int64  `tfsdk:"td"`
+	Nsipbinding  types.Set    `tfsdk:"nsipbinding"`
+	Nsip6binding types.Set    `tfsdk:"nsip6binding"`
 }
 
 func (r *IpsetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -42,9 +45,28 @@ func (r *IpsetResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
+			},
+			"nsipbinding": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The IPv4 addresses (nsip) bound to the IP set.",
+			},
+			"nsip6binding": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The IPv6 addresses (nsip6) bound to the IP set.",
 			},
 		},
 	}
@@ -55,10 +77,13 @@ func ipsetGetThePayloadFromtheConfig(ctx context.Context, data *IpsetResourceMod
 
 	// Create API request body from the model
 	ipset := network.Ipset{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		ipset.Name = data.Name.ValueString()
 	}
-	if !data.Td.IsNull() {
+	// td is Optional+Computed+ForceNew. Only send it when the user explicitly
+	// configured it (known, non-null); otherwise let the ADC assign the default
+	// traffic domain. This mirrors the SDK v2 GetRawConfig().GetAttr("td") guard.
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		ipset.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -71,19 +96,19 @@ func ipsetSetAttrFromGet(ctx context.Context, data *IpsetResourceModel, getRespo
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
+		// Do not clobber a known configured value that NITRO may omit from GET
+		// (omit-on-default trap). Only resolve an unknown to null.
 		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

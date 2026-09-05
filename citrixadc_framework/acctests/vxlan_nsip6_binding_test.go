@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVxlan_nsip6_binding_basic = `
@@ -83,6 +86,49 @@ func TestAccVxlan_nsip6_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVxlan_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vxlan_nsip6_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: vxlanid,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"vxlanid", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlan_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVxlan_nsip6_binding_basic},
+			{Config: testAccVxlan_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"netmask"}},
+			{Config: testAccVxlan_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"netmask"}},
+		},
+	})
+}
+
 func testAccCheckVxlan_nsip6_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -110,10 +156,12 @@ func testAccCheckVxlan_nsip6_bindingExist(n string, id *string) resource.TestChe
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vxlanid := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vxlanid", "ipaddress"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		vxlanid := idMap["vxlanid"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vxlan_nsip6_binding",
@@ -157,13 +205,12 @@ func testAccCheckVxlan_nsip6_bindingNotExist(n string, id string) resource.TestC
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"vxlanid", "ipaddress"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		vxlanid := idSlice[0]
-		ipaddress := idSlice[1]
+		vxlanid := idMap["vxlanid"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vxlan_nsip6_binding",
@@ -263,6 +310,95 @@ func TestAccVxlan_nsip6_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vxlan_nsip6_binding.tf_binding", "vxlanid", "123"),
 					resource.TestCheckResourceAttr("data.citrixadc_vxlan_nsip6_binding.tf_binding", "ipaddress", "2001:db8:100::fb/64"),
 				),
+			},
+		},
+	})
+}
+
+const testAccVxlan_nsip6_binding_upgrade_basic = `
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "test_nsip" {
+		ipv6address = "2001:db8:100::fb/64"
+		type        = "VIP"
+		icmp        = "DISABLED"
+	}
+	resource "citrixadc_vxlan_nsip6_binding" "tf_binding" {
+		vxlanid   = citrixadc_vxlan.tf_vxlan.vxlanid
+		ipaddress = citrixadc_nsip6.test_nsip.ipv6address
+		netmask   = "255.255.255.0"
+	}
+`
+
+func TestAccVxlan_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vxlan_nsip6_binding.tf_binding"
+	legacyId := "123,2001:db8:100::fb/64"
+	newId := "vxlanid:123,ipaddress:2001%3Adb8%3A100%3A%3Afb%2F64"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVxlan_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release, writing legacy-id state.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVxlan_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlan_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", legacyId),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework
+			// provider. Read exercises ParseIdString on the legacy id and recomputes the
+			// canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVxlan_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlan_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", newId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVxlan_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vxlan_nsip6_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlan_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlan_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlan_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vxlan_nsip6_binding.Type(), "123", []string{fmt.Sprintf("ipaddress:%s", utils.UrlEncode("2001:db8:100::fb/64")), fmt.Sprintf("netmask:%s", utils.UrlEncode("255.255.255.0"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVxlan_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlan_nsip6_bindingExist(resAddr, nil)),
 			},
 		},
 	})

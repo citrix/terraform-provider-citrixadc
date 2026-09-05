@@ -36,11 +36,3 @@ In addition to the arguments, the following attributes are available:
 * `username` - Name for the user. Must begin with a letter, number, or the underscore (_) character.
 * `password` - Password with which the user logs on. Required for Single sign on to external server.
 * `id` - The id of the aaassoprofile. It has the same value as the `name` attribute.
-
-## Import
-
-A aaassoprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_aaassoprofile.tf_aaassoprofile myssoprofile
-```

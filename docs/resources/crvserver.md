@@ -70,6 +70,8 @@ resource "citrixadc_crvserver" "crvserver" {
 * `useportrange` - (Optional) Use a port number from the port range (set by using the set ns param command, or in the Create Virtual Server (Cache Redirection) dialog box) as the source port in the requests sent to the origin server.
 * `via` - (Optional) Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server. This header indicates whether the request is being sent from a cache server.
 * `disallowserviceaccess` - (Optional) This is effective when a FORWARD type cr vserver is added. By default, this parameter is DISABLED. When it is ENABLED, backend services cannot be accessed through a FORWARD type cr vserver.
+* `newname` - (Optional) New name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
+* `wasmmodule` - (Optional) Name of the WASM module to assign to this virtual server.
 
 
 ## Attribute Reference

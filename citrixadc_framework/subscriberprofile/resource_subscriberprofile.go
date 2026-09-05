@@ -3,8 +3,10 @@ package subscriberprofile
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,29 @@ func (r *SubscriberprofileResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating subscriberprofile resource")
 
-	// subscriberprofile := subscriberprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Build the create payload and push it to the ADC.
+	subscriberprofile := subscriberprofileGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscriberprofile.Type(), &subscriberprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscriberprofile, got error: %s", err))
-	//	 return
-	// }
+	// Named resource (keyed by ip) - use AddResource (matches SDK v2).
+	subscriberprofileName := data.Ip.ValueString()
+	_, err := r.client.AddResource(service.Subscriberprofile.Type(), subscriberprofileName, &subscriberprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscriberprofile, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("subscriberprofile-config")
+	// ID is the plain ip value (matches SDK v2 d.SetId(ip)).
+	data.Id = types.StringValue(subscriberprofileName)
 
 	tflog.Trace(ctx, "Created subscriberprofile resource")
 
 	// Read the updated state back
-	r.readSubscriberprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSubscriberprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "subscriberprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +97,92 @@ func (r *SubscriberprofileResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading subscriberprofile resource")
 
-	r.readSubscriberprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSubscriberprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SubscriberprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SubscriberprofileResourceModel
+	var data, config, state SubscriberprofileResourceModel
 
+	// Read Terraform prior state to preserve ID and to detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish "changed" from "removed from config" (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating subscriberprofile resource")
 
-	// Create API request body from the model
-	// subscriberprofile := subscriberprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Change detection on the updateable (non-ForceNew) attributes.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Servicepath.Equal(state.Servicepath) {
+		tflog.Debug(ctx, "servicepath has changed for subscriberprofile")
+		if config.Servicepath.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "servicepath")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Subscriberrules.Equal(state.Subscriberrules) {
+		tflog.Debug(ctx, "subscriberrules has changed for subscriberprofile")
+		hasChange = true
+	}
+	if !data.Subscriptionidtype.Equal(state.Subscriptionidtype) {
+		tflog.Debug(ctx, "subscriptionidtype has changed for subscriberprofile")
+		hasChange = true
+	}
+	if !data.Subscriptionidvalue.Equal(state.Subscriptionidvalue) {
+		tflog.Debug(ctx, "subscriptionidvalue has changed for subscriberprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscriberprofile.Type(), &subscriberprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscriberprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		subscriberprofile := subscriberprofileGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// SDK v2 updates subscriberprofile via UpdateUnnamedResource.
+		err := r.client.UpdateUnnamedResource(service.Subscriberprofile.Type(), &subscriberprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscriberprofile, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated subscriberprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for subscriberprofile resource, skipping update")
+	}
 
-	tflog.Trace(ctx, "Updated subscriberprofile resource")
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Keyed by ip (the resource key).
+	unsetIdPayload := map[string]interface{}{
+		"ip": data.Ip.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Subscriberprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset subscriberprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readSubscriberprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSubscriberprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "subscriberprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +200,58 @@ func (r *SubscriberprofileResource) Delete(ctx context.Context, req resource.Del
 
 	tflog.Debug(ctx, "Deleting subscriberprofile resource")
 
-	// For subscriberprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted subscriberprofile resource from state")
-}
-
-// Helper function to read subscriberprofile data from API
-func (r *SubscriberprofileResource) readSubscriberprofileFromApi(ctx context.Context, data *SubscriberprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Subscriberprofile.Type(), "")
+	// Delete keyed by ip, disambiguated by vlan (matches SDK v2 DeleteResourceWithArgs).
+	subscriberprofileName := data.Id.ValueString()
+	vlan := int64(0)
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
+		vlan = data.Vlan.ValueInt64()
+	}
+	args := []string{fmt.Sprintf("vlan:%d", vlan)}
+	err := r.client.DeleteResourceWithArgs(service.Subscriberprofile.Type(), subscriberprofileName, args)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read subscriberprofile, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete subscriberprofile, got error: %s", err))
 		return
 	}
 
-	subscriberprofileSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted subscriberprofile resource")
+}
 
+// Helper function to read subscriberprofile data from API.
+// Mirrors SDK v2 Read: array query filtered by vlan (ArgsMap) then matched by ip.
+// Returns false when the resource no longer exists on the ADC.
+func (r *SubscriberprofileResource) readSubscriberprofileFromApi(ctx context.Context, data *SubscriberprofileResourceModel, diags *diag.Diagnostics) bool {
+	// The ip is carried in the ID (plain value), which also works for import.
+	subscriberprofileName := data.Id.ValueString()
+	vlan := int64(0)
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
+		vlan = data.Vlan.ValueInt64()
+	}
+
+	findParams := service.FindParams{
+		ResourceType:             service.Subscriberprofile.Type(),
+		ArgsMap:                  map[string]string{"vlan": strconv.FormatInt(vlan, 10)},
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		// Resource is gone (mirrors SDK v2 which clears state on read error).
+		return false
+	}
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	foundIndex := -1
+	for i, v := range dataArr {
+		if ipVal, ok := v["ip"]; ok && ipVal != nil && ipVal.(string) == subscriberprofileName {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		return false
+	}
+
+	subscriberprofileSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	return true
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,16 +56,18 @@ func (r *Nat64paramResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nat64param resource")
 
-	// nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton: build the payload from the plan and push it with
+	// UpdateUnnamedResource (matches SDK v2 createNat64paramFunc).
+	nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nat64param, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nat64param, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate stable ID for this singleton configuration resource
 	data.Id = types.StringValue("nat64param-config")
 
 	tflog.Trace(ctx, "Created nat64param resource")
@@ -95,28 +98,83 @@ func (r *Nat64paramResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *Nat64paramResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data Nat64paramResourceModel
+	var data, config, state Nat64paramResourceModel
 
+	// Read Terraform prior state to preserve the singleton ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nat64param resource")
 
-	// Create API request body from the model
-	// nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
+	// Detect changes and attributes removed from config (to unset).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Nat64fragheader.Equal(state.Nat64fragheader) {
+		if config.Nat64fragheader.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nat64fragheader")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Nat64ignoretos.Equal(state.Nat64ignoretos) {
+		if config.Nat64ignoretos.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nat64ignoretos")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Nat64v6mtu.Equal(state.Nat64v6mtu) {
+		if config.Nat64v6mtu.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nat64v6mtu")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Nat64zerochecksum.Equal(state.Nat64zerochecksum) {
+		if config.Nat64zerochecksum.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nat64zerochecksum")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Td.Equal(state.Td) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nat64param, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Singleton: build the payload from the plan and push it with
+		// UpdateUnnamedResource (matches SDK v2 updateNat64paramFunc).
+		nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated nat64param resource")
+		// Make API call
+		err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nat64param, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nat64param resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nat64param resource, skipping update")
+	}
+
+	// Unset attributes that were removed from configuration (revert to ADC defaults).
+	// Singleton resource - no identity fields required in the unset payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nat64param.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nat64param attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNat64paramFromApi(ctx, &data, &resp.Diagnostics)

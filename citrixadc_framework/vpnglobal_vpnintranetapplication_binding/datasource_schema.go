@@ -15,6 +15,9 @@ func VpnglobalVpnintranetapplicationBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
+			// Note: gotopriorityexpression stays Computed in the datasource (read-only
+			// context); the datasource setter copies it from the GET response (null here
+			// since NITRO never returns it).
 			"intranetapplication": schema.StringAttribute{
 				Required:    true,
 				Description: "The intranet vpn application.",

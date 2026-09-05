@@ -96,6 +96,9 @@ A GSLB service binding supports the following:
 * `weight` - (Optional) Weight to assign to the GSLB service.
 * `servicename` - (Optional) Name of the GSLB service for which to change the weight.
 * `domainname` - (Optional) Domain name for which to change the time to live (TTL) and/or backup service IP address.
+* `newname` - (Optional) New name for the GSLB virtual server.
+* `order` - (Optional) Order number to be assigned to the service when it is bound to the lb vserver.
+* `servicegroupname` - (Optional) The GSLB service group name bound to the selected GSLB virtual server.
 
 ## Attribute Reference
 

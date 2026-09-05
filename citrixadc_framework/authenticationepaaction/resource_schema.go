@@ -7,9 +7,37 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward
+// and removal is a silent no-op. It does nothing when the config still carries a
+// value, on create (no prior state), or when the prior value is already empty.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // AuthenticationepaactionResourceModel describes the resource data model.
 type AuthenticationepaactionResourceModel struct {
@@ -37,13 +65,19 @@ func (r *AuthenticationepaactionResource) Schema(ctx context.Context, req resour
 				Description: "it holds the ClientSecurityExpression to be sent to the client",
 			},
 			"defaultepagroup": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "This is the default group that is chosen when the EPA check succeeds.",
 			},
 			"deletefiles": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "String specifying the path(s) and name(s) of the files to be deleted by the endpoint analysis (EPA) tool. Multiple files to be delimited by comma",
 			},
 			"deviceposture": schema.StringAttribute{
@@ -52,47 +86,87 @@ func (r *AuthenticationepaactionResource) Schema(ctx context.Context, req resour
 				Description: "Parameter to enable/disable device posture service scan",
 			},
 			"killprocess": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool. Multiple processes to be delimited by comma",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the epa action. Must begin with a\n	    letter, number, or the underscore character (_), and must consist\n	    only of letters, numbers, and the hyphen (-), period (.) pound\n	    (#), space ( ), at (@), equals (=), colon (:), and underscore\n		    characters. Cannot be changed after epa action is created.The following requirement applies only to the Citrix ADC CLI:If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my aaa action\" or 'my aaa action').",
 			},
 			"quarantinegroup": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "This is the quarantine group that is chosen when the EPA check fails\nif configured.",
 			},
 		},
 	}
 }
 
-func authenticationepaactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationepaactionResourceModel) authentication.Authenticationepaaction {
-	tflog.Debug(ctx, "In authenticationepaactionGetThePayloadFromtheConfig Function")
+func authenticationepaactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationepaactionResourceModel) authentication.Authenticationepaaction {
+	tflog.Debug(ctx, "In authenticationepaactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationepaaction := authentication.Authenticationepaaction{}
-	if !data.Csecexpr.IsNull() {
+	if !data.Csecexpr.IsNull() && !data.Csecexpr.IsUnknown() {
 		authenticationepaaction.Csecexpr = data.Csecexpr.ValueString()
 	}
-	if !data.Defaultepagroup.IsNull() {
+	if !data.Defaultepagroup.IsNull() && !data.Defaultepagroup.IsUnknown() {
 		authenticationepaaction.Defaultepagroup = data.Defaultepagroup.ValueString()
 	}
-	if !data.Deletefiles.IsNull() {
+	if !data.Deletefiles.IsNull() && !data.Deletefiles.IsUnknown() {
 		authenticationepaaction.Deletefiles = data.Deletefiles.ValueString()
 	}
-	if !data.Deviceposture.IsNull() {
+	if !data.Deviceposture.IsNull() && !data.Deviceposture.IsUnknown() {
 		authenticationepaaction.Deviceposture = data.Deviceposture.ValueString()
 	}
-	if !data.Killprocess.IsNull() {
+	if !data.Killprocess.IsNull() && !data.Killprocess.IsUnknown() {
 		authenticationepaaction.Killprocess = data.Killprocess.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationepaaction.Name = data.Name.ValueString()
 	}
-	if !data.Quarantinegroup.IsNull() {
+	if !data.Quarantinegroup.IsNull() && !data.Quarantinegroup.IsUnknown() {
+		authenticationepaaction.Quarantinegroup = data.Quarantinegroup.ValueString()
+	}
+
+	return authenticationepaaction
+}
+
+func authenticationepaactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationepaactionResourceModel) authentication.Authenticationepaaction {
+	tflog.Debug(ctx, "In authenticationepaactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	authenticationepaaction := authentication.Authenticationepaaction{}
+	if !data.Csecexpr.IsNull() && !data.Csecexpr.IsUnknown() {
+		authenticationepaaction.Csecexpr = data.Csecexpr.ValueString()
+	}
+	if !data.Defaultepagroup.IsNull() && !data.Defaultepagroup.IsUnknown() {
+		authenticationepaaction.Defaultepagroup = data.Defaultepagroup.ValueString()
+	}
+	if !data.Deletefiles.IsNull() && !data.Deletefiles.IsUnknown() {
+		authenticationepaaction.Deletefiles = data.Deletefiles.ValueString()
+	}
+	if !data.Deviceposture.IsNull() && !data.Deviceposture.IsUnknown() {
+		authenticationepaaction.Deviceposture = data.Deviceposture.ValueString()
+	}
+	if !data.Killprocess.IsNull() && !data.Killprocess.IsUnknown() {
+		authenticationepaaction.Killprocess = data.Killprocess.ValueString()
+	}
+	// name is the primary key and is required in the update payload
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationepaaction.Name = data.Name.ValueString()
+	}
+	if !data.Quarantinegroup.IsNull() && !data.Quarantinegroup.IsUnknown() {
 		authenticationepaaction.Quarantinegroup = data.Quarantinegroup.ValueString()
 	}
 
@@ -140,7 +214,7 @@ func authenticationepaactionSetAttrFromGet(ctx context.Context, data *Authentica
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

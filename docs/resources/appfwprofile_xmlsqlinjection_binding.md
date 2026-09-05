@@ -58,7 +58,7 @@ resource "citrixadc_appfwprofile_xmlsqlinjection_binding" "tf_binding" {
 * `name` - (Required) Name of the profile to which to bind an exemption or rule.
 * `xmlsqlinjection` - (Required) Exempt the specified URL from the XML SQL injection check.  An XML SQL injection exemption (relaxation) consists of the following items: * Name. Name to exempt, as a string or a PCRE-format regular expression. * ISREGEX flag. REGEX if URL is a regular expression, NOTREGEX if URL is a fixed string. * Location. ELEMENT if the injection is located in an XML element, ATTRIBUTE if located in an XML attribute.
 * `alertonly` - (Optional) Send SNMP alert?
-* `as_scan_location_xmlsql` - (Optional) Location of SQL injection exception - XML Element or Attribute.
+* `as_scan_location_xmlsql` - (Optional) Location of SQL injection exception - XML Element or Attribute. Defaults to `"ELEMENT"`.
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
 * `isregex_xmlsql` - (Optional) Is the XML SQL Injection exempted field name a regular expression?

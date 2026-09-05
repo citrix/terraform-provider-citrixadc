@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,27 @@ func (r *NshostnameResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nshostname resource")
 
-	// nshostname := nshostnameGetThePayloadFromtheConfig(ctx, &data)
+	nshostname := nshostnameGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nshostname, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nshostname, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static singleton ID
 	data.Id = types.StringValue("nshostname-config")
 
 	tflog.Trace(ctx, "Created nshostname resource")
 
 	// Read the updated state back
-	r.readNshostnameFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNshostnameFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nshostname not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +94,24 @@ func (r *NshostnameResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading nshostname resource")
 
-	r.readNshostnameFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNshostnameFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NshostnameResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NshostnameResourceModel
+	var data, state NshostnameResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +119,42 @@ func (r *NshostnameResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nshostname resource")
 
-	// Create API request body from the model
-	// nshostname := nshostnameGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Hostname.Equal(state.Hostname) {
+		tflog.Debug(ctx, "hostname has changed for nshostname")
+		hasChange = true
+	}
+	if !data.Ownernode.IsUnknown() && !data.Ownernode.Equal(state.Ownernode) {
+		tflog.Debug(ctx, "ownernode has changed for nshostname")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nshostname, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nshostname resource")
+	if hasChange {
+		nshostname := nshostnameGetThePayloadFromtheConfig(ctx, &data)
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Nshostname.Type(), &nshostname)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nshostname, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated nshostname resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nshostname resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readNshostnameFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNshostnameFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nshostname not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +171,24 @@ func (r *NshostnameResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleting nshostname resource")
-
-	// For nshostname, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nshostname resource from state")
+	// nshostname is a singleton and does not support delete on the ADC
+	// (matches SDK v2 behavior) - just remove it from Terraform state.
+	tflog.Trace(ctx, "Removed nshostname from Terraform state")
 }
 
 // Helper function to read nshostname data from API
-func (r *NshostnameResource) readNshostnameFromApi(ctx context.Context, data *NshostnameResourceModel, diags *diag.Diagnostics) {
+func (r *NshostnameResource) readNshostnameFromApi(ctx context.Context, data *NshostnameResourceModel, diags *diag.Diagnostics) bool {
+	// Singleton resource - simple find without ID
 	getResponseData, err := r.client.FindResource(service.Nshostname.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nshostname, got error: %s", err))
-		return
+		return false
 	}
 
 	nshostnameSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

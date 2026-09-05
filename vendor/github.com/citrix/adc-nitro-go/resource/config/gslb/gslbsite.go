@@ -84,6 +84,10 @@ type Gslbsite struct {
 	*/
 	Sitepassword string `json:"sitepassword,omitempty"`
 	/**
+	* Source IP address to be used to communicate with this GSLB site.
+	*/
+	Krpcnodesrcip string `json:"krpcnodesrcip,omitempty"`
+	/**
 	* New name for the GSLB site.
 	*/
 	Newname string `json:"newname,omitempty"`

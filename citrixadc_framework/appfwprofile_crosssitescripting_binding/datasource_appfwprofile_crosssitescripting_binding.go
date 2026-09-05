@@ -141,7 +141,7 @@ func (d *AppfwprofileCrosssitescriptingBindingDataSource) Read(ctx context.Conte
 		return
 	}
 
-	appfwprofile_crosssitescripting_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_crosssitescripting_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

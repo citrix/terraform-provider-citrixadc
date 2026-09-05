@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnpcoipvserverprofile_add = `
@@ -138,6 +141,148 @@ func testAccCheckVpnpcoipvserverprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnpcoipvserverprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnpcoipvserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnpcoipvserverprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipvserverprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnpcoipvserverprofile.Type(), "tf_vpnpcoipvserverprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnpcoipvserverprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipvserverprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnpcoipvserverprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnpcoipvserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnpcoipvserverprofile_add},
+			{
+				Config:                  testAccVpnpcoipvserverprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVpnpcoipvserverprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnpcoipvserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpnpcoipvserverprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipvserverprofileExist("citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnpcoipvserverprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipvserverprofileExist("citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile", nil)),
+			},
+		},
+	})
+}
+
+const testAccVpnpcoipvserverprofile_unset_step1 = `
+	resource "citrixadc_vpnpcoipvserverprofile" "tf_unset" {
+		name        = "tf_pcoip_unset"
+		logindomain = "domainname"
+		udpport     = 802
+	}
+`
+
+const testAccVpnpcoipvserverprofile_unset_step2 = `
+	resource "citrixadc_vpnpcoipvserverprofile" "tf_unset" {
+		name        = "tf_pcoip_unset"
+		logindomain = "domainname"
+		# udpport removed from config -> the provider must unset it (revert to
+		# NITRO default 4172).
+	}
+`
+
+func TestAccVpnpcoipvserverprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnpcoipvserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccVpnpcoipvserverprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnpcoipvserverprofileExist("citrixadc_vpnpcoipvserverprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnpcoipvserverprofile.tf_unset", "udpport", "802"),
+				),
+			},
+			{
+				// Removing udpport must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVpnpcoipvserverprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnpcoipvserverprofileExist("citrixadc_vpnpcoipvserverprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnpcoipvserverprofile.tf_unset", "udpport", "4172"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVpnpcoipvserverprofileADCValue("tf_pcoip_unset", "udpport", "4172"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnpcoipvserverprofileADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckVpnpcoipvserverprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnpcoipvserverprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnpcoipvserverprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpnpcoipvserverprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVpnpcoipvserverprofileDataSource_basic(t *testing.T) {

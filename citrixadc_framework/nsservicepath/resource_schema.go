@@ -38,12 +38,12 @@ func (r *NsservicepathResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func nsservicepathGetThePayloadFromtheConfig(ctx context.Context, data *NsservicepathResourceModel) ns.Nsservicepath {
-	tflog.Debug(ctx, "In nsservicepathGetThePayloadFromtheConfig Function")
+func nsservicepathGetThePayloadFromthePlan(ctx context.Context, data *NsservicepathResourceModel) ns.Nsservicepath {
+	tflog.Debug(ctx, "In nsservicepathGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nsservicepath := ns.Nsservicepath{}
-	if !data.Servicepathname.IsNull() {
+	if !data.Servicepathname.IsNull() && !data.Servicepathname.IsUnknown() {
 		nsservicepath.Servicepathname = data.Servicepathname.ValueString()
 	}
 

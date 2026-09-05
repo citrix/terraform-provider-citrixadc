@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVideooptimizationpacingpolicy_add = `
@@ -72,6 +75,34 @@ func TestAccVideooptimizationpacingpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_policy", "name", "tf_policy"),
 					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_policy", "rule", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationpacingpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationpacingpolicy.Type(), "tf_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist(resAddr, nil)),
 			},
 		},
 	})
@@ -141,6 +172,154 @@ func testAccCheckVideooptimizationpacingpolicyDestroy(s *terraform.State) error 
 	return nil
 }
 
+func TestAccVideooptimizationpacingpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVideooptimizationpacingpolicy_add},
+			{
+				Config:                  testAccVideooptimizationpacingpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationpacingpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist("citrixadc_videooptimizationpacingpolicy.tf_policy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist("citrixadc_videooptimizationpacingpolicy.tf_policy", nil)),
+			},
+		},
+	})
+}
+
+// Unset test: comment and logaction are the spec-unsettable, mutable, non-key
+// attributes that NITRO echoes on GET and can revert to their (empty) defaults.
+// undefaction is excluded because NITRO never echoes it back on GET, so it cannot
+// round-trip. logaction requires a valid auditmessageaction to reference.
+const testAccVideooptimizationpacingpolicy_unset_step1 = `
+	resource "citrixadc_videooptimizationpacingaction" "tf_action" {
+		name = "tf_action_unset"
+		rate = 10
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_msg" {
+		name              = "tf_msg_unset"
+		loglevel          = "INFORMATIONAL"
+		stringbuilderexpr = "\"hi\""
+	}
+
+	resource "citrixadc_videooptimizationpacingpolicy" "tf_unset" {
+		name      = "tf_policy_unset"
+		rule      = "true"
+		action    = citrixadc_videooptimizationpacingaction.tf_action.name
+		comment   = "some comment"
+		logaction = citrixadc_auditmessageaction.tf_msg.name
+	}
+`
+
+const testAccVideooptimizationpacingpolicy_unset_step2 = `
+	resource "citrixadc_videooptimizationpacingaction" "tf_action" {
+		name = "tf_action_unset"
+		rate = 10
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_msg" {
+		name              = "tf_msg_unset"
+		loglevel          = "INFORMATIONAL"
+		stringbuilderexpr = "\"hi\""
+	}
+
+	resource "citrixadc_videooptimizationpacingpolicy" "tf_unset" {
+		name   = "tf_policy_unset"
+		rule   = "true"
+		action = citrixadc_videooptimizationpacingaction.tf_action.name
+		# comment and logaction removed from config -> provider must unset them
+		# (revert to the NITRO default of empty).
+	}
+`
+
+func TestAccVideooptimizationpacingpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVideooptimizationpacingpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationpacingpolicyExist("citrixadc_videooptimizationpacingpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_unset", "comment", "some comment"),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_unset", "logaction", "tf_msg_unset"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// empty NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccVideooptimizationpacingpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationpacingpolicyExist("citrixadc_videooptimizationpacingpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_unset", "logaction", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVideooptimizationpacingpolicyADCValue("tf_policy_unset", "comment", ""),
+					testAccCheckVideooptimizationpacingpolicyADCValue("tf_policy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVideooptimizationpacingpolicyADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it. An unset attribute is omitted from GET (nil).
+func testAccCheckVideooptimizationpacingpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Videooptimizationpacingpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("videooptimizationpacingpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("videooptimizationpacingpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 const testAccVideooptimizationpacingpolicyDataSource_basic = `
 
 	resource "citrixadc_videooptimizationpacingaction" "tf_action" {
@@ -170,6 +349,11 @@ func TestAccVideooptimizationpacingpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "name", "tf_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "action", "tf_action"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "id"),
+					// Counter-style read-only attributes are always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingpolicy.tf_policy", "undefhits"),
 				),
 			},
 		},

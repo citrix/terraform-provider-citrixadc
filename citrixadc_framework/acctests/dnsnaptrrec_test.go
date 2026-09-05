@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnsnaptrrec_basic = `
@@ -134,6 +135,49 @@ func testAccCheckDnsnaptrrecDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDnsnaptrrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsnaptrrec.dnsnaptrrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsnaptrrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsnaptrrec_basic},
+			{
+				Config:                  testAccDnsnaptrrec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnsnaptrrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsnaptrrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnsnaptrrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsnaptrrecExist("citrixadc_dnsnaptrrec.dnsnaptrrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnsnaptrrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsnaptrrecExist("citrixadc_dnsnaptrrec.dnsnaptrrec", nil)),
+			},
+		},
+	})
 }
 
 func TestAccDnsnaptrrecDataSource_basic(t *testing.T) {

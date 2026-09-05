@@ -29,10 +29,11 @@ type Sslvserversslpolicybinding struct {
 	*/
 	Priority *int `json:"priority,omitempty"`
 	/**
-	* Bind point to which to bind the policy. Possible Values: REQUEST, INTERCEPT_REQ and CLIENTHELLO_REQ. These bindpoints mean:
+	* Bind point to which to bind the policy. Possible Values: REQUEST, INTERCEPT_REQ, CLIENTHELLO_REQ and CLIENT_AUTH_VAL_REQ. These bindpoints mean:
 		1. REQUEST: Policy evaluation will be done at appplication above SSL. This bindpoint is default and is used for actions based on clientauth and client cert.
 		2. INTERCEPT_REQ: Policy evaluation will be done during SSL handshake to decide whether to intercept or not. Actions allowed with this type are: INTERCEPT, BYPASS and RESET.
-		3. CLIENTHELLO_REQ: Policy evaluation will be done during handling of Client Hello Request. Action allowed with this type is: RESET, FORWARD and PICKCACERTGRP.
+		3. CLIENTHELLO_REQ: Policy evaluation will be done during handling of Client Hello Request. Action allowed with this type is: RESET, FORWARD, PICKCACERTGRP and OCSPSTAPLING.
+		4. CLIENT_AUTH_VAL_REQ: Policy evaluation will be performed during the verification of the client certificate. Action allowed with this type is: OCSPCERTVALIDATION.
 	*/
 	Type string `json:"type,omitempty"`
 	/**

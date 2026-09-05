@@ -6,7 +6,7 @@ subcategory: "Analytics"
 
 The analyticsglobal_analyticsprofile_binding data source allows you to retrieve information about the analytics profile that is bound globally.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_analyticsglobal_analyticsprofile_binding" "tf_binding" {

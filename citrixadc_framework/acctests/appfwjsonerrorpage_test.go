@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwjsonerrorpage_basic = `
@@ -124,6 +126,77 @@ const testAccAppfwjsonerrorpageDataSource_basic = `
 	}
 `
 
+func TestAccAppfwjsonerrorpage_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsonerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwjsonerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsonerrorpageExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwjsonerrorpage.Type(), "tf_appfwjsonerrorpage"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwjsonerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsonerrorpageExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsonerrorpage_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsonerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwjsonerrorpage_basic},
+			{
+				Config:                  testAccAppfwjsonerrorpage_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsonerrorpage_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwjsonerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwjsonerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsonerrorpageExist("citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwjsonerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsonerrorpageExist("citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwjsonerrorpageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doAppfwPreChecks(t) },
@@ -134,6 +207,8 @@ func TestAccAppfwjsonerrorpageDataSource_basic(t *testing.T) {
 				Config: testAccAppfwjsonerrorpageDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", "name", "tf_appfwjsonerrorpage"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", "id"),
 				),
 			},
 		},

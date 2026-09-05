@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *DnsactionResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating dnsaction resource")
 
-	// dnsaction := dnsactionGetThePayloadFromtheConfig(ctx, &data)
+	dnsaction := dnsactionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsaction.Type(), &dnsaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsaction-config")
+	// Named resource - use AddResource (NITRO add is POST)
+	dnsactionName := data.Actionname.ValueString()
+	_, err := r.client.AddResource(service.Dnsaction.Type(), dnsactionName, &dnsaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(dnsactionName)
+
 	// Read the updated state back
-	r.readDnsactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,102 @@ func (r *DnsactionResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading dnsaction resource")
 
-	r.readDnsactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsactionResourceModel
+	var data, config, state DnsactionResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnsaction resource")
 
-	// Create API request body from the model
-	// dnsaction := dnsactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Actiontype.Equal(state.Actiontype) {
+		tflog.Debug(ctx, "actiontype has changed for dnsaction")
+		hasChange = true
+	}
+	if !data.Dnsprofilename.Equal(state.Dnsprofilename) {
+		tflog.Debug(ctx, "dnsprofilename has changed for dnsaction")
+		hasChange = true
+	}
+	if !data.Ipaddress.Equal(state.Ipaddress) {
+		tflog.Debug(ctx, "ipaddress has changed for dnsaction")
+		hasChange = true
+	}
+	if !data.Preferredloclist.Equal(state.Preferredloclist) {
+		tflog.Debug(ctx, "preferredloclist has changed for dnsaction")
+		hasChange = true
+	}
+	if !data.Ttl.Equal(state.Ttl) {
+		tflog.Debug(ctx, "ttl has changed for dnsaction")
+		if config.Ttl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ttl")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Viewname.Equal(state.Viewname) {
+		tflog.Debug(ctx, "viewname has changed for dnsaction")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsaction.Type(), &dnsaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Named resource - use UpdateResource (NITRO update is PUT).
+		// Use the update builder which excludes the create-only attr (actiontype).
+		dnsaction := dnsactionGetTheUpdatePayloadFromThePlan(ctx, &data)
+		dnsactionName := data.Actionname.ValueString()
+		_, err := r.client.UpdateResource(service.Dnsaction.Type(), dnsactionName, &dnsaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsaction, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated dnsaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dnsaction resource, skipping update")
+	}
 
-	tflog.Trace(ctx, "Updated dnsaction resource")
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"actionname": data.Actionname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsaction attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readDnsactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +208,33 @@ func (r *DnsactionResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting dnsaction resource")
 
-	// For dnsaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsaction resource from state")
+	// Named resource - delete using DeleteResource
+	dnsactionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Dnsaction.Type(), dnsactionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsaction, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted dnsaction resource")
 }
 
-// Helper function to read dnsaction data from API
-func (r *DnsactionResource) readDnsactionFromApi(ctx context.Context, data *DnsactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsaction.Type(), "")
+// Helper function to read dnsaction data from API.
+// Returns false (without adding an error) when the resource no longer exists.
+func (r *DnsactionResource) readDnsactionFromApi(ctx context.Context, data *DnsactionResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (actionname)
+	dnsactionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnsaction.Type(), dnsactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsaction, got error: %s", err))
-		return
+		return false
 	}
 
 	dnsactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

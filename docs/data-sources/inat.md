@@ -46,11 +46,8 @@ In addition to the arguments, the following attributes are available:
 * `usnip` - Enable the Citrix ADC to use a SNIP address as the source IP address of packets before sending the packets to the server.
 * `id` - The id of the inat. It has the same value as the `name` attribute.
 
+### Read-only inat metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_inat` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
 
-An inat can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_inat.tf_inat my_inat
-```
+* `flags` - Flags for different modes.

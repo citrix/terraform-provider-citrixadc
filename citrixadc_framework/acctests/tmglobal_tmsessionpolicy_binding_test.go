@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // tmglobal_tmsessionpolicy_binding is an immutable GLOBAL binding (no update / RequiresReplace).
@@ -286,7 +286,37 @@ func TestAccTmglobalTmsessionpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "policyname", "tf_tmsessionpolicy_glb"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "gotopriorityexpression", "END"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccTmglobal_tmsessionpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmglobal_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmglobal_tmsessionpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmglobal_tmsessionpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Tmglobal_tmsessionpolicy_binding.Type(), "", []string{"policyname:tf_tmsessionpolicy_glb"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmglobal_tmsessionpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmglobal_tmsessionpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

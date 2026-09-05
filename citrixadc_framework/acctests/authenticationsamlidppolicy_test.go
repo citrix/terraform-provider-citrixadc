@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationsamlidppolicy_add = `
@@ -165,6 +167,53 @@ func testAccCheckAuthenticationsamlidppolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationsamlidppolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlidppolicy.tf_samlidppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsamlidppolicy.Type(), "tf_samlidppolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationsamlidppolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlidppolicy.tf_samlidppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationsamlidppolicy_add},
+			{
+				Config:                  testAccAuthenticationsamlidppolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationsamlidppolicyDataSource_basic = `
 	resource "citrixadc_sslcertkey" "tf_sslcertkey_ds" {
 		certkey = "tf_sslcertkey_ds"
@@ -193,6 +242,140 @@ const testAccAuthenticationsamlidppolicyDataSource_basic = `
 	}
 `
 
+func TestAccAuthenticationsamlidppolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist("citrixadc_authenticationsamlidppolicy.tf_samlidppolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist("citrixadc_authenticationsamlidppolicy.tf_samlidppolicy", nil)),
+			},
+		},
+	})
+}
+
+// testAccAuthenticationsamlidppolicy_unset_step1 sets the unset-eligible
+// attribute (comment) to a valid non-default value.
+const testAccAuthenticationsamlidppolicy_unset_step1 = `
+	resource "citrixadc_sslcertkey" "tf_sslcertkey_unset" {
+		certkey = "tf_sslcertkey_unset"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile_unset" {
+		name                        = "tf_samlidpprofile_unset"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey_unset.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+	resource "citrixadc_authenticationsamlidppolicy" "tf_unset" {
+		name    = "tf_test_samlidppolicy_unset"
+		rule    = "true"
+		action  = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile_unset.name
+		comment = "aSimpleTesting"
+	}
+`
+
+// testAccAuthenticationsamlidppolicy_unset_step2 removes comment from the policy
+// (keeping only the key + required attributes). The provider must unset it so the
+// appliance reverts it to its default (empty).
+const testAccAuthenticationsamlidppolicy_unset_step2 = `
+	resource "citrixadc_sslcertkey" "tf_sslcertkey_unset" {
+		certkey = "tf_sslcertkey_unset"
+		cert    = "/var/tmp/certificate1.crt"
+		key     = "/var/tmp/key1.pem"
+	}
+	resource "citrixadc_authenticationsamlidpprofile" "tf_samlidpprofile_unset" {
+		name                        = "tf_samlidpprofile_unset"
+		samlspcertname              = citrixadc_sslcertkey.tf_sslcertkey_unset.certkey
+		assertionconsumerserviceurl = "http://www.example.com"
+		sendpassword                = "OFF"
+		samlissuername              = "new_user"
+		rejectunsignedrequests      = "ON"
+		signaturealg                = "RSA-SHA1"
+		digestmethod                = "SHA1"
+		nameidformat                = "Unspecified"
+	}
+	resource "citrixadc_authenticationsamlidppolicy" "tf_unset" {
+		name   = "tf_test_samlidppolicy_unset"
+		rule   = "true"
+		action = citrixadc_authenticationsamlidpprofile.tf_samlidpprofile_unset.name
+	}
+`
+
+func TestAccAuthenticationsamlidppolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuthenticationsamlidppolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationsamlidppolicyExist("citrixadc_authenticationsamlidppolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlidppolicy.tf_unset", "comment", "aSimpleTesting"),
+					testAccCheckAuthenticationsamlidppolicyADCValue("tf_test_samlidppolicy_unset", "comment", "aSimpleTesting"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts
+				// them to their defaults (empty), and the implicit post-apply plan
+				// must be empty.
+				Config: testAccAuthenticationsamlidppolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationsamlidppolicyExist("citrixadc_authenticationsamlidppolicy.tf_unset", nil),
+					testAccCheckAuthenticationsamlidppolicyADCValue("tf_test_samlidppolicy_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationsamlidppolicyADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it. An absent attribute is treated as the empty string.
+func testAccCheckAuthenticationsamlidppolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationsamlidppolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationsamlidppolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationsamlidppolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccAuthenticationsamlidppolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
@@ -205,6 +388,8 @@ func TestAccAuthenticationsamlidppolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "rule", "false"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "comment", "DataSource Test"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "hits"),
 				),
 			},
 		},

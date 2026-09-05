@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *SslvserverEcccurveBindingResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the sslvserver_ecccurve_binding resource.",
 			},
 			"ecccurvename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Named ECC curve bound to vserver/service.",
 			},
 			"vservername": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL virtual server.",
 			},
 		},
 	}
 }
 
-func sslvserver_ecccurve_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SslvserverEcccurveBindingResourceModel) ssl.Sslvserverecccurvebinding {
-	tflog.Debug(ctx, "In sslvserver_ecccurve_bindingGetThePayloadFromtheConfig Function")
+func sslvserver_ecccurve_bindingGetThePayloadFromthePlan(ctx context.Context, data *SslvserverEcccurveBindingResourceModel) ssl.Sslvserverecccurvebinding {
+	tflog.Debug(ctx, "In sslvserver_ecccurve_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslvserver_ecccurve_binding := ssl.Sslvserverecccurvebinding{}
-	if !data.Ecccurvename.IsNull() {
+	if !data.Ecccurvename.IsNull() && !data.Ecccurvename.IsUnknown() {
 		sslvserver_ecccurve_binding.Ecccurvename = data.Ecccurvename.ValueString()
 	}
-	if !data.Vservername.IsNull() {
+	if !data.Vservername.IsNull() && !data.Vservername.IsUnknown() {
 		sslvserver_ecccurve_binding.Vservername = data.Vservername.ValueString()
 	}
 

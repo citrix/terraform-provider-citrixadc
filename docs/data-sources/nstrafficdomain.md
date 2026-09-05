@@ -34,3 +34,9 @@ In addition to the arguments, the following attributes are available:
 
 * `aliasname` - Name of traffic domain being added.
 * `vmac` - Associate the traffic domain with a VMAC address instead of with VLANs.
+
+### Read-only nstrafficdomain metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nstrafficdomain` resource) and are computed. Any attribute the appliance does not return is `null`.
+
+* `state` - The state of the traffic domain (for example `ENABLED`, `DISABLED`).

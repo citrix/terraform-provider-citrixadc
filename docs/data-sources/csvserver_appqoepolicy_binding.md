@@ -42,4 +42,5 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label invoked.
 * `labeltype` - The invocation type.
 * `targetlbvserver` - Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1. Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
-* `id` - The id of the csvserver_appqoepolicy_binding. It is a system-generated identifier.
+* `bindpoint` - The bindpoint to which the policy is bound.
+* `id` - The id of the csvserver_appqoepolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.

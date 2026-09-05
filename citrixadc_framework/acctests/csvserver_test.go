@@ -18,12 +18,15 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -53,6 +56,58 @@ resource "citrixadc_csvserver" "foo" {
 }
 `
 
+func TestAccCsvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Csvserver.Type(), "terraform-cs"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.foo", nil)),
+			},
+		},
+	})
+}
+
 const testAccCsvserverDataSource_basic = `
 
 resource "citrixadc_csvserver" "foo" {
@@ -68,6 +123,34 @@ data "citrixadc_csvserver" "foo" {
   name = citrixadc_csvserver.foo.name
 }
 `
+
+const testAccCsvserver_missing_sslcertkey = `
+resource "citrixadc_csvserver" "tf_missingcert" {
+  name        = "tf_cs_missingcert"
+  ipv46       = "10.202.11.91"
+  port        = 443
+  servicetype = "SSL"
+  sslcertkey  = "tf_nonexistent_cert_pre"
+}
+`
+
+// TestAccCsvserver_missing_sslcertkey_precheck verifies the create-time cert
+// existence pre-check: referencing a non-existent sslcertkey must fail up-front
+// (before the vserver is created), so no orphaned csvserver is left on the
+// appliance. Guards the SDK v2-parity pre-check + rollback fix.
+func TestAccCsvserver_missing_sslcertkey_precheck(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCsvserver_missing_sslcertkey,
+				ExpectError: regexp.MustCompile("does not exist"),
+			},
+		},
+	})
+}
 
 func TestAccCsvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -112,6 +195,25 @@ func TestAccCsvserver_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_basic},
+			{
+				Config:                  testAccCsvserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccCsvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -128,10 +230,38 @@ func TestAccCsvserverDataSource_basic(t *testing.T) {
 						"data.citrixadc_csvserver.foo", "port", "8080"),
 					resource.TestCheckResourceAttr(
 						"data.citrixadc_csvserver.foo", "servicetype", "HTTP"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver.foo", "id"),
+					// Read-only operational metadata exposed only by the data source;
+					// curstate is always populated for a csvserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver.foo", "curstate"),
 				),
 			},
 		},
 	})
+}
+
+// skipIfDefaultSSLProfileEnabled skips the test unless the ADC's default SSL
+// profile is DISABLED. PREREQUISITE: these tests bind ciphers/SNI certs directly
+// on the vserver, which NITRO only permits when the default SSL profile is
+// DISABLED (a STANDALONE_NON_DEFAULT_SSL_PROFILE box). With it ENABLED, cipher/SNI
+// binding must go through an SSL profile and NITRO rejects the direct binding with
+// errorcode 3740 "Operation not permitted. Use profile command to do this
+// operation". State is read from sslparameter.defaultprofile.
+func skipIfDefaultSSLProfileEnabled(t *testing.T) {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		t.Fatalf("Failed to get test client: %v", err)
+	}
+	data, err := client.FindResource(service.Sslparameter.Type(), "")
+	if err != nil {
+		t.Fatalf("Failed to read sslparameter to check the default-SSL-profile prerequisite: %v", err)
+	}
+	if got := strings.TrimSpace(fmt.Sprintf("%v", data["defaultprofile"])); got == "ENABLED" {
+		t.Skipf("Prerequisite not met: this test binds ciphers/SNI directly on the vserver, which requires the "+
+			"default SSL profile to be DISABLED (STANDALONE_NON_DEFAULT_SSL_PROFILE); appliance reports "+
+			"sslparameter.defaultprofile=%q, so NITRO rejects direct binding with errorcode 3740. Skipping.", got)
+	}
 }
 
 func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
@@ -139,7 +269,7 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// 	t.Skip("cluster ADC deployment")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfDefaultSSLProfileEnabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Initial
@@ -172,7 +302,7 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 
 func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfDefaultSSLProfileEnabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
@@ -501,7 +631,7 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 
 func TestAccCsvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { doPreChecks(t) },
+		PreCheck:                 func() { doPreChecks(t); skipIfDefaultSSLProfileEnabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
@@ -951,5 +1081,240 @@ resource "citrixadc_csvserver" "tf_csvserver" {
 	 gotopriorityexpression = "END"
 	}
 
+}
+`
+
+// The csvserver unset test covers the mutable, spec-unsettable attributes whose
+// NITRO ?action=unset cleanly reverts them to their documented server default
+// for an HTTP content switching virtual server: appflowlog (ENABLED),
+// clttimeout (180), icmpvsrresponse (PASSIVE) and l2conn (OFF). Other listed
+// unset attributes (e.g. cacheable, downstateflush, redirectportrewrite,
+// disableprimaryondown, rhistate, stateupdate) do NOT revert on unset for a
+// csvserver (the appliance keeps the configured value), so they are excluded.
+const testAccCsvserver_unset_step1 = `
+resource "citrixadc_csvserver" "tf_unset" {
+  name            = "tf_test_csvserver_unset"
+  ipv46           = "10.202.11.44"
+  port            = 8080
+  servicetype     = "HTTP"
+  appflowlog      = "DISABLED"
+  clttimeout      = 200
+  icmpvsrresponse = "ACTIVE"
+  l2conn          = "ON"
+}
+`
+
+const testAccCsvserver_unset_step2 = `
+resource "citrixadc_csvserver" "tf_unset" {
+  name        = "tf_test_csvserver_unset"
+  ipv46       = "10.202.11.44"
+  port        = 8080
+  servicetype = "HTTP"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccCsvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccCsvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "clttimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "icmpvsrresponse", "ACTIVE"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "l2conn", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCsvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "clttimeout", "180"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "icmpvsrresponse", "PASSIVE"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "l2conn", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCsvserverADCValue("tf_test_csvserver_unset", "appflowlog", "ENABLED"),
+					testAccCheckCsvserverADCValue("tf_test_csvserver_unset", "l2conn", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCsvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckCsvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Csvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("csvserver %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("csvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+// TestAccCsvserver_sslpolicybinding_editsubattr edits only a NON-KEY sub-attribute
+// (labelname) of an sslpolicy binding while its diff key (policyname+priority) is
+// unchanged. (gotopriorityexpression cannot be used here: NITRO pins it to END
+// for SSL vserver policy bindings, errorcode 3042.) A key-only reconciliation
+// would silently drop the edit, and the post-apply refresh would then disagree
+// with the plan ("inconsistent result after apply"). The second step asserts the
+// edit lands.
+func TestAccCsvserver_sslpolicybinding_editsubattr(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_sslpolicybinding_editsubattr("tf_ssllbl1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_csvserver.tf_csvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_policy", "priority": "100", "gotopriorityexpression": "END", "labelname": "tf_ssllbl1"}),
+				),
+			},
+			{
+				Config: testAccCsvserver_sslpolicybinding_editsubattr("tf_ssllbl2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_csvserver.tf_csvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_policy", "priority": "100", "gotopriorityexpression": "END", "labelname": "tf_ssllbl2"}),
+				),
+			},
+		},
+	})
+}
+
+func testAccCsvserver_sslpolicybinding_editsubattr(labelname string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_sslpolicylabel" "tf_ssllbl1" {
+  labelname = "tf_ssllbl1"
+  type      = "CONTROL"
+}
+
+resource "citrixadc_sslpolicylabel" "tf_ssllbl2" {
+  labelname = "tf_ssllbl2"
+  type      = "CONTROL"
+}
+
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile  = "ns_default_ssl_profile_frontend"
+
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority               = 100
+    gotopriorityexpression = "END"
+    invoke                 = true
+    labeltype              = "policylabel"
+    labelname              = citrixadc_sslpolicylabel.%s.labelname
+  }
+}
+`, labelname)
+}
+
+// TestAccCsvserver_sslpolicybinding_type asserts that an sslpolicybinding with an
+// explicit bind point (type = "REQUEST") applies cleanly and idempotently. Before
+// the fix, the NEW provider aborted with "Provider produced inconsistent result
+// after apply": readSslpolicyBindings set type="" (NITRO omits type for the default
+// REQUEST bind point on GET) while the plan held "REQUEST". Step 2's ExpectEmptyPlan
+// guards against any perpetual replace.
+func TestAccCsvserver_sslpolicybinding_type(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_sslpolicybinding_type,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_csvserver.tf_csvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_csslpol_type", "priority": "100", "type": "REQUEST", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccCsvserver_sslpolicybinding_type,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+const testAccCsvserver_sslpolicybinding_type = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_csslact_type"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_csslpol_type"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  name        = "tf_cs_sslpol_type"
+  ipv46       = "10.222.74.11"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+  }
 }
 `

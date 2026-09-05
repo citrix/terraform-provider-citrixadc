@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslcertificatechain is create-only (AddResource); its NITRO Delete is a no-op
@@ -182,6 +182,10 @@ func TestAccSslcertificatechainDataSource_basic(t *testing.T) {
 				Config: testAccSslcertificatechainDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertificatechain.tf_sslcertificatechain", "certkeyname", "tf_chain_certkey"),
+					// id is the universal runtime-binding proof; read-only chain
+					// metadata attrs are instance/config-dependent and Null when
+					// the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertificatechain.tf_sslcertificatechain", "id"),
 				),
 			},
 		},

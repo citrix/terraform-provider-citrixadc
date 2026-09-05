@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTransformprofile_basic_step1 = `
@@ -79,6 +81,53 @@ func TestAccTransformprofile_lean(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_trans_profile", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccTransformprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformprofile.tf_trans_profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Transformprofile.Type(), "tf_trans_profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTransformprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_transformprofile.tf_trans_profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformprofile_basic_step1},
+			{
+				Config:                  testAccTransformprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -148,6 +197,104 @@ func testAccCheckTransformprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTransformprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_trans_profile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_trans_profile", nil)),
+			},
+		},
+	})
+}
+
+const testAccTransformprofile_unset_step1 = `
+resource "citrixadc_transformprofile" "tf_unset" {
+    name                      = "tf_test_transformprofile_unset"
+    type                      = "URL"
+    comment                   = "some non-default comment"
+    onlytransformabsurlinbody = "ON"
+}
+`
+
+const testAccTransformprofile_unset_step2 = `
+resource "citrixadc_transformprofile" "tf_unset" {
+    name = "tf_test_transformprofile_unset"
+    type = "URL"
+    # comment and onlytransformabsurlinbody removed -> provider must unset them
+    # (revert to NITRO defaults: "" and "OFF").
+}
+`
+
+func TestAccTransformprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTransformprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "comment", "some non-default comment"),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "onlytransformabsurlinbody", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccTransformprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "onlytransformabsurlinbody", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckTransformprofileADCValue("tf_test_transformprofile_unset", "onlytransformabsurlinbody", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTransformprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckTransformprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Transformprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("transformprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("transformprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccTransformprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -160,6 +307,7 @@ func TestAccTransformprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "name", "tf_trans_profile"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "comment", "Some comment"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "onlytransformabsurlinbody", "ON"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformprofile.tf_trans_profile", "id"),
 				),
 			},
 		},

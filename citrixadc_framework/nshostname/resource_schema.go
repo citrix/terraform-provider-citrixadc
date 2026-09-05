@@ -2,13 +2,11 @@ package nshostname
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,9 +32,12 @@ func (r *NshostnameResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Required:    true,
 				Description: "Host name for the Citrix ADC.",
 			},
+			// ownernode was Optional+Computed (no Default, no ForceNew) in SDK v2.
+			// A Default is invalid without Computed, and SDK v2 had no default, so we
+			// read the effective value back from the ADC.
 			"ownernode": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(255),
+				Computed:    true,
 				Description: "ID of the cluster node for which you are setting the hostname. Can be configured only through the cluster IP address.",
 			},
 		},
@@ -48,10 +49,10 @@ func nshostnameGetThePayloadFromtheConfig(ctx context.Context, data *NshostnameR
 
 	// Create API request body from the model
 	nshostname := ns.Nshostname{}
-	if !data.Hostname.IsNull() {
+	if !data.Hostname.IsNull() && !data.Hostname.IsUnknown() {
 		nshostname.Hostname = data.Hostname.ValueString()
 	}
-	if !data.Ownernode.IsNull() {
+	if !data.Ownernode.IsNull() && !data.Ownernode.IsUnknown() {
 		nshostname.Ownernode = utils.IntPtr(int(data.Ownernode.ValueInt64()))
 	}
 
@@ -64,20 +65,22 @@ func nshostnameSetAttrFromGet(ctx context.Context, data *NshostnameResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
 		data.Hostname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostname.IsUnknown() {
 		data.Hostname = types.StringNull()
 	}
+	// Do not clobber a known/configured ownernode when NITRO omits it from GET
+	// (omit-on-default trap). Only null it when the value is unknown.
 	if val, ok := getResponseData["ownernode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ownernode.IsUnknown() {
 		data.Ownernode = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(fmt.Sprintf("%d", data.Ownernode.ValueInt64()))
+	// nshostname is a singleton resource - use a static ID
+	data.Id = types.StringValue("nshostname-config")
 
 	return data
 }

@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwgrpcwebtextcontenttype_basic_step1 = `
@@ -162,6 +162,37 @@ func TestAccAppfwgrpcwebtextcontenttypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpcwebtextcontenttype.tf_appfwgrpcwebtextcontenttype", "grpcwebtextcontenttypevalue", "application/grpc-web-text-ds-test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpcwebtextcontenttype.tf_appfwgrpcwebtextcontenttype", "isregex", "NOTREGEX"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAppfwgrpcwebtextcontenttype_selfHealing verifies drift recovery: after the
+// resource is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwgrpcwebtextcontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwgrpcwebtextcontenttype.tf_appfwgrpcwebtextcontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwgrpcwebtextcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwgrpcwebtextcontenttype_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwgrpcwebtextcontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwgrpcwebtextcontenttype.Type(), "application/grpc-web-text-test"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwgrpcwebtextcontenttype_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwgrpcwebtextcontenttypeExist(resAddr, nil)),
 			},
 		},
 	})

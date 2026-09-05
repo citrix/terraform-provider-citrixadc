@@ -47,3 +47,9 @@ In addition to the arguments, the following attributes are available:
 * `retry` - Time, in seconds, between retries if a secondary server's attempt to contact the primary server for a zone refresh fails.
 * `serial` - The secondary server uses this parameter to determine whether it requires a zone transfer from the primary server.
 * `ttl` - Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.
+
+### Read-only dnssoarec metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnssoarec` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `authtype` - Record type. Possible values = ALL, ADNS, PROXY.

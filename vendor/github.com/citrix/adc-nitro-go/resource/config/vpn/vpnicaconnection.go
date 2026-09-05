@@ -36,6 +36,14 @@ type Vpnicaconnection struct {
 	* Terminate all active icaconnections.
 	*/
 	All bool `json:"all,omitempty"`
+	/**
+	* Tenant name for which ica connections needs to be terminated.
+	*/
+	Tenantname string `json:"tenantname,omitempty"`
+	/**
+	* Product name for which ica connections needs to be terminated.
+	*/
+	Productname string `json:"productname,omitempty"`
 
 	//------- Read only Parameter ---------;
 

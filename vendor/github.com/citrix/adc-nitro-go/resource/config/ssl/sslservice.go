@@ -180,6 +180,10 @@ type Sslservice struct {
 	* This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI name, from SSL handshakes to the audit logs.
 	*/
 	Sslclientlogs string `json:"sslclientlogs,omitempty"`
+	/**
+	* Enable strict EKU extension check during client authentication. This can be set to DISABLED only for SSL service types Internal and Transparent.
+	*/
+	Strictclientekucheck string `json:"strictclientekucheck,omitempty"`
 
 	//------- Read only Parameter ---------;
 

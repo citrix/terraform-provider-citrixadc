@@ -71,7 +71,7 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 	for i, v := range dataArr {
 		match := true
 
-		// Check bot_captcha_url
+		// Check bot_captcha_url (the lookup key alongside the parent name)
 		if val, ok := v["bot_captcha_url"].(string); ok {
 			if botcaptchaurl_Name.IsNull() || val != botcaptchaurl_Name.ValueString() {
 				match = false
@@ -81,7 +81,6 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 			match = false
 			continue
 		}
-
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +93,7 @@ func (d *BotprofileCaptchaBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	botprofile_captcha_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	botprofile_captcha_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

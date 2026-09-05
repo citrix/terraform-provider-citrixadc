@@ -32,4 +32,10 @@ output "portaltheme" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the authenticationvserver_vpnportaltheme_binding. It is a system-generated identifier.
+* `id` - The id of the authenticationvserver_vpnportaltheme_binding. It is the concatenation of `name` and `portaltheme` attributes separated by a comma.
+
+### Read-only authenticationvserver_vpnportaltheme_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationvserver_vpnportaltheme_binding` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `acttype` - Type of the bound portal theme action, as reported by the appliance.

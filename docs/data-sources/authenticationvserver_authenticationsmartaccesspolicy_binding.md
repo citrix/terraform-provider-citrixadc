@@ -37,3 +37,9 @@ In addition to the arguments, the following attributes are available:
 * `secondary` - Applicable only while binding a classic authentication policy; advance authentication policy uses nFactor.
 * `groupextraction` - Applicable only while binding a classic authentication policy; advance authentication policy uses nFactor.
 * `nextfactor` - Applicable only while binding an advance authentication policy; classic authentication policy does not support nFactor.
+
+### Read-only authenticationvserver_authenticationsmartaccesspolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `acttype` - Type of the bound authentication policy action, as reported by the appliance.

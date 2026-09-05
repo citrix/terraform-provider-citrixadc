@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -56,33 +58,41 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "The ID of the botprofile resource.",
 			},
 			"addcookieflags": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("httpOnly"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "httpOnly"},
+				},
 				Description: "Add the specified flags to bot session cookies. Available settings function as follows:\n* None - Do not add flags to cookies.\n* HTTP Only - Add the HTTP Only flag to cookies, which prevents scripts from accessing cookies.\n* Secure - Add Secure flag to cookies.\n* All - Add both HTTPOnly and Secure flags to cookies.",
 			},
 			"bot_enable_black_list": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable black-list bot detection.",
 			},
 			"bot_enable_ip_reputation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable IP-reputation bot detection.",
 			},
 			"bot_enable_rate_limit": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable rate-limit bot detection.",
 			},
 			"bot_enable_tps": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable TPS.",
 			},
 			"bot_enable_white_list": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable white-list bot detection.",
 			},
 			"clientipexpression": schema.StringAttribute{
@@ -98,16 +108,19 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"devicefingerprint": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable device-fingerprint bot detection",
 			},
 			"devicefingerprintaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Action to be taken for device-fingerprint based bot detection.",
 			},
 			"devicefingerprintmobile": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enabling bot device fingerprint protection for mobile clients",
 			},
 			"dfprequestlimit": schema.Int64Attribute{
@@ -123,6 +136,7 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"headlessbrowserdetection": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable Headless Browser detection.",
 			},
 			"kmdetection": schema.StringAttribute{
@@ -141,7 +155,10 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name of the JavaScript file that the Bot Management feature will insert in the response for keyboard-mouse based detection.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my javascript file name\" or 'my javascript file name').",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"sessioncookiename": schema.StringAttribute{
@@ -162,26 +179,31 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"signaturemultipleuseragentheaderaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Actions to be taken if multiple User-Agent headers are seen in a request (Applicable if Signature check is enabled). Log action should be combined with other actions",
 			},
 			"signaturenouseragentheaderaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Actions to be taken if no User-Agent header in the request (Applicable if Signature check is enabled).",
 			},
 			"spoofedreqaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Actions to be taken on a spoofed request (A request spoofing good bot user agent string).",
 			},
 			"trap": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable trap bot detection.",
 			},
 			"trapaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Action to be taken for bot trap based bot detection.",
 			},
 			"trapurl": schema.StringAttribute{
@@ -191,6 +213,7 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"verboseloglevel": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("NONE"),
 				Description: "Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.",
 			},
@@ -198,75 +221,105 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func botprofileGetThePayloadFromtheConfig(ctx context.Context, data *BotprofileResourceModel) bot.Botprofile {
-	tflog.Debug(ctx, "In botprofileGetThePayloadFromtheConfig Function")
+func botprofileGetThePayloadFromthePlan(ctx context.Context, data *BotprofileResourceModel) bot.Botprofile {
+	tflog.Debug(ctx, "In botprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	botprofile := bot.Botprofile{}
-	if !data.Addcookieflags.IsNull() {
+	if !data.Addcookieflags.IsNull() && !data.Addcookieflags.IsUnknown() {
 		botprofile.Addcookieflags = data.Addcookieflags.ValueString()
 	}
-	if !data.BotEnableBlackList.IsNull() {
+	if !data.BotEnableBlackList.IsNull() && !data.BotEnableBlackList.IsUnknown() {
 		botprofile.Botenableblacklist = data.BotEnableBlackList.ValueString()
 	}
-	if !data.BotEnableIpReputation.IsNull() {
+	if !data.BotEnableIpReputation.IsNull() && !data.BotEnableIpReputation.IsUnknown() {
 		botprofile.Botenableipreputation = data.BotEnableIpReputation.ValueString()
 	}
-	if !data.BotEnableRateLimit.IsNull() {
+	if !data.BotEnableRateLimit.IsNull() && !data.BotEnableRateLimit.IsUnknown() {
 		botprofile.Botenableratelimit = data.BotEnableRateLimit.ValueString()
 	}
-	if !data.BotEnableTps.IsNull() {
+	if !data.BotEnableTps.IsNull() && !data.BotEnableTps.IsUnknown() {
 		botprofile.Botenabletps = data.BotEnableTps.ValueString()
 	}
-	if !data.BotEnableWhiteList.IsNull() {
+	if !data.BotEnableWhiteList.IsNull() && !data.BotEnableWhiteList.IsUnknown() {
 		botprofile.Botenablewhitelist = data.BotEnableWhiteList.ValueString()
 	}
-	if !data.Clientipexpression.IsNull() {
+	if !data.Clientipexpression.IsNull() && !data.Clientipexpression.IsUnknown() {
 		botprofile.Clientipexpression = data.Clientipexpression.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		botprofile.Comment = data.Comment.ValueString()
 	}
-	if !data.Devicefingerprint.IsNull() {
+	if !data.Devicefingerprint.IsNull() && !data.Devicefingerprint.IsUnknown() {
 		botprofile.Devicefingerprint = data.Devicefingerprint.ValueString()
 	}
-	if !data.Dfprequestlimit.IsNull() {
+	if !data.Devicefingerprintaction.IsNull() && !data.Devicefingerprintaction.IsUnknown() {
+		var listValue []string
+		data.Devicefingerprintaction.ElementsAs(ctx, &listValue, false)
+		botprofile.Devicefingerprintaction = listValue
+	}
+	if !data.Devicefingerprintmobile.IsNull() && !data.Devicefingerprintmobile.IsUnknown() {
+		var listValue []string
+		data.Devicefingerprintmobile.ElementsAs(ctx, &listValue, false)
+		botprofile.Devicefingerprintmobile = listValue
+	}
+	if !data.Dfprequestlimit.IsNull() && !data.Dfprequestlimit.IsUnknown() {
 		botprofile.Dfprequestlimit = utils.IntPtr(int(data.Dfprequestlimit.ValueInt64()))
 	}
-	if !data.Errorurl.IsNull() {
+	if !data.Errorurl.IsNull() && !data.Errorurl.IsUnknown() {
 		botprofile.Errorurl = data.Errorurl.ValueString()
 	}
-	if !data.Headlessbrowserdetection.IsNull() {
+	if !data.Headlessbrowserdetection.IsNull() && !data.Headlessbrowserdetection.IsUnknown() {
 		botprofile.Headlessbrowserdetection = data.Headlessbrowserdetection.ValueString()
 	}
-	if !data.Kmdetection.IsNull() {
+	if !data.Kmdetection.IsNull() && !data.Kmdetection.IsUnknown() {
 		botprofile.Kmdetection = data.Kmdetection.ValueString()
 	}
-	if !data.Kmeventspostbodylimit.IsNull() {
+	if !data.Kmeventspostbodylimit.IsNull() && !data.Kmeventspostbodylimit.IsUnknown() {
 		botprofile.Kmeventspostbodylimit = utils.IntPtr(int(data.Kmeventspostbodylimit.ValueInt64()))
 	}
-	if !data.Kmjavascriptname.IsNull() {
+	if !data.Kmjavascriptname.IsNull() && !data.Kmjavascriptname.IsUnknown() {
 		botprofile.Kmjavascriptname = data.Kmjavascriptname.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		botprofile.Name = data.Name.ValueString()
 	}
-	if !data.Sessioncookiename.IsNull() {
+	if !data.Sessioncookiename.IsNull() && !data.Sessioncookiename.IsUnknown() {
 		botprofile.Sessioncookiename = data.Sessioncookiename.ValueString()
 	}
-	if !data.Sessiontimeout.IsNull() {
+	if !data.Sessiontimeout.IsNull() && !data.Sessiontimeout.IsUnknown() {
 		botprofile.Sessiontimeout = utils.IntPtr(int(data.Sessiontimeout.ValueInt64()))
 	}
-	if !data.Signature.IsNull() {
+	if !data.Signature.IsNull() && !data.Signature.IsUnknown() {
 		botprofile.Signature = data.Signature.ValueString()
 	}
-	if !data.Trap.IsNull() {
+	if !data.Signaturemultipleuseragentheaderaction.IsNull() && !data.Signaturemultipleuseragentheaderaction.IsUnknown() {
+		var listValue []string
+		data.Signaturemultipleuseragentheaderaction.ElementsAs(ctx, &listValue, false)
+		botprofile.Signaturemultipleuseragentheaderaction = listValue
+	}
+	if !data.Signaturenouseragentheaderaction.IsNull() && !data.Signaturenouseragentheaderaction.IsUnknown() {
+		var listValue []string
+		data.Signaturenouseragentheaderaction.ElementsAs(ctx, &listValue, false)
+		botprofile.Signaturenouseragentheaderaction = listValue
+	}
+	if !data.Spoofedreqaction.IsNull() && !data.Spoofedreqaction.IsUnknown() {
+		var listValue []string
+		data.Spoofedreqaction.ElementsAs(ctx, &listValue, false)
+		botprofile.Spoofedreqaction = listValue
+	}
+	if !data.Trap.IsNull() && !data.Trap.IsUnknown() {
 		botprofile.Trap = data.Trap.ValueString()
 	}
-	if !data.Trapurl.IsNull() {
+	if !data.Trapaction.IsNull() && !data.Trapaction.IsUnknown() {
+		var listValue []string
+		data.Trapaction.ElementsAs(ctx, &listValue, false)
+		botprofile.Trapaction = listValue
+	}
+	if !data.Trapurl.IsNull() && !data.Trapurl.IsUnknown() {
 		botprofile.Trapurl = data.Trapurl.ValueString()
 	}
-	if !data.Verboseloglevel.IsNull() {
+	if !data.Verboseloglevel.IsNull() && !data.Verboseloglevel.IsUnknown() {
 		botprofile.Verboseloglevel = data.Verboseloglevel.ValueString()
 	}
 
@@ -322,11 +375,45 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	} else {
 		data.Devicefingerprint = types.StringNull()
 	}
+	if val, ok := getResponseData["devicefingerprintaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Devicefingerprintaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Devicefingerprintaction = listValue
+		default:
+			if data.Devicefingerprintaction.IsUnknown() {
+				data.Devicefingerprintaction = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Devicefingerprintaction.IsUnknown() {
+		data.Devicefingerprintaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["devicefingerprintmobile"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Devicefingerprintmobile = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Devicefingerprintmobile = listValue
+		default:
+			if data.Devicefingerprintmobile.IsUnknown() {
+				data.Devicefingerprintmobile = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Devicefingerprintmobile.IsUnknown() {
+		data.Devicefingerprintmobile = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["dfprequestlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dfprequestlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dfprequestlimit.IsUnknown() {
 		data.Dfprequestlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["errorurl"]; ok && val != nil {
@@ -348,7 +435,7 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Kmeventspostbodylimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Kmeventspostbodylimit.IsUnknown() {
 		data.Kmeventspostbodylimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["kmjavascriptname"]; ok && val != nil {
@@ -370,7 +457,7 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessiontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessiontimeout.IsUnknown() {
 		data.Sessiontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["signature"]; ok && val != nil {
@@ -378,10 +465,78 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	} else {
 		data.Signature = types.StringNull()
 	}
+	if val, ok := getResponseData["signaturemultipleuseragentheaderaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Signaturemultipleuseragentheaderaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Signaturemultipleuseragentheaderaction = listValue
+		default:
+			if data.Signaturemultipleuseragentheaderaction.IsUnknown() {
+				data.Signaturemultipleuseragentheaderaction = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Signaturemultipleuseragentheaderaction.IsUnknown() {
+		data.Signaturemultipleuseragentheaderaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["signaturenouseragentheaderaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Signaturenouseragentheaderaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Signaturenouseragentheaderaction = listValue
+		default:
+			if data.Signaturenouseragentheaderaction.IsUnknown() {
+				data.Signaturenouseragentheaderaction = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Signaturenouseragentheaderaction.IsUnknown() {
+		data.Signaturenouseragentheaderaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["spoofedreqaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Spoofedreqaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Spoofedreqaction = listValue
+		default:
+			if data.Spoofedreqaction.IsUnknown() {
+				data.Spoofedreqaction = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Spoofedreqaction.IsUnknown() {
+		data.Spoofedreqaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["trap"]; ok && val != nil {
 		data.Trap = types.StringValue(val.(string))
 	} else {
 		data.Trap = types.StringNull()
+	}
+	if val, ok := getResponseData["trapaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Trapaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Trapaction = listValue
+		default:
+			if data.Trapaction.IsUnknown() {
+				data.Trapaction = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Trapaction.IsUnknown() {
+		data.Trapaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["trapurl"]; ok && val != nil {
 		data.Trapurl = types.StringValue(val.(string))
@@ -395,7 +550,7 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value (name) as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

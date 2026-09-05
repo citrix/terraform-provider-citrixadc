@@ -55,3 +55,10 @@ The following attributes are available:
 * `servercmp` - Allow the server to send compressed data to the Citrix ADC. With the default setting, the Citrix ADC appliance handles all compression.
 * `varyheadervalue` - The value of the HTTP Vary header for compressed responses. If this argument is not specified, a default value of "Accept-Encoding" will be used.
 * `id` - The id of the cmpparameter. It is a system-generated identifier.
+
+### Read-only cmpparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cmpparameter` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine whether compression is default or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

@@ -35,7 +35,7 @@ func (d *LbmonitorDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *LbmonitorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LbmonitorResourceModel
+	var data LbmonitorDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -90,7 +90,7 @@ func (d *LbmonitorDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	lbmonitorSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbmonitorDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

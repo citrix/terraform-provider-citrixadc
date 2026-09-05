@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccResponderpolicylabel_responderpolicy_binding_basic = `
@@ -83,6 +86,49 @@ func TestAccResponderpolicylabel_responderpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccResponderpolicylabel_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: labelname,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"labelname", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderpolicylabel_responderpolicy_binding_basic},
+			{Config: testAccResponderpolicylabel_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"gotopriorityexpression", "invoke", "priority"}},
+			{Config: testAccResponderpolicylabel_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"gotopriorityexpression", "invoke", "priority"}},
+		},
+	})
+}
+
 func testAccCheckResponderpolicylabel_responderpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -110,10 +156,12 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingExist(n string, id 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		labelname := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		labelname := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "responderpolicylabel_responderpolicy_binding",
@@ -155,10 +203,12 @@ func testAccCheckResponderpolicylabel_responderpolicy_bindingNotExist(n string, 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		labelname := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		labelname := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "responderpolicylabel_responderpolicy_binding",
@@ -257,6 +307,97 @@ func TestAccResponderpolicylabel_responderpolicy_bindingDataSource_basic(t *test
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "gotopriorityexpression", "END"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "invoke", "false"),
 				),
+			},
+		},
+	})
+}
+
+const testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_responderpolicylabel_responderpolicy_binding" "tf_responderpolicylabel_responderpolicy_binding" {
+	labelname = citrixadc_responderpolicylabel.tf_responderpolicylabel.labelname
+	policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+	priority = 5
+	gotopriorityexpression = "END"
+	invoke = "false"
+}
+
+resource "citrixadc_responderpolicylabel" "tf_responderpolicylabel" {
+	labelname = "tf_responderpolicylabel"
+	policylabeltype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+	name    = "tf_responderpolicy"
+	action = "NOOP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+`
+
+func TestAccResponderpolicylabel_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicylabel_responderpolicy_bindingExist("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "id", "tf_responderpolicylabel,tf_responderpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicylabel_responderpolicy_bindingExist("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "id", "labelname:tf_responderpolicylabel,policyname:tf_responderpolicy"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccResponderpolicylabel_responderpolicy_binding_selfHealing verifies the provider
+// re-creates the binding when it is deleted out-of-band between apply steps (drift
+// recovery). The delete labelname/policyname/priority args match the resource's Delete.
+func TestAccResponderpolicylabel_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabel_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicylabel_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabel_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Responderpolicylabel_responderpolicy_binding.Type(), "tf_responderpolicylabel", map[string]string{"policyname": "tf_responderpolicy", "priority": "5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderpolicylabel_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabel_responderpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

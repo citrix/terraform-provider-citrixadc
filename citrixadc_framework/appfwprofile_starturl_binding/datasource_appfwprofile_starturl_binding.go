@@ -93,7 +93,7 @@ func (d *AppfwprofileStarturlBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	appfwprofile_starturl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_starturl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

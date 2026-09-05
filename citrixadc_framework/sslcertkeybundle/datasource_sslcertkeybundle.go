@@ -35,7 +35,7 @@ func (d *SslcertkeybundleDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *SslcertkeybundleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslcertkeybundleResourceModel
+	var data SslcertkeybundleDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *SslcertkeybundleDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	sslcertkeybundleSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	sslcertkeybundleDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

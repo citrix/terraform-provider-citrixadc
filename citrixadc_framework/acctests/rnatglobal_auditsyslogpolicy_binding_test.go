@@ -20,14 +20,15 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRnatglobal_auditsyslogpolicy_binding_basic = `
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.54"
 		serverport = 514
 		loglevel = [
 		"ERROR",
@@ -49,7 +50,7 @@ const testAccRnatglobal_auditsyslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.54"
 		serverport = 514
 		loglevel = [
 		"ERROR",
@@ -226,7 +227,7 @@ func testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy(s *terraform.State)
 const testAccRnatglobalAuditsyslogpolicyBindingDataSource_basic = `
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.54"
 		serverport = 514
 		loglevel = [
 		"ERROR",
@@ -261,6 +262,96 @@ func TestAccRnatglobalAuditsyslogpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "policy", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "priority", "50"),
 				),
+			},
+		},
+	})
+}
+
+// testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current framework schema (same attribute names).
+const testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+		name       = "tf_syslogaction"
+		serverip   = "10.78.60.54"
+		serverport = 514
+		loglevel = [
+		"ERROR",
+		"NOTICE",
+		]
+	}
+	resource "citrixadc_auditsyslogpolicy" "tf_policy" {
+		name   = "tf_auditsyslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+	resource "citrixadc_rnatglobal_auditsyslogpolicy_binding" "tf_binding" {
+		policy   = citrixadc_auditsyslogpolicy.tf_policy.name
+		priority = 50
+	}
+`
+
+func TestAccRnatglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policy value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatglobal_auditsyslogpolicy_bindingExist("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "id", "tf_auditsyslogpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises the legacy id and SetAttrFromGet
+				// recomputes the id. This binding is single-key (policy), so the
+				// canonical new id is the plain policy value (== the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatglobal_auditsyslogpolicy_bindingExist("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "id", "tf_auditsyslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRnatglobal_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnatglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnatglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnatglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Rnatglobal_auditsyslogpolicy_binding.Type(), "", []string{"policy:tf_auditsyslogpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRnatglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnatglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

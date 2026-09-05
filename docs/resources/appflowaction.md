@@ -47,6 +47,7 @@ resource "citrixadc_appflowaction" "tf_appflowaction" {
 * `transactionlog` - (Optional) Log ANOMALOUS or ALL transactions
 * `videoanalytics` - (Optional) On enabling this option, the Citrix ADC will send the videoinsight records to the configured collectors.
 * `webinsight` - (Optional) On enabling this option, the Citrix ADC will send the webinsight records to the configured collectors.
+* `newname` - (Optional) New name for the AppFlow action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow action" or 'my appflow action').
 
 
 ## Attribute Reference

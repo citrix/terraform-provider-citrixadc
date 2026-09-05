@@ -47,11 +47,11 @@ type Nd6 struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td *int `json:"td"` // Zero is a valid value
+	Td *int `json:"td,omitempty"`
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid *int `json:"nodeid"` // Zero is a valid value
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,15 @@ func (r *NsspparamsResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nsspparams resource")
 
-	// nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton resource - build the payload and push it via UpdateUnnamedResource
+	nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsspparams, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsspparams, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nsspparams-config")
@@ -95,28 +97,64 @@ func (r *NsspparamsResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NsspparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsspparamsResourceModel
+	var data, config, state NsspparamsResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nsspparams resource")
 
-	// Create API request body from the model
-	// nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Detect attributes removed from config so they can be unset (reverted to defaults)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Basethreshold.Equal(state.Basethreshold) {
+		if config.Basethreshold.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "basethreshold")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Throttle.Equal(state.Throttle) {
+		if config.Throttle.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "throttle")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsspparams, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated nsspparams resource")
+		// Make API call
+		err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsspparams, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nsspparams resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsspparams resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nsspparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsspparams attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNsspparamsFromApi(ctx, &data, &resp.Diagnostics)

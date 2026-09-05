@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Participating-entity config below is lifted from the existing acceptance tests:
@@ -316,6 +316,34 @@ func TestAccMetricsprofile_authenticationvserver_bindingDataSource_basic(t *test
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile_authenticationvserver_binding.tf_metricsprofile_authenticationvserver_binding", "entityname", "tf_authenticationvserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile_authenticationvserver_binding.tf_metricsprofile_authenticationvserver_binding", "entitytype", "authvserver"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMetricsprofile_authenticationvserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_authenticationvserver_binding.tf_metricsprofile_authenticationvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_authenticationvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_authenticationvserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_authenticationvserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Metricsprofile_authenticationvserver_binding.Type(), "tf_metricsprofile", map[string]string{"entityname": "tf_authenticationvserver", "entitytype": "authvserver"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_authenticationvserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_authenticationvserver_bindingExist(resAddr, nil)),
 			},
 		},
 	})

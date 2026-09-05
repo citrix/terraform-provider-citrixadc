@@ -64,11 +64,9 @@ In addition to the arguments, the following attributes are available:
 * `serverport` - Port number on which the TACACS+ server listens for connections.
 * `tacacssecret` - Key shared between the TACACS+ server and the Citrix ADC. Required for allowing the Citrix ADC to communicate with the TACACS+ server.
 
+### Read-only authenticationtacacsaction metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationtacacsaction` resource). They are Computed/GET-only and are `null` when the appliance omits them.
 
-A authenticationtacacsaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationtacacsaction.tf_tacacsaction my_tacacsaction
-```
+* `success` - Number of successful authentications.
+* `failure` - Number of failed authentications.

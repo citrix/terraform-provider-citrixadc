@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaagroup_vpnurlpolicy_binding_basic = `
@@ -101,6 +104,49 @@ func TestAccAaagroup_vpnurlpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaagroup_vpnurlpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: groupname,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"groupname", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_vpnurlpolicy_binding_basic},
+			{Config: testAccAaagroup_vpnurlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+			{Config: testAccAaagroup_vpnurlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"type"}},
+		},
+	})
+}
+
 func testAccCheckAaagroup_vpnurlpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -128,10 +174,12 @@ func testAccCheckAaagroup_vpnurlpolicy_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		groupname := idMap["groupname"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaagroup_vpnurlpolicy_binding",
@@ -281,7 +329,106 @@ func TestAccAaagroup_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", "policy", "new_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", "priority", "100"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAaagroup_vpnurlpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_aaagroup_vpnurlpolicy_binding" "tf_aaagroup_vpnurlpolicy_binding" {
+		groupname = citrixadc_aaagroup.tf_aaagroup.groupname
+		policy    = citrixadc_vpnurlpolicy.tf_vpnurlpolicy.name
+		type     = "REQUEST"
+		priority  = 100
+	}
+
+	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+		name             = "tf_vpnurlaction"
+		linkname         = "new_link"
+		actualurl        = "http://www.citrix.com"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		ssotype          = "unifiedgateway"
+		vservername      = "vserver1"
+	}
+	resource "citrixadc_vpnurlpolicy" "tf_vpnurlpolicy" {
+		name   = "new_policy"
+		rule   = "true"
+		action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+
+`
+
+func TestAccAaagroup_vpnurlpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroup_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccAaagroup_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_vpnurlpolicy_bindingExist("citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", "id", "my_group,new_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaagroup_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_vpnurlpolicy_bindingExist("citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding", "id", "groupname:my_group,policy:new_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaagroup_vpnurlpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_vpnurlpolicy_binding.tf_aaagroup_vpnurlpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_vpnurlpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_vpnurlpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaagroup_vpnurlpolicy_binding.Type(), "my_group", map[string]string{"policy": "new_policy", "type": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaagroup_vpnurlpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_vpnurlpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

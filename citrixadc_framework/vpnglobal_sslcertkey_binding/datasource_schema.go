@@ -10,15 +10,14 @@ func VpnglobalSslcertkeyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"certkeyname": schema.StringAttribute{
+				Required:    true,
+				Description: "SSL certkey to use in signing tokens. Only RSA cert key is allowed",
+			},
 			"cacert": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "The name of the CA certificate binding.",
-			},
-			"certkeyname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "SSL certkey to use in signing tokens. Only RSA cert key is allowed",
 			},
 			"crlcheck": schema.StringAttribute{
 				Optional:    true,

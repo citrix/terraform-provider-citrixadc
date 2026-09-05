@@ -37,46 +37,63 @@ func (r *Rnat6Resource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 				Description: "The ID of the rnat6 resource.",
 			},
+			// SDK v2: Optional + Computed + ForceNew
 			"acl6name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of any configured ACL6 whose action is ALLOW. The rule of the ACL6 is used as an RNAT6 rule.",
 			},
+			// SDK v2: Required + ForceNew
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the RNAT6 rule. Must begin with a letter, number, or the underscore character (_), and can consist of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the rule is created. Choose a name that helps identify the RNAT6 rule.",
 			},
+			// SDK v2: Optional + Computed + ForceNew
 			"network": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IPv6 address of the network on whose traffic you want the Citrix ADC to do RNAT processing.",
 			},
+			// SDK v2: Optional + Computed (updateable, no default, not ForceNew)
 			"ownergroup": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT_NG"),
+				Computed:    true,
 				Description: "The owner node group in a Cluster for this rnat rule.",
 			},
+			// SDK v2: Optional + Computed (updateable, not ForceNew)
 			"redirectport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Port number to which the IPv6 packets are redirected. Applicable to TCP and UDP protocols.",
 			},
+			// SDK v2: Optional + Computed (updateable, no default, not ForceNew)
 			"srcippersistency": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default (spec: Default value: DISABLED). A Default is
+				// required so that removing the attribute from config produces a
+				// plan diff, which lets Update fire the unset operation.
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.",
 			},
+			// SDK v2: Optional + Computed + ForceNew
 			"td": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -89,35 +106,116 @@ func rnat6GetThePayloadFromtheConfig(ctx context.Context, data *Rnat6ResourceMod
 
 	// Create API request body from the model
 	rnat6 := network.Rnat6{}
-	if !data.Acl6name.IsNull() {
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
 		rnat6.Acl6name = data.Acl6name.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		rnat6.Name = data.Name.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		rnat6.Network = data.Network.ValueString()
 	}
-	if !data.Ownergroup.IsNull() {
+	if !data.Ownergroup.IsNull() && !data.Ownergroup.IsUnknown() {
 		rnat6.Ownergroup = data.Ownergroup.ValueString()
 	}
-	if !data.Redirectport.IsNull() {
+	if !data.Redirectport.IsNull() && !data.Redirectport.IsUnknown() {
 		rnat6.Redirectport = utils.IntPtr(int(data.Redirectport.ValueInt64()))
 	}
-	if !data.Srcippersistency.IsNull() {
+	if !data.Srcippersistency.IsNull() && !data.Srcippersistency.IsUnknown() {
 		rnat6.Srcippersistency = data.Srcippersistency.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		rnat6.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
 	return rnat6
 }
 
+// rnat6GetTheUpdatablePayloadFromThePlan builds a payload restricted to the
+// NITRO-updatable fields (ownergroup, redirectport, srcippersistency), matching
+// the SDK v2 update semantics. srcippersistency is handled by the caller so it
+// can be routed to an unset when removed from config. It returns the payload and
+// whether any tracked updatable attribute changed relative to prior state.
+func rnat6GetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Rnat6ResourceModel, state *Rnat6ResourceModel) (network.Rnat6, bool) {
+	tflog.Debug(ctx, "In rnat6GetTheUpdatablePayloadFromThePlan Function")
+
+	rnat6 := network.Rnat6{}
+	rnat6.Name = data.Name.ValueString()
+	hasChange := false
+
+	if !data.Ownergroup.Equal(state.Ownergroup) && !data.Ownergroup.IsUnknown() {
+		tflog.Debug(ctx, "ownergroup has changed for rnat6")
+		rnat6.Ownergroup = data.Ownergroup.ValueString()
+		hasChange = true
+	}
+	if !data.Redirectport.Equal(state.Redirectport) && !data.Redirectport.IsUnknown() {
+		tflog.Debug(ctx, "redirectport has changed for rnat6")
+		rnat6.Redirectport = utils.IntPtr(int(data.Redirectport.ValueInt64()))
+		hasChange = true
+	}
+
+	return rnat6, hasChange
+}
+
 func rnat6SetAttrFromGet(ctx context.Context, data *Rnat6ResourceModel, getResponseData map[string]interface{}) *Rnat6ResourceModel {
 	tflog.Debug(ctx, "In rnat6SetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. In the else branches we only null the
+	// value when the current value is unknown, so a known/configured value that
+	// NITRO omits from GET (omit-on-default trap) is never clobbered.
+	if val, ok := getResponseData["acl6name"]; ok && val != nil {
+		data.Acl6name = types.StringValue(val.(string))
+	} else if data.Acl6name.IsUnknown() {
+		data.Acl6name = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["network"]; ok && val != nil {
+		data.Network = types.StringValue(val.(string))
+	} else if data.Network.IsUnknown() {
+		data.Network = types.StringNull()
+	}
+	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
+		data.Ownergroup = types.StringValue(val.(string))
+	} else if data.Ownergroup.IsUnknown() {
+		data.Ownergroup = types.StringNull()
+	}
+	if val, ok := getResponseData["redirectport"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Redirectport = types.Int64Value(intVal)
+		}
+	} else if data.Redirectport.IsUnknown() {
+		data.Redirectport = types.Int64Null()
+	}
+	if val, ok := getResponseData["srcippersistency"]; ok && val != nil {
+		data.Srcippersistency = types.StringValue(val.(string))
+	} else if data.Srcippersistency.IsUnknown() {
+		data.Srcippersistency = types.StringNull()
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	return data
+}
+
+// rnat6SetAttrFromGetForDatasource populates every attribute directly from the
+// GET response (nulling absent values) for the datasource, which starts from an
+// empty model and has no prior state to preserve.
+func rnat6SetAttrFromGetForDatasource(ctx context.Context, data *Rnat6ResourceModel, getResponseData map[string]interface{}) *Rnat6ResourceModel {
+	tflog.Debug(ctx, "In rnat6SetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["acl6name"]; ok && val != nil {
 		data.Acl6name = types.StringValue(val.(string))
 	} else {
@@ -141,6 +239,8 @@ func rnat6SetAttrFromGet(ctx context.Context, data *Rnat6ResourceModel, getRespo
 	if val, ok := getResponseData["redirectport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Redirectport = types.Int64Value(intVal)
+		} else {
+			data.Redirectport = types.Int64Null()
 		}
 	} else {
 		data.Redirectport = types.Int64Null()
@@ -153,13 +253,14 @@ func rnat6SetAttrFromGet(ctx context.Context, data *Rnat6ResourceModel, getRespo
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
+		} else {
+			data.Td = types.Int64Null()
 		}
 	} else {
 		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the datasource
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

@@ -36,3 +36,9 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Name of the Citrix ADC named rule, or an expression.
 * `comment` - Any comments to preserve information about this policy.
 * `id` - The id of the authenticationsmartaccesspolicy. It has the same value as the `name` attribute.
+
+### Read-only authenticationsmartaccesspolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationsmartaccesspolicy` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `hits` - Number of hits.

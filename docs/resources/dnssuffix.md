@@ -19,6 +19,7 @@ resource "citrixadc_dnssuffix" "tf_dnssuffix" {
 ## Argument Reference
 
 * `Dnssuffix` - (Required) Suffix to be appended when resolving domain names that are not fully qualified.
+* `dnssuffix` - (Required) Suffix to be appended when resolving domain names that are not fully qualified.
 
 
 ## Attribute Reference

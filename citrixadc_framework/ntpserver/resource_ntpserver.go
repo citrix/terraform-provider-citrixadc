@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -54,10 +56,17 @@ func (r *NtpserverResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating ntpserver resource")
 
+	// Build the identifier (serverip preferred, otherwise servername) - SDK v2 parity.
+	identifier := ntpserverIdentifier(&data)
+	if identifier == "" {
+		resp.Diagnostics.AddError("Configuration Error", "At least one of serverip or servername must be specified")
+		return
+	}
+
 	ntpserver := ntpserverGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	_, err := r.client.AddResource(service.Ntpserver.Type(), "", &ntpserver)
+	// Named resource - use AddResource
+	_, err := r.client.AddResource(service.Ntpserver.Type(), identifier, &ntpserver)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ntpserver, got error: %s", err))
 		return
@@ -65,8 +74,16 @@ func (r *NtpserverResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Trace(ctx, "Created ntpserver resource")
 
+	// SDK v2 ID scheme: plain identifier value.
+	data.Id = types.StringValue(identifier)
+
 	// Read the updated state back
-	r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ntpserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -84,38 +101,111 @@ func (r *NtpserverResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading ntpserver resource")
 
-	r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NtpserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NtpserverResourceModel
+	var data, config, state NtpserverResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config so attributes removed from config can be unset
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state (serverip/servername are ForceNew and unchanged).
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating ntpserver resource")
 
-	// Create API request body from the model
-	ntpserver := ntpserverGetThePayloadFromtheConfig(ctx, &data)
+	// Detect changes and, for attributes removed from config, mark them for unset
+	// so the appliance reverts them to their NITRO defaults.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Autokey.Equal(state.Autokey) {
+		if config.Autokey.IsNull() {
+			attributesToUnset = append(attributesToUnset, "autokey")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxpoll.Equal(state.Maxpoll) {
+		if config.Maxpoll.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxpoll")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Minpoll.Equal(state.Minpoll) {
+		if config.Minpoll.IsNull() {
+			attributesToUnset = append(attributesToUnset, "minpoll")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Preferredntpserver.Equal(state.Preferredntpserver) {
+		if config.Preferredntpserver.IsNull() {
+			attributesToUnset = append(attributesToUnset, "preferredntpserver")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Key.Equal(state.Key) {
+		hasChange = true
+	}
 
-	// Make API call - update the resource
-	err := r.client.UpdateUnnamedResource(service.Ntpserver.Type(), &ntpserver)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpserver, got error: %s", err))
+	if hasChange {
+		// Create API request body from the model
+		ntpserver := ntpserverGetThePayloadFromtheConfig(ctx, &data)
+
+		// Singleton-style update: PUT with serverip/servername in the payload (SDK v2 parity).
+		err := r.client.UpdateUnnamedResource(service.Ntpserver.Type(), &ntpserver)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpserver, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated ntpserver resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ntpserver resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. The unset key is serverip/servername (the resource key).
+	unsetIdPayload := map[string]interface{}{}
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() && data.Serverip.ValueString() != "" {
+		unsetIdPayload["serverip"] = data.Serverip.ValueString()
+	}
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() && data.Servername.ValueString() != "" {
+		unsetIdPayload["servername"] = data.Servername.ValueString()
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ntpserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ntpserver attributes, got error: %s", err))
 		return
 	}
 
-	tflog.Trace(ctx, "Updated ntpserver resource")
-
 	// Read the updated state back
-	r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ntpserver not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -133,12 +223,10 @@ func (r *NtpserverResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting ntpserver resource")
 
-	// Build the identifier for deletion
-	var identifier string
-	if !data.Serverip.IsNull() && data.Serverip.ValueString() != "" {
-		identifier = data.Serverip.ValueString()
-	} else if !data.Servername.IsNull() && data.Servername.ValueString() != "" {
-		identifier = data.Servername.ValueString()
+	// The ID holds the plain serverip/servername value (SDK v2 parity).
+	identifier := data.Id.ValueString()
+	if identifier == "" {
+		identifier = ntpserverIdentifier(&data)
 	}
 
 	if identifier != "" {
@@ -152,26 +240,50 @@ func (r *NtpserverResource) Delete(ctx context.Context, req resource.DeleteReque
 	tflog.Trace(ctx, "Deleted ntpserver resource")
 }
 
-// Helper function to read ntpserver data from API
-func (r *NtpserverResource) readNtpserverFromApi(ctx context.Context, data *NtpserverResourceModel, diags *diag.Diagnostics) {
-	// Build the identifier for reading
-	var identifier string
-	if !data.Serverip.IsNull() && data.Serverip.ValueString() != "" {
-		identifier = data.Serverip.ValueString()
-	} else if !data.Servername.IsNull() && data.Servername.ValueString() != "" {
-		identifier = data.Servername.ValueString()
+// ntpserverIdentifier returns the plain-value identifier: serverip if set,
+// otherwise servername (matches the SDK v2 ID scheme).
+func ntpserverIdentifier(data *NtpserverResourceModel) string {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() && data.Serverip.ValueString() != "" {
+		return data.Serverip.ValueString()
 	}
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() && data.Servername.ValueString() != "" {
+		return data.Servername.ValueString()
+	}
+	return ""
+}
 
+// readNtpserverFromApi reads ntpserver state from the ADC. It uses FindAllResources
+// + a serverip/servername filter (SDK v2 parity, since ntpserver only exposes
+// "get (all)"). Returns false when the resource is absent so the caller can remove
+// it from state.
+func (r *NtpserverResource) readNtpserverFromApi(ctx context.Context, data *NtpserverResourceModel, diags *diag.Diagnostics) bool {
+	// The ID is the plain serverip/servername value.
+	identifier := data.Id.ValueString()
+	if identifier == "" {
+		identifier = ntpserverIdentifier(data)
+	}
 	if identifier == "" {
 		diags.AddError("Configuration Error", "At least one of serverip or servername must be specified")
-		return
+		return false
 	}
 
-	getResponseData, err := r.client.FindResource(service.Ntpserver.Type(), identifier)
+	dataArr, err := r.client.FindAllResources(service.Ntpserver.Type())
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read ntpserver, got error: %s", err))
-		return
+		return false
 	}
 
-	ntpserverSetAttrFromGet(ctx, data, getResponseData)
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["serverip"] == identifier || v["servername"] == identifier {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		return false
+	}
+
+	ntpserverSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	return true
 }

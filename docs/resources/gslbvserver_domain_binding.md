@@ -37,9 +37,9 @@ resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 * `name` - (Required) Name of the virtual server on which to perform the binding operation.
 * `domainname` - (Required) Domain name for which to change the time to live (TTL) and/or backup service IP address.
 * `backupip` - (Optional) The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.
-* `backupipflag` - (Optional) The IP address of the backup service for the specified domain name. Used when all the services bound to the domain are down, or when the backup chain of virtual servers is down.
-* `cookie_domain` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
-* `cookie_domainflag` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
+* `backupipflag` - (Optional) Flag indicating whether a backup IP address is configured for the specified domain name.
+* `cookiedomain` - (Optional) The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
+* `cookiedomainflag` - (Optional) Flag indicating whether a cookie domain is configured for the GSLB site.
 * `cookietimeout` - (Optional) Timeout, in minutes, for the GSLB site cookie.
 * `sitedomainttl` - (Optional) TTL, in seconds, for all internally created site domains (created when a site prefix is configured on a GSLB service) that are associated with this virtual server.
 * `ttl` - (Optional) Time to live (TTL) for the domain.
@@ -50,7 +50,7 @@ resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the gslbvserver_domain_binding is the conatenation of the `name` and `domainname` attributes.
+* `id` - The id of the gslbvserver_domain_binding. It is the concatenation of the `name` and `domainname` attributes separated by a comma.
 
 
 ## Import

@@ -18,10 +18,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbaction_basic = `
@@ -114,6 +117,53 @@ func testAccCheckLbactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLbaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbaction.tf_act"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbaction.Type(), "tf_act"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLbaction_import(t *testing.T) {
+	const resAddr = "citrixadc_lbaction.tf_act"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbaction_basic},
+			{
+				Config:                  testAccLbaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLbactionDataSource_basic = `
 
 	resource "citrixadc_lbaction" "tf_act_ds" {
@@ -127,6 +177,108 @@ const testAccLbactionDataSource_basic = `
 	}
 `
 
+func TestAccLbaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLbaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbactionExist("citrixadc_lbaction.tf_act", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbactionExist("citrixadc_lbaction.tf_act", nil)),
+			},
+		},
+	})
+}
+
+// comment is the only spec-unsettable mutable attribute of lbaction (the NITRO
+// unset payload lists only "comment"; name/type are ForceNew keys, newname is
+// rename-only, and value is not unsettable per the spec). Step 1 sets a
+// non-default comment; step 2 removes it, and the provider must issue the NITRO
+// ?action=unset so the appliance reverts comment to its default (absent/empty).
+const testAccLbaction_unset_step1 = `
+	resource "citrixadc_lbaction" "tf_unset" {
+		name    = "tf_act_unset"
+		type    = "SELECTIONORDER"
+		value   = [1]
+		comment = "managed by terraform"
+	}
+`
+
+const testAccLbaction_unset_step2 = `
+	resource "citrixadc_lbaction" "tf_unset" {
+		name  = "tf_act_unset"
+		type  = "SELECTIONORDER"
+		value = [1]
+		# comment removed from config -> the provider must unset it (revert to default).
+	}
+`
+
+func TestAccLbaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccLbaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbactionExist("citrixadc_lbaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbaction.tf_unset", "comment", "managed by terraform"),
+				),
+			},
+			{
+				// Removing comment must unset it: state (read back from the appliance)
+				// reverts to the NITRO default, and the implicit post-apply plan is empty.
+				Config: testAccLbaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbactionExist("citrixadc_lbaction.tf_unset", nil),
+					// Appliance-level confirmation the unset reverted comment to its
+					// default (absent/empty); the implicit post-apply plan must be empty.
+					testAccCheckLbactionADCValue("tf_act_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLbactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("lbaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccLbactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -137,6 +289,10 @@ func TestAccLbactionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_lbaction.tf_lbaction_ds", "name", "tf_act_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbaction.tf_lbaction_ds", "type", "SELECTIONORDER"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbaction.tf_lbaction_ds", "id"),
+					// referencecount is a reference-count read-only field the appliance
+					// always returns for an existing action.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbaction.tf_lbaction_ds", "referencecount"),
 				),
 			},
 		},

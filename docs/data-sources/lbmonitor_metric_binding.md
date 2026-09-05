@@ -35,6 +35,13 @@ output "metricweight" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lbmonitor_metric_binding. It is a system-generated identifier.
+* `id` - The id of the lbmonitor_metric_binding. It is the concatenation of the `monitorname` and `metric` attributes separated by a comma.
 * `metricthreshold` - Threshold to be used for that metric.
 * `metricweight` - The weight for the specified service metric with respect to others.
+
+### Read-only lbmonitor_metric_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbmonitor_metric_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `metric_unit` - Giving the unit of the metric. Possible values = Bytes/s, ms, pkts/s, users.
+* `metrictable` - Metric table to which to bind metrics.

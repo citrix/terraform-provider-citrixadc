@@ -2,6 +2,8 @@ package cacheforwardproxy
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cache"
 
@@ -54,10 +56,10 @@ func cacheforwardproxyGetThePayloadFromtheConfig(ctx context.Context, data *Cach
 
 	// Create API request body from the model
 	cacheforwardproxy := cache.Cacheforwardproxy{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		cacheforwardproxy.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		cacheforwardproxy.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
 
@@ -81,9 +83,14 @@ func cacheforwardproxySetAttrFromGet(ctx context.Context, data *Cacheforwardprox
 		data.Port = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Ipaddress.ValueString())
+	// Set ID for the resource.
+	// Multi-key resource (ipaddress + port): compose the new Framework key:value ID
+	// format. utils.ParseIdString still accepts the legacy SDK v2 "ipaddress,port"
+	// positional form (see resource_id_mapping.json) so existing state imports cleanly.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ipaddress:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ipaddress.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

@@ -3,8 +3,11 @@ package appfwconfidfield
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +58,31 @@ func (r *AppfwconfidfieldResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating appfwconfidfield resource")
 
-	// appfwconfidfield := appfwconfidfieldGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwconfidfield := appfwconfidfieldGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwconfidfield.Type(), &appfwconfidfield)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwconfidfield, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwconfidfield-config")
+	// Named resource - use AddResource
+	fieldname_value := data.Fieldname.ValueString()
+	_, err := r.client.AddResource(service.Appfwconfidfield.Type(), fieldname_value, &appfwconfidfield)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwconfidfield, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwconfidfield resource")
 
+	// Set ID for the resource before reading state
+	// Composite ID matches SDK v2 d.SetId: "fieldname,url"
+	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Fieldname.ValueString(), data.Url.ValueString()))
+
 	// Read the updated state back
-	r.readAppfwconfidfieldFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwconfidfieldFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwconfidfield not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +100,96 @@ func (r *AppfwconfidfieldResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading appfwconfidfield resource")
 
-	r.readAppfwconfidfieldFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwconfidfieldFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwconfidfieldResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwconfidfieldResourceModel
+	var data, config, state AppfwconfidfieldResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwconfidfield resource")
 
-	// Create API request body from the model
-	// appfwconfidfield := appfwconfidfieldGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for appfwconfidfield")
+		hasChange = true
+	}
+	if !data.Isregex.Equal(state.Isregex) {
+		tflog.Debug(ctx, "isregex has changed for appfwconfidfield")
+		if config.Isregex.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "isregex")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.State.Equal(state.State) {
+		tflog.Debug(ctx, "state has changed for appfwconfidfield")
+		if config.State.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "state")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwconfidfield.Type(), &appfwconfidfield)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwconfidfield, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appfwconfidfield := appfwconfidfieldGetThePayloadFromthePlan(ctx, &data)
+		// Unnamed update - the composite key (fieldname,url) is carried in the payload
+		err := r.client.UpdateUnnamedResource(service.Appfwconfidfield.Type(), &appfwconfidfield)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwconfidfield, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appfwconfidfield resource")
+		tflog.Trace(ctx, "Updated appfwconfidfield resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwconfidfield resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The composite key (fieldname,url) identifies the
+	// resource for the unset operation.
+	unsetIdPayload := map[string]interface{}{
+		"fieldname": data.Fieldname.ValueString(),
+		"url":       data.Url.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appfwconfidfield.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appfwconfidfield attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readAppfwconfidfieldFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwconfidfieldFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwconfidfield not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +207,60 @@ func (r *AppfwconfidfieldResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting appfwconfidfield resource")
 
-	// For appfwconfidfield, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwconfidfield resource from state")
-}
+	// Only the fieldname and url properties are required for deletion
+	argsMap := make(map[string]string)
+	argsMap["fieldname"] = url.QueryEscape(data.Fieldname.ValueString())
+	argsMap["url"] = url.QueryEscape(data.Url.ValueString())
 
-// Helper function to read appfwconfidfield data from API
-func (r *AppfwconfidfieldResource) readAppfwconfidfieldFromApi(ctx context.Context, data *AppfwconfidfieldResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwconfidfield.Type(), "")
+	err := r.client.DeleteResourceWithArgsMap(service.Appfwconfidfield.Type(), "", argsMap)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwconfidfield, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwconfidfield, got error: %s", err))
 		return
 	}
 
-	appfwconfidfieldSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted appfwconfidfield resource")
+}
 
+// Helper function to read appfwconfidfield data from API
+func (r *AppfwconfidfieldResource) readAppfwconfidfieldFromApi(ctx context.Context, data *AppfwconfidfieldResourceModel, diags *diag.Diagnostics) bool {
+
+	// Resolve the composite key (fieldname,url) from prior state, falling back to
+	// the composite ID (needed on import where the attributes are not yet populated).
+	fieldname_value := data.Fieldname.ValueString()
+	url_value := data.Url.ValueString()
+	if idParts := strings.SplitN(data.Id.ValueString(), ",", 2); len(idParts) == 2 {
+		fieldname_value = idParts[0]
+		url_value = idParts[1]
+	}
+
+	findParams := service.FindParams{
+		ResourceType: service.Appfwconfidfield.Type(),
+	}
+	dataArray, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwconfidfield, got error: %s", err))
+		return false
+	}
+
+	if len(dataArray) == 0 {
+		return false
+	}
+
+	foundIndex := -1
+	for i, item := range dataArray {
+		if item["fieldname"] == fieldname_value && item["url"] == url_value {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		return false
+	}
+
+	appfwconfidfieldSetAttrFromGet(ctx, data, dataArray[foundIndex])
+
+	return true
 }

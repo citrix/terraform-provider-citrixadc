@@ -93,7 +93,7 @@ func (d *CachepolicylabelCachepolicyBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	cachepolicylabel_cachepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	cachepolicylabel_cachepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -44,3 +44,9 @@ In addition to the arguments, the following attributes are exported:
 * `keytab` - The path to the keytab file that is used to decrypt kerberos tickets presented to Citrix ADC. If keytab is not available, domain/username/password can be specified in the negotiate action configuration.
 * `ntlmpath` - The path to the site that is enabled for NTLM authentication, including FQDN of the server. This is used when clients fallback to NTLM.
 * `ou` - Active Directory organizational units (OU) attribute.
+
+### Read-only authenticationnegotiateaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationnegotiateaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `kcdspn` - Host SPN extracted from keytab file.

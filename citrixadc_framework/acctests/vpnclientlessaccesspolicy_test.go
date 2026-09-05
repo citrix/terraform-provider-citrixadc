@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnclientlessaccesspolicy_basic = `
@@ -146,6 +147,77 @@ func testAccCheckVpnclientlessaccesspolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnclientlessaccesspolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnclientlessaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnclientlessaccesspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccesspolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnclientlessaccesspolicy.Type(), "tf_vpnclientlessaccesspolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnclientlessaccesspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccesspolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnclientlessaccesspolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnclientlessaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnclientlessaccesspolicy_basic},
+			{
+				Config:                  testAccVpnclientlessaccesspolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVpnclientlessaccesspolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnclientlessaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpnclientlessaccesspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccesspolicyExist("citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnclientlessaccesspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccesspolicyExist("citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnclientlessaccesspolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -158,6 +230,11 @@ func TestAccVpnclientlessaccesspolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "name", "tf_vpnclientlessaccesspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "profilename", "ns_cvpn_default_profile"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "rule", "true"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "id"),
+					// Counter-style read-only attributes are always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "undefhits"),
 				),
 			},
 		},

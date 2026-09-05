@@ -23,9 +23,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccNsacls_basic(t *testing.T) {
@@ -261,6 +263,174 @@ func testMapEquals(m1 map[string]interface{}, m2 map[string]interface{}) bool {
 		eq = eq && reflect.DeepEqual(m2[k], v)
 	}
 	return eq
+}
+
+func TestAccNsacls_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsaclsDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsacls_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsacls_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil)),
+			},
+		},
+	})
+}
+
+// TestAccNsacls_acl_drift_delete verifies that Read refreshes the managed acl
+// rules from the appliance so an out-of-band DELETE of a managed rule is detected
+// as drift (the rule is dropped from state; the plan re-adds it). The old
+// state-preserving no-op read left the deleted rule in state, hiding the drift.
+func TestAccNsacls_acl_drift_delete(t *testing.T) {
+	const resAddr = "citrixadc_nsacls.drift"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsaclsDriftDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsacls_drift("ALLOW"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resAddr, "id"),
+					testAccCheckNsaclFieldOnDevice("tf_drift_acl", "aclaction", "ALLOW"),
+				),
+			},
+			{
+				// Out-of-band delete the managed rule. Read must drop it from state so
+				// the refresh plan is non-empty (re-add).
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("drift: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsacl.Type(), "tf_drift_acl"); err != nil {
+						t.Fatalf("drift: out-of-band delete failed: %v", err)
+					}
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				// Re-apply reconciles: the rule is absent on the device, so it is
+				// recreated.
+				Config: testAccNsacls_drift("ALLOW"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resAddr, "id"),
+					testAccCheckNsaclFieldOnDevice("tf_drift_acl", "aclaction", "ALLOW"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccNsacls_acl_drift_modify verifies that Read refreshes a managed rule's
+// user-configured attributes from the appliance so an out-of-band field change is
+// detected as drift, and that a subsequent apply reconciles it back to config.
+func TestAccNsacls_acl_drift_modify(t *testing.T) {
+	const resAddr = "citrixadc_nsacls.drift"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsaclsDriftDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsacls_drift("ALLOW"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resAddr, "id"),
+					testAccCheckNsaclFieldOnDevice("tf_drift_acl", "aclaction", "ALLOW"),
+				),
+			},
+			{
+				// Out-of-band change a user-configured field (aclaction ALLOW->DENY).
+				// Read must echo the new value so the refresh plan is non-empty.
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("drift: client: %v", err)
+					}
+					payload := ns.Nsacl{Aclname: "tf_drift_acl", Aclaction: "DENY"}
+					if _, err := client.UpdateResource(service.Nsacl.Type(), "tf_drift_acl", &payload); err != nil {
+						t.Fatalf("drift: out-of-band modify failed: %v", err)
+					}
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				// Re-apply reconciles aclaction back to ALLOW on the appliance.
+				Config: testAccNsacls_drift("ALLOW"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resAddr, "id"),
+					testAccCheckNsaclFieldOnDevice("tf_drift_acl", "aclaction", "ALLOW"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsaclFieldOnDevice asserts a single field of an nsacl rule on the
+// appliance equals the expected value.
+func testAccCheckNsaclFieldOnDevice(aclname, field, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		rule, err := client.FindResource(service.Nsacl.Type(), aclname)
+		if err != nil {
+			return fmt.Errorf("nsacl rule %q not found on the appliance: %v", aclname, err)
+		}
+		got := fmt.Sprintf("%v", rule[field])
+		if got != expected {
+			return fmt.Errorf("nsacl %q field %q = %q on the appliance, expected %q", aclname, field, got, expected)
+		}
+		return nil
+	}
+}
+
+// testAccCheckNsaclsDriftDestroy asserts the drift-test rule is gone.
+func testAccCheckNsaclsDriftDestroy(s *terraform.State) error {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
+	deviceAcls, err := client.FindAllResources(service.Nsacl.Type())
+	if err != nil {
+		return err
+	}
+	for _, acl := range deviceAcls {
+		if acl["aclname"] == "tf_drift_acl" {
+			return fmt.Errorf("citrixadc-provider testAccCheckNsaclsDriftDestroy: dangling acl tf_drift_acl")
+		}
+	}
+	return nil
+}
+
+func testAccNsacls_drift(aclaction string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_nsacls" "drift" {
+  acl {
+    aclname   = "tf_drift_acl"
+    protocol  = "TCP"
+    aclaction = "%s"
+    destipval = "192.168.199.60"
+    priority  = 30
+    logstate  = "ENABLED"
+  }
+}
+`, aclaction)
 }
 
 const testAccNsacls_basic = `

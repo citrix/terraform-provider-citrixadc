@@ -29,3 +29,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the l4param. It is a unique string prefixed with "tf-l4param-"
 
+
+## Import
+
+A l4param can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_l4param.tf_l4param l4param-config
+```

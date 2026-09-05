@@ -42,8 +42,8 @@ func (d *VxlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vxlanid.ValueInt64())
+	// Array filter with parent ID. The parent name is vxlanid.
+	vxlanid := fmt.Sprintf("%v", data.Vxlanid.ValueInt64())
 	ipaddress_Name := data.Ipaddress
 
 	var dataArr []map[string]interface{}
@@ -51,7 +51,7 @@ func (d *VxlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Re
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vxlan_nsip_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vxlanid,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -66,35 +66,24 @@ func (d *VxlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right ipaddress
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ipaddress
 		if val, ok := v["ipaddress"].(string); ok {
-			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
-				match = false
-				continue
+			if !ipaddress_Name.IsNull() && val == ipaddress_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !ipaddress_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vxlan_nsip_binding with ipaddress %s not found", ipaddress_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vxlan_nsip_binding with ipaddress %s not found", ipaddress_Name.ValueString()))
 		return
 	}
 
-	vxlan_nsip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vxlan_nsip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

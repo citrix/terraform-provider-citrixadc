@@ -12,7 +12,6 @@ func SslcertkeySslocspresponderBindingDataSourceSchema() schema.Schema {
 			},
 			"ca": schema.BoolAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "The certificate-key pair being unbound is a Certificate Authority (CA) certificate. If you choose this option, the certificate-key pair is unbound from the list of CA certificates that were bound to the specified SSL virtual server or SSL service.",
 			},
 			"certkey": schema.StringAttribute{

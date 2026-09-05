@@ -42,10 +42,12 @@ In addition to the arguments, the following attributes are available:
   * Disabled - When one of the nodes goes down, a non-nodegroup cluster node is picked up and acts as part of the nodegroup. When the original node of the nodegroup comes up, the backup node will be replaced.
 * `id` - The id of the clusternodegroup. It has the same value as the `name` attribute.
 
-## Import
+### Read-only clusternodegroup metadata
 
-A clusternodegroup can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_clusternodegroup` resource). Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_clusternodegroup.tf_clusternodegroup my_clusternode
-```
+* `currentnodemask` - Bitmap of current nodes in this nodegroup.
+* `backupnodemask` - Bitmap of backup nodes in this nodegroup.
+* `boundedentitiescntfrompe` - Count of bounded entities to this nodegroup according to PE.
+* `activelist` - Active node list of this nodegroup. A list of strings.
+* `backuplist` - Backup node list of this nodegroup. A list of strings.

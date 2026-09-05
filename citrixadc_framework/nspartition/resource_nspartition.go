@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *NspartitionResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating nspartition resource")
 
-	// nspartition := nspartitionGetThePayloadFromtheConfig(ctx, &data)
+	nspartition := nspartitionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nspartition.Type(), &nspartition)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nspartition, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nspartition-config")
+	// Named resource - use AddResource
+	partitionname_value := data.Partitionname.ValueString()
+	_, err := r.client.AddResource(service.Nspartition.Type(), partitionname_value, &nspartition)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nspartition, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nspartition resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Partitionname.ValueString()))
+
 	// Read the updated state back
-	r.readNspartitionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNspartitionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nspartition not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,118 @@ func (r *NspartitionResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading nspartition resource")
 
-	r.readNspartitionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNspartitionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NspartitionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NspartitionResourceModel
+	var data, config, state NspartitionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nspartition resource")
 
-	// Create API request body from the model
-	// nspartition := nspartitionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Force.Equal(state.Force) {
+		tflog.Debug(ctx, "force has changed for nspartition")
+		hasChange = true
+	}
+	if !data.Maxbandwidth.Equal(state.Maxbandwidth) {
+		tflog.Debug(ctx, "maxbandwidth has changed for nspartition")
+		if config.Maxbandwidth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxbandwidth")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxconn.Equal(state.Maxconn) {
+		tflog.Debug(ctx, "maxconn has changed for nspartition")
+		if config.Maxconn.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxconn")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxmemlimit.Equal(state.Maxmemlimit) {
+		tflog.Debug(ctx, "maxmemlimit has changed for nspartition")
+		if config.Maxmemlimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxmemlimit")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Minbandwidth.Equal(state.Minbandwidth) {
+		tflog.Debug(ctx, "minbandwidth has changed for nspartition")
+		if config.Minbandwidth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "minbandwidth")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Partitionmac.Equal(state.Partitionmac) {
+		tflog.Debug(ctx, "partitionmac has changed for nspartition")
+		hasChange = true
+	}
+	if !data.Save.Equal(state.Save) {
+		tflog.Debug(ctx, "save has changed for nspartition")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nspartition.Type(), &nspartition)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nspartition, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		nspartition := nspartitionGetThePayloadFromthePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		partitionname_value := data.Partitionname.ValueString()
+		_, err := r.client.UpdateResource(service.Nspartition.Type(), partitionname_value, &nspartition)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nspartition, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated nspartition resource")
+		tflog.Trace(ctx, "Updated nspartition resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nspartition resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"partitionname": data.Partitionname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nspartition.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nspartition attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readNspartitionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNspartitionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nspartition not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +224,34 @@ func (r *NspartitionResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting nspartition resource")
 
-	// For nspartition, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nspartition resource from state")
+	// Named resource - delete using DeleteResource
+	partitionname_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nspartition.Type(), partitionname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nspartition, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nspartition resource")
 }
 
-// Helper function to read nspartition data from API
-func (r *NspartitionResource) readNspartitionFromApi(ctx context.Context, data *NspartitionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nspartition.Type(), "")
+// Helper function to read nspartition data from API.
+// Returns false when the resource no longer exists on the appliance.
+func (r *NspartitionResource) readNspartitionFromApi(ctx context.Context, data *NspartitionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain partitionname value
+	partitionname_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nspartition.Type(), partitionname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nspartition, got error: %s", err))
-		return
+		return false
 	}
 
 	nspartitionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

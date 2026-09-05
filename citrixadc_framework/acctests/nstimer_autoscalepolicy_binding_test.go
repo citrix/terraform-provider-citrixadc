@@ -17,12 +17,14 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Participating entities reused:
@@ -134,6 +136,35 @@ func TestAccNstimer_autoscalepolicy_binding_basic(t *testing.T) {
 
 func TestAccNstimer_autoscalepolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_nstimer_autoscalepolicy_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -156,6 +187,7 @@ func TestAccNstimer_autoscalepolicy_binding_import(t *testing.T) {
 				// non-recoverable.
 				ImportStateVerifyIgnore: []string{"priority"}, // not in ID; GET returns empty body on this firmware
 			},
+			{Config: testAccNstimer_autoscalepolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"priority"}},
 		},
 	})
 }
@@ -305,4 +337,33 @@ func testAccCheckNstimer_autoscalepolicy_bindingDestroy(s *terraform.State) erro
 	}
 
 	return nil
+}
+
+func TestAccNstimer_autoscalepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstimer_autoscalepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstimer_autoscalepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstimer_autoscalepolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimer_autoscalepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// DELETE .../<name>?args=policyname:<policyname> (mirrors the resource Delete).
+					if err := client.DeleteResourceWithArgs(service.Nstimer_autoscalepolicy_binding.Type(), "tf_nstimer_binding", []string{"policyname:tf_binding_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstimer_autoscalepolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimer_autoscalepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
 }

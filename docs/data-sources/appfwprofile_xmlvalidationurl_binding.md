@@ -38,9 +38,10 @@ In addition to the arguments, the following attributes are available:
 
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `id` - The id of the appfwprofile_xmlvalidationurl_binding. It is a system-generated identifier.
-* `isautodeployed` - Is the rule auto deployed by dynamic profile?
+* `id` - The id of the appfwprofile_xmlvalidationurl_binding. It is the concatenation of the `name` and `xmlvalidationurl` attributes separated by a comma.
+* `isautodeployed` - Is the rule auto deployed by dynamic profile ?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.
 * `xmladditionalsoapheaders` - Allow addtional soap headers.
 * `xmlendpointcheck` - Modifies the behaviour of the Request URL validation w.r.t. the Service URL. If set to ABSOLUTE, the entire request URL is validated with the entire URL mentioned in Service of the associated WSDL. eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would FAIL the validation. If set to RELAIVE, only the non-hostname part of the request URL is validated against the non-hostname part of the Service URL. eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would PASS the validation.

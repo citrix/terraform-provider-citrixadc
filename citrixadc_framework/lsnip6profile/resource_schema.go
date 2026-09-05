@@ -2,6 +2,7 @@ package lsnip6profile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
@@ -31,6 +32,7 @@ func (r *Lsnip6profileResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the lsnip6profile resource.",
 			},
 			"name": schema.StringAttribute{
+				// SDK v2: Required + ForceNew
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -38,25 +40,34 @@ func (r *Lsnip6profileResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Name for the LSN ip6 profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN ip6 profile is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn ip6 profile1\" or 'lsn ip6 profile1').",
 			},
 			"natprefix": schema.StringAttribute{
+				// SDK v2: Optional + ForceNew. Computed so ADC-returned values do not
+				// cause perpetual diffs; RequiresReplaceIfConfigured mirrors ForceNew for
+				// a user-configured Optional attribute without forcing replace on computed drift.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IPv6 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.",
 			},
 			"network6": schema.StringAttribute{
+				// SDK v2: Optional + ForceNew
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IPv6 address of the Citrix ADC AFTR device",
 			},
 			"type": schema.StringAttribute{
-				Required: true,
+				// SDK v2: Optional + ForceNew (NOT Required — backward-compat with existing configs).
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IPv6 translation type for which to set the LSN IP6 profile parameters.",
 			},
@@ -69,16 +80,16 @@ func lsnip6profileGetThePayloadFromtheConfig(ctx context.Context, data *Lsnip6pr
 
 	// Create API request body from the model
 	lsnip6profile := lsn.Lsnip6profile{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		lsnip6profile.Name = data.Name.ValueString()
 	}
-	if !data.Natprefix.IsNull() {
+	if !data.Natprefix.IsNull() && !data.Natprefix.IsUnknown() {
 		lsnip6profile.Natprefix = data.Natprefix.ValueString()
 	}
-	if !data.Network6.IsNull() {
+	if !data.Network6.IsNull() && !data.Network6.IsUnknown() {
 		lsnip6profile.Network6 = data.Network6.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		lsnip6profile.Type = data.Type.ValueString()
 	}
 
@@ -88,31 +99,33 @@ func lsnip6profileGetThePayloadFromtheConfig(ctx context.Context, data *Lsnip6pr
 func lsnip6profileSetAttrFromGet(ctx context.Context, data *Lsnip6profileResourceModel, getResponseData map[string]interface{}) *Lsnip6profileResourceModel {
 	tflog.Debug(ctx, "In lsnip6profileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches so a known (configured/state) value is never clobbered
+	// to null when NITRO omits the field from GET (omit-on-default trap).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["natprefix"]; ok && val != nil {
 		data.Natprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Natprefix.IsUnknown() {
 		data.Natprefix = types.StringNull()
 	}
 	if val, ok := getResponseData["network6"]; ok && val != nil {
 		data.Network6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Network6.IsUnknown() {
 		data.Network6 = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value (name) as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

@@ -110,6 +110,7 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
 * `mptcpreliableaddaddr` - (Optional) If enabled, Citrix ADC retransmits MPTCP ADD-ADDR option if echo response is not received within the timeout interval. The retransmission is attempted only once.
 * `mptcpsendsfresetoption` - (Optional) Allow MPTCP subflows to send TCP RST Reason (MP_TCPRST) Option while sending TCP RST.
 * `rfc5961chlgacklimit` - (Optional) Limits number of Challenge ACK sent per second, as recommended in RFC 5961(Improving TCP's Robustness to Blind In-Window Attacks)
+* `sendresetreasoncode` - (Optional) If enabled, NetScaler includes a debug code indicating the reason for the reset in the TCP Window header field of outgoing TCP RST segments.
 
 
 ## Attribute Reference
@@ -117,3 +118,12 @@ resource "citrixadc_nstcpparam" "tf_tcpparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nstcpparam. It is a unique string prefixed with "tf-nstcpparam-"
+
+
+## Import
+
+A nstcpparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nstcpparam.tf_nstcpparam nstcpparam-config
+```

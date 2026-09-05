@@ -1,5 +1,5 @@
 ---
-subcategory: "Appflow"
+subcategory: "AppFlow"
 ---
 
 # Data Source: appflowaction_analyticsprofile_binding

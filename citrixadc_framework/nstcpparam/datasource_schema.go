@@ -1,8 +1,83 @@
 package nstcpparam
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// NstcpparamDataSourceModel is the data-source-specific model, decoupled from
+// NstcpparamResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// Every non-key attribute is Computed; the Framework's per-attribute model
+// <-> schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type NstcpparamDataSourceModel struct {
+	Id                                  types.String `tfsdk:"id"`
+	Ackonpush                           types.String `tfsdk:"ackonpush"`
+	Autosyncookietimeout                types.Int64  `tfsdk:"autosyncookietimeout"`
+	Compacttcpoptionnoop                types.String `tfsdk:"compacttcpoptionnoop"`
+	Connflushifnomem                    types.String `tfsdk:"connflushifnomem"`
+	Connflushthres                      types.Int64  `tfsdk:"connflushthres"`
+	Delayedack                          types.Int64  `tfsdk:"delayedack"`
+	Delinkclientserveronrst             types.String `tfsdk:"delinkclientserveronrst"`
+	Downstaterst                        types.String `tfsdk:"downstaterst"`
+	Enhancedisngeneration               types.String `tfsdk:"enhancedisngeneration"`
+	Initialcwnd                         types.Int64  `tfsdk:"initialcwnd"`
+	Kaprobeupdatelastactivity           types.String `tfsdk:"kaprobeupdatelastactivity"`
+	Learnvsvrmss                        types.String `tfsdk:"learnvsvrmss"`
+	Limitedpersist                      types.String `tfsdk:"limitedpersist"`
+	Maxburst                            types.Int64  `tfsdk:"maxburst"`
+	Maxdynserverprobes                  types.Int64  `tfsdk:"maxdynserverprobes"`
+	Maxpktpermss                        types.Int64  `tfsdk:"maxpktpermss"`
+	Maxsynackretx                       types.Int64  `tfsdk:"maxsynackretx"`
+	Maxsynhold                          types.Int64  `tfsdk:"maxsynhold"`
+	Maxsynholdperprobe                  types.Int64  `tfsdk:"maxsynholdperprobe"`
+	Maxtimewaitconn                     types.Int64  `tfsdk:"maxtimewaitconn"`
+	Minrto                              types.Int64  `tfsdk:"minrto"`
+	Mptcpchecksum                       types.String `tfsdk:"mptcpchecksum"`
+	Mptcpclosemptcpsessiononlastsfclose types.String `tfsdk:"mptcpclosemptcpsessiononlastsfclose"`
+	Mptcpconcloseonpassivesf            types.String `tfsdk:"mptcpconcloseonpassivesf"`
+	Mptcpfastcloseoption                types.String `tfsdk:"mptcpfastcloseoption"`
+	Mptcpimmediatesfcloseonfin          types.String `tfsdk:"mptcpimmediatesfcloseonfin"`
+	Mptcpmaxpendingsf                   types.Int64  `tfsdk:"mptcpmaxpendingsf"`
+	Mptcpmaxsf                          types.Int64  `tfsdk:"mptcpmaxsf"`
+	Mptcppendingjointhreshold           types.Int64  `tfsdk:"mptcppendingjointhreshold"`
+	Mptcpreliableaddaddr                types.String `tfsdk:"mptcpreliableaddaddr"`
+	Mptcprtostoswitchsf                 types.Int64  `tfsdk:"mptcprtostoswitchsf"`
+	Mptcpsendsfresetoption              types.String `tfsdk:"mptcpsendsfresetoption"`
+	Mptcpsfreplacetimeout               types.Int64  `tfsdk:"mptcpsfreplacetimeout"`
+	Mptcpsftimeout                      types.Int64  `tfsdk:"mptcpsftimeout"`
+	Mptcpusebackupondss                 types.String `tfsdk:"mptcpusebackupondss"`
+	Msslearndelay                       types.Int64  `tfsdk:"msslearndelay"`
+	Msslearninterval                    types.Int64  `tfsdk:"msslearninterval"`
+	Nagle                               types.String `tfsdk:"nagle"`
+	Oooqsize                            types.Int64  `tfsdk:"oooqsize"`
+	Pktperretx                          types.Int64  `tfsdk:"pktperretx"`
+	Recvbuffsize                        types.Int64  `tfsdk:"recvbuffsize"`
+	Rfc5961chlgacklimit                 types.Int64  `tfsdk:"rfc5961chlgacklimit"`
+	Sack                                types.String `tfsdk:"sack"`
+	Sendresetreasoncode                 types.String `tfsdk:"sendresetreasoncode"`
+	Slowstartincr                       types.Int64  `tfsdk:"slowstartincr"`
+	Synattackdetection                  types.String `tfsdk:"synattackdetection"`
+	Synholdfastgiveup                   types.Int64  `tfsdk:"synholdfastgiveup"`
+	Tcpfastopencookietimeout            types.Int64  `tfsdk:"tcpfastopencookietimeout"`
+	Tcpfintimeout                       types.Int64  `tfsdk:"tcpfintimeout"`
+	Tcpmaxretries                       types.Int64  `tfsdk:"tcpmaxretries"`
+	Ws                                  types.String `tfsdk:"ws"`
+	Wsval                               types.Int64  `tfsdk:"wsval"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/nstcpparam.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func NstcpparamDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -225,6 +300,11 @@ func NstcpparamDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enable or disable Selective ACKnowledgement (SACK).",
 			},
+			"sendresetreasoncode": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, NetScaler includes a debug code indicating the reason for the reset in the TCP Window header field of outgoing TCP RST segments.",
+			},
 			"slowstartincr": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -265,6 +345,88 @@ func NstcpparamDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Factor used to calculate the new window size.\nThis argument is needed only when the window scaling is enabled.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if the tcp param is built-in or not.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// nstcpparamDataSourceSetAttrFromGet projects a NITRO nstcpparam GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func nstcpparamDataSourceSetAttrFromGet(ctx context.Context, data *NstcpparamDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nstcpparamDataSourceSetAttrFromGet Function")
+
+	// nstcpparam is a singleton with no lookup key; use a static ID.
+	data.Id = types.StringValue("nstcpparam-config")
+
+	// Read/write attributes as read-back outputs.
+	data.Ackonpush = utils.MapGetString(g, "ackonpush")
+	data.Autosyncookietimeout = utils.MapGetInt64(g, "autosyncookietimeout")
+	data.Compacttcpoptionnoop = utils.MapGetString(g, "compacttcpoptionnoop")
+	data.Connflushifnomem = utils.MapGetString(g, "connflushifnomem")
+	data.Connflushthres = utils.MapGetInt64(g, "connflushthres")
+	data.Delayedack = utils.MapGetInt64(g, "delayedack")
+	data.Delinkclientserveronrst = utils.MapGetString(g, "delinkclientserveronrst")
+	data.Downstaterst = utils.MapGetString(g, "downstaterst")
+	data.Enhancedisngeneration = utils.MapGetString(g, "enhancedisngeneration")
+	data.Initialcwnd = utils.MapGetInt64(g, "initialcwnd")
+	data.Kaprobeupdatelastactivity = utils.MapGetString(g, "kaprobeupdatelastactivity")
+	data.Learnvsvrmss = utils.MapGetString(g, "learnvsvrmss")
+	data.Limitedpersist = utils.MapGetString(g, "limitedpersist")
+	data.Maxburst = utils.MapGetInt64(g, "maxburst")
+	data.Maxdynserverprobes = utils.MapGetInt64(g, "maxdynserverprobes")
+	data.Maxpktpermss = utils.MapGetInt64(g, "maxpktpermss")
+	data.Maxsynackretx = utils.MapGetInt64(g, "maxsynackretx")
+	data.Maxsynhold = utils.MapGetInt64(g, "maxsynhold")
+	data.Maxsynholdperprobe = utils.MapGetInt64(g, "maxsynholdperprobe")
+	data.Maxtimewaitconn = utils.MapGetInt64(g, "maxtimewaitconn")
+	data.Minrto = utils.MapGetInt64(g, "minrto")
+	data.Mptcpchecksum = utils.MapGetString(g, "mptcpchecksum")
+	data.Mptcpclosemptcpsessiononlastsfclose = utils.MapGetString(g, "mptcpclosemptcpsessiononlastsfclose")
+	data.Mptcpconcloseonpassivesf = utils.MapGetString(g, "mptcpconcloseonpassivesf")
+	data.Mptcpfastcloseoption = utils.MapGetString(g, "mptcpfastcloseoption")
+	data.Mptcpimmediatesfcloseonfin = utils.MapGetString(g, "mptcpimmediatesfcloseonfin")
+	data.Mptcpmaxpendingsf = utils.MapGetInt64(g, "mptcpmaxpendingsf")
+	data.Mptcpmaxsf = utils.MapGetInt64(g, "mptcpmaxsf")
+	data.Mptcppendingjointhreshold = utils.MapGetInt64(g, "mptcppendingjointhreshold")
+	data.Mptcpreliableaddaddr = utils.MapGetString(g, "mptcpreliableaddaddr")
+	data.Mptcprtostoswitchsf = utils.MapGetInt64(g, "mptcprtostoswitchsf")
+	data.Mptcpsendsfresetoption = utils.MapGetString(g, "mptcpsendsfresetoption")
+	data.Mptcpsfreplacetimeout = utils.MapGetInt64(g, "mptcpsfreplacetimeout")
+	data.Mptcpsftimeout = utils.MapGetInt64(g, "mptcpsftimeout")
+	data.Mptcpusebackupondss = utils.MapGetString(g, "mptcpusebackupondss")
+	data.Msslearndelay = utils.MapGetInt64(g, "msslearndelay")
+	data.Msslearninterval = utils.MapGetInt64(g, "msslearninterval")
+	data.Nagle = utils.MapGetString(g, "nagle")
+	data.Oooqsize = utils.MapGetInt64(g, "oooqsize")
+	data.Pktperretx = utils.MapGetInt64(g, "pktperretx")
+	data.Recvbuffsize = utils.MapGetInt64(g, "recvbuffsize")
+	data.Rfc5961chlgacklimit = utils.MapGetInt64(g, "rfc5961chlgacklimit")
+	data.Sack = utils.MapGetString(g, "sack")
+	data.Sendresetreasoncode = utils.MapGetString(g, "sendresetreasoncode")
+	data.Slowstartincr = utils.MapGetInt64(g, "slowstartincr")
+	data.Synattackdetection = utils.MapGetString(g, "synattackdetection")
+	data.Synholdfastgiveup = utils.MapGetInt64(g, "synholdfastgiveup")
+	data.Tcpfastopencookietimeout = utils.MapGetInt64(g, "tcpfastopencookietimeout")
+	data.Tcpfintimeout = utils.MapGetInt64(g, "tcpfintimeout")
+	data.Tcpmaxretries = utils.MapGetInt64(g, "tcpmaxretries")
+	data.Ws = utils.MapGetString(g, "ws")
+	data.Wsval = utils.MapGetInt64(g, "wsval")
+
+	// Read-only attributes.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

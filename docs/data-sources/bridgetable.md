@@ -51,6 +51,15 @@ In addition to the arguments above, the following attributes are exported:
 
 * `id` - The ID of the bridge table entry. For bridgetable, this is a composite key of `mac,vxlan,vtep`.
 
+### Read-only bridgetable metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_bridgetable` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `flags` - Display flags.
+* `type` - Whether the entry is static or dynamic. Possible values = STATIC, PERMANENT, DYNAMIC.
+* `channel` - The Tunnel through which bridge entry is learned.
+* `controlplane` - Whether this bridge table entry is populated by a control plane protocol.
+
 ## Common Use Cases
 
 ### Retrieve Bridge Table Entry for VXLAN Configuration

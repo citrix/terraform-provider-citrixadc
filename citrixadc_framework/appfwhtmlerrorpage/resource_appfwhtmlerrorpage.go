@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *AppfwhtmlerrorpageResource) Create(ctx context.Context, req resource.Cr
 
 	tflog.Debug(ctx, "Creating appfwhtmlerrorpage resource")
 
-	// appfwhtmlerrorpage := appfwhtmlerrorpageGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	appfwhtmlerrorpage := appfwhtmlerrorpageGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwhtmlerrorpage.Type(), &appfwhtmlerrorpage)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwhtmlerrorpage, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwhtmlerrorpage-config")
+	// Named resource created via the "Import" action (mirrors SDK v2 ActOnResource)
+	err := r.client.ActOnResource(service.Appfwhtmlerrorpage.Type(), &appfwhtmlerrorpage, "Import")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwhtmlerrorpage, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwhtmlerrorpage resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAppfwhtmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwhtmlerrorpageFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwhtmlerrorpage not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppfwhtmlerrorpageResource) Read(ctx context.Context, req resource.Read
 
 	tflog.Debug(ctx, "Reading appfwhtmlerrorpage resource")
 
-	r.readAppfwhtmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwhtmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwhtmlerrorpageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwhtmlerrorpageResourceModel
+	var data, state AppfwhtmlerrorpageResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,22 @@ func (r *AppfwhtmlerrorpageResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwhtmlerrorpage resource")
 
-	// Create API request body from the model
-	// appfwhtmlerrorpage := appfwhtmlerrorpageGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwhtmlerrorpage.Type(), &appfwhtmlerrorpage)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwhtmlerrorpage, got error: %s", err))
-	//	 return
-	// }
-
+	// All attributes are ForceNew/RequiresReplace; there are no in-place updatable
+	// fields for appfwhtmlerrorpage, so no NITRO update call is issued here.
 	tflog.Trace(ctx, "Updated appfwhtmlerrorpage resource")
 
 	// Read the updated state back
-	r.readAppfwhtmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwhtmlerrorpageFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwhtmlerrorpage not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +153,36 @@ func (r *AppfwhtmlerrorpageResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleting appfwhtmlerrorpage resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Appfwhtmlerrorpage.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwhtmlerrorpage, got error: %s", err))
+		return
+	}
 
-	// For appfwhtmlerrorpage, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwhtmlerrorpage resource from state")
+	tflog.Trace(ctx, "Deleted appfwhtmlerrorpage resource")
 }
 
 // Helper function to read appfwhtmlerrorpage data from API
-func (r *AppfwhtmlerrorpageResource) readAppfwhtmlerrorpageFromApi(ctx context.Context, data *AppfwhtmlerrorpageResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwhtmlerrorpage.Type(), "")
+func (r *AppfwhtmlerrorpageResource) readAppfwhtmlerrorpageFromApi(ctx context.Context, data *AppfwhtmlerrorpageResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	appfwhtmlerrorpage_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Appfwhtmlerrorpage.Type(), appfwhtmlerrorpage_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwhtmlerrorpage, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwhtmlerrorpageSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

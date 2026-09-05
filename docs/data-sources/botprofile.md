@@ -102,3 +102,10 @@ In addition to the argument above, the following attributes are exported:
 
 * `verboseloglevel` - Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.
 
+### Read-only botprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_botprofile` resource) and are always `Computed`. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if the bot profile is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+

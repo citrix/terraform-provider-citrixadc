@@ -93,7 +93,7 @@ func (d *CsvserverAuthorizationpolicyBindingDataSource) Read(ctx context.Context
 		return
 	}
 
-	csvserver_authorizationpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	csvserver_authorizationpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

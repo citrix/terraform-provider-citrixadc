@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *InatResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	tflog.Debug(ctx, "Creating inat resource")
 
-	// inat := inatGetThePayloadFromtheConfig(ctx, &data)
+	inat := inatGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Inat.Type(), &inat)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create inat, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("inat-config")
+	// Named resource - use AddResource keyed on name
+	inatName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Inat.Type(), inatName, &inat)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create inat, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created inat resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(inatName)
+
 	// Read the updated state back
-	r.readInatFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readInatFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "inat not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,136 @@ func (r *InatResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	tflog.Debug(ctx, "Reading inat resource")
 
-	r.readInatFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readInatFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *InatResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data InatResourceModel
+	var data, config, state InatResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset targets)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating inat resource")
 
-	// Create API request body from the model
-	// inat := inatGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	// (publicip, td and name are RequiresReplace and never reach Update)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Connfailover.Equal(state.Connfailover) {
+		tflog.Debug(ctx, "connfailover has changed for inat")
+		if config.Connfailover.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "connfailover")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ftp.Equal(state.Ftp) {
+		tflog.Debug(ctx, "ftp has changed for inat")
+		if config.Ftp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ftp")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Mode.Equal(state.Mode) {
+		tflog.Debug(ctx, "mode has changed for inat")
+		hasChange = true
+	}
+	if !data.Privateip.Equal(state.Privateip) {
+		tflog.Debug(ctx, "privateip has changed for inat")
+		hasChange = true
+	}
+	if !data.Proxyip.Equal(state.Proxyip) {
+		tflog.Debug(ctx, "proxyip has changed for inat")
+		hasChange = true
+	}
+	if !data.Tcpproxy.Equal(state.Tcpproxy) {
+		tflog.Debug(ctx, "tcpproxy has changed for inat")
+		if config.Tcpproxy.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tcpproxy")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Tftp.Equal(state.Tftp) {
+		tflog.Debug(ctx, "tftp has changed for inat")
+		if config.Tftp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tftp")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Useproxyport.Equal(state.Useproxyport) {
+		tflog.Debug(ctx, "useproxyport has changed for inat")
+		if config.Useproxyport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useproxyport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Usip.Equal(state.Usip) {
+		tflog.Debug(ctx, "usip has changed for inat")
+		hasChange = true
+	}
+	if !data.Usnip.Equal(state.Usnip) {
+		tflog.Debug(ctx, "usnip has changed for inat")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Inat.Type(), &inat)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update inat, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model, restricted to NITRO-updatable fields
+		inat := inatGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Named resource - use UpdateResource keyed on name
+		inatName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Inat.Type(), inatName, &inat)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update inat, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated inat resource")
+		tflog.Trace(ctx, "Updated inat resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for inat resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Inat.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset inat attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readInatFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readInatFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "inat not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +242,33 @@ func (r *InatResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	tflog.Debug(ctx, "Deleting inat resource")
 
-	// For inat, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted inat resource from state")
+	// Named resource - delete using DeleteResource keyed on the live name (id)
+	inatName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Inat.Type(), inatName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete inat, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted inat resource")
 }
 
-// Helper function to read inat data from API
-func (r *InatResource) readInatFromApi(ctx context.Context, data *InatResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Inat.Type(), "")
+// Helper function to read inat data from API. Returns false when the resource no
+// longer exists on the ADC (so callers can drop it from state).
+func (r *InatResource) readInatFromApi(ctx context.Context, data *InatResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	inatName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Inat.Type(), inatName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read inat, got error: %s", err))
-		return
+		return false
 	}
 
 	inatSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

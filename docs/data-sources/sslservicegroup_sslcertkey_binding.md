@@ -27,8 +27,8 @@ output "ocspcheck" {
 ## Argument Reference
 
 * `servicegroupname` - (Required) The name of the SSL service group to which the certificate is bound.
-* `certkeyname` - (Required) The name of the certificate bound to the SSL service group.
-* `ca` - (Required) CA certificate.
+* `certkeyname` - (Optional) The name of the certificate bound to the SSL service group.
+* `ca` - (Optional) CA certificate.
 
 ## Attribute Reference
 

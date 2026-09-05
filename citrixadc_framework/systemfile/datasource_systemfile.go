@@ -36,7 +36,7 @@ func (d *SystemfileDataSource) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *SystemfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SystemfileResourceModel
+	var data SystemfileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -99,7 +99,7 @@ func (d *SystemfileDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	systemfileSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	systemfileDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

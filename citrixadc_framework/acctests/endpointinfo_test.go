@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // endpointinfo is a STANDARD CRUD resource whose Read is a get-all-and-filter
@@ -252,6 +252,34 @@ func TestAccEndpointinfoDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_endpointinfo.tf_endpointinfo", "endpointmetadata", "cluster.default.frontend.*.*.*"),
 					resource.TestCheckResourceAttr("data.citrixadc_endpointinfo.tf_endpointinfo", "endpointlabelsjson", "{\"env\":\"test\"}"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEndpointinfo_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_endpointinfo.tf_endpointinfo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointinfoDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointinfo_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckEndpointinfoExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Endpointinfo.Type(), "IP", []string{"endpointname:10.222.74.100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccEndpointinfo_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckEndpointinfoExist(resAddr, nil)),
 			},
 		},
 	})

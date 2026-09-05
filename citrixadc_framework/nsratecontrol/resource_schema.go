@@ -33,22 +33,26 @@ func (r *NsratecontrolResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"icmpthreshold": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(100),
 				Description: "Number of ICMP packets permitted per 10 milliseconds.",
 			},
 			"tcprstthreshold": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(100),
 				Description: "The number of TCP RST packets permitted per 10 milli second. zero means rate control is disabled and 0xffffffff means every thing is rate controlled",
 			},
 			"tcpthreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Number of SYNs permitted per 10 milliseconds.",
 			},
 			"udpthreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Number of UDP packets permitted per 10 milliseconds.",
 			},
 		},
@@ -60,16 +64,16 @@ func nsratecontrolGetThePayloadFromtheConfig(ctx context.Context, data *Nsrateco
 
 	// Create API request body from the model
 	nsratecontrol := ns.Nsratecontrol{}
-	if !data.Icmpthreshold.IsNull() {
+	if !data.Icmpthreshold.IsNull() && !data.Icmpthreshold.IsUnknown() {
 		nsratecontrol.Icmpthreshold = utils.IntPtr(int(data.Icmpthreshold.ValueInt64()))
 	}
-	if !data.Tcprstthreshold.IsNull() {
+	if !data.Tcprstthreshold.IsNull() && !data.Tcprstthreshold.IsUnknown() {
 		nsratecontrol.Tcprstthreshold = utils.IntPtr(int(data.Tcprstthreshold.ValueInt64()))
 	}
-	if !data.Tcpthreshold.IsNull() {
+	if !data.Tcpthreshold.IsNull() && !data.Tcpthreshold.IsUnknown() {
 		nsratecontrol.Tcpthreshold = utils.IntPtr(int(data.Tcpthreshold.ValueInt64()))
 	}
-	if !data.Udpthreshold.IsNull() {
+	if !data.Udpthreshold.IsNull() && !data.Udpthreshold.IsUnknown() {
 		nsratecontrol.Udpthreshold = utils.IntPtr(int(data.Udpthreshold.ValueInt64()))
 	}
 
@@ -79,33 +83,35 @@ func nsratecontrolGetThePayloadFromtheConfig(ctx context.Context, data *Nsrateco
 func nsratecontrolSetAttrFromGet(ctx context.Context, data *NsratecontrolResourceModel, getResponseData map[string]interface{}) *NsratecontrolResourceModel {
 	tflog.Debug(ctx, "In nsratecontrolSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard else-branches on IsUnknown() so a configured 0 that NITRO may omit
+	// from GET is never clobbered to null (omit-on-default trap).
 	if val, ok := getResponseData["icmpthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Icmpthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Icmpthreshold.IsUnknown() {
 		data.Icmpthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcprstthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcprstthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcprstthreshold.IsUnknown() {
 		data.Tcprstthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcpthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcpthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcpthreshold.IsUnknown() {
 		data.Tcpthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["udpthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Udpthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Udpthreshold.IsUnknown() {
 		data.Udpthreshold = types.Int64Null()
 	}
 

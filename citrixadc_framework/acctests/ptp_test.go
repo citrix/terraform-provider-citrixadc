@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccPtp_add = `
@@ -97,6 +98,25 @@ func testAccCheckPtpExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccPtp_import(t *testing.T) {
+	const resAddr = "citrixadc_ptp.tf_ptp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccPtp_add},
+			{
+				Config:                  testAccPtp_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccPtpDataSource_basic = `
 	resource "citrixadc_ptp" "tf_ptp_ds" {
 		state = "ENABLE"
@@ -106,6 +126,30 @@ const testAccPtpDataSource_basic = `
 		depends_on = [citrixadc_ptp.tf_ptp_ds]
 	}
 `
+
+func TestAccPtp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccPtp_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPtpExist("citrixadc_ptp.tf_ptp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPtp_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPtpExist("citrixadc_ptp.tf_ptp", nil)),
+			},
+		},
+	})
+}
 
 func TestAccPtpDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

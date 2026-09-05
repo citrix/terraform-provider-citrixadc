@@ -42,11 +42,8 @@ In addition to the arguments, the following attributes are available:
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 * `id` - The id of the netprofile. It has the same value as the `name` attribute.
 
+### Read-only netprofile metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_netprofile` resource); they are Computed/GET-only. Any attribute the appliance does not return is `null`.
 
-A netprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_netprofile.tf_netprofile my_netprofile
-```
+* `proxyprotocoltlvoptions` - Proxy protocol TLV options (for example `cert-cn`). A list of strings.

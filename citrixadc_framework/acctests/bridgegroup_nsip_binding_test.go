@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBridgegroup_nsip_binding_basic = `
@@ -106,10 +109,12 @@ func testAccCheckBridgegroup_nsip_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		bridgegroup_id := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"bridgegroup_id", "ipaddress"}, nil)
+		if err != nil {
+			return err
+		}
+		bridgegroup_id := idMap["bridgegroup_id"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "bridgegroup_nsip_binding",
@@ -151,10 +156,12 @@ func testAccCheckBridgegroup_nsip_bindingNotExist(n string, id string) resource.
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		bridgegroup_id := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"bridgegroup_id", "ipaddress"}, nil)
+		if err != nil {
+			return err
+		}
+		bridgegroup_id := idMap["bridgegroup_id"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "bridgegroup_nsip_binding",
@@ -246,7 +253,144 @@ func TestAccbridgegroup_nsip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "bridgegroup_id", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "ipaddress", "2.2.2.3"),
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "netmask", "255.255.255.0"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// testAccBridgegroup_nsip_binding_upgrade_basic is valid under BOTH the last
+// SDK v2 release (2.2.0) and the current Framework schema. It reuses the same
+// resource labels and values as testAccBridgegroup_nsip_binding_basic so the
+// existing Exist/Destroy helpers and addresses match.
+const testAccBridgegroup_nsip_binding_upgrade_basic = `
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "2.2.2.3"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+	resource "citrixadc_bridgegroup_nsip_binding" "tf_binding" {
+		bridgegroup_id = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+		ipaddress      = citrixadc_nsip.nsip.ipaddress
+		netmask        = citrixadc_nsip.nsip.netmask
+	}
+`
+
+// TestAccBridgegroup_nsip_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-joined id) is upgraded correctly by
+// the current Framework provider. Step 1 creates the binding with citrix/citrixadc
+// 2.2.0 (legacy id "2,2.2.2.3"). Step 2 re-plans/applies the SAME config through
+// the current (Framework) provider, whose Read (SetAttrFromGet) recomputes the id
+// into the new key:value format ("bridgegroup_id:2,ipaddress:2.2.2.3").
+func TestAccBridgegroup_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBridgegroup_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccBridgegroup_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgegroup_nsip_bindingExist("citrixadc_bridgegroup_nsip_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup_nsip_binding.tf_binding", "id", "2,2.2.2.3"),
+				),
+			},
+			{
+				// Refresh/plan/apply the legacy-id state through the current provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBridgegroup_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgegroup_nsip_bindingExist("citrixadc_bridgegroup_nsip_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup_nsip_binding.tf_binding", "id", "bridgegroup_id:2,ipaddress:2.2.2.3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBridgegroup_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup_nsip_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: bridgegroup_id,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"bridgegroup_id", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroup_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBridgegroup_nsip_binding_basic},
+			{Config: testAccBridgegroup_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccBridgegroup_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccBridgegroup_nsip_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccBridgegroup_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup_nsip_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroup_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgegroup_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroup_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Bridgegroup_nsip_binding.Type(), "2", []string{"ipaddress:2.2.2.3", "netmask:255.255.255.0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBridgegroup_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroup_nsip_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *LocationfileResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating locationfile resource")
 
-	// locationfile := locationfileGetThePayloadFromtheConfig(ctx, &data)
+	// Build the `add` payload (Locationfile + format; src is not part of add).
+	locationfile := locationfileGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Locationfile.Type(), &locationfile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create locationfile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("locationfile-config")
+	// Named-in-body resource: SDK v2 used AddResource with an empty name (the
+	// location file name travels in the payload). Mirror that exactly.
+	_, err := r.client.AddResource(service.Locationfile.Type(), "", &locationfile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create locationfile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created locationfile resource")
 
+	// SDK v2 ID scheme: d.SetId(locationfile name). Preserve it for backward compat.
+	data.Id = types.StringValue(data.Locationfile.ValueString())
+
 	// Read the updated state back
-	r.readLocationfileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLocationfileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "locationfile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,45 @@ func (r *LocationfileResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading locationfile resource")
 
-	r.readLocationfileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLocationfileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LocationfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LocationfileResourceModel
+	// The NITRO locationfile resource exposes no `update` operation and every
+	// writable attribute is RequiresReplace / RequiresReplaceIfConfigured (matching
+	// SDK v2, which had no Update and marked all attributes ForceNew). Terraform
+	// therefore never invokes Update for a real change; this is a defensive
+	// state-preserving read-back.
+	var data, state LocationfileResourceModel
 
-	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Updating locationfile resource")
+	// Preserve ID from prior state.
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// locationfile := locationfileGetThePayloadFromtheConfig(ctx, &data)
+	tflog.Debug(ctx, "Updating locationfile resource (no NITRO update op; read-back only)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Locationfile.Type(), &locationfile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update locationfile, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated locationfile resource")
-
-	// Read the updated state back
-	r.readLocationfileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLocationfileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "locationfile not found during update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +152,34 @@ func (r *LocationfileResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting locationfile resource")
 
-	// For locationfile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted locationfile resource from state")
+	// SDK v2: DeleteResource(type, "") — DELETE /config/locationfile (no name).
+	err := r.client.DeleteResource(service.Locationfile.Type(), "")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete locationfile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted locationfile resource")
 }
 
-// Helper function to read locationfile data from API
-func (r *LocationfileResource) readLocationfileFromApi(ctx context.Context, data *LocationfileResourceModel, diags *diag.Diagnostics) {
+// readLocationfileFromApi reads locationfile data from the API into data. It
+// returns false (without adding an error) when the resource no longer exists so
+// callers can drop it from state.
+func (r *LocationfileResource) readLocationfileFromApi(ctx context.Context, data *LocationfileResourceModel, diags *diag.Diagnostics) bool {
+	// locationfile GET is a "get (all)"; SDK v2 read used an empty name.
 	getResponseData, err := r.client.FindResource(service.Locationfile.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read locationfile, got error: %s", err))
-		return
+		return false
+	}
+	if getResponseData == nil {
+		return false
 	}
 
 	locationfileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

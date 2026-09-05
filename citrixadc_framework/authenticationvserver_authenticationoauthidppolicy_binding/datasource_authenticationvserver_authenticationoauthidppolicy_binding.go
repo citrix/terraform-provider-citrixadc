@@ -35,14 +35,15 @@ func (d *AuthenticationvserverAuthenticationoauthidppolicyBindingDataSource) Sch
 }
 
 func (d *AuthenticationvserverAuthenticationoauthidppolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverAuthenticationoauthidppolicyBindingResourceModel
+	var data AuthenticationvserverAuthenticationoauthidppolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter with parent ID. Look up by parent name, then match the policy
+	// discriminator (matches the resource Read behaviour).
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,24 +67,14 @@ func (d *AuthenticationvserverAuthenticationoauthidppolicyBindingDataSource) Rea
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if !policy_Name.IsNull() && val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
@@ -93,7 +84,7 @@ func (d *AuthenticationvserverAuthenticationoauthidppolicyBindingDataSource) Rea
 		return
 	}
 
-	authenticationvserver_authenticationoauthidppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationoauthidppolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

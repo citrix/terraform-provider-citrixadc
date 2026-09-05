@@ -41,11 +41,9 @@ In addition to the arguments, the following attributes are available:
 * `domain` - Domain of the server that is used for authentication. If users enter name without domain, this parameter is added to username in the authentication request to server.
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 
+### Read-only authenticationstorefrontauthaction metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationstorefrontauthaction` resource). They are Computed/GET-only and are `null` when the appliance omits them.
 
-A authenticationstorefrontauthaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationstorefrontauthaction.tf_storefront my_storefront_action
-```
+* `success` - Number of successful authentications.
+* `failure` - Number of failed authentications.

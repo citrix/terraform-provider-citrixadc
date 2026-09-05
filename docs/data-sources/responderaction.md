@@ -39,3 +39,13 @@ In addition to the arguments, the following attributes are exported:
 * `newname` - New name for the responder action.
 * `reasonphrase` - Expression specifying the reason phrase of the HTTP response. The reason phrase may be a string literal with quotes or a PI expression.
 * `responsestatuscode` - HTTP response status code, for example 200, 302, 404, etc. The default value for the redirect action type is 302 and for respondwithhtmlpage is 200.
+
+### Read-only responderaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_responderaction` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `builtin` - Flag to determine whether the responder action is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

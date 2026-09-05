@@ -36,8 +36,6 @@ output "ownergroup" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vlan_channel_binding. It has the same value as the `vlanid` and `ifnum` attributes separated by a comma.
+* `id` - The id of the vlan_channel_binding. It is the concatenation of the `vlanid` and `ifnum` attributes separated by a comma.
 * `ownergroup` - The owner node group in a Cluster for this vlan.
-* `tagged` - Indicates whether the interface is an 802.1q tagged interface. Packets sent on this interface on this VLAN have an additional 4-byte 802.1q tag, which identifies the VLAN.
-* `ownergroup` - The owner node group in a Cluster for this vlan. Use this to filter the binding by ownergroup.
-* `tagged` - Make the interface an 802.1q tagged interface. Use this to filter the binding by tagged status.
+* `tagged` - Whether the interface is an 802.1q tagged interface. Packets sent on this interface on this VLAN have an additional 4-byte 802.1q tag, which identifies the VLAN.

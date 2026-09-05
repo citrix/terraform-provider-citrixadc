@@ -34,3 +34,9 @@ The following attributes are available:
 * `encryption` - To encrypt otp secret in AD or not. Default value is OFF.
 * `maxotpdevices` - Maximum number of otp devices user can register. Default value is 4. Max value is 255.
 * `id` - The id of the aaaotpparameter. It is a system-generated identifier.
+
+### Read-only aaaotpparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaaotpparameter` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `gwtestchallenge` - Holds the generated OTP to access gwtest admin flow.

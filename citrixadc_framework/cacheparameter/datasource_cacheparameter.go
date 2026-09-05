@@ -35,7 +35,7 @@ func (d *CacheparameterDataSource) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (d *CacheparameterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CacheparameterResourceModel
+	var data CacheparameterDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *CacheparameterDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	cacheparameterSetAttrFromGet(ctx, &data, getResponseData)
+	cacheparameterDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

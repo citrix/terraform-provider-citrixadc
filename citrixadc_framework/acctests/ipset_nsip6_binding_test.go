@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIpset_nsip6_binding_basic = `
@@ -127,10 +130,12 @@ func testAccCheckIpset_nsip6_bindingExist(n string, id *string) resource.TestChe
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "ipaddress"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "ipset_nsip6_binding",
@@ -243,6 +248,143 @@ func TestAccIpset_nsip6_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding", "name", "tf_ipset"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding", "ipaddress", "2003:db8:100::fb/64"),
 				),
+			},
+		},
+	})
+}
+
+const testAccIpset_nsip6_binding_upgrade_basic = `
+
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_ipset"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2003:db8:100::fb/64"
+		type 		= "VIP"
+	}
+
+	resource "citrixadc_ipset_nsip6_binding" "tf_ipset_nsip6_binding" {
+		name      = citrixadc_ipset.tf_ipset.name
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
+
+`
+
+// TestAccIpset_nsip6_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-separated ID) is correctly upgraded when the
+// same config is subsequently managed by the current Framework provider. Step 1
+// creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_ipset,2003:db8:100::fb/64"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because
+// the Framework recomputes the id on Read (SetAttrFromGet re-derives data.Id), the
+// id upgrades to the new "key:value" form.
+func TestAccIpset_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpset_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccIpset_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_ipset,2003:db8:100::fb/64"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIpset_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip6_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "ipaddress:2003%3Adb8%3A100%3A%3Afb%2F64,name:tf_ipset"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIpset_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpset_nsip6_binding_basic},
+			{Config: testAccIpset_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccIpset_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccIpset_nsip6_binding_selfHealing verifies drift recovery: after the binding is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config must
+// detect the missing binding and recreate it.
+func TestAccIpset_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpset_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Ipset_nsip6_binding.Type(), "tf_ipset", []string{"ipaddress:" + utils.UrlEncode("2003:db8:100::fb/64")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpset_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpset_nsip6_bindingExist(resAddr, nil)),
 			},
 		},
 	})

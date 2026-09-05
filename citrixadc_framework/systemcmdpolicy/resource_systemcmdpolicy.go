@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SystemcmdpolicyResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating systemcmdpolicy resource")
 
-	// systemcmdpolicy := systemcmdpolicyGetThePayloadFromtheConfig(ctx, &data)
+	systemcmdpolicy := systemcmdpolicyGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemcmdpolicy.Type(), &systemcmdpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemcmdpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("systemcmdpolicy-config")
+	// Named resource - use AddResource
+	policyname := data.Policyname.ValueString()
+	_, err := r.client.AddResource(service.Systemcmdpolicy.Type(), policyname, &systemcmdpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemcmdpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created systemcmdpolicy resource")
 
+	// Set ID for the resource before reading state (single unique attribute - plain value)
+	data.Id = types.StringValue(policyname)
+
 	// Read the updated state back
-	r.readSystemcmdpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSystemcmdpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "systemcmdpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *SystemcmdpolicyResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading systemcmdpolicy resource")
 
-	r.readSystemcmdpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSystemcmdpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SystemcmdpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SystemcmdpolicyResourceModel
+	var data, state SystemcmdpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,43 @@ func (r *SystemcmdpolicyResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating systemcmdpolicy resource")
 
-	// Create API request body from the model
-	// systemcmdpolicy := systemcmdpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for systemcmdpolicy")
+		hasChange = true
+	}
+	if !data.Cmdspec.Equal(state.Cmdspec) {
+		tflog.Debug(ctx, "cmdspec has changed for systemcmdpolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemcmdpolicy.Type(), &systemcmdpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemcmdpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated systemcmdpolicy resource")
+	if hasChange {
+		systemcmdpolicy := systemcmdpolicyGetThePayloadFromthePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		policyname := data.Policyname.ValueString()
+		_, err := r.client.UpdateResource(service.Systemcmdpolicy.Type(), policyname, &systemcmdpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemcmdpolicy, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated systemcmdpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for systemcmdpolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSystemcmdpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSystemcmdpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "systemcmdpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +174,32 @@ func (r *SystemcmdpolicyResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting systemcmdpolicy resource")
 
-	// For systemcmdpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted systemcmdpolicy resource from state")
+	// Named resource - delete using DeleteResource
+	policyname := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Systemcmdpolicy.Type(), policyname)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete systemcmdpolicy, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted systemcmdpolicy resource")
 }
 
 // Helper function to read systemcmdpolicy data from API
-func (r *SystemcmdpolicyResource) readSystemcmdpolicyFromApi(ctx context.Context, data *SystemcmdpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Systemcmdpolicy.Type(), "")
+func (r *SystemcmdpolicyResource) readSystemcmdpolicyFromApi(ctx context.Context, data *SystemcmdpolicyResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value
+	policyname := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Systemcmdpolicy.Type(), policyname)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read systemcmdpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	systemcmdpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

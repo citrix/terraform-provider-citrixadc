@@ -105,6 +105,7 @@ resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
 * `tcpburstreporting` - (Optional) On enabling this option, the Citrix ADC will log TCP burst parameters. Possible values: [ ENABLED, DISABLED ]. Defaults to `"ENABLED"`.
 * `topn` - (Optional) On enabling this topn support, the topn information of the stream identifier this profile is bound to will be exported to the analytics endpoint. Possible values: [ ENABLED, DISABLED ]. Defaults to `"DISABLED"`.
 * `urlcategory` - (Optional) On enabling this option, the Citrix ADC will send the URL category record. Possible values: [ ENABLED, DISABLED ]. Defaults to `"DISABLED"`.
+* `mcpsummary` - (Optional) Enable/disable appflow logging for MCP (Model Context Protocol) traffic.
 
 
 ## Attribute Reference

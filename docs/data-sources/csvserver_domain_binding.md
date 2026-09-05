@@ -37,3 +37,9 @@ In addition to the arguments, the following attributes are available:
 * `cookiedomain` - Domain attribute set in the persistence cookie for the domain.
 * `cookietimeout` - Persistence cookie timeout, in minutes, for the domain.
 * `sitedomainttl` - TTL, in seconds, for all internally registered records that share this domain name as a suffix.
+
+### Read-only csvserver_domain_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csvserver_domain_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `appflowlog` - Enable logging appflow flow information.

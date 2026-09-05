@@ -42,15 +42,16 @@ func (d *VlanInterfaceBindingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vlanid.ValueInt64())
+	// Array filter with parent ID (vlanid) and bound key (ifnum)
+	vlanid_Name := fmt.Sprintf("%v", data.Vlanid.ValueInt64())
 	ifnum_Name := data.Ifnum
+
 	var dataArr []map[string]interface{}
 	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_interface_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vlanid_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -65,35 +66,24 @@ func (d *VlanInterfaceBindingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right ifnum
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ifnum
 		if val, ok := v["ifnum"].(string); ok {
-			if ifnum_Name.IsNull() || val != ifnum_Name.ValueString() {
-				match = false
-				continue
+			if !ifnum_Name.IsNull() && val == ifnum_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !ifnum_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vlan_interface_binding with ifnum %s not found", ifnum_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vlan_interface_binding with ifnum %s not found", ifnum_Name.ValueString()))
 		return
 	}
 
-	vlan_interface_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vlan_interface_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

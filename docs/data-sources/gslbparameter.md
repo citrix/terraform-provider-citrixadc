@@ -48,3 +48,13 @@ The following attributes are available:
 * `undefaction` - Action to perform when policy evaluation creates an UNDEF condition. Possible values: `NOLBACTION`, `RESET`, `DROP`.
 * `v6ldnsmasklen` - Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.
 * `id` - The id of the gslbparameter. It is a system-generated identifier.
+
+### Read-only gslbparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbparameter` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `flags` - State of the GSLB parameter.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `incarnation` - This is a counter to maintain the gslb sync incarnation number.
+* `overridepersistencyfororder` - This option is used to override persistency when order is configured for services or servicegroups.

@@ -20,7 +20,7 @@ func AppfwpolicylabelAppfwpolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.",

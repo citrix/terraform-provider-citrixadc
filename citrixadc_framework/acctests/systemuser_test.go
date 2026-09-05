@@ -17,12 +17,14 @@ package citrixadc
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSystemuser_basic(t *testing.T) {
@@ -42,6 +44,32 @@ func TestAccSystemuser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user", nil),
 				),
+			},
+		},
+	})
+}
+
+const testAccSystemuser_extauth_disabled_nopass = `
+resource "citrixadc_systemuser" "tf_local_nopw" {
+  username     = "tf_local_nopw"
+  externalauth = "DISABLED"
+}
+`
+
+// TestAccSystemuser_externalauth_disabled_requires_password verifies the local-
+// password guard still fires for an explicit local (externalauth=DISABLED) user
+// with no password. This must survive removing the externalauth schema Default
+// and adding the ValidateConfig/isPasswordExempt exemption for UNSET externalauth:
+// only an explicit non-ENABLED externalauth should still require a local password.
+func TestAccSystemuser_externalauth_disabled_requires_password(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSystemuser_extauth_disabled_nopass,
+				ExpectError: regexp.MustCompile("must be specified"),
 			},
 		},
 	})
@@ -194,6 +222,8 @@ func TestAccSystemuserDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSystemuserDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// "id" is the universal runtime-binding proof (equals username).
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemuser.tf_user", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser.tf_user", "username", "tf_user"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser.tf_user", "timeout", "900"),
 				),
@@ -418,10 +448,48 @@ func TestAccSystemuser_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSystemuser_basic_step1,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: a strict non-refresh PlanOnly check spuriously
+				// fails on write-only resources, because the first post-upgrade non-refresh plan
+				// shows a one-time zero-diff in-place "update" (no NITRO write; it clears after one
+				// refresh/apply and never appears in the default refreshed plan an end user runs).
+				// Instead, apply the upgrade and assert via expectNoReplace that it does not
+				// destroy+recreate the resource; the framework's built-in post-apply idempotency
+				// plan then verifies convergence to an empty plan.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemuser_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSystemuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemuser.tf_user"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systemuser.Type(), "tf_user"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemuser_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuserExist(resAddr, nil)),
 			},
 		},
 	})

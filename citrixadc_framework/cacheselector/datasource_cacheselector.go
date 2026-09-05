@@ -35,7 +35,7 @@ func (d *CacheselectorDataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *CacheselectorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CacheselectorResourceModel
+	var data CacheselectorDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *CacheselectorDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	cacheselectorSetAttrFromGet(ctx, &data, getResponseData)
+	cacheselectorDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

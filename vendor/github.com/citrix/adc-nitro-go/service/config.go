@@ -462,6 +462,19 @@ func (c *NitroClient) DeleteResourceWithArgsMap(resourceType string, resourceNam
 	var body []byte
 	if resourceType == "sslhsmkey" {
 		_, err = c.listResource(resourceType, resourceName)
+	} else if resourceType == "dnssvcbrec" {
+		// dnssvcbrec's GET only accepts svcbtype/type as key args; targetname and
+		// priority are valid on DELETE (to disambiguate records sharing a domain)
+		// but are rejected by GET with errorcode 278 "Invalid argument". Run the
+		// existence pre-check with only the GET-valid svcbtype key (domain is the
+		// URL positional), but keep the full args for the actual delete so the exact
+		// record is removed. Mirrors the snmptrap_snmpuser_binding pattern
+		// (different args for list vs delete).
+		listArgs := make(map[string]string)
+		if v, ok := args["svcbtype"]; ok {
+			listArgs["svcbtype"] = v
+		}
+		_, err = c.listResourceWithArgsMap(resourceType, resourceName, listArgs)
 	} else {
 		_, err = c.listResourceWithArgsMap(resourceType, resourceName, args)
 	}

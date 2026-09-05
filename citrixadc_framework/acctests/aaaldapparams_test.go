@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaaldapparams_basic = `
@@ -289,9 +290,14 @@ func TestAccAaaldapparams_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAaaldapparams_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -322,6 +328,8 @@ func TestAccAaaldapparamsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchsubattribute", "cn"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchfilter", "memberOf"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "defaultauthenticationgroup", "default_group"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaldapparams.tf_aaaldapparams", "id"),
 				),
 			},
 		},

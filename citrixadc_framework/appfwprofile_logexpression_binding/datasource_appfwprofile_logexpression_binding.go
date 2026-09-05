@@ -93,7 +93,7 @@ func (d *AppfwprofileLogexpressionBindingDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	appfwprofile_logexpression_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_logexpression_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

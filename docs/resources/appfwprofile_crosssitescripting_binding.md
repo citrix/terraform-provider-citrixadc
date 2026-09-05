@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_crosssitescripting_binding
 
-The `appfwprofile_crosssitescripting_binding` resource is used to add binding between Applicatin Firewall Profile and CrossSiteScripting relaxation rule.
+The `appfwprofile_crosssitescripting_binding` resource is used to add bindings between an Application Firewall profile and a cross-site scripting relaxation rule.
 
 ## Example usage
 
@@ -56,11 +56,11 @@ resource citrixadc_appfwprofile_crosssitescripting_binding demo_binding {
 
 ## Argument Reference
 
-* `name` - Name of the profile to which to bind an exemption or rule.
-* `crosssitescripting` - The web form field name.
-* `isregex_xss` - Is the web form field name a regular expression?. Possible values: [ REGEX, NOTREGEX ]
-* `formactionurl_xss` - The web form action URL.
-* `as_scan_location_xss` - Location of cross-site scripting exception - form field, header, cookie or URL. Possible values: [ FORMFIELD, HEADER, COOKIE, URL ]
+* `name` - (Required) Name of the profile to which to bind an exemption or rule.
+* `crosssitescripting` - (Required) The web form field name.
+* `formactionurl_xss` - (Required) The web form action URL.
+* `as_scan_location_xss` - (Required) Location of cross-site scripting exception - form field, header, cookie or URL. Possible values: [ FORMFIELD, HEADER, COOKIE, URL ]
+* `isregex_xss` - (Optional) Is the web form field name a regular expression?. Possible values: [ REGEX, NOTREGEX ]
 * `as_value_type_xss` - (Optional) The web form value type. Possible values: [ Tag, Attribute, Pattern ]
 * `as_value_expr_xss` - (Optional) The web form value expression.
 * `isvalueregex_xss` - (Optional) Is the web form field value a regular expression?. Possible values: [ REGEX, NOTREGEX ]

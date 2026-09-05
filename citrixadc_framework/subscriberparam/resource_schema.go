@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -32,18 +33,22 @@ func (r *SubscriberparamResource) Schema(ctx context.Context, req resource.Schem
 				Computed:    true,
 				Description: "The ID of the subscriberparam resource.",
 			},
+			// SDK v2 backward-compat: Optional+Computed with NO Default (value read from ADC).
 			"idleaction": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ccrTerminate"),
 				Description: "q!Once idleTTL exprires on a subscriber session, Citrix ADC will take an idle action on that session. idleAction could be chosen from one of these ==>\n1. ccrTerminate: (default) send CCR-T to inform PCRF about session termination and delete the session.  \n2. delete: Just delete the subscriber session without informing PCRF.\n3. ccrUpdate: Do not delete the session and instead send a CCR-U to PCRF requesting for an updated session. !",
 			},
 			"idlettl": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "q!Idle Timeout, in seconds, after which Citrix ADC will take an idleAction on a subscriber session (refer to 'idleAction' arguement in 'set subscriber param' for more details on idleAction). Any data-plane or control plane activity updates the idleTimeout on subscriber session. idleAction could be to 'just delete the session' or 'delete and CCR-T' (if PCRF is configured) or 'do not delete but send a CCR-U'. \nZero value disables the idle timeout. !",
 			},
 			"interfacetype": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("None"),
 				Description: "Subscriber Interface refers to Citrix ADC interaction with control plane protocols, RADIUS and GX.\nTypes of subscriber interface: NONE, RadiusOnly, RadiusAndGx, GxOnly.\nNONE: Only static subscribers can be configured.\nRadiusOnly: GX interface is absent. Subscriber information is obtained through RADIUS Accounting messages.\nRadiusAndGx: Subscriber ID obtained through RADIUS Accounting is used to query PCRF. Subscriber information is obtained from both RADIUS and PCRF.\nGxOnly: RADIUS interface is absent. Subscriber information is queried using Subscriber IP or IP+VLAN.",
 			},
@@ -55,6 +60,7 @@ func (r *SubscriberparamResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"keytype": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("IP"),
 				Description: "Type of subscriber key type IP or IPANDVLAN. IPANDVLAN option can be used only when the interfaceType is set to gxOnly.\nChanging the lookup method should result to the subscriber session database being flushed.",
 			},
@@ -67,16 +73,25 @@ func subscriberparamGetThePayloadFromtheConfig(ctx context.Context, data *Subscr
 
 	// Create API request body from the model
 	subscriberparam := subscriber.Subscriberparam{}
-	if !data.Idleaction.IsNull() {
+	if !data.Idleaction.IsNull() && !data.Idleaction.IsUnknown() {
 		subscriberparam.Idleaction = data.Idleaction.ValueString()
 	}
-	if !data.Idlettl.IsNull() {
+	if !data.Idlettl.IsNull() && !data.Idlettl.IsUnknown() {
 		subscriberparam.Idlettl = utils.IntPtr(int(data.Idlettl.ValueInt64()))
 	}
-	if !data.Interfacetype.IsNull() {
+	if !data.Interfacetype.IsNull() && !data.Interfacetype.IsUnknown() {
 		subscriberparam.Interfacetype = data.Interfacetype.ValueString()
 	}
-	if !data.Keytype.IsNull() {
+	if !data.Ipv6prefixlookuplist.IsNull() && !data.Ipv6prefixlookuplist.IsUnknown() {
+		var elems []int64
+		data.Ipv6prefixlookuplist.ElementsAs(ctx, &elems, false)
+		intList := make([]int, len(elems))
+		for i, v := range elems {
+			intList[i] = int(v)
+		}
+		subscriberparam.Ipv6prefixlookuplist = intList
+	}
+	if !data.Keytype.IsNull() && !data.Keytype.IsUnknown() {
 		subscriberparam.Keytype = data.Keytype.ValueString()
 	}
 
@@ -86,32 +101,52 @@ func subscriberparamGetThePayloadFromtheConfig(ctx context.Context, data *Subscr
 func subscriberparamSetAttrFromGet(ctx context.Context, data *SubscriberparamResourceModel, getResponseData map[string]interface{}) *SubscriberparamResourceModel {
 	tflog.Debug(ctx, "In subscriberparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Else-branches only null the value when it is
+	// Unknown so a known/configured value that NITRO omits from GET (omit-on-default
+	// trap) is preserved rather than clobbered.
 	if val, ok := getResponseData["idleaction"]; ok && val != nil {
 		data.Idleaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Idleaction.IsUnknown() {
 		data.Idleaction = types.StringNull()
 	}
 	if val, ok := getResponseData["idlettl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Idlettl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Idlettl.IsUnknown() {
 		data.Idlettl = types.Int64Null()
 	}
 	if val, ok := getResponseData["interfacetype"]; ok && val != nil {
 		data.Interfacetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Interfacetype.IsUnknown() {
 		data.Interfacetype = types.StringNull()
+	}
+	if val, ok := getResponseData["ipv6prefixlookuplist"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			// NITRO may return the prefix lengths as strings or as JSON numbers;
+			// ConvertToInt64 handles int/float64/string uniformly.
+			int64List := make([]int64, 0, len(sliceVal))
+			for _, item := range sliceVal {
+				if intVal, err := utils.ConvertToInt64(item); err == nil {
+					int64List = append(int64List, intVal)
+				}
+			}
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, int64List)
+			data.Ipv6prefixlookuplist = listValue
+		} else if data.Ipv6prefixlookuplist.IsUnknown() {
+			data.Ipv6prefixlookuplist = types.ListNull(types.Int64Type)
+		}
+	} else if data.Ipv6prefixlookuplist.IsUnknown() {
+		data.Ipv6prefixlookuplist = types.ListNull(types.Int64Type)
 	}
 	if val, ok := getResponseData["keytype"]; ok && val != nil {
 		data.Keytype = types.StringValue(val.(string))
-	} else {
+	} else if data.Keytype.IsUnknown() {
 		data.Keytype = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Case 1: No unique attributes - static ID (singleton)
 	data.Id = types.StringValue("subscriberparam-config")
 
 	return data

@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -35,7 +36,7 @@ func (d *VpnvserverIntranetip6BindingDataSource) Schema(ctx context.Context, req
 }
 
 func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverIntranetip6BindingResourceModel
+	var data VpnvserverIntranetip6BindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -45,6 +46,7 @@ func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req d
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	intranetip6_Name := data.Intranetip6
+	numaddr_Name := data.Numaddr
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -71,17 +73,32 @@ func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req d
 	for i, v := range dataArr {
 		match := true
 
-		// Check intranetip6
-		if val, ok := v["intranetip6"].(string); ok {
-			if intranetip6_Name.IsNull() || val != intranetip6_Name.ValueString() {
+		// Check intranetip6 (only filter when the user supplied a value)
+		if !intranetip6_Name.IsNull() {
+			if val, ok := v["intranetip6"].(string); ok {
+				if val != intranetip6_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !intranetip6_Name.IsNull() {
-			match = false
-			continue
 		}
 
+		// Check numaddr (optional filter; skip when the user omitted it)
+		if !numaddr_Name.IsNull() {
+			if val, ok := v["numaddr"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != numaddr_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +111,7 @@ func (d *VpnvserverIntranetip6BindingDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	vpnvserver_intranetip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_intranetip6_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

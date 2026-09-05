@@ -38,10 +38,13 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression, or name of a named expression, against which traffic is evaluated. The following requirements apply only to the Citrix ADC CLI: If the expression includes one or more spaces, enclose the entire expression in double quotation marks. If the expression itself includes double quotation marks, escape the quotations by using the  character. Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `id` - The id of the cspolicy. It has the same value as the `policyname` attribute.
 
-## Import
+### Read-only cspolicy metadata
 
-A cspolicy can be imported using its policyname, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cspolicy` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_cspolicy.tf_cspolicy my_cspolicy
-```
+* `vstype` - Virtual server type.
+* `hits` - Total number of hits.
+* `labelname` - Name of the label invoked.
+* `labeltype` - The invocation type (for example `reqvserver`, `resvserver`, `policylabel`).
+* `activepolicy` - Indicates whether the policy is bound or not.
+* `boundto` - Location where the policy is bound.

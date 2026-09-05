@@ -9,7 +9,8 @@ The appfwprofile_jsonxssurl_binding resource is used to bind jsonxssurl to appfw
 
 ## Example usage
 
-```hclresource "citrixadc_appfwprofile" "tf_appfwprofile" {
+```hcl
+resource "citrixadc_appfwprofile" "tf_appfwprofile" {
   name                     = "tf_appfwprofile"
   bufferoverflowaction     = ["none"]
   contenttypeaction        = ["none"]
@@ -41,16 +42,16 @@ The appfwprofile_jsonxssurl_binding resource is used to bind jsonxssurl to appfw
   xmlxssaction             = ["none"]
 }
 resource "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding" {
-  name           = citrixadc_appfwprofile.tf_appfwprofile.name
-  jsonxssurl     = "www.example.com"
-  alertonly      = "OFF"
-  state          = "ENABLED"
-  keyname_json_xss = "id"
+  name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+  jsonxssurl             = "www.example.com"
+  alertonly              = "OFF"
+  state                  = "ENABLED"
+  keyname_json_xss       = "id"
   as_value_type_json_xss = "Pattern"
   as_value_expr_json_xss = "br2"
-  isautodeployed = "NOTAUTODEPLOYED"
-  comment        = "Testing"
-}	
+  isautodeployed         = "NOTAUTODEPLOYED"
+  comment                = "Testing"
+}
 resource "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding2" {
   name           = citrixadc_appfwprofile.tf_appfwprofile.name
   jsonxssurl     = "www.example.com"
@@ -84,7 +85,7 @@ resource "citrixadc_appfwprofile_jsonxssurl_binding" "tf_binding2" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_jsonxssurl_binding. It is the concatenation of `name`,`jsonxssurl`,`keyname_json_xss`,`as_value_type_json_xss` and `as_value_expr_json_xss`attributes separated by comma.
+* `id` - The id of the appfwprofile_jsonxssurl_binding. It is the concatenation of `name`, `jsonxssurl`, `keyname_json_xss`, `as_value_type_json_xss` and `as_value_expr_json_xss` attributes separated by a comma.
 
 
 ## Import

@@ -42,10 +42,8 @@ In addition to the arguments, the following attributes are available:
 * `state` - Enable or disable this action.
 * `id` - The id of the transformaction. It has the same value as the `name` attribute.
 
-## Import
+### Read-only transformaction metadata
 
-A transformaction can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_transformaction` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
 
-```shell
-terraform import citrixadc_transformaction.tf_trans_action tf_trans_action
-```
+* `continuematching` - Continue transforming using the next rule in the list. Possible values = ON, OFF

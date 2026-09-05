@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppqoeaction_basic = `
@@ -67,6 +69,34 @@ func TestAccAppqoeaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_appqoeaction", "priority", "HIGH"),
 					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_appqoeaction", "respondwith", "NS"),
 					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_appqoeaction", "delay", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppqoeaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppqoeaction_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeactionExist("citrixadc_appqoeaction.tf_appqoeaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppqoeaction_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeactionExist("citrixadc_appqoeaction.tf_appqoeaction", nil),
 				),
 			},
 		},
@@ -137,6 +167,53 @@ func testAccCheckAppqoeactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppqoeaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appqoeaction.tf_appqoeaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoeaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoeactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appqoeaction.Type(), "my_appqoeaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppqoeaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoeactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppqoeaction_import(t *testing.T) {
+	const resAddr = "citrixadc_appqoeaction.tf_appqoeaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppqoeaction_basic},
+			{
+				Config:                  testAccAppqoeaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAppqoeactionDataSource_basic = `
 
 	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
@@ -151,6 +228,89 @@ const testAccAppqoeactionDataSource_basic = `
 	}
 `
 
+// The appqoeaction unset test covers the unset-eligible attributes that have a
+// documented NITRO server default: numretries (default 3) and retryonreset
+// (default NO). Step 1 sets them to non-default values; step 2 removes them
+// from config, so the provider must unset them (revert to the NITRO defaults).
+const testAccAppqoeaction_unset_step1 = `
+	resource "citrixadc_appqoeaction" "tf_unset" {
+		name         = "tf_test_appqoeaction_unset"
+		priority     = "LOW"
+		respondwith  = "NS"
+		delay        = "30"
+		numretries   = "5"
+		retryonreset = "YES"
+	}
+`
+
+const testAccAppqoeaction_unset_step2 = `
+	resource "citrixadc_appqoeaction" "tf_unset" {
+		name        = "tf_test_appqoeaction_unset"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = "30"
+		# numretries and retryonreset removed from config -> the provider must
+		# unset them (revert to NITRO defaults: 3 and NO).
+	}
+`
+
+func TestAccAppqoeaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAppqoeaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeactionExist("citrixadc_appqoeaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_unset", "numretries", "5"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_unset", "retryonreset", "YES"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAppqoeaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeactionExist("citrixadc_appqoeaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_unset", "numretries", "3"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeaction.tf_unset", "retryonreset", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppqoeactionADCValue("tf_test_appqoeaction_unset", "numretries", "3"),
+					testAccCheckAppqoeactionADCValue("tf_test_appqoeaction_unset", "retryonreset", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppqoeactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckAppqoeactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appqoeaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appqoeaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("appqoeaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccAppqoeactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -164,6 +324,8 @@ func TestAccAppqoeactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "priority", "LOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "respondwith", "NS"),
 					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "delay", "30"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appqoeaction.tf_appqoeaction", "id"),
 				),
 			},
 		},

@@ -32,4 +32,10 @@ output "vpnvserver_name" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_appcontroller_binding. It is a system-generated identifier.
+* `id` - The id of the vpnvserver_appcontroller_binding. It is the concatenation of `name` and `appcontroller` attributes separated by a comma.
+
+### Read-only vpnvserver_appcontroller_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnvserver_appcontroller_binding` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `acttype` - The bound entity (action) type, as returned by the appliance.

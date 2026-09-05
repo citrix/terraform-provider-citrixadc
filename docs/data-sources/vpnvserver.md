@@ -59,3 +59,41 @@ In addition to the arguments, the following attributes are available:
 * `logoutonsmartcardremoval` - Option to VPN plugin behavior when smartcard or its reader is removed.
 * `macepapluginupgrade` - Option to set plugin upgrade behaviour for Mac.
 * `secureprivateaccess` - Enable secure private access for this virtual server.
+
+### Read-only vpnvserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnvserver` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `ip` - The Virtual IP address of the VPN virtual server.
+* `value` - Indicates whether or not the certificate is bound or if SSL offload is disabled.
+* `type` - The type of virtual server; for example, CONTENT based or ADDRESS based.
+* `curstate` - The current state of the virtual server, as UP, DOWN, BUSY, and so on.
+* `status` - Whether or not this virtual server responds to ARPs and whether or not round-robin selection is temporarily in effect.
+* `cachetype` - Virtual server cache type. The options are: TRANSPARENT, REVERSE, and FORWARD.
+* `redirect` - The cache redirect policy.
+* `precedence` - The type of policy (URL or RULE) that takes precedence on the content switching virtual server.
+* `redirecturl` - The URL where traffic is redirected if the virtual server in system becomes unavailable.
+* `curaaausers` - The number of current users logged on to this virtual server.
+* `curtotalusers` - The total number of current users connected through this virtual server.
+* `domain` - The domain name of the server for which a service needs to be added.
+* `rule` - The name of the rule, or expression, if any, that policy for the VPN server is to use.
+* `servicename` - The name of the service, if any, to which the virtual server policy is bound.
+* `weight` - Weight for this service, if any, used when the system performs load balancing.
+* `cachevserver` - The name of the default target cache virtual server, if any, to which requests are redirected.
+* `backupvserver` - The name of the backup VPN virtual server for this VPN virtual server.
+* `clttimeout` - The idle time, if any, in seconds after which the client connection is terminated.
+* `somethod` - The method used to determine whether or not a new connection will spill over the allocated block of intranet IP addresses.
+* `sothreshold` - The number of client connections after which the mapped IP address is used as the client source IP address.
+* `sopersistence` - Whether or not cookie-based site persistance is enabled for this VPN vserver.
+* `sopersistencetimeout` - The timeout, if any, for cookie-based site persistance of this VPN vserver.
+* `usemip` - Deprecated. See `map`.
+* `map` - Whether or not mapped IP addresses are ON or OFF.
+* `bindpoint` - Bindpoint to which the policy is bound.
+* `disableprimaryondown` - Tells whether traffic will continue reaching backup virtual servers even after the primary virtual server comes UP from DOWN state.
+* `secondary` - Whether the authentication policy is bound as the secondary policy in a two-factor configuration.
+* `groupextraction` - Whether the authentication policy is bound to a tertiary chain used only for group extraction.
+* `epaprofileoptional` - Whether the EPA profile is marked optional for preauthentication EPA profile.
+* `ngname` - Node group devno to which this authentication virtual server belongs.
+* `csvserver` - Name of the CS vserver to which the VPN vserver is bound.
+* `nodefaultbindings` - Whether the configuration will have default ssl CIPHER and ECC curve bindings.
+* `response` - Response.

@@ -63,6 +63,8 @@ resource "citrixadc_aaaparameter" "tf_aaaparameter" {
 
     Default value: DISABLED |
     Possible values: [ ENABLED, DISABLED ]
+* `classicendpoints` - (Optional) Parameter to enable/disable classic endpoints.
+* `webviewendpoints` - (Optional) Parameter to enable/disable webview endpoints.
 
 
 ## Attribute Reference
@@ -70,3 +72,12 @@ resource "citrixadc_aaaparameter" "tf_aaaparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the aaaparameter. It is a unique string prefixed with `tf-aaaparameter-`.
+
+
+## Import
+
+A aaaparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_aaaparameter.tf_aaaparameter aaaparameter-config
+```

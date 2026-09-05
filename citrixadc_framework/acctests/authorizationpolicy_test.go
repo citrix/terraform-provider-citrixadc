@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthorizationpolicy_add = `
@@ -88,6 +89,10 @@ func TestAccAuthorizationpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "name", "tp-authorize-datasource-1"),
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "action", "ALLOW"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicy.foo", "id"),
+					// Read-only counter-style attribute always populated by the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicy.foo", "hits"),
 				),
 			},
 		},
@@ -130,6 +135,77 @@ func testAccCheckAuthorizationpolicyExist(n string, id *string) resource.TestChe
 
 		return nil
 	}
+}
+
+func TestAccAuthorizationpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authorizationpolicy.Type(), "tp-authorize-1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthorizationpolicy_add},
+			{
+				Config:                  testAccAuthorizationpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthorizationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist("citrixadc_authorizationpolicy.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist("citrixadc_authorizationpolicy.foo", nil)),
+			},
+		},
+	})
 }
 
 func testAccCheckAuthorizationpolicyDestroy(s *terraform.State) error {

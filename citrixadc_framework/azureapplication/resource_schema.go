@@ -66,14 +66,19 @@ func (r *AzureapplicationResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"clientsecret_wo_version": schema.Int64Attribute{
 				Optional: true,
+				// Optional+Computed+Default(1) is the canonical _wo_version shape. The Default
+				// supplies 1 when config omits the attribute, matching the value UpgradeState
+				// seeds on migration — so an upgraded application plans 1 -> 1 (no diff) instead
+				// of 1 -> null (spurious destroy+recreate). Without Computed+Default the seeded
+				// value collapses to null and the RequiresReplace below forces replacement.
 				Computed: true,
+				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
 					// GH #1436: Update() PUTs the full create payload with no update-builder, so an
 					// in-place _wo_version bump on upgrade risks an unsupported/rejected NITRO update;
 					// keep RequiresReplace so the transition stays a (supported) replace.
 					int64planmodifier.RequiresReplace(),
 				},
-				Default:     int64default.StaticInt64(1),
 				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"name": schema.StringAttribute{

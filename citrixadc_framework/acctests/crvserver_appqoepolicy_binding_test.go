@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCrvserver_appqoepolicy_binding_basic = `
@@ -120,10 +123,12 @@ func testAccCheckCrvserver_appqoepolicy_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_appqoepolicy_binding",
@@ -271,6 +276,140 @@ func TestAcccrvserver_appqoepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "policyname", "tf_appqoepolicy_ds"),
 				),
 			},
+		},
+	})
+}
+
+const testAccCrvserver_appqoepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appqoeaction" "tf_appqoeaction" {
+		name        = "tf_appqoeaction"
+		priority    = "LOW"
+		respondwith = "NS"
+		delay       = 40
+	}
+	resource "citrixadc_appqoepolicy" "tf_appqoepolicy" {
+		name   = "tf_appqoepolicy"
+		rule   = "true"
+		action = citrixadc_appqoeaction.tf_appqoeaction.name
+	}
+	resource "citrixadc_crvserver" "crvserver" {
+		name        = "my_vserver"
+		servicetype = "HTTP"
+		arp         = "OFF"
+	}
+	resource "citrixadc_crvserver_appqoepolicy_binding" "crvserver_appqoepolicy_binding" {
+		name       = citrixadc_crvserver.crvserver.name
+		policyname = citrixadc_appqoepolicy.tf_appqoepolicy.name
+		priority   = 10
+	}
+`
+
+func TestAccCrvserver_appqoepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCrvserver_appqoepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appqoepolicy_bindingExist("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "id", "my_vserver,tf_appqoepolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_appqoepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appqoepolicy_bindingExist("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding", "id", "name:my_vserver,policyname:tf_appqoepolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_appqoepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_appqoepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_appqoepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_appqoepolicy_binding.Type(), "my_vserver", []string{"policyname:tf_appqoepolicy", "priority:10"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_appqoepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_appqoepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_appqoepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appqoepolicy_binding.crvserver_appqoepolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_appqoepolicy_binding_basic},
+			{Config: testAccCrvserver_appqoepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCrvserver_appqoepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

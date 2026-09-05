@@ -39,6 +39,7 @@ resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
 * `reqtimeout` - (Optional) Time, in seconds, within which the remote server should respond to the ICAP-request. If the Netscaler does not receive full response with this time, the specified request timeout action is performed. Zero value disables this timeout functionality. Minimum value =  0 Maximum value =  86400
 * `reqtimeoutaction` - (Optional) Name of the action to perform if the Vserver/Server representing the remote service does not respond with any response within the timeout value configured. The Supported actions are * BYPASS - This Ignores the remote server response and sends the request/response to Client/Server. * If the ICAP response with Encapsulated headers is not received within the request-timeout value configured, this Ignores the remote ICAP server response and sends the Full request/response to Server/Client. * RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired. * DROP - Drop the request without sending a response to the user. Possible values: [ BYPASS, DROP, RESET ]
 * `logaction` - (Optional) Name of the audit message action which would be evaluated on receiving the ICAP response to emit the logs.
+* `inspecthttp2` - (Optional) Enable or Disable ICAP inspection for HTTP/2 traffic.
 
 
 ## Attribute Reference

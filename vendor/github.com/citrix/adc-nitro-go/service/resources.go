@@ -1354,6 +1354,29 @@ const (
 	Wisite_binding
 	Wisite_farmname_binding
 	Wisite_translationinternalip_binding
+	Aaaproxyparam
+	Aaagroup_vpnsecureprivateaccessprofile_binding
+	Aaauser_vpnsecureprivateaccessprofile_binding
+	Cloudgcpstaticroutes
+	Cloudroutes
+	Cloudtrafficroutes
+	Contentinspectionwasmprofile
+	Dnssvcbrec
+	Dpsparameter
+	Hasecureheartbeats
+	Mcpprofile
+	Nsaigwprofile
+	Nsmemrecovery
+	Nsmigration
+	Ssldynamicclientcertcache
+	Sslzerotouchparam
+	Systemautosaveparam
+	Systemscalablemgmtthreads
+	Vpnglobal_vpnsecureprivateaccessprofile_binding
+	Vpnsecureprivateaccessprofile
+	Vpnvserver_vpnsecureprivateaccessprofile_binding
+	Wasmfile
+	Wasmmodule
 )
 
 var resources = []string{
@@ -2673,4 +2696,27 @@ var resources = []string{
 	"wisite_binding",
 	"wisite_farmname_binding",
 	"wisite_translationinternalip_binding",
+	"aaaproxyparam",
+	"aaagroup_vpnsecureprivateaccessprofile_binding",
+	"aaauser_vpnsecureprivateaccessprofile_binding",
+	"cloudgcpstaticroutes",
+	"cloudroutes",
+	"cloudtrafficroutes",
+	"contentinspectionwasmprofile",
+	"dnssvcbrec",
+	"dpsparameter",
+	"hasecureheartbeats",
+	"mcpprofile",
+	"nsaigwprofile",
+	"nsmemrecovery",
+	"nsmigration",
+	"ssldynamicclientcertcache",
+	"sslzerotouchparam",
+	"systemautosaveparam",
+	"systemscalablemgmtthreads",
+	"vpnglobal_vpnsecureprivateaccessprofile_binding",
+	"vpnsecureprivateaccessprofile",
+	"vpnvserver_vpnsecureprivateaccessprofile_binding",
+	"wasmfile",
+	"wasmmodule",
 }

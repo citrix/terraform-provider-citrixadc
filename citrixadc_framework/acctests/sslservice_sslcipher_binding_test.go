@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslservice_sslcipher_binding binds a cipher group/alias/individual cipher
@@ -319,6 +319,37 @@ func TestAccSslserviceSslcipherBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcipher_binding.tf_binding", "servicename", "tf_sslsvc_cipher"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcipher_binding.tf_binding", "ciphername", "HIGH"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslserviceSslcipherBinding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservice_sslcipher_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceSslcipherBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslserviceSslcipherBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceSslcipherBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslservice_sslcipher_binding.Type(), "tf_sslsvc_cipher", map[string]string{"ciphername": "HIGH"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslserviceSslcipherBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceSslcipherBindingExist(resAddr, nil)),
 			},
 		},
 	})

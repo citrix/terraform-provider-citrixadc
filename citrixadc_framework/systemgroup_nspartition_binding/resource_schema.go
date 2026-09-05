@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *SystemgroupNspartitionBindingResource) Schema(ctx context.Context, req 
 				Description: "The ID of the systemgroup_nspartition_binding resource.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the system group.",
 			},
 			"partitionname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Partition to bind to the system group.",
 			},
 		},
 	}
 }
 
-func systemgroup_nspartition_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SystemgroupNspartitionBindingResourceModel) system.Systemgroupnspartitionbinding {
-	tflog.Debug(ctx, "In systemgroup_nspartition_bindingGetThePayloadFromtheConfig Function")
+func systemgroup_nspartition_bindingGetThePayloadFromthePlan(ctx context.Context, data *SystemgroupNspartitionBindingResourceModel) system.Systemgroupnspartitionbinding {
+	tflog.Debug(ctx, "In systemgroup_nspartition_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemgroup_nspartition_binding := system.Systemgroupnspartitionbinding{}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		systemgroup_nspartition_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Partitionname.IsNull() {
+	if !data.Partitionname.IsNull() && !data.Partitionname.IsUnknown() {
 		systemgroup_nspartition_binding.Partitionname = data.Partitionname.ValueString()
 	}
 

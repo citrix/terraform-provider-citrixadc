@@ -7,6 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -52,86 +55,103 @@ func (r *AuthenticationwebauthactionResource) Schema(ctx context.Context, req re
 			"attribute1": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute1 from the webauth response",
 			},
 			"attribute10": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute10 from the webauth response",
 			},
 			"attribute11": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute11 from the webauth response",
 			},
 			"attribute12": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute12 from the webauth response",
 			},
 			"attribute13": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute13 from the webauth response",
 			},
 			"attribute14": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute14 from the webauth response",
 			},
 			"attribute15": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute15 from the webauth response",
 			},
 			"attribute16": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute16 from the webauth response",
 			},
 			"attribute2": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute2 from the webauth response",
 			},
 			"attribute3": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute3 from the webauth response",
 			},
 			"attribute4": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute4 from the webauth response",
 			},
 			"attribute5": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute5 from the webauth response",
 			},
 			"attribute6": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute6 from the webauth response",
 			},
 			"attribute7": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute7 from the webauth response",
 			},
 			"attribute8": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute8 from the webauth response",
 			},
 			"attribute9": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute9 from the webauth response",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "This is the default group that is chosen when the authentication succeeds in addition to extracted groups.",
 			},
 			"fullreqexpr": schema.StringAttribute{
@@ -140,7 +160,10 @@ func (r *AuthenticationwebauthactionResource) Schema(ctx context.Context, req re
 				Description: "Exact HTTP request, in the form of an expression, which the Citrix ADC sends to the authentication server.\nThe Citrix ADC does not check the validity of this request. One must manually validate the request.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Web Authentication action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"scheme": schema.StringAttribute{
@@ -168,73 +191,73 @@ func authenticationwebauthactionGetThePayloadFromtheConfig(ctx context.Context, 
 
 	// Create API request body from the model
 	authenticationwebauthaction := authentication.Authenticationwebauthaction{}
-	if !data.Attribute1.IsNull() {
+	if !data.Attribute1.IsNull() && !data.Attribute1.IsUnknown() {
 		authenticationwebauthaction.Attribute1 = data.Attribute1.ValueString()
 	}
-	if !data.Attribute10.IsNull() {
+	if !data.Attribute10.IsNull() && !data.Attribute10.IsUnknown() {
 		authenticationwebauthaction.Attribute10 = data.Attribute10.ValueString()
 	}
-	if !data.Attribute11.IsNull() {
+	if !data.Attribute11.IsNull() && !data.Attribute11.IsUnknown() {
 		authenticationwebauthaction.Attribute11 = data.Attribute11.ValueString()
 	}
-	if !data.Attribute12.IsNull() {
+	if !data.Attribute12.IsNull() && !data.Attribute12.IsUnknown() {
 		authenticationwebauthaction.Attribute12 = data.Attribute12.ValueString()
 	}
-	if !data.Attribute13.IsNull() {
+	if !data.Attribute13.IsNull() && !data.Attribute13.IsUnknown() {
 		authenticationwebauthaction.Attribute13 = data.Attribute13.ValueString()
 	}
-	if !data.Attribute14.IsNull() {
+	if !data.Attribute14.IsNull() && !data.Attribute14.IsUnknown() {
 		authenticationwebauthaction.Attribute14 = data.Attribute14.ValueString()
 	}
-	if !data.Attribute15.IsNull() {
+	if !data.Attribute15.IsNull() && !data.Attribute15.IsUnknown() {
 		authenticationwebauthaction.Attribute15 = data.Attribute15.ValueString()
 	}
-	if !data.Attribute16.IsNull() {
+	if !data.Attribute16.IsNull() && !data.Attribute16.IsUnknown() {
 		authenticationwebauthaction.Attribute16 = data.Attribute16.ValueString()
 	}
-	if !data.Attribute2.IsNull() {
+	if !data.Attribute2.IsNull() && !data.Attribute2.IsUnknown() {
 		authenticationwebauthaction.Attribute2 = data.Attribute2.ValueString()
 	}
-	if !data.Attribute3.IsNull() {
+	if !data.Attribute3.IsNull() && !data.Attribute3.IsUnknown() {
 		authenticationwebauthaction.Attribute3 = data.Attribute3.ValueString()
 	}
-	if !data.Attribute4.IsNull() {
+	if !data.Attribute4.IsNull() && !data.Attribute4.IsUnknown() {
 		authenticationwebauthaction.Attribute4 = data.Attribute4.ValueString()
 	}
-	if !data.Attribute5.IsNull() {
+	if !data.Attribute5.IsNull() && !data.Attribute5.IsUnknown() {
 		authenticationwebauthaction.Attribute5 = data.Attribute5.ValueString()
 	}
-	if !data.Attribute6.IsNull() {
+	if !data.Attribute6.IsNull() && !data.Attribute6.IsUnknown() {
 		authenticationwebauthaction.Attribute6 = data.Attribute6.ValueString()
 	}
-	if !data.Attribute7.IsNull() {
+	if !data.Attribute7.IsNull() && !data.Attribute7.IsUnknown() {
 		authenticationwebauthaction.Attribute7 = data.Attribute7.ValueString()
 	}
-	if !data.Attribute8.IsNull() {
+	if !data.Attribute8.IsNull() && !data.Attribute8.IsUnknown() {
 		authenticationwebauthaction.Attribute8 = data.Attribute8.ValueString()
 	}
-	if !data.Attribute9.IsNull() {
+	if !data.Attribute9.IsNull() && !data.Attribute9.IsUnknown() {
 		authenticationwebauthaction.Attribute9 = data.Attribute9.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationwebauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Fullreqexpr.IsNull() {
+	if !data.Fullreqexpr.IsNull() && !data.Fullreqexpr.IsUnknown() {
 		authenticationwebauthaction.Fullreqexpr = data.Fullreqexpr.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationwebauthaction.Name = data.Name.ValueString()
 	}
-	if !data.Scheme.IsNull() {
+	if !data.Scheme.IsNull() && !data.Scheme.IsUnknown() {
 		authenticationwebauthaction.Scheme = data.Scheme.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		authenticationwebauthaction.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		authenticationwebauthaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Successrule.IsNull() {
+	if !data.Successrule.IsNull() && !data.Successrule.IsUnknown() {
 		authenticationwebauthaction.Successrule = data.Successrule.ValueString()
 	}
 
@@ -248,87 +271,87 @@ func authenticationwebauthactionSetAttrFromGet(ctx context.Context, data *Authen
 	if val, ok := getResponseData["attribute1"]; ok && val != nil {
 		data.Attribute1 = types.StringValue(val.(string))
 	} else {
-		data.Attribute1 = types.StringNull()
+		data.Attribute1 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute10"]; ok && val != nil {
 		data.Attribute10 = types.StringValue(val.(string))
 	} else {
-		data.Attribute10 = types.StringNull()
+		data.Attribute10 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute11"]; ok && val != nil {
 		data.Attribute11 = types.StringValue(val.(string))
 	} else {
-		data.Attribute11 = types.StringNull()
+		data.Attribute11 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute12"]; ok && val != nil {
 		data.Attribute12 = types.StringValue(val.(string))
 	} else {
-		data.Attribute12 = types.StringNull()
+		data.Attribute12 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute13"]; ok && val != nil {
 		data.Attribute13 = types.StringValue(val.(string))
 	} else {
-		data.Attribute13 = types.StringNull()
+		data.Attribute13 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute14"]; ok && val != nil {
 		data.Attribute14 = types.StringValue(val.(string))
 	} else {
-		data.Attribute14 = types.StringNull()
+		data.Attribute14 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute15"]; ok && val != nil {
 		data.Attribute15 = types.StringValue(val.(string))
 	} else {
-		data.Attribute15 = types.StringNull()
+		data.Attribute15 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute16"]; ok && val != nil {
 		data.Attribute16 = types.StringValue(val.(string))
 	} else {
-		data.Attribute16 = types.StringNull()
+		data.Attribute16 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute2"]; ok && val != nil {
 		data.Attribute2 = types.StringValue(val.(string))
 	} else {
-		data.Attribute2 = types.StringNull()
+		data.Attribute2 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute3"]; ok && val != nil {
 		data.Attribute3 = types.StringValue(val.(string))
 	} else {
-		data.Attribute3 = types.StringNull()
+		data.Attribute3 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute4"]; ok && val != nil {
 		data.Attribute4 = types.StringValue(val.(string))
 	} else {
-		data.Attribute4 = types.StringNull()
+		data.Attribute4 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute5"]; ok && val != nil {
 		data.Attribute5 = types.StringValue(val.(string))
 	} else {
-		data.Attribute5 = types.StringNull()
+		data.Attribute5 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute6"]; ok && val != nil {
 		data.Attribute6 = types.StringValue(val.(string))
 	} else {
-		data.Attribute6 = types.StringNull()
+		data.Attribute6 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute7"]; ok && val != nil {
 		data.Attribute7 = types.StringValue(val.(string))
 	} else {
-		data.Attribute7 = types.StringNull()
+		data.Attribute7 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute8"]; ok && val != nil {
 		data.Attribute8 = types.StringValue(val.(string))
 	} else {
-		data.Attribute8 = types.StringNull()
+		data.Attribute8 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute9"]; ok && val != nil {
 		data.Attribute9 = types.StringValue(val.(string))
 	} else {
-		data.Attribute9 = types.StringNull()
+		data.Attribute9 = types.StringValue("")
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
 	} else {
-		data.Defaultauthenticationgroup = types.StringNull()
+		data.Defaultauthenticationgroup = types.StringValue("")
 	}
 	if val, ok := getResponseData["fullreqexpr"]; ok && val != nil {
 		data.Fullreqexpr = types.StringValue(val.(string))

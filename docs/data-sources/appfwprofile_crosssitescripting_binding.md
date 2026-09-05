@@ -35,8 +35,8 @@ The following arguments are required:
 * `crosssitescripting` - (Required) The web form field name.
 * `formactionurl_xss` - (Required) The web form action URL.
 * `as_scan_location_xss` - (Required) Location of cross-site scripting exception - form field, header, cookie or URL.
-* `as_value_type_xss` - (Optional) The web form value type.
-* `as_value_expr_xss` - (Optional) The web form value expression.
+* `as_value_type_xss` - (Required) The web form value type.
+* `as_value_expr_xss` - (Required) The web form value expression.
 
 ## Attribute Reference
 
@@ -49,4 +49,5 @@ In addition to the arguments, the following attributes are exported:
 * `isregex_xss` - Is the web form field name a regular expression?
 * `isvalueregex_xss` - Is the web form field value a regular expression?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

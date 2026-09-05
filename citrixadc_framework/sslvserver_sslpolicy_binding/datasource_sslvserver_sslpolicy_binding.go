@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -35,7 +36,7 @@ func (d *SslvserverSslpolicyBindingDataSource) Schema(ctx context.Context, req d
 }
 
 func (d *SslvserverSslpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslvserverSslpolicyBindingResourceModel
+	var data SslvserverSslpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -45,6 +46,7 @@ func (d *SslvserverSslpolicyBindingDataSource) Read(ctx context.Context, req dat
 	// Case 4: Array filter with parent ID
 	vservername_Name := data.Vservername.ValueString()
 	policyname_Name := data.Policyname
+	priority_Name := data.Priority
 	type_Name := data.Type
 
 	var dataArr []map[string]interface{}
@@ -53,7 +55,7 @@ func (d *SslvserverSslpolicyBindingDataSource) Read(ctx context.Context, req dat
 	findParams := service.FindParams{
 		ResourceType:             service.Sslvserver_sslpolicy_binding.Type(),
 		ResourceName:             vservername_Name,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 461,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
@@ -83,6 +85,20 @@ func (d *SslvserverSslpolicyBindingDataSource) Read(ctx context.Context, req dat
 			continue
 		}
 
+		// Check priority (only when supplied as a lookup key)
+		if !priority_Name.IsNull() {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {
@@ -102,7 +118,7 @@ func (d *SslvserverSslpolicyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	sslvserver_sslpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslvserver_sslpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

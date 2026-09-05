@@ -35,7 +35,7 @@ func (d *AnalyticsprofileDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *AnalyticsprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AnalyticsprofileResourceModel
+	var data AnalyticsprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AnalyticsprofileDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	analyticsprofileSetAttrFromGet(ctx, &data, getResponseData)
+	analyticsprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

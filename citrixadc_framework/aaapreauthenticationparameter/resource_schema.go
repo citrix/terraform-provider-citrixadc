@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -41,11 +42,13 @@ func (r *AaapreauthenticationparameterResource) Schema(ctx context.Context, req 
 			"preauthenticationaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ALLOW"),
 				Description: "Deny or allow login on the basis of end point analysis results.",
 			},
 			"rule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ns_true"),
 				Description: "Name of the Citrix ADC named rule, or an expression, to be evaluated by the EPA tool.",
 			},
 		},
@@ -57,16 +60,16 @@ func aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx context.Context
 
 	// Create API request body from the model
 	aaapreauthenticationparameter := aaa.Aaapreauthenticationparameter{}
-	if !data.Deletefiles.IsNull() {
+	if !data.Deletefiles.IsNull() && !data.Deletefiles.IsUnknown() {
 		aaapreauthenticationparameter.Deletefiles = data.Deletefiles.ValueString()
 	}
-	if !data.Killprocess.IsNull() {
+	if !data.Killprocess.IsNull() && !data.Killprocess.IsUnknown() {
 		aaapreauthenticationparameter.Killprocess = data.Killprocess.ValueString()
 	}
-	if !data.Preauthenticationaction.IsNull() {
+	if !data.Preauthenticationaction.IsNull() && !data.Preauthenticationaction.IsUnknown() {
 		aaapreauthenticationparameter.Preauthenticationaction = data.Preauthenticationaction.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		aaapreauthenticationparameter.Rule = data.Rule.ValueString()
 	}
 

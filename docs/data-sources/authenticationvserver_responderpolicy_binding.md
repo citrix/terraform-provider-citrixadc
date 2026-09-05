@@ -32,9 +32,10 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
-* `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor
+* `groupextraction` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
+* `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor.
 * `priority` - The priority, if any, of the vpn vserver policy.
-* `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor
-* `id` - The id of the authenticationvserver_responderpolicy_binding. It is a system-generated identifier.
+* `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
+* `id` - The id of the authenticationvserver_responderpolicy_binding. It is the concatenation of `name` and `policy` attributes separated by a comma.

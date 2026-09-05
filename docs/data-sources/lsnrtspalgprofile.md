@@ -36,12 +36,3 @@ In addition to the arguments, the following attributes are available:
 * `rtspportrange` - port for the RTSP
 * `rtsptransportprotocol` - RTSP ALG Profile transport protocol type.
 * `id` - The id of the lsnrtspalgprofile. It has the same value as the `rtspalgprofilename` attribute.
-
-
-## Import
-
-A lsnrtspalgprofile can be imported using its rtspalgprofilename, e.g.
-
-```shell
-terraform import citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile my_lsn_rtspalgprofile_ds
-```

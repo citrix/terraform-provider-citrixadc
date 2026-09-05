@@ -35,7 +35,7 @@ func (d *DnstxtrecDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *DnstxtrecDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DnstxtrecResourceModel
+	var data DnstxtrecDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -43,53 +43,21 @@ func (d *DnstxtrecDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	domain_Name := data.Domain.ValueString()
+	// Look up by the primary key (domain).
+	domainName := data.Domain.ValueString()
 
-	var dataArr []map[string]interface{}
-	var err error
-
-	findParams := service.FindParams{
-		ResourceType:             service.Dnstxtrec.Type(),
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	getResponseData, err := d.client.FindResource(service.Dnstxtrec.Type(), domainName)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnstxtrec, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
-	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "dnstxtrec returned empty array.")
+	if getResponseData == nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("dnstxtrec with domain %s not found", domainName))
 		return
 	}
 
-	// Iterate through results to find the one with the right id
-	foundIndex := -1
-	for i, v := range dataArr {
-
-		match := true
-
-		if v["domain"].(string) != domain_Name {
-			match = false
-		}
-
-		if match {
-			foundIndex = i
-			break
-		}
-
-	}
-
-	// Resource is missing
-	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("dnstxtrec with domain %s not found", domain_Name))
-		return
-	}
-
-	// Use the first result
-	dnstxtrecSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnstxtrecDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

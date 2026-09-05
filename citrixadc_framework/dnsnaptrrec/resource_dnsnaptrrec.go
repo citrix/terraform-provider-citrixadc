@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *DnsnaptrrecResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating dnsnaptrrec resource")
 
-	// dnsnaptrrec := dnsnaptrrecGetThePayloadFromtheConfig(ctx, &data)
+	dnsnaptrrec := dnsnaptrrecGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsnaptrrec.Type(), &dnsnaptrrec)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsnaptrrec, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsnaptrrec-config")
+	// Named resource - use AddResource. The domain is the resource name.
+	domainName := data.Domain.ValueString()
+	_, err := r.client.AddResource(service.Dnsnaptrrec.Type(), domainName, &dnsnaptrrec)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsnaptrrec, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsnaptrrec resource")
 
-	// Read the updated state back
-	r.readDnsnaptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(domainName)
+
+	// Read the created state back
+	if !r.readDnsnaptrrecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsnaptrrec not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *DnsnaptrrecResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading dnsnaptrrec resource")
 
-	r.readDnsnaptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsnaptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsnaptrrecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsnaptrrecResourceModel
+	var data, state DnsnaptrrecResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,20 @@ func (r *DnsnaptrrecResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Updating dnsnaptrrec resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// dnsnaptrrec := dnsnaptrrecGetThePayloadFromtheConfig(ctx, &data)
+	// dnsnaptrrec has no NITRO-updatable attributes - every attribute is ForceNew
+	// (RequiresReplace), so any change forces recreation and Update is never reached
+	// with an actual attribute change. Simply refresh state from the API.
+	tflog.Debug(ctx, "Updating dnsnaptrrec resource (no updatable attributes)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsnaptrrec.Type(), &dnsnaptrrec)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsnaptrrec, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated dnsnaptrrec resource")
-
-	// Read the updated state back
-	r.readDnsnaptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsnaptrrecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsnaptrrec not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +151,54 @@ func (r *DnsnaptrrecResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting dnsnaptrrec resource")
 
-	// For dnsnaptrrec, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsnaptrrec resource from state")
+	domainName := data.Id.ValueString()
+
+	// The NAPTR record is deleted by domain name, disambiguated by the internally
+	// generated recordid (matches SDK v2 behavior).
+	argsMap := make(map[string]string)
+	if !data.Recordid.IsNull() && !data.Recordid.IsUnknown() {
+		argsMap["recordid"] = fmt.Sprintf("%d", data.Recordid.ValueInt64())
+	} else {
+		// Fall back to a fresh GET to obtain the recordid (e.g. imported state).
+		getResponseData, err := r.client.FindResource(service.Dnsnaptrrec.Type(), domainName)
+		if err != nil {
+			if utils.IsNotFoundError(err) {
+				// Already gone - nothing to delete.
+				return
+			}
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnsnaptrrec before delete, got error: %s", err))
+			return
+		}
+		if v, ok := getResponseData["recordid"]; ok && v != nil {
+			argsMap["recordid"] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	err := r.client.DeleteResourceWithArgsMap(service.Dnsnaptrrec.Type(), domainName, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsnaptrrec, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted dnsnaptrrec resource")
 }
 
-// Helper function to read dnsnaptrrec data from API
-func (r *DnsnaptrrecResource) readDnsnaptrrecFromApi(ctx context.Context, data *DnsnaptrrecResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsnaptrrec.Type(), "")
+// Helper function to read dnsnaptrrec data from API. Returns false when the
+// resource no longer exists on the ADC.
+func (r *DnsnaptrrecResource) readDnsnaptrrecFromApi(ctx context.Context, data *DnsnaptrrecResourceModel, diags *diag.Diagnostics) bool {
+	// Named resource - find by ID (the domain value).
+	domainName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnsnaptrrec.Type(), domainName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsnaptrrec, got error: %s", err))
-		return
+		return false
 	}
 
 	dnsnaptrrecSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

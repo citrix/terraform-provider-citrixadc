@@ -44,3 +44,10 @@ The following attributes are available:
 * `dynaddr` - Enable or disable dynamic address allocation. Possible values: [ ON, OFF ]
 * `ftmode` - Enable or disable fault tolerance for AAA. Possible values: [ ON, OFF, HA ]
 * `id` - The id of the aaaparameter. It is a system-generated identifier.
+
+### Read-only aaaparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaaparameter` resource) and are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if aaa param is built-in or not. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]. A list of strings.
+* `feature` - The feature to be checked while applying this config.

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCrvserver_responderpolicy_binding_basic = `
@@ -108,10 +111,12 @@ func testAccCheckCrvserver_responderpolicy_bindingExist(n string, id *string) re
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_responderpolicy_binding",
@@ -153,10 +158,12 @@ func testAccCheckCrvserver_responderpolicy_bindingNotExist(n string, id string) 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_responderpolicy_binding",
@@ -250,6 +257,144 @@ func TestAcccrvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "policyname", "tf_responderpolicy_ds"),
 				),
+			},
+		},
+	})
+}
+
+// Config for the SDK v2 -> Framework state-upgrade test. It is identical to the
+// _basic config (same terraform resource labels, same values) so it is valid under
+// BOTH the last SDK v2 release (2.2.0) schema in step 1 and the current framework
+// schema in step 2.
+const testAccCrvserver_responderpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+    name = "my_vserver"
+    servicetype = "HTTP"
+    arp = "OFF"
+}
+resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+	name    = "tf_responderpolicy1"
+	action = "NOOP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+resource "citrixadc_crvserver_responderpolicy_binding" "crvserver_responderpolicy_binding" {
+    name = citrixadc_crvserver.crvserver.name
+    policyname = citrixadc_responderpolicy.tf_responderpolicy.name
+    priority = 10
+
+}
+`
+
+// TestAccCrvserver_responderpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 provider release (2.2.0), which stores the legacy
+// comma-joined ID "name,policyname", is refreshed cleanly through the current
+// Framework provider. On Read the Framework recomputes the ID to the canonical
+// new "key:value" format, so after the step-2 apply the ID becomes
+// "name:<name>,policyname:<policyname>".
+func TestAccCrvserver_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state gets the legacy comma ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCrvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_responderpolicy_bindingExist("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "id", "my_vserver,tf_responderpolicy1"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-ID state through the current Framework
+			// provider. Read exercises ParseIdString on the legacy ID and recomputes
+			// the canonical new-format ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_responderpolicy_bindingExist("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding", "id", "name:my_vserver,policyname:tf_responderpolicy1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_responderpolicy_binding_basic},
+			{Config: testAccCrvserver_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCrvserver_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccCrvserver_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_responderpolicy_binding.Type(), "my_vserver", []string{"policyname:tf_responderpolicy1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_responderpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *VpnformssoactionResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating vpnformssoaction resource")
 
-	// vpnformssoaction := vpnformssoactionGetThePayloadFromtheConfig(ctx, &data)
+	vpnformssoaction := vpnformssoactionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnformssoaction.Type(), &vpnformssoaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnformssoaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnformssoaction-config")
+	// Named resource - use AddResource
+	vpnformssoactionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnformssoaction.Type(), vpnformssoactionName, &vpnformssoaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnformssoaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnformssoaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(vpnformssoactionName)
+
 	// Read the updated state back
-	r.readVpnformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnformssoactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnformssoaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,107 @@ func (r *VpnformssoactionResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading vpnformssoaction resource")
 
-	r.readVpnformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnformssoactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnformssoactionResourceModel
+	var data, config, state VpnformssoactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnformssoaction resource")
 
-	// Create API request body from the model
-	// vpnformssoaction := vpnformssoactionGetThePayloadFromtheConfig(ctx, &data)
+	// Only the non-ForceNew attributes can reach Update; the ForceNew attributes
+	// (actionurl, name, passwdfield, ssosuccessrule, userfield) trigger a replace.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Namevaluepair.Equal(state.Namevaluepair) {
+		tflog.Debug(ctx, "namevaluepair has changed for vpnformssoaction")
+		if config.Namevaluepair.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "namevaluepair")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Nvtype.Equal(state.Nvtype) {
+		tflog.Debug(ctx, "nvtype has changed for vpnformssoaction")
+		if config.Nvtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nvtype")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Responsesize.Equal(state.Responsesize) {
+		tflog.Debug(ctx, "responsesize has changed for vpnformssoaction")
+		if config.Responsesize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "responsesize")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Submitmethod.Equal(state.Submitmethod) {
+		tflog.Debug(ctx, "submitmethod has changed for vpnformssoaction")
+		if config.Submitmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "submitmethod")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnformssoaction.Type(), &vpnformssoaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnformssoaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		vpnformssoaction := vpnformssoactionGetThePayloadFromthePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		vpnformssoactionName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Vpnformssoaction.Type(), vpnformssoactionName, &vpnformssoaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnformssoaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnformssoaction resource")
+		tflog.Trace(ctx, "Updated vpnformssoaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnformssoaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnformssoaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnformssoaction attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readVpnformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnformssoactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnformssoaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +213,33 @@ func (r *VpnformssoactionResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting vpnformssoaction resource")
 
-	// For vpnformssoaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnformssoaction resource from state")
+	// Named resource - delete using DeleteResource
+	vpnformssoactionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vpnformssoaction.Type(), vpnformssoactionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnformssoaction, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnformssoaction resource")
 }
 
 // Helper function to read vpnformssoaction data from API
-func (r *VpnformssoactionResource) readVpnformssoactionFromApi(ctx context.Context, data *VpnformssoactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnformssoaction.Type(), "")
+func (r *VpnformssoactionResource) readVpnformssoactionFromApi(ctx context.Context, data *VpnformssoactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	vpnformssoactionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnformssoaction.Type(), vpnformssoactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnformssoaction, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnformssoactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNspartition_vlan_binding_basic = `
@@ -107,10 +110,12 @@ func testAccCheckNspartition_vlan_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		partitionname := idSlice[0]
-		vlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"partitionname", "vlan"}, nil)
+		if err != nil {
+			return err
+		}
+		partitionname := idMap["partitionname"]
+		vlan := idMap["vlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nspartition_vlan_binding",
@@ -127,7 +132,7 @@ func testAccCheckNspartition_vlan_bindingExist(n string, id *string) resource.Te
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["vlan"].(string) == vlan {
+			if fmt.Sprintf("%v", v["vlan"]) == vlan {
 				found = true
 				break
 			}
@@ -247,6 +252,131 @@ func TestAccNspartition_vlan_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nspartition_vlan_binding.tf_binding", "partitionname", "tf_nspartition"),
 					resource.TestCheckResourceAttr("data.citrixadc_nspartition_vlan_binding.tf_binding", "vlan", "20"),
 				),
+			},
+		},
+	})
+}
+
+const testAccNspartition_vlan_binding_upgrade_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nspartition_vlan_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		vlan          = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+func TestAccNspartition_vlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vlan_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: partitionname,vlan) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"partitionname", "vlan"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspartition_vlan_binding_basic},
+			{Config: testAccNspartition_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNspartition_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNspartition_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspartition_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (writes state with the legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNspartition_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vlan_bindingExist("citrixadc_nspartition_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vlan_binding.tf_binding", "id", "tf_nspartition,20"),
+				),
+			},
+			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+			// The framework Read recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNspartition_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vlan_bindingExist("citrixadc_nspartition_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vlan_binding.tf_binding", "id", "partitionname:tf_nspartition,vlan:20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNspartition_vlan_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_vlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_vlan_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nspartition_vlan_binding.Type(), "tf_nspartition", map[string]string{"vlan": "20"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspartition_vlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_vlan_bindingExist(resAddr, nil)),
 			},
 		},
 	})

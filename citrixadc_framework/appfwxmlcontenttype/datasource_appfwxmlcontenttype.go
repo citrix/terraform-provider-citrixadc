@@ -35,7 +35,7 @@ func (d *AppfwxmlcontenttypeDataSource) Schema(ctx context.Context, req datasour
 }
 
 func (d *AppfwxmlcontenttypeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwxmlcontenttypeResourceModel
+	var data AppfwxmlcontenttypeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AppfwxmlcontenttypeDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	appfwxmlcontenttypeSetAttrFromGet(ctx, &data, getResponseData)
+	appfwxmlcontenttypeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

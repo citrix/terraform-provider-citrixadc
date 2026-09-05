@@ -18,8 +18,10 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -186,6 +188,45 @@ func testAccCheckCrvserver_filterpolicy_bindingNotExist(n string, id string) res
 	}
 }
 
+func TestAccCrvserver_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the binding with the last SDK v2 release (v2.2.0),
+				// which writes state using the legacy comma-separated ID format.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCrvserver_filterpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_filterpolicy_bindingExist("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", "id", "my_vserver,tf_filterpolicy"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-ID state through the current
+				// (Framework) provider. Read parses the legacy ID via ParseIdString
+				// and recomputes the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_filterpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_filterpolicy_bindingExist("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", "id", "bindpoint:REQUEST,name:my_vserver,policyname:tf_filterpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCrvserver_filterpolicy_bindingDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()
@@ -210,4 +251,77 @@ func testAccCheckCrvserver_filterpolicy_bindingDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+func TestAccCrvserver_filterpolicy_binding_import(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_filterpolicy_binding_basic},
+			{Config: testAccCrvserver_filterpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCrvserver_filterpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccCrvserver_filterpolicy_binding_selfHealing(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_filterpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_filterpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_filterpolicy_binding.Type(), "my_vserver", []string{"policyname:tf_filterpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_filterpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_filterpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
 }

@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // TODO_PLACEHOLDER: Replace "TODO_PLACEHOLDER_SPEC_FILE" with the actual name of an API spec file
@@ -192,10 +192,39 @@ func TestAccApispecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccApispecDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_apispec.tf_apispec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_apispec.tf_apispec", "name", "tf_apispec"),
 					resource.TestCheckResourceAttr("data.citrixadc_apispec.tf_apispec", "file", "test_apispecfile"),
 					resource.TestCheckResourceAttr("data.citrixadc_apispec.tf_apispec", "type", "OAS"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccApispec_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_apispec.tf_apispec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApispecDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApispec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApispecExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Apispec.Type(), "tf_apispec"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccApispec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApispecExist(resAddr, nil)),
 			},
 		},
 	})

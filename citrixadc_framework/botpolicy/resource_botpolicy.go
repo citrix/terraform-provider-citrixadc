@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,28 @@ func (r *BotpolicyResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating botpolicy resource")
 
-	// botpolicy := botpolicyGetThePayloadFromtheConfig(ctx, &data)
+	botpolicy := botpolicyGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botpolicy.Type(), &botpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botpolicy-config")
+	// Named resource - use AddResource (POST)
+	botpolicyName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Botpolicy.Type(), botpolicyName, &botpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botpolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(botpolicyName)
+
 	// Read the updated state back
-	r.readBotpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,117 @@ func (r *BotpolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading botpolicy resource")
 
-	r.readBotpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBotpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BotpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotpolicyResourceModel
+	var data, config, state BotpolicyResourceModel
 
+	// Read Terraform prior state to preserve the live object ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state; it holds the current live object name.
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating botpolicy resource")
 
-	// Create API request body from the model
-	// botpolicy := botpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Handle in-place rename via the NITRO rename action. The rename source must
+	// be the CURRENT LIVE name (state.Id), not the configured name attribute.
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() && data.Newname.ValueString() != "" && !data.Newname.Equal(state.Newname) {
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("newname has changed for botpolicy, renaming %s -> %s", state.Id.ValueString(), newName))
+		renamePayload := bot.Botpolicy{
+			Name:    state.Id.ValueString(),
+			Newname: newName,
+		}
+		err := r.client.ActOnResource(service.Botpolicy.Type(), &renamePayload, "rename")
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename botpolicy, got error: %s", err))
+			return
+		}
+		// The live object is now named newName; the ID must track it.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botpolicy.Type(), &botpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botpolicy, got error: %s", err))
-	//	 return
-	// }
+	// Detect changes to in-place updatable attributes (name, rule and profilename
+	// are RequiresReplace and never reach Update).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Undefaction.Equal(state.Undefaction) {
+		tflog.Debug(ctx, "undefaction has changed for botpolicy")
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for botpolicy")
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Logaction.Equal(state.Logaction) {
+		tflog.Debug(ctx, "logaction has changed for botpolicy")
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
+	}
 
-	tflog.Trace(ctx, "Updated botpolicy resource")
+	if hasChange {
+		botpolicy := botpolicyGetThePayloadFromthePlan(ctx, &data)
+		// Target the live object name (post-rename if applicable). NITRO's update
+		// PUT requires the name field in the payload.
+		botpolicy.Name = data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Botpolicy.Type(), data.Id.ValueString(), &botpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botpolicy, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated botpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No in-place changes detected for botpolicy resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Keyed on the live object name (post-rename if any).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Botpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset botpolicy attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readBotpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +224,33 @@ func (r *BotpolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting botpolicy resource")
 
-	// For botpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botpolicy resource from state")
+	// Named resource - delete using DeleteResource keyed on the live name (ID).
+	botpolicyName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Botpolicy.Type(), botpolicyName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botpolicy, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botpolicy resource")
 }
 
 // Helper function to read botpolicy data from API
-func (r *BotpolicyResource) readBotpolicyFromApi(ctx context.Context, data *BotpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botpolicy.Type(), "")
+func (r *BotpolicyResource) readBotpolicyFromApi(ctx context.Context, data *BotpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the live object name.
+	botpolicyName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Botpolicy.Type(), botpolicyName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	botpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

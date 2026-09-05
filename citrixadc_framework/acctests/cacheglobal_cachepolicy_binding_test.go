@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCacheglobal_cachepolicy_binding_basic = `
@@ -98,7 +100,13 @@ func testAccCheckCacheglobal_cachepolicy_bindingExist(n string, id *string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policy := rs.Primary.ID
+		// ID-parse helper: handle both the new key:value ID format and the legacy
+		// plain-policy format produced by SDK v2.
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policy"}, nil)
+		if err != nil {
+			return err
+		}
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "cacheglobal_cachepolicy_binding",
@@ -223,7 +231,111 @@ func TestAcccacheglobal_cachepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "policy", "my_cachepolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// testAccCacheglobal_cachepolicy_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current framework schema. It reuses the values from
+// testAccCacheglobal_cachepolicy_binding_basic and keeps the same resource labels so
+// the Exist/Destroy helpers and addresses match.
+const testAccCacheglobal_cachepolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_cachepolicy" "tf_cachepolicy" {
+		policyname  = "my_cachepolicy"
+		rule        = "true"
+		action      = "CACHE"
+	}
+	resource "citrixadc_cacheglobal_cachepolicy_binding" "tf_cacheglobal_cachepolicy_binding" {
+		policy   = citrixadc_cachepolicy.tf_cachepolicy.policyname
+		priority = 100
+		type     = "REQ_DEFAULT"
+	}
+`
+
+// TestAccCacheglobal_cachepolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created by the last SDK v2 release (which writes the legacy id "my_cachepolicy" via
+// d.SetId(policy)) is correctly read/refreshed by the current framework provider, which
+// recomputes the id to the new "policy:...,type:..." format on Read (SetAttrFromGet).
+func TestAccCacheglobal_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCacheglobal_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release from the registry.
+			// State is written with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCacheglobal_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCacheglobal_cachepolicy_bindingExist("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "id", "my_cachepolicy"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Terraform
+			// refreshes the legacy-id state (exercising ParseIdString on the legacy id),
+			// and the framework Read recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCacheglobal_cachepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCacheglobal_cachepolicy_bindingExist("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "id", "policy:my_cachepolicy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCacheglobal_cachepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheglobal_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCacheglobal_cachepolicy_binding_basic},
+			{Config: testAccCacheglobal_cachepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccCacheglobal_cachepolicy_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccCacheglobal_cachepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheglobal_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheglobal_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheglobal_cachepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Cacheglobal_cachepolicy_binding.Type(), "", map[string]string{"policy": "my_cachepolicy", "type": "REQ_DEFAULT", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCacheglobal_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheglobal_cachepolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -125,25 +125,12 @@ func (r *AppfwgrpcwebtextcontenttypeResource) Update(ctx context.Context, req re
 
 	tflog.Debug(ctx, "Updating appfwgrpcwebtextcontenttype resource")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		appfwgrpcwebtextcontenttype := appfwgrpcwebtextcontenttypeGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Named resource - use UpdateResource
-		grpcwebtextcontenttypevalue_value := data.Grpcwebtextcontenttypevalue.ValueString()
-		_, err := r.client.UpdateResource(service.Appfwgrpcwebtextcontenttype.Type(), grpcwebtextcontenttypevalue_value, &appfwgrpcwebtextcontenttype)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwgrpcwebtextcontenttype, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated appfwgrpcwebtextcontenttype resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for appfwgrpcwebtextcontenttype resource, skipping update")
-	}
+	// No in-place update: every settable attribute of appfwgrpcwebtextcontenttype is
+	// ForceNew (RequiresReplace) and NITRO exposes no "update" operation for this
+	// resource (only add/delete/get), so any change triggers a destroy+recreate and
+	// this method is never invoked with a real diff. The prior UpdateResource(PUT)
+	// call was dead code (a PUT would be rejected) and has been removed. If a future
+	// schema change makes an attribute non-ForceNew, add a proper update path here.
 
 	// Read the updated state back
 	if !r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {

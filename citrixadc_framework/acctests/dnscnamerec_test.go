@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnscnamerec_basic = `
@@ -138,6 +139,81 @@ func testAccCheckDnscnamerecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnscnamerec_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnscnamerec.dnscnamerec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnscnamerecDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnscnamerec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnscnamerecExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnscnamerec.Type(), "citrixadc.cloud.com"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnscnamerec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnscnamerecExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnscnamerec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnscnamerec.dnscnamerec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnscnamerecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnscnamerec_basic},
+			{
+				Config:                  testAccDnscnamerec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnscnamerec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnscnamerecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnscnamerec_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnscnamerecExist("citrixadc_dnscnamerec.dnscnamerec", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnscnamerec_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnscnamerecExist("citrixadc_dnscnamerec.dnscnamerec", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDnscnamerecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -146,6 +222,7 @@ func TestAccDnscnamerecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnscnamerecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnscnamerec.dnscnamerec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "aliasname", "tfacc-ds-cname-test.local"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "canonicalname", "tfacc-target.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "ttl", "3600"),

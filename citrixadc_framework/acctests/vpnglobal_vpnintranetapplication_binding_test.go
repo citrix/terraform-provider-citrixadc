@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpnintranetapplication_binding_basic = `
@@ -212,6 +213,100 @@ func TestAccVpnglobal_vpnintranetapplication_bindingDataSource_basic(t *testing.
 				Config: testAccVpnglobal_vpnintranetapplication_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", "intranetapplication", "tf_vpnintranetapplication"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_vpnintranetapplication_binding_upgrade_basic = `
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
+	resource "citrixadc_vpnglobal_vpnintranetapplication_binding" "tf_bind" {
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+`
+
+func TestAccVpnglobal_vpnintranetapplication_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_vpnintranetapplication_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnintranetapplication_bindingExist("citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", "id", "tf_vpnintranetapplication"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			// For this single-key binding both the legacy and new id are the plain intranetapplication value.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpnintranetapplication_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnintranetapplication_bindingExist("citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", "id", "tf_vpnintranetapplication"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnintranetapplication_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpnintranetapplication_binding_basic},
+			{Config: testAccVpnglobal_vpnintranetapplication_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnintranetapplication_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnintranetapplication_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnintranetapplication_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnintranetapplication_binding.Type(), "", []string{"intranetapplication:tf_vpnintranetapplication"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpnintranetapplication_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnintranetapplication_bindingExist(resAddr, nil),
 				),
 			},
 		},

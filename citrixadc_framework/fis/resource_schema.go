@@ -42,7 +42,10 @@ func (r *FisResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (fis has no update op); avoid
+					// spurious destroy+recreate on upgrade for Optional+Computed.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "ID of the cluster node for which you are creating the FIS. Can be configured only through the cluster IP address.",
 			},
@@ -50,15 +53,18 @@ func (r *FisResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 	}
 }
 
-func fisGetThePayloadFromtheConfig(ctx context.Context, data *FisResourceModel) network.Fis {
-	tflog.Debug(ctx, "In fisGetThePayloadFromtheConfig Function")
+func fisGetThePayloadFromthePlan(ctx context.Context, data *FisResourceModel) network.Fis {
+	tflog.Debug(ctx, "In fisGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	fis := network.Fis{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		fis.Name = data.Name.ValueString()
 	}
-	if !data.Ownernode.IsNull() {
+	// ownernode is Optional+Computed: only send it when the user actually
+	// configured a value (matches SDK v2 GetRawConfig null check). When it is
+	// unknown (computed, not configured) leave it out of the payload.
+	if !data.Ownernode.IsNull() && !data.Ownernode.IsUnknown() {
 		fis.Ownernode = utils.IntPtr(int(data.Ownernode.ValueInt64()))
 	}
 
@@ -78,7 +84,11 @@ func fisSetAttrFromGet(ctx context.Context, data *FisResourceModel, getResponseD
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ownernode.IsUnknown() {
+		// NITRO omits ownernode from GET when it equals its default (0). Only
+		// null it out when the value was never configured (unknown); otherwise
+		// preserve the configured value to avoid "inconsistent result after
+		// apply" when the user explicitly sets ownernode = 0.
 		data.Ownernode = types.Int64Null()
 	}
 

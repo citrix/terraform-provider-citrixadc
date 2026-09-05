@@ -7,8 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -71,6 +72,8 @@ type NshttpprofileResourceModel struct {
 	Maxreusepool                     types.Int64  `tfsdk:"maxreusepool"`
 	Minreusepool                     types.Int64  `tfsdk:"minreusepool"`
 	Name                             types.String `tfsdk:"name"`
+	Normalizeurl                     types.String `tfsdk:"normalizeurl"`
+	Normalizeurltoorigin             types.String `tfsdk:"normalizeurltoorigin"`
 	Passprotocolupgrade              types.String `tfsdk:"passprotocolupgrade"`
 	Persistentetag                   types.String `tfsdk:"persistentetag"`
 	Reqtimeout                       types.Int64  `tfsdk:"reqtimeout"`
@@ -91,16 +94,19 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"adpttimeout": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Adapts the configured request timeout based on flow conditions. The timeout is increased or decreased internally and applied on the flow.",
 			},
 			"allowonlywordcharactersandhyphen": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "When enabled allows only the word characters [A-Za-z0-9_] and hyphen [-] in the request/response header names and the connection will be reset for the other characters. When disabled allows any visible (printing) characters (%21-%7E) except delimiters (double quotes and \"(),/:;<=>?@[]{}\").",
 			},
 			"altsvc": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for Alternative Services.",
 			},
@@ -111,7 +117,7 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"apdexcltresptimethreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(500),
+				Computed:    true,
 				Description: "This option sets the satisfactory threshold (T) for client response time in milliseconds to be used for APDEX calculations. This means a transaction responding in less than this threshold is considered satisfactory. Transaction responding between T and 4*T is considered tolerable. Any transaction responding in more than 4*T time is considered frustrating. Citrix ADC maintains stats for such tolerable and frustrating transcations. And client response time related apdex counters are only updated on a vserver which receives clients traffic.",
 			},
 			"clientiphdrexpr": schema.StringAttribute{
@@ -121,112 +127,123 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"cmponpush": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Start data compression on receiving a TCP packet with PUSH flag set.",
 			},
 			"conmultiplex": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Reuse server connections for requests from more than one client connections.",
 			},
 			"dropextracrlf": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Drop any extra 'CR' and 'LF' characters present after the header.",
 			},
 			"dropextradata": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Drop any extra data when server sends more data than the specified content-length.",
 			},
 			"dropinvalreqs": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Drop invalid HTTP requests or responses.",
 			},
 			"grpcholdlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(131072),
+				Computed:    true,
 				Description: "Maximum size in bytes allowed to buffer gRPC packets till trailer is received",
 			},
 			"grpcholdtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1000),
+				Computed:    true,
 				Description: "Maximum time in milliseconds allowed to buffer gRPC packets till trailer is received. The value should be in multiples of 100",
 			},
 			"grpclengthdelimitation": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Set to DISABLED for gRPC without a length delimitation.",
 			},
 			"hostheadervalidation": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Validates the length of the Host header and its syntax. Also includes validation of the port number if specified",
 			},
 			"http2": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for HTTP/2.",
 			},
 			"http2altsvcframe": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for sending HTTP/2 ALTSVC frames. When enabled, the ADC sends HTTP/2 ALTSVC frames to HTTP/2 clients, instead of the Alt-Svc response header field. Not applicable to servers.",
 			},
 			"http2direct": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for Direct HTTP/2.",
 			},
 			"http2extendedconnect": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Choose whether to enable HTTP/2 Extended CONNECT mechanism.",
 			},
 			"http2headertablesize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4096),
+				Computed:    true,
 				Description: "Maximum size of the header compression table used to decode header blocks, in bytes.",
 			},
 			"http2initialconnwindowsize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Initial window size for connection level flow control, in bytes.",
 			},
 			"http2initialwindowsize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Initial window size for stream level flow control, in bytes.",
 			},
 			"http2maxconcurrentstreams": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(100),
+				Computed:    true,
 				Description: "Maximum number of concurrent streams that is allowed per connection.",
 			},
 			"http2maxemptyframespermin": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "Maximum number of empty frames allowed in HTTP2 connection per minute",
 			},
 			"http2maxframesize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(16384),
+				Computed:    true,
 				Description: "Maximum size of the frame payload that the Citrix ADC is willing to receive, in bytes.",
 			},
 			"http2maxheaderlistsize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(24576),
+				Computed:    true,
 				Description: "Maximum size of header list that the Citrix ADC is prepared to accept, in bytes. NOTE: The actual plain text header size that the Citrix ADC accepts is limited by maxHeaderLen. Please change maxHeaderLen parameter as well when modifying http2MaxHeaderListSize.",
 			},
 			"http2maxpingframespermin": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "Maximum number of PING frames allowed in HTTP2 connection per minute",
 			},
 			"http2maxresetframespermin": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(90),
+				Computed:    true,
 				Description: "Maximum number of outgoing RST_STREAM frames allowed in HTTP/2 connection per minute",
 			},
 			"http2maxrxresetframespermin": schema.Int64Attribute{
@@ -241,81 +258,91 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"http2maxsettingsframespermin": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(15),
+				Computed:    true,
 				Description: "Maximum number of SETTINGS frames allowed in HTTP2 connection per minute",
 			},
 			"http2minseverconn": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(20),
+				Computed:    true,
 				Description: "Minimum number of HTTP2 connections established to backend server, on receiving HTTP requests from client before multiplexing the streams into the available HTTP/2 connections.",
 			},
 			"http2strictcipher": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Choose whether to enable strict HTTP/2 cipher selection",
 			},
 			"http3": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for HTTP/3.",
 			},
 			"http3maxheaderblockedstreams": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(100),
+				Computed:    true,
 				Description: "Maximum number of HTTP/3 streams that can be blocked while HTTP/3 headers are being decoded.",
 			},
 			"http3maxheaderfieldsectionsize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(24576),
+				Computed:    true,
 				Description: "Maximum size of the HTTP/3 header field section, in bytes.",
 			},
 			"http3maxheadertablesize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4096),
+				Computed:    true,
 				Description: "Maximum size of the HTTP/3 QPACK dynamic header table, in bytes.",
 			},
 			"http3minseverconn": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(20),
+				Computed:    true,
 				Description: "Minimum number of HTTP/3 connections established to backend server, on receiving HTTP requests from client before multiplexing the streams into the available HTTP/3 connections.",
 			},
 			"http3webtransport": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Choose whether to enable support for WebTransport over HTTP/3.",
 			},
 			"httppipelinebuffsize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(131072),
+				Computed:    true,
 				Description: "Application pipeline request buffering size, in bytes.",
 			},
 			"incomphdrdelay": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(7000),
+				Computed:    true,
 				Description: "Maximum time to wait, in milliseconds, between incomplete header packets. If the header packets take longer to arrive at Citrix ADC, the connection is silently dropped.",
 			},
 			"markconnreqinval": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark CONNECT requests as invalid.",
 			},
 			"markhttp09inval": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark HTTP/0.9 requests as invalid.",
 			},
 			"markhttpheaderextrawserror": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark Http header with extra white space as invalid",
 			},
 			"markrfc7230noncompliantinval": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark RFC7230 non-compliant transaction as invalid",
 			},
 			"marktracereqinval": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark TRACE requests as invalid.",
 			},
@@ -326,12 +353,12 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"maxheaderfieldlen": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(24820),
+				Computed:    true,
 				Description: "Number of bytes allowed for header field for HTTP header. If number of bytes exceeds beyond configured value, then request will be marked invalid",
 			},
 			"maxheaderlen": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(24820),
+				Computed:    true,
 				Description: "Number of bytes to be queued to look for complete header before returning error. If complete header is not obtained after queuing these many bytes, request will be marked as invalid and no L7 processing will be done for that TCP connection.",
 			},
 			"maxreq": schema.Int64Attribute{
@@ -350,16 +377,31 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Minimum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time. Zero implies no limit on reuse pool size.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for an HTTP profile. Must begin with a letter, number, or the underscore \\(_\\) character. Other characters allowed, after the first character, are the hyphen \\(-\\), period \\(.\\), hash \\(\\#\\), space \\( \\), at \\(@\\), colon \\(:\\), and equal \\(=\\) characters. The name of a HTTP profile cannot be changed after it is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my http profile\" or 'my http profile'\\).",
+			},
+			"normalizeurl": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable RFC 3986 normalization of incoming URL before validation or consumption.",
+			},
+			"normalizeurltoorigin": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable RFC 3986 URL normalization for request sent to the origin server.",
 			},
 			"passprotocolupgrade": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Pass protocol upgrade request to the server.",
 			},
 			"persistentetag": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Generate the persistent Citrix ADC specific ETag for the HTTP response with ETag header.",
 			},
@@ -380,16 +422,19 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"rtsptunnel": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Allow RTSP tunnel in HTTP. Once application/x-rtsp-tunnelled is seen in Accept or Content-Type header, Citrix ADC does not process Layer 7 traffic on this connection.",
 			},
 			"weblog": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable web logging.",
 			},
 			"websocket": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "HTTP connection to be upgraded to a web socket connection. Once upgraded, Citrix ADC does not process Layer 7 traffic on this connection.",
 			},
@@ -400,186 +445,197 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 func nshttpprofileGetThePayloadFromtheConfig(ctx context.Context, data *NshttpprofileResourceModel) ns.Nshttpprofile {
 	tflog.Debug(ctx, "In nshttpprofileGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model. Only known, configured values are
+	// sent; unknown (Computed, unset) values are skipped so they are read back
+	// from the ADC rather than being overwritten with an empty value.
 	nshttpprofile := ns.Nshttpprofile{}
-	if !data.Adpttimeout.IsNull() {
+	if !data.Adpttimeout.IsNull() && !data.Adpttimeout.IsUnknown() {
 		nshttpprofile.Adpttimeout = data.Adpttimeout.ValueString()
 	}
-	if !data.Allowonlywordcharactersandhyphen.IsNull() {
+	if !data.Allowonlywordcharactersandhyphen.IsNull() && !data.Allowonlywordcharactersandhyphen.IsUnknown() {
 		nshttpprofile.Allowonlywordcharactersandhyphen = data.Allowonlywordcharactersandhyphen.ValueString()
 	}
-	if !data.Altsvc.IsNull() {
+	if !data.Altsvc.IsNull() && !data.Altsvc.IsUnknown() {
 		nshttpprofile.Altsvc = data.Altsvc.ValueString()
 	}
-	if !data.Altsvcvalue.IsNull() {
+	if !data.Altsvcvalue.IsNull() && !data.Altsvcvalue.IsUnknown() {
 		nshttpprofile.Altsvcvalue = data.Altsvcvalue.ValueString()
 	}
-	if !data.Apdexcltresptimethreshold.IsNull() {
+	if !data.Apdexcltresptimethreshold.IsNull() && !data.Apdexcltresptimethreshold.IsUnknown() {
 		nshttpprofile.Apdexcltresptimethreshold = utils.IntPtr(int(data.Apdexcltresptimethreshold.ValueInt64()))
 	}
-	if !data.Clientiphdrexpr.IsNull() {
+	if !data.Clientiphdrexpr.IsNull() && !data.Clientiphdrexpr.IsUnknown() {
 		nshttpprofile.Clientiphdrexpr = data.Clientiphdrexpr.ValueString()
 	}
-	if !data.Cmponpush.IsNull() {
+	if !data.Cmponpush.IsNull() && !data.Cmponpush.IsUnknown() {
 		nshttpprofile.Cmponpush = data.Cmponpush.ValueString()
 	}
-	if !data.Conmultiplex.IsNull() {
+	if !data.Conmultiplex.IsNull() && !data.Conmultiplex.IsUnknown() {
 		nshttpprofile.Conmultiplex = data.Conmultiplex.ValueString()
 	}
-	if !data.Dropextracrlf.IsNull() {
+	if !data.Dropextracrlf.IsNull() && !data.Dropextracrlf.IsUnknown() {
 		nshttpprofile.Dropextracrlf = data.Dropextracrlf.ValueString()
 	}
-	if !data.Dropextradata.IsNull() {
+	if !data.Dropextradata.IsNull() && !data.Dropextradata.IsUnknown() {
 		nshttpprofile.Dropextradata = data.Dropextradata.ValueString()
 	}
-	if !data.Dropinvalreqs.IsNull() {
+	if !data.Dropinvalreqs.IsNull() && !data.Dropinvalreqs.IsUnknown() {
 		nshttpprofile.Dropinvalreqs = data.Dropinvalreqs.ValueString()
 	}
-	if !data.Grpcholdlimit.IsNull() {
+	if !data.Grpcholdlimit.IsNull() && !data.Grpcholdlimit.IsUnknown() {
 		nshttpprofile.Grpcholdlimit = utils.IntPtr(int(data.Grpcholdlimit.ValueInt64()))
 	}
-	if !data.Grpcholdtimeout.IsNull() {
+	if !data.Grpcholdtimeout.IsNull() && !data.Grpcholdtimeout.IsUnknown() {
 		nshttpprofile.Grpcholdtimeout = utils.IntPtr(int(data.Grpcholdtimeout.ValueInt64()))
 	}
-	if !data.Grpclengthdelimitation.IsNull() {
+	if !data.Grpclengthdelimitation.IsNull() && !data.Grpclengthdelimitation.IsUnknown() {
 		nshttpprofile.Grpclengthdelimitation = data.Grpclengthdelimitation.ValueString()
 	}
-	if !data.Hostheadervalidation.IsNull() {
+	if !data.Hostheadervalidation.IsNull() && !data.Hostheadervalidation.IsUnknown() {
 		nshttpprofile.Hostheadervalidation = data.Hostheadervalidation.ValueString()
 	}
-	if !data.Http2.IsNull() {
+	if !data.Http2.IsNull() && !data.Http2.IsUnknown() {
 		nshttpprofile.Http2 = data.Http2.ValueString()
 	}
-	if !data.Http2altsvcframe.IsNull() {
+	if !data.Http2altsvcframe.IsNull() && !data.Http2altsvcframe.IsUnknown() {
 		nshttpprofile.Http2altsvcframe = data.Http2altsvcframe.ValueString()
 	}
-	if !data.Http2direct.IsNull() {
+	if !data.Http2direct.IsNull() && !data.Http2direct.IsUnknown() {
 		nshttpprofile.Http2direct = data.Http2direct.ValueString()
 	}
-	if !data.Http2extendedconnect.IsNull() {
+	if !data.Http2extendedconnect.IsNull() && !data.Http2extendedconnect.IsUnknown() {
 		nshttpprofile.Http2extendedconnect = data.Http2extendedconnect.ValueString()
 	}
-	if !data.Http2headertablesize.IsNull() {
+	if !data.Http2headertablesize.IsNull() && !data.Http2headertablesize.IsUnknown() {
 		nshttpprofile.Http2headertablesize = utils.IntPtr(int(data.Http2headertablesize.ValueInt64()))
 	}
-	if !data.Http2initialconnwindowsize.IsNull() {
+	if !data.Http2initialconnwindowsize.IsNull() && !data.Http2initialconnwindowsize.IsUnknown() {
 		nshttpprofile.Http2initialconnwindowsize = utils.IntPtr(int(data.Http2initialconnwindowsize.ValueInt64()))
 	}
-	if !data.Http2initialwindowsize.IsNull() {
+	if !data.Http2initialwindowsize.IsNull() && !data.Http2initialwindowsize.IsUnknown() {
 		nshttpprofile.Http2initialwindowsize = utils.IntPtr(int(data.Http2initialwindowsize.ValueInt64()))
 	}
-	if !data.Http2maxconcurrentstreams.IsNull() {
+	if !data.Http2maxconcurrentstreams.IsNull() && !data.Http2maxconcurrentstreams.IsUnknown() {
 		nshttpprofile.Http2maxconcurrentstreams = utils.IntPtr(int(data.Http2maxconcurrentstreams.ValueInt64()))
 	}
-	if !data.Http2maxemptyframespermin.IsNull() {
+	if !data.Http2maxemptyframespermin.IsNull() && !data.Http2maxemptyframespermin.IsUnknown() {
 		nshttpprofile.Http2maxemptyframespermin = utils.IntPtr(int(data.Http2maxemptyframespermin.ValueInt64()))
 	}
-	if !data.Http2maxframesize.IsNull() {
+	if !data.Http2maxframesize.IsNull() && !data.Http2maxframesize.IsUnknown() {
 		nshttpprofile.Http2maxframesize = utils.IntPtr(int(data.Http2maxframesize.ValueInt64()))
 	}
-	if !data.Http2maxheaderlistsize.IsNull() {
+	if !data.Http2maxheaderlistsize.IsNull() && !data.Http2maxheaderlistsize.IsUnknown() {
 		nshttpprofile.Http2maxheaderlistsize = utils.IntPtr(int(data.Http2maxheaderlistsize.ValueInt64()))
 	}
-	if !data.Http2maxpingframespermin.IsNull() {
+	if !data.Http2maxpingframespermin.IsNull() && !data.Http2maxpingframespermin.IsUnknown() {
 		nshttpprofile.Http2maxpingframespermin = utils.IntPtr(int(data.Http2maxpingframespermin.ValueInt64()))
 	}
-	if !data.Http2maxresetframespermin.IsNull() {
+	if !data.Http2maxresetframespermin.IsNull() && !data.Http2maxresetframespermin.IsUnknown() {
 		nshttpprofile.Http2maxresetframespermin = utils.IntPtr(int(data.Http2maxresetframespermin.ValueInt64()))
 	}
-	if !data.Http2maxrxresetframespermin.IsNull() {
+	if !data.Http2maxrxresetframespermin.IsNull() && !data.Http2maxrxresetframespermin.IsUnknown() {
 		nshttpprofile.Http2maxrxresetframespermin = utils.IntPtr(int(data.Http2maxrxresetframespermin.ValueInt64()))
 	}
-	if !data.Http2maxsettingsframespermin.IsNull() {
+	if !data.Http2maxsettingsframespermin.IsNull() && !data.Http2maxsettingsframespermin.IsUnknown() {
 		nshttpprofile.Http2maxsettingsframespermin = utils.IntPtr(int(data.Http2maxsettingsframespermin.ValueInt64()))
 	}
-	if !data.Http2minseverconn.IsNull() {
+	if !data.Http2minseverconn.IsNull() && !data.Http2minseverconn.IsUnknown() {
 		nshttpprofile.Http2minseverconn = utils.IntPtr(int(data.Http2minseverconn.ValueInt64()))
 	}
-	if !data.Http2strictcipher.IsNull() {
+	if !data.Http2smallwndtimeout.IsNull() && !data.Http2smallwndtimeout.IsUnknown() {
+		nshttpprofile.Http2smallwndtimeout = utils.IntPtr(int(data.Http2smallwndtimeout.ValueInt64()))
+	}
+	if !data.Http2strictcipher.IsNull() && !data.Http2strictcipher.IsUnknown() {
 		nshttpprofile.Http2strictcipher = data.Http2strictcipher.ValueString()
 	}
-	if !data.Http3.IsNull() {
+	if !data.Http3.IsNull() && !data.Http3.IsUnknown() {
 		nshttpprofile.Http3 = data.Http3.ValueString()
 	}
-	if !data.Http3maxheaderblockedstreams.IsNull() {
+	if !data.Http3maxheaderblockedstreams.IsNull() && !data.Http3maxheaderblockedstreams.IsUnknown() {
 		nshttpprofile.Http3maxheaderblockedstreams = utils.IntPtr(int(data.Http3maxheaderblockedstreams.ValueInt64()))
 	}
-	if !data.Http3maxheaderfieldsectionsize.IsNull() {
+	if !data.Http3maxheaderfieldsectionsize.IsNull() && !data.Http3maxheaderfieldsectionsize.IsUnknown() {
 		nshttpprofile.Http3maxheaderfieldsectionsize = utils.IntPtr(int(data.Http3maxheaderfieldsectionsize.ValueInt64()))
 	}
-	if !data.Http3maxheadertablesize.IsNull() {
+	if !data.Http3maxheadertablesize.IsNull() && !data.Http3maxheadertablesize.IsUnknown() {
 		nshttpprofile.Http3maxheadertablesize = utils.IntPtr(int(data.Http3maxheadertablesize.ValueInt64()))
 	}
-	if !data.Http3minseverconn.IsNull() {
+	if !data.Http3minseverconn.IsNull() && !data.Http3minseverconn.IsUnknown() {
 		nshttpprofile.Http3minseverconn = utils.IntPtr(int(data.Http3minseverconn.ValueInt64()))
 	}
-	if !data.Http3webtransport.IsNull() {
+	if !data.Http3webtransport.IsNull() && !data.Http3webtransport.IsUnknown() {
 		nshttpprofile.Http3webtransport = data.Http3webtransport.ValueString()
 	}
-	if !data.Httppipelinebuffsize.IsNull() {
+	if !data.Httppipelinebuffsize.IsNull() && !data.Httppipelinebuffsize.IsUnknown() {
 		nshttpprofile.Httppipelinebuffsize = utils.IntPtr(int(data.Httppipelinebuffsize.ValueInt64()))
 	}
-	if !data.Incomphdrdelay.IsNull() {
+	if !data.Incomphdrdelay.IsNull() && !data.Incomphdrdelay.IsUnknown() {
 		nshttpprofile.Incomphdrdelay = utils.IntPtr(int(data.Incomphdrdelay.ValueInt64()))
 	}
-	if !data.Markconnreqinval.IsNull() {
+	if !data.Markconnreqinval.IsNull() && !data.Markconnreqinval.IsUnknown() {
 		nshttpprofile.Markconnreqinval = data.Markconnreqinval.ValueString()
 	}
-	if !data.Markhttp09inval.IsNull() {
+	if !data.Markhttp09inval.IsNull() && !data.Markhttp09inval.IsUnknown() {
 		nshttpprofile.Markhttp09inval = data.Markhttp09inval.ValueString()
 	}
-	if !data.Markhttpheaderextrawserror.IsNull() {
+	if !data.Markhttpheaderextrawserror.IsNull() && !data.Markhttpheaderextrawserror.IsUnknown() {
 		nshttpprofile.Markhttpheaderextrawserror = data.Markhttpheaderextrawserror.ValueString()
 	}
-	if !data.Markrfc7230noncompliantinval.IsNull() {
+	if !data.Markrfc7230noncompliantinval.IsNull() && !data.Markrfc7230noncompliantinval.IsUnknown() {
 		nshttpprofile.Markrfc7230noncompliantinval = data.Markrfc7230noncompliantinval.ValueString()
 	}
-	if !data.Marktracereqinval.IsNull() {
+	if !data.Marktracereqinval.IsNull() && !data.Marktracereqinval.IsUnknown() {
 		nshttpprofile.Marktracereqinval = data.Marktracereqinval.ValueString()
 	}
-	if !data.Maxduplicateheaderfields.IsNull() {
+	if !data.Maxduplicateheaderfields.IsNull() && !data.Maxduplicateheaderfields.IsUnknown() {
 		nshttpprofile.Maxduplicateheaderfields = utils.IntPtr(int(data.Maxduplicateheaderfields.ValueInt64()))
 	}
-	if !data.Maxheaderfieldlen.IsNull() {
+	if !data.Maxheaderfieldlen.IsNull() && !data.Maxheaderfieldlen.IsUnknown() {
 		nshttpprofile.Maxheaderfieldlen = utils.IntPtr(int(data.Maxheaderfieldlen.ValueInt64()))
 	}
-	if !data.Maxheaderlen.IsNull() {
+	if !data.Maxheaderlen.IsNull() && !data.Maxheaderlen.IsUnknown() {
 		nshttpprofile.Maxheaderlen = utils.IntPtr(int(data.Maxheaderlen.ValueInt64()))
 	}
-	if !data.Maxreq.IsNull() {
+	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
 		nshttpprofile.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
 	}
-	if !data.Maxreusepool.IsNull() {
+	if !data.Maxreusepool.IsNull() && !data.Maxreusepool.IsUnknown() {
 		nshttpprofile.Maxreusepool = utils.IntPtr(int(data.Maxreusepool.ValueInt64()))
 	}
-	if !data.Minreusepool.IsNull() {
+	if !data.Minreusepool.IsNull() && !data.Minreusepool.IsUnknown() {
 		nshttpprofile.Minreusepool = utils.IntPtr(int(data.Minreusepool.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nshttpprofile.Name = data.Name.ValueString()
 	}
-	if !data.Passprotocolupgrade.IsNull() {
+	if !data.Normalizeurl.IsNull() && !data.Normalizeurl.IsUnknown() {
+		nshttpprofile.Normalizeurl = data.Normalizeurl.ValueString()
+	}
+	if !data.Normalizeurltoorigin.IsNull() && !data.Normalizeurltoorigin.IsUnknown() {
+		nshttpprofile.Normalizeurltoorigin = data.Normalizeurltoorigin.ValueString()
+	}
+	if !data.Passprotocolupgrade.IsNull() && !data.Passprotocolupgrade.IsUnknown() {
 		nshttpprofile.Passprotocolupgrade = data.Passprotocolupgrade.ValueString()
 	}
-	if !data.Persistentetag.IsNull() {
+	if !data.Persistentetag.IsNull() && !data.Persistentetag.IsUnknown() {
 		nshttpprofile.Persistentetag = data.Persistentetag.ValueString()
 	}
-	if !data.Reqtimeout.IsNull() {
+	if !data.Reqtimeout.IsNull() && !data.Reqtimeout.IsUnknown() {
 		nshttpprofile.Reqtimeout = utils.IntPtr(int(data.Reqtimeout.ValueInt64()))
 	}
-	if !data.Reqtimeoutaction.IsNull() {
+	if !data.Reqtimeoutaction.IsNull() && !data.Reqtimeoutaction.IsUnknown() {
 		nshttpprofile.Reqtimeoutaction = data.Reqtimeoutaction.ValueString()
 	}
-	if !data.Reusepooltimeout.IsNull() {
+	if !data.Reusepooltimeout.IsNull() && !data.Reusepooltimeout.IsUnknown() {
 		nshttpprofile.Reusepooltimeout = utils.IntPtr(int(data.Reusepooltimeout.ValueInt64()))
 	}
-	if !data.Rtsptunnel.IsNull() {
+	if !data.Rtsptunnel.IsNull() && !data.Rtsptunnel.IsUnknown() {
 		nshttpprofile.Rtsptunnel = data.Rtsptunnel.ValueString()
 	}
-	if !data.Weblog.IsNull() {
+	if !data.Weblog.IsNull() && !data.Weblog.IsUnknown() {
 		nshttpprofile.Weblog = data.Weblog.ValueString()
 	}
-	if !data.Websocket.IsNull() {
+	if !data.Websocket.IsNull() && !data.Websocket.IsUnknown() {
 		nshttpprofile.Websocket = data.Websocket.ValueString()
 	}
 
@@ -589,375 +645,387 @@ func nshttpprofileGetThePayloadFromtheConfig(ctx context.Context, data *Nshttppr
 func nshttpprofileSetAttrFromGet(ctx context.Context, data *NshttpprofileResourceModel, getResponseData map[string]interface{}) *NshttpprofileResourceModel {
 	tflog.Debug(ctx, "In nshttpprofileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. In the else-branches only null a value when
+	// it is Unknown (Computed and unset). Never clobber a known, configured value
+	// that NITRO omits from GET (omit-on-default trap).
 	if val, ok := getResponseData["adpttimeout"]; ok && val != nil {
 		data.Adpttimeout = types.StringValue(val.(string))
-	} else {
+	} else if data.Adpttimeout.IsUnknown() {
 		data.Adpttimeout = types.StringNull()
 	}
 	if val, ok := getResponseData["allowonlywordcharactersandhyphen"]; ok && val != nil {
 		data.Allowonlywordcharactersandhyphen = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowonlywordcharactersandhyphen.IsUnknown() {
 		data.Allowonlywordcharactersandhyphen = types.StringNull()
 	}
 	if val, ok := getResponseData["altsvc"]; ok && val != nil {
 		data.Altsvc = types.StringValue(val.(string))
-	} else {
+	} else if data.Altsvc.IsUnknown() {
 		data.Altsvc = types.StringNull()
 	}
 	if val, ok := getResponseData["altsvcvalue"]; ok && val != nil {
 		data.Altsvcvalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Altsvcvalue.IsUnknown() {
 		data.Altsvcvalue = types.StringNull()
 	}
 	if val, ok := getResponseData["apdexcltresptimethreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Apdexcltresptimethreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Apdexcltresptimethreshold.IsUnknown() {
 		data.Apdexcltresptimethreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["clientiphdrexpr"]; ok && val != nil {
 		data.Clientiphdrexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientiphdrexpr.IsUnknown() {
 		data.Clientiphdrexpr = types.StringNull()
 	}
 	if val, ok := getResponseData["cmponpush"]; ok && val != nil {
 		data.Cmponpush = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmponpush.IsUnknown() {
 		data.Cmponpush = types.StringNull()
 	}
 	if val, ok := getResponseData["conmultiplex"]; ok && val != nil {
 		data.Conmultiplex = types.StringValue(val.(string))
-	} else {
+	} else if data.Conmultiplex.IsUnknown() {
 		data.Conmultiplex = types.StringNull()
 	}
 	if val, ok := getResponseData["dropextracrlf"]; ok && val != nil {
 		data.Dropextracrlf = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropextracrlf.IsUnknown() {
 		data.Dropextracrlf = types.StringNull()
 	}
 	if val, ok := getResponseData["dropextradata"]; ok && val != nil {
 		data.Dropextradata = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropextradata.IsUnknown() {
 		data.Dropextradata = types.StringNull()
 	}
 	if val, ok := getResponseData["dropinvalreqs"]; ok && val != nil {
 		data.Dropinvalreqs = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropinvalreqs.IsUnknown() {
 		data.Dropinvalreqs = types.StringNull()
 	}
 	if val, ok := getResponseData["grpcholdlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Grpcholdlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Grpcholdlimit.IsUnknown() {
 		data.Grpcholdlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["grpcholdtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Grpcholdtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Grpcholdtimeout.IsUnknown() {
 		data.Grpcholdtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["grpclengthdelimitation"]; ok && val != nil {
 		data.Grpclengthdelimitation = types.StringValue(val.(string))
-	} else {
+	} else if data.Grpclengthdelimitation.IsUnknown() {
 		data.Grpclengthdelimitation = types.StringNull()
 	}
 	if val, ok := getResponseData["hostheadervalidation"]; ok && val != nil {
 		data.Hostheadervalidation = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostheadervalidation.IsUnknown() {
 		data.Hostheadervalidation = types.StringNull()
 	}
 	if val, ok := getResponseData["http2"]; ok && val != nil {
 		data.Http2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Http2.IsUnknown() {
 		data.Http2 = types.StringNull()
 	}
 	if val, ok := getResponseData["http2altsvcframe"]; ok && val != nil {
 		data.Http2altsvcframe = types.StringValue(val.(string))
-	} else {
+	} else if data.Http2altsvcframe.IsUnknown() {
 		data.Http2altsvcframe = types.StringNull()
 	}
 	if val, ok := getResponseData["http2direct"]; ok && val != nil {
 		data.Http2direct = types.StringValue(val.(string))
-	} else {
+	} else if data.Http2direct.IsUnknown() {
 		data.Http2direct = types.StringNull()
 	}
 	if val, ok := getResponseData["http2extendedconnect"]; ok && val != nil {
 		data.Http2extendedconnect = types.StringValue(val.(string))
-	} else {
+	} else if data.Http2extendedconnect.IsUnknown() {
 		data.Http2extendedconnect = types.StringNull()
 	}
 	if val, ok := getResponseData["http2headertablesize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2headertablesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2headertablesize.IsUnknown() {
 		data.Http2headertablesize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2initialconnwindowsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2initialconnwindowsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2initialconnwindowsize.IsUnknown() {
 		data.Http2initialconnwindowsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2initialwindowsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2initialwindowsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2initialwindowsize.IsUnknown() {
 		data.Http2initialwindowsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxconcurrentstreams"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxconcurrentstreams = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxconcurrentstreams.IsUnknown() {
 		data.Http2maxconcurrentstreams = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxemptyframespermin"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxemptyframespermin = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxemptyframespermin.IsUnknown() {
 		data.Http2maxemptyframespermin = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxframesize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxframesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxframesize.IsUnknown() {
 		data.Http2maxframesize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxheaderlistsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxheaderlistsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxheaderlistsize.IsUnknown() {
 		data.Http2maxheaderlistsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxpingframespermin"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxpingframespermin = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxpingframespermin.IsUnknown() {
 		data.Http2maxpingframespermin = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxresetframespermin"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxresetframespermin = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxresetframespermin.IsUnknown() {
 		data.Http2maxresetframespermin = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxrxresetframespermin"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxrxresetframespermin = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxrxresetframespermin.IsUnknown() {
 		data.Http2maxrxresetframespermin = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2smallwndtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2smallwndtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2smallwndtimeout.IsUnknown() {
 		data.Http2smallwndtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxsettingsframespermin"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2maxsettingsframespermin = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2maxsettingsframespermin.IsUnknown() {
 		data.Http2maxsettingsframespermin = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2minseverconn"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http2minseverconn = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http2minseverconn.IsUnknown() {
 		data.Http2minseverconn = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2strictcipher"]; ok && val != nil {
 		data.Http2strictcipher = types.StringValue(val.(string))
-	} else {
+	} else if data.Http2strictcipher.IsUnknown() {
 		data.Http2strictcipher = types.StringNull()
 	}
 	if val, ok := getResponseData["http3"]; ok && val != nil {
 		data.Http3 = types.StringValue(val.(string))
-	} else {
+	} else if data.Http3.IsUnknown() {
 		data.Http3 = types.StringNull()
 	}
 	if val, ok := getResponseData["http3maxheaderblockedstreams"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http3maxheaderblockedstreams = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http3maxheaderblockedstreams.IsUnknown() {
 		data.Http3maxheaderblockedstreams = types.Int64Null()
 	}
 	if val, ok := getResponseData["http3maxheaderfieldsectionsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http3maxheaderfieldsectionsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http3maxheaderfieldsectionsize.IsUnknown() {
 		data.Http3maxheaderfieldsectionsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http3maxheadertablesize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http3maxheadertablesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http3maxheadertablesize.IsUnknown() {
 		data.Http3maxheadertablesize = types.Int64Null()
 	}
 	if val, ok := getResponseData["http3minseverconn"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Http3minseverconn = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Http3minseverconn.IsUnknown() {
 		data.Http3minseverconn = types.Int64Null()
 	}
 	if val, ok := getResponseData["http3webtransport"]; ok && val != nil {
 		data.Http3webtransport = types.StringValue(val.(string))
-	} else {
+	} else if data.Http3webtransport.IsUnknown() {
 		data.Http3webtransport = types.StringNull()
 	}
 	if val, ok := getResponseData["httppipelinebuffsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Httppipelinebuffsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Httppipelinebuffsize.IsUnknown() {
 		data.Httppipelinebuffsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["incomphdrdelay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Incomphdrdelay = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Incomphdrdelay.IsUnknown() {
 		data.Incomphdrdelay = types.Int64Null()
 	}
 	if val, ok := getResponseData["markconnreqinval"]; ok && val != nil {
 		data.Markconnreqinval = types.StringValue(val.(string))
-	} else {
+	} else if data.Markconnreqinval.IsUnknown() {
 		data.Markconnreqinval = types.StringNull()
 	}
 	if val, ok := getResponseData["markhttp09inval"]; ok && val != nil {
 		data.Markhttp09inval = types.StringValue(val.(string))
-	} else {
+	} else if data.Markhttp09inval.IsUnknown() {
 		data.Markhttp09inval = types.StringNull()
 	}
 	if val, ok := getResponseData["markhttpheaderextrawserror"]; ok && val != nil {
 		data.Markhttpheaderextrawserror = types.StringValue(val.(string))
-	} else {
+	} else if data.Markhttpheaderextrawserror.IsUnknown() {
 		data.Markhttpheaderextrawserror = types.StringNull()
 	}
 	if val, ok := getResponseData["markrfc7230noncompliantinval"]; ok && val != nil {
 		data.Markrfc7230noncompliantinval = types.StringValue(val.(string))
-	} else {
+	} else if data.Markrfc7230noncompliantinval.IsUnknown() {
 		data.Markrfc7230noncompliantinval = types.StringNull()
 	}
 	if val, ok := getResponseData["marktracereqinval"]; ok && val != nil {
 		data.Marktracereqinval = types.StringValue(val.(string))
-	} else {
+	} else if data.Marktracereqinval.IsUnknown() {
 		data.Marktracereqinval = types.StringNull()
 	}
 	if val, ok := getResponseData["maxduplicateheaderfields"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxduplicateheaderfields = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxduplicateheaderfields.IsUnknown() {
 		data.Maxduplicateheaderfields = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxheaderfieldlen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxheaderfieldlen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxheaderfieldlen.IsUnknown() {
 		data.Maxheaderfieldlen = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxheaderlen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxheaderlen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxheaderlen.IsUnknown() {
 		data.Maxheaderlen = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxreq"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxreq = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxreq.IsUnknown() {
 		data.Maxreq = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxreusepool"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxreusepool = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxreusepool.IsUnknown() {
 		data.Maxreusepool = types.Int64Null()
 	}
 	if val, ok := getResponseData["minreusepool"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Minreusepool = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Minreusepool.IsUnknown() {
 		data.Minreusepool = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["normalizeurl"]; ok && val != nil {
+		data.Normalizeurl = types.StringValue(val.(string))
+	} else if data.Normalizeurl.IsUnknown() {
+		data.Normalizeurl = types.StringNull()
+	}
+	if val, ok := getResponseData["normalizeurltoorigin"]; ok && val != nil {
+		data.Normalizeurltoorigin = types.StringValue(val.(string))
+	} else if data.Normalizeurltoorigin.IsUnknown() {
+		data.Normalizeurltoorigin = types.StringNull()
 	}
 	if val, ok := getResponseData["passprotocolupgrade"]; ok && val != nil {
 		data.Passprotocolupgrade = types.StringValue(val.(string))
-	} else {
+	} else if data.Passprotocolupgrade.IsUnknown() {
 		data.Passprotocolupgrade = types.StringNull()
 	}
 	if val, ok := getResponseData["persistentetag"]; ok && val != nil {
 		data.Persistentetag = types.StringValue(val.(string))
-	} else {
+	} else if data.Persistentetag.IsUnknown() {
 		data.Persistentetag = types.StringNull()
 	}
 	if val, ok := getResponseData["reqtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Reqtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Reqtimeout.IsUnknown() {
 		data.Reqtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["reqtimeoutaction"]; ok && val != nil {
 		data.Reqtimeoutaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Reqtimeoutaction.IsUnknown() {
 		data.Reqtimeoutaction = types.StringNull()
 	}
 	if val, ok := getResponseData["reusepooltimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Reusepooltimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Reusepooltimeout.IsUnknown() {
 		data.Reusepooltimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["rtsptunnel"]; ok && val != nil {
 		data.Rtsptunnel = types.StringValue(val.(string))
-	} else {
+	} else if data.Rtsptunnel.IsUnknown() {
 		data.Rtsptunnel = types.StringNull()
 	}
 	if val, ok := getResponseData["weblog"]; ok && val != nil {
 		data.Weblog = types.StringValue(val.(string))
-	} else {
+	} else if data.Weblog.IsUnknown() {
 		data.Weblog = types.StringNull()
 	}
 	if val, ok := getResponseData["websocket"]; ok && val != nil {
 		data.Websocket = types.StringValue(val.(string))
-	} else {
+	} else if data.Websocket.IsUnknown() {
 		data.Websocket = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain name value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

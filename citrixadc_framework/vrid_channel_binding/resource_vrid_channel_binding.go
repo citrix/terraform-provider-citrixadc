@@ -299,5 +299,12 @@ func (r *VridChannelBindingResource) readVridChannelBindingFromApi(ctx context.C
 			data.VridId = types.Int64Value(n)
 		}
 	}
+
+	// Re-derive the canonical id (now that vrid_id + ifnum identity attrs are known)
+	// so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.VridId.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return true
 }

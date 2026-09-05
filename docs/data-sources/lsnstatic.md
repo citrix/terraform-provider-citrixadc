@@ -45,10 +45,8 @@ In addition to the arguments, the following attributes are available:
 * `td` - ID of the traffic domain to which the subscriber belongs. If you do not specify an ID, the subscriber is assumed to be a part of the default traffic domain.
 * `transportprotocol` - Protocol for the LSN mapping entry.
 
-## Import
+### Read-only lsnstatic metadata
 
-A lsnstatic can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lsnstatic` resource) and are `Computed`/GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_lsnstatic.tf_lsnstatic my_lsn_static
-```
+* `status` - The status of the mapping. Status could be Inactive, if mapping addition failed due to already existing dynamic/static mapping, or port allocation failure. Possible values: `ACTIVE`, `INACTIVE`.

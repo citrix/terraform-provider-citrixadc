@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpntrafficpolicy_add = `
@@ -166,6 +167,77 @@ func testAccCheckVpntrafficpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpntrafficpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpntrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpntrafficpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpntrafficpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpntrafficpolicy.Type(), "tf_vpntrafficpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpntrafficpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpntrafficpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpntrafficpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpntrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpntrafficpolicy_add},
+			{
+				Config:                  testAccVpntrafficpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVpntrafficpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpntrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpntrafficpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpntrafficpolicyExist("citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpntrafficpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpntrafficpolicyExist("citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpntrafficpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -177,6 +249,9 @@ func TestAccVpntrafficpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "name", "tf_vpntrafficpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "rule", "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "action", "Testingaction"),
+					// Runtime-binding proof + read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "hits"),
 				),
 			},
 		},

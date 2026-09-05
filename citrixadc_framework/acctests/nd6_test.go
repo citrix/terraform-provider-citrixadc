@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNd6_basic = `
@@ -93,7 +95,10 @@ func testAccCheckNd6Exist(n string, id *string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
-		data, err := client.FindResource(service.Nd6.Type(), rs.Primary.ID)
+		// The resource ID is the composite "neighbor,td,nodeid"; the NITRO lookup
+		// key is the neighbor (first component).
+		neighbor := strings.SplitN(rs.Primary.ID, ",", 2)[0]
+		data, err := client.FindResource(service.Nd6.Type(), neighbor)
 
 		if err != nil {
 			return err
@@ -123,7 +128,8 @@ func testAccCheckNd6Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Nd6.Type(), rs.Primary.ID)
+		neighbor := strings.SplitN(rs.Primary.ID, ",", 2)[0]
+		_, err := client.FindResource(service.Nd6.Type(), neighbor)
 		if err == nil {
 			return fmt.Errorf("nd6 %s still exists", rs.Primary.ID)
 		}
@@ -146,6 +152,81 @@ const testAccNd6DataSource_basic = `
 	}
 `
 
+func TestAccNd6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nd6.tf_nd6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNd6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Nd6.Type(), "2001::3", []string{"vlan:1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// TestAccNd6_import verifies import via the composite ID "neighbor,td,nodeid".
+// Pre-fix, ImportStatePassthroughID populated only id, so readNd6FromApi (which
+// matches on neighbor/td/nodeid) found no row and dropped the resource -> import
+// always failed.
+func TestAccNd6_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNd6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist("citrixadc_nd6.tf_nd6", nil)),
+			},
+			{
+				ResourceName:      "citrixadc_nd6.tf_nd6",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNd6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNd6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist("citrixadc_nd6.tf_nd6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist("citrixadc_nd6.tf_nd6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNd6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -157,6 +238,8 @@ func TestAccNd6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "neighbor", "2001::5"),
 					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "mac", "e6:ec:41:50:b1:d3"),
 					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "ifnum", "LO/1"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nd6.tf_nd6_ds_data", "id"),
 				),
 			},
 		},

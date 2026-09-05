@@ -6,7 +6,7 @@ subcategory: "GSLB"
 
 The gslbvserver_gslbservicegroup_binding data source allows you to retrieve information about a GSLB virtual server's service group binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_gslbvserver_gslbservicegroup_binding" "tf_gslbvserver_gslbservicegroup_binding" {
@@ -32,5 +32,5 @@ output "servicegroupname" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the gslbvserver_gslbservicegroup_binding. It is a system-generated identifier.
+* `id` - The id of the gslbvserver_gslbservicegroup_binding is the concatenation of the `name` and `servicegroupname` attributes separated by a comma.
 * `order` - Order number to be assigned to the service when it is bound to the lb vserver.

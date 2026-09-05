@@ -9,8 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 var _ datasource.DataSource = (*LldpneighborsDataSource)(nil)
@@ -75,7 +73,7 @@ func (d *LldpneighborsDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	if match != nil {
-		lldpneighborsSetAttrFromGetForDatasourceModel(ctx, &data, match)
+		lldpneighborsDataSourceSetAttrFromGet(ctx, &data, match)
 	} else {
 		tflog.Debug(ctx, "No lldpneighbors records found; returning empty result")
 	}
@@ -85,61 +83,4 @@ func (d *LldpneighborsDataSource) Read(ctx context.Context, req datasource.ReadR
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-// lldpneighborsSetAttrFromGetForDatasourceModel faithfully copies the get(all)
-// response record into the datasource model, including the full read-only LLDP
-// neighbor telemetry. Every telemetry field is a string on the vendored NITRO
-// struct, so they map to types.String. Missing fields are left as their
-// zero-value (null) so callers can distinguish absent telemetry.
-func lldpneighborsSetAttrFromGetForDatasourceModel(ctx context.Context, data *LldpneighborsDataSourceModel, getResponseData map[string]interface{}) *LldpneighborsDataSourceModel {
-	tflog.Debug(ctx, "In lldpneighborsSetAttrFromGetForDatasourceModel Function")
-
-	setString := func(key string, dst *types.String) {
-		if val, ok := getResponseData[key]; ok && val != nil {
-			if s, ok := val.(string); ok {
-				*dst = types.StringValue(s)
-			}
-		}
-	}
-
-	setString("ifnum", &data.Ifnum)
-	if val, ok := getResponseData["nodeid"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Nodeid = types.Int64Value(intVal)
-		}
-	}
-
-	setString("chassisidsubtype", &data.Chassisidsubtype)
-	setString("chassisid", &data.Chassisid)
-	setString("portidsubtype", &data.Portidsubtype)
-	setString("portid", &data.Portid)
-	setString("ttl", &data.Ttl)
-	setString("portdescription", &data.Portdescription)
-	setString("sys", &data.Sys)
-	setString("sysdesc", &data.Sysdesc)
-	setString("mgmtaddresssubtype", &data.Mgmtaddresssubtype)
-	setString("mgmtaddress", &data.Mgmtaddress)
-	setString("iftype", &data.Iftype)
-	setString("ifnumber", &data.Ifnumber)
-	setString("vlan", &data.Vlan)
-	setString("vlanid", &data.Vlanid)
-	setString("portprotosupported", &data.Portprotosupported)
-	setString("portprotoenabled", &data.Portprotoenabled)
-	setString("portprotoid", &data.Portprotoid)
-	setString("portvlanid", &data.Portvlanid)
-	setString("protocolid", &data.Protocolid)
-	setString("linkaggrcapable", &data.Linkaggrcapable)
-	setString("linkaggrenabled", &data.Linkaggrenabled)
-	setString("linkaggrid", &data.Linkaggrid)
-	setString("flag", &data.Flag)
-	setString("syscapabilities", &data.Syscapabilities)
-	setString("syscapenabled", &data.Syscapenabled)
-	setString("autonegsupport", &data.Autonegsupport)
-	setString("autonegenabled", &data.Autonegenabled)
-	setString("autonegadvertised", &data.Autonegadvertised)
-	setString("autonegmautype", &data.Autonegmautype)
-	setString("mtu", &data.Mtu)
-
-	return data
 }

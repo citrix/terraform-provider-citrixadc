@@ -35,7 +35,7 @@ func (d *NsencryptionkeyDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *NsencryptionkeyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsencryptionkeyResourceModel
+	var data NsencryptionkeyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *NsencryptionkeyDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	nsencryptionkeySetAttrFromGet(ctx, &data, getResponseData)
+	nsencryptionkeyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

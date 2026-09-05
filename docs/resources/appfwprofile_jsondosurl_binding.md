@@ -97,7 +97,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A appfwprofile_jsondosurl_binding can be imported using its id, e.g.
+An appfwprofile_jsondosurl_binding can be imported using its id, e.g.
 
 ```shell
 terraform import citrixadc_appfwprofile_jsondosurl_binding.tf_binding tf_appfwprofile,.*

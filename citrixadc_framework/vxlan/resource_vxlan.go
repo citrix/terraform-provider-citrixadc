@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,28 @@ func (r *VxlanResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	tflog.Debug(ctx, "Creating vxlan resource")
 
-	// vxlan := vxlanGetThePayloadFromtheConfig(ctx, &data)
+	vxlan := vxlanGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vxlan.Type(), &vxlan)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vxlan, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vxlan-config")
+	// Named resource keyed on vxlanid - use AddResource (SDK v2 parity)
+	vxlanIdStr := fmt.Sprintf("%d", data.Vxlanid.ValueInt64())
+	_, err := r.client.AddResource(service.Vxlan.Type(), vxlanIdStr, &vxlan)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vxlan, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vxlan resource")
 
+	// Set ID (SDK v2: d.SetId(vxlanIdStr)) before reading state back
+	data.Id = types.StringValue(vxlanIdStr)
+
 	// Read the updated state back
-	r.readVxlanFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVxlanFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vxlan not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,116 @@ func (r *VxlanResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	tflog.Debug(ctx, "Reading vxlan resource")
 
-	r.readVxlanFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVxlanFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VxlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VxlanResourceModel
+	var data, config, state VxlanResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vxlan resource")
 
-	// Create API request body from the model
-	// vxlan := vxlanGetThePayloadFromtheConfig(ctx, &data)
+	vxlan := network.Vxlan{}
+	if !data.Vxlanid.IsNull() && !data.Vxlanid.IsUnknown() {
+		vxlan.Id = utils.IntPtr(int(data.Vxlanid.ValueInt64()))
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vxlan.Type(), &vxlan)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vxlan, got error: %s", err))
-	//	 return
-	// }
+	hasChange := false
+	attributesToUnset := []string{}
 
-	tflog.Trace(ctx, "Updated vxlan resource")
+	if !data.Dynamicrouting.Equal(state.Dynamicrouting) {
+		if config.Dynamicrouting.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dynamicrouting")
+		} else {
+			vxlan.Dynamicrouting = data.Dynamicrouting.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Innervlantagging.Equal(state.Innervlantagging) {
+		if config.Innervlantagging.IsNull() {
+			attributesToUnset = append(attributesToUnset, "innervlantagging")
+		} else {
+			vxlan.Innervlantagging = data.Innervlantagging.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Ipv6dynamicrouting.Equal(state.Ipv6dynamicrouting) {
+		if config.Ipv6dynamicrouting.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ipv6dynamicrouting")
+		} else {
+			vxlan.Ipv6dynamicrouting = data.Ipv6dynamicrouting.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Port.Equal(state.Port) {
+		if config.Port.IsNull() {
+			attributesToUnset = append(attributesToUnset, "port")
+		} else {
+			vxlan.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+			hasChange = true
+		}
+	}
+	// protocol and type are create-only (add-update) params per NITRO: they
+	// cannot be sent in the UPDATE (PUT) payload, so they are intentionally not
+	// set here even when changed.
+	if !data.Vlan.Equal(state.Vlan) {
+		vxlan.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
+		hasChange = true
+	}
+
+	if hasChange {
+		// Named resource - use UpdateResource keyed on the live ID
+		vxlanIdStr := data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Vxlan.Type(), vxlanIdStr, &vxlan)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vxlan, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated vxlan resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vxlan resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. The vxlan key is "id" (the VXLAN Network Identifier).
+	unsetIdPayload := map[string]interface{}{
+		"id": data.Vxlanid.ValueInt64(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vxlan.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vxlan attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readVxlanFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVxlanFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vxlan not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +223,31 @@ func (r *VxlanResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	tflog.Debug(ctx, "Deleting vxlan resource")
 
-	// For vxlan, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vxlan resource from state")
+	// Named resource - delete using DeleteResource keyed on the live ID
+	err := r.client.DeleteResource(service.Vxlan.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vxlan, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vxlan resource")
 }
 
-// Helper function to read vxlan data from API
-func (r *VxlanResource) readVxlanFromApi(ctx context.Context, data *VxlanResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vxlan.Type(), "")
+// Helper function to read vxlan data from API. Returns false when the resource
+// no longer exists on the ADC.
+func (r *VxlanResource) readVxlanFromApi(ctx context.Context, data *VxlanResourceModel, diags *diag.Diagnostics) bool {
+	vxlanIdStr := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vxlan.Type(), vxlanIdStr)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vxlan, got error: %s", err))
-		return
+		return false
 	}
 
 	vxlanSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

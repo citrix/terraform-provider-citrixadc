@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLocationfile_basic = `
@@ -116,6 +117,53 @@ func testAccCheckLocationfileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLocationfile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_locationfile.tf_locationfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLocationfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Locationfile.Type(), ""); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLocationfile_import(t *testing.T) {
+	const resAddr = "citrixadc_locationfile.tf_locationfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLocationfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLocationfile_basic},
+			{
+				Config:                  testAccLocationfile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLocationfileDataSource_basic = `
 
 	resource "citrixadc_locationfile" "tf_locationfile" {
@@ -128,6 +176,30 @@ const testAccLocationfileDataSource_basic = `
 	}
 `
 
+func TestAccLocationfile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLocationfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist("citrixadc_locationfile.tf_locationfile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist("citrixadc_locationfile.tf_locationfile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLocationfileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -138,6 +210,11 @@ func TestAccLocationfileDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_locationfile.tf_locationfile", "locationfile", "/var/netscaler/inbuilt_db/Citrix_Netscaler_InBuilt_GeoIP_DB_IPv4"),
 					resource.TestCheckResourceAttr("data.citrixadc_locationfile.tf_locationfile", "format", "netscaler"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_locationfile.tf_locationfile", "id"),
+					// curlocfilestatus is a status field the appliance always reports
+					// for a loaded location file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_locationfile.tf_locationfile", "curlocfilestatus"),
 				),
 			},
 		},

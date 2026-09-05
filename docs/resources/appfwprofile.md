@@ -214,3 +214,12 @@ resource "citrixadc_appfwprofile" "tf_appfwprofile1" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwprofile`. It has the same value as the `name` attribute.
+
+
+## Import
+
+A appfwprofile can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile.tf_appfwprofile <name>
+```

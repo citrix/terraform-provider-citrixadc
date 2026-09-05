@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIpsecprofile_basic = `
@@ -180,6 +181,8 @@ func TestAccIpsecprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "name", "my_ipsecprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "ikeversion", "V2"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "livenesscheckinterval", "50"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "id"),
 				),
 			},
 		},
@@ -285,9 +288,14 @@ func TestAccIpsecprofile_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccIpsecprofile_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -356,6 +364,37 @@ func TestAccIpsecprofile_psk_wo_ephemeral(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "ikeversion", "V2"),
 					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk_wo", "psk_wo_version", "2"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccIpsecprofile_selfHealing verifies drift recovery: after the resource is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config
+// must detect the missing resource and recreate it.
+func TestAccIpsecprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipsecprofile.tf_ipsecprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ipsecprofile.Type(), "my_ipsecprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpsecprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecprofileExist(resAddr, nil)),
 			},
 		},
 	})

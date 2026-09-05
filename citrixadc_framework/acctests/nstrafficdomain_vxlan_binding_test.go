@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNstrafficdomain_vxlan_binding_basic = `
@@ -130,10 +133,12 @@ func testAccCheckNstrafficdomain_vxlan_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		td := idSlice[0]
-		vxlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"td", "vxlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		td := idMap["td"]
+		vxlan := idMap["vxlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_vxlan_binding",
@@ -247,6 +252,131 @@ func TestAccNstrafficdomain_vxlan_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "td", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "vxlan", "123"),
 				),
+			},
+		},
+	})
+}
+
+const testAccNstrafficdomain_vxlan_binding_upgrade_basic = `
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nstrafficdomain_vxlan_binding" "tf_binding" {
+		td    = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		vxlan = citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+`
+
+func TestAccNstrafficdomain_vxlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstrafficdomain_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNstrafficdomain_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_vxlan_bindingExist("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "id", "2,123"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNstrafficdomain_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_vxlan_bindingExist("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_vxlan_binding.tf_binding", "id", "td:2,vxlan:123"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_vxlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain_vxlan_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: td,vxlan) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"td", "vxlan"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomain_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstrafficdomain_vxlan_binding_basic},
+			{Config: testAccNstrafficdomain_vxlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNstrafficdomain_vxlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_vxlan_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain_vxlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomain_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_vxlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomain_vxlan_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nstrafficdomain_vxlan_binding.Type(), "2", map[string]string{"vxlan": "123"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstrafficdomain_vxlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomain_vxlan_bindingExist(resAddr, nil)),
 			},
 		},
 	})

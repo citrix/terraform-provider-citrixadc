@@ -23,8 +23,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccGslbsite_basic(t *testing.T) {
@@ -212,6 +213,8 @@ func TestAccGslbsiteDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbsiteDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbsite.tf_gslbsite_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "sitename", "Site-GSLB-East-Coast-DS"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "siteipaddress", "172.31.11.25"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "metricexchange", "ENABLED"),
@@ -451,9 +454,42 @@ func TestAccGslbsite_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccGslbsite_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+			},
+		},
+	})
+}
+
+func TestAccGslbsite_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbsite.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbsite_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbsiteExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbsite.Type(), "Site-GSLB-East-Coast"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbsite_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbsiteExist(resAddr, nil)),
 			},
 		},
 	})

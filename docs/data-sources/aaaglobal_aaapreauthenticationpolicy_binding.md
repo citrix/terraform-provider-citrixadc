@@ -31,5 +31,11 @@ output "policy_priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the aaaglobal_aaapreauthenticationpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the aaaglobal_aaapreauthenticationpolicy_binding. It has the same value as the `policy` attribute.
 * `priority` - Priority of the bound policy.
+
+### Read-only aaaglobal_aaapreauthenticationpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaaglobal_aaapreauthenticationpolicy_binding` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `bindpolicytype` - Bound policy type.

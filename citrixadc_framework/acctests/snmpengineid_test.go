@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSnmpengineid_basic = `
@@ -56,6 +57,25 @@ func TestAccSnmpengineid_basic(t *testing.T) {
 					testAccCheckSnmpengineidExist("citrixadc_snmpengineid.tf_snmpengineid", nil),
 					resource.TestCheckResourceAttr("citrixadc_snmpengineid.tf_snmpengineid", "engineid", "1234567890123456"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSnmpengineid_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpengineid.tf_snmpengineid"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpengineid_basic},
+			{
+				Config:                  testAccSnmpengineid_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -99,6 +119,30 @@ func testAccCheckSnmpengineidExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccSnmpengineid_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSnmpengineid_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpengineidExist("citrixadc_snmpengineid.tf_snmpengineid", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSnmpengineid_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpengineidExist("citrixadc_snmpengineid.tf_snmpengineid", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSnmpengineidDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -109,6 +153,8 @@ func TestAccSnmpengineidDataSource_basic(t *testing.T) {
 				Config: testAccSnmpengineidDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_snmpengineid.tf_snmpengineid_ds", "engineid", "1234567890abcdef"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpengineid.tf_snmpengineid_ds", "id"),
 				),
 			},
 		},

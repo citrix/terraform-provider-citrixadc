@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsservicepath_nsservicefunction_binding_basic = `
@@ -134,10 +137,12 @@ func testAccCheckNsservicepath_nsservicefunction_bindingExist(n string, id *stri
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicepathname := idSlice[0]
-		servicefunction := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicepathname", "servicefunction"}, nil)
+		if err != nil {
+			return err
+		}
+		servicepathname := idMap["servicepathname"]
+		servicefunction := idMap["servicefunction"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nsservicepath_nsservicefunction_binding",
@@ -251,6 +256,139 @@ func TestAccNsservicepath_nsservicefunction_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "servicefunction", "tf_servicefunc"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "index", "2"),
 				),
+			},
+		},
+	})
+}
+
+// testAccNsservicepath_nsservicefunction_binding_upgrade_basic reuses the _basic config values
+// (prerequisite resources + the binding). It is valid under BOTH the SDK v2 2.2.0 schema and the
+// current Framework schema, keeping the same terraform resource label as the _basic config so the
+// Exist/Destroy helpers and addresses match.
+const testAccNsservicepath_nsservicefunction_binding_upgrade_basic = `
+	resource "citrixadc_nsservicepath" "tf_servicepath" {
+		servicepathname = "tf_servicepath"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_nsservicefunction" "tf_servicefunc" {
+		servicefunctionname = "tf_servicefunc"
+		ingressvlan         = citrixadc_vlan.tf_vlan.vlanid
+	}
+	resource "citrixadc_nsservicepath_nsservicefunction_binding" "tf_binding" {
+		servicepathname = citrixadc_nsservicepath.tf_servicepath.servicepathname
+		servicefunction = citrixadc_nsservicefunction.tf_servicefunc.servicefunctionname
+		index           = 2
+	}
+`
+
+// TestAccNsservicepath_nsservicefunction_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (2.2.0) with the legacy comma-joined id upgrades cleanly through the
+// current Framework provider, which recomputes the id to the new key:value format on Read.
+func TestAccNsservicepath_nsservicefunction_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsservicepath_nsservicefunction_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNsservicepath_nsservicefunction_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsservicepath_nsservicefunction_bindingExist("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "id", "tf_servicepath,tf_servicefunc"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework provider.
+				// Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsservicepath_nsservicefunction_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsservicepath_nsservicefunction_bindingExist("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "id", "servicefunction:tf_servicefunc,servicepathname:tf_servicepath"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNsservicepath_nsservicefunction_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nsservicepath_nsservicefunction_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: servicepathname,servicefunction) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"servicepathname", "servicefunction"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicepath_nsservicefunction_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsservicepath_nsservicefunction_binding_basic},
+			{Config: testAccNsservicepath_nsservicefunction_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNsservicepath_nsservicefunction_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNsservicepath_nsservicefunction_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsservicepath_nsservicefunction_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicepath_nsservicefunction_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicepath_nsservicefunction_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepath_nsservicefunction_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nsservicepath_nsservicefunction_binding.Type(), "tf_servicepath", map[string]string{"servicefunction": "tf_servicefunc"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsservicepath_nsservicefunction_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepath_nsservicefunction_bindingExist(resAddr, nil)),
 			},
 		},
 	})

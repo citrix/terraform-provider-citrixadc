@@ -7,7 +7,7 @@ subcategory: "VPN"
 The vpnvserver_feopolicy_binding data source allows you to retrieve information about a specific feopolicy binding to a vpnvserver.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnvserver_feopolicy_binding" "tf_bind" {

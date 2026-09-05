@@ -49,6 +49,10 @@ type Nscapacity struct {
 	*/
 	Password string `json:"password,omitempty"`
 	/**
+	* Value to mention if days to expire data needs to be fetched or not.
+	*/
+	Ignoreexpiry bool `json:"ignoreexpiry,omitempty"`
+	/**
 	* Unique number that identifies the cluster node.
 	*/
 	Nodeid *int `json:"nodeid,omitempty"`

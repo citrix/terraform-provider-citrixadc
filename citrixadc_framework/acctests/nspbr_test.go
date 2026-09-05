@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNspbr_basic = `
@@ -135,6 +137,34 @@ func testAccCheckNspbrDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNspbr_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspbr.tf_nspbr"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nspbr.Type(), "my_nspbr"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccNspbrDataSource_basic = `
 	resource "citrixadc_nspbr" "tf_nspbr_ds" {
 		name     = "tf_test_nspbr_ds"
@@ -152,6 +182,128 @@ const testAccNspbrDataSource_basic = `
 		name = citrixadc_nspbr.tf_nspbr_ds.name
 	}
 `
+
+func TestAccNspbr_import(t *testing.T) {
+	const resAddr = "citrixadc_nspbr.tf_nspbr"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspbr_basic},
+			{
+				Config:                  testAccNspbr_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNspbr_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist("citrixadc_nspbr.tf_nspbr", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist("citrixadc_nspbr.tf_nspbr", nil)),
+			},
+		},
+	})
+}
+
+// testAccNspbr_unset_step1 sets unset-eligible attributes to non-default values.
+// srcmac is a prerequisite for srcmacmask; srcmacmask defaults to "000000000000".
+const testAccNspbr_unset_step1 = `
+	resource "citrixadc_nspbr" "tf_unset" {
+		name       = "tf_test_nspbr_unset"
+		action     = "DENY"
+		srcmac     = "00:11:22:33:44:55"
+		srcmacmask = "000000111111"
+	}
+`
+
+// testAccNspbr_unset_step2 removes srcmacmask (key + required + its co-prerequisite
+// srcmac retained), which must unset srcmacmask back to the NITRO default. NITRO
+// rejects setting srcmacmask without srcmac, so srcmac stays configured.
+const testAccNspbr_unset_step2 = `
+	resource "citrixadc_nspbr" "tf_unset" {
+		name   = "tf_test_nspbr_unset"
+		action = "DENY"
+		srcmac = "00:11:22:33:44:55"
+	}
+`
+
+func TestAccNspbr_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNspbr_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspbrExist("citrixadc_nspbr.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspbr.tf_unset", "srcmacmask", "000000111111"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults, and the implicit post-apply plan is empty.
+				Config: testAccNspbr_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspbrExist("citrixadc_nspbr.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspbr.tf_unset", "srcmac", "00:11:22:33:44:55"),
+					// srcmacmask was unset: NITRO omits it from GET once back at the
+					// default ("000000000000"), so state carries no value for it.
+					resource.TestCheckNoResourceAttr("citrixadc_nspbr.tf_unset", "srcmacmask"),
+					// Independent appliance-level confirmation the unset took effect:
+					// the appliance must no longer report the non-default value.
+					testAccCheckNspbrADCNotValue("tf_test_nspbr_unset", "srcmacmask", "000000111111"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNspbrADCNotValue asserts an attribute on the appliance (not just in
+// Terraform state) no longer holds a given value, proving the unset reverted it.
+// Used for omit-on-default attributes that NITRO drops from GET once at default.
+func testAccCheckNspbrADCNotValue(name, attr, notWant string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nspbr.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nspbr %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got == notWant {
+			return fmt.Errorf("nspbr %s: appliance attr %q still = %q (unset did not revert it)", name, attr, got)
+		}
+		return nil
+	}
+}
 
 func TestAccNspbrDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

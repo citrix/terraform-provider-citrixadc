@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccContentinspectionpolicy_basic = `
@@ -147,6 +150,163 @@ func testAccCheckContentinspectionpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccContentinspectionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectionpolicy.Type(), "my_ci_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionpolicy_basic},
+			{
+				Config:                  testAccContentinspectionpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccContentinspectionpolicy_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccContentinspectionpolicy_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", nil),
+				),
+			},
+		},
+	})
+}
+
+// The contentinspectionpolicy unset test covers the sole cleanly-unsettable
+// mutable attribute: comment. undefaction and logaction are spec-unsettable too,
+// but NITRO reverts them to the sentinel "Use Global" (echoed back on GET and
+// rejected as an input value), so they cannot round-trip through an unset without
+// causing a perpetual plan diff and are excluded here.
+const testAccContentinspectionpolicy_unset_step1 = `
+	resource "citrixadc_contentinspectionpolicy" "tf_unset" {
+		name    = "tf_ci_unset"
+		rule    = "true"
+		action  = "RESET"
+		comment = "tf test comment"
+	}
+`
+
+const testAccContentinspectionpolicy_unset_step2 = `
+	resource "citrixadc_contentinspectionpolicy" "tf_unset" {
+		name   = "tf_ci_unset"
+		rule   = "true"
+		action = "RESET"
+		# comment removed from config -> the provider must unset it (revert to the
+		# NITRO default: no comment).
+	}
+`
+
+func TestAccContentinspectionpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccContentinspectionpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionpolicy.tf_unset", "comment", "tf test comment"),
+					testAccCheckContentinspectionpolicyADCValue("tf_ci_unset", "comment", "tf test comment"),
+				),
+			},
+			{
+				// Removing comment must unset it: state (read back from the appliance)
+				// reverts to the NITRO default (absent), and the implicit post-apply
+				// plan must be empty.
+				Config: testAccContentinspectionpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_unset", nil),
+					resource.TestCheckNoResourceAttr("citrixadc_contentinspectionpolicy.tf_unset", "comment"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckContentinspectionpolicyADCValue("tf_ci_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckContentinspectionpolicyADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually
+// reverted it. An absent attribute is treated as the empty string.
+func testAccCheckContentinspectionpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Contentinspectionpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("contentinspectionpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("contentinspectionpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccContentinspectionpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -158,6 +318,9 @@ func TestAccContentinspectionpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "name", "my_ci_policy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "action", "RESET"),
+					// Runtime-binding proof; read-only metadata (hits/undefhits/
+					// builtin/feature) is exposed but may be omitted for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "id"),
 				),
 			},
 		},

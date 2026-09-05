@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -55,22 +54,28 @@ func (r *SsldhparamResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating ssldhparam resource")
 
-	// ssldhparam := ssldhparamGetThePayloadFromtheConfig(ctx, &data)
+	ssldhparam := ssldhparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ssldhparam.Type(), &ssldhparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ssldhparam, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("ssldhparam-config")
+	// ssldhparam is an action-only resource: NITRO only exposes the "create"
+	// action (DH key file generation). There is no GET / update / delete
+	// operation, matching the SDK v2 behaviour (ActOnResource "create").
+	err := r.client.ActOnResource(service.Ssldhparam.Type(), &ssldhparam, "create")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ssldhparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created ssldhparam resource")
 
-	// Read the updated state back
-	r.readSsldhparamFromApi(ctx, &data, &resp.Diagnostics)
+	// gen is Optional+Computed but there is no GET to read it back. Resolve the
+	// computed/unknown value to the NITRO default ("2") so the state is fully
+	// known and Terraform does not report an inconsistent result after apply.
+	if data.Gen.IsNull() || data.Gen.IsUnknown() {
+		data.Gen = types.StringValue("2")
+	}
+
+	// ID is the dhfile value, matching SDK v2 d.SetId(dhfile).
+	data.Id = types.StringValue(data.Dhfile.ValueString())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,17 +93,19 @@ func (r *SsldhparamResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading ssldhparam resource")
 
-	r.readSsldhparamFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save updated data into Terraform state
+	// ssldhparam has no NITRO GET operation (action-only DH generation).
+	// Mirror the SDK v2 schema.Noop Read: preserve prior state as-is without
+	// clobbering configured values.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SsldhparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SsldhparamResourceModel
+	var data, state SsldhparamResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform prior state to preserve ID / computed values
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,50 +113,20 @@ func (r *SsldhparamResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating ssldhparam resource")
 
-	// Create API request body from the model
-	// ssldhparam := ssldhparamGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ssldhparam.Type(), &ssldhparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ssldhparam, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated ssldhparam resource")
-
-	// Read the updated state back
-	r.readSsldhparamFromApi(ctx, &data, &resp.Diagnostics)
+	// All ssldhparam attributes are ForceNew and there is no NITRO update
+	// operation, so any real change is handled via replace. This body only runs
+	// for no-op plan differences; preserve prior ID and computed values.
+	data.Id = state.Id
+	if data.Gen.IsNull() || data.Gen.IsUnknown() {
+		data.Gen = state.Gen
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SsldhparamResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data SsldhparamResourceModel
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tflog.Debug(ctx, "Deleting ssldhparam resource")
-
-	// For ssldhparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted ssldhparam resource from state")
-}
-
-// Helper function to read ssldhparam data from API
-func (r *SsldhparamResource) readSsldhparamFromApi(ctx context.Context, data *SsldhparamResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Ssldhparam.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read ssldhparam, got error: %s", err))
-		return
-	}
-
-	ssldhparamSetAttrFromGet(ctx, data, getResponseData)
-
+	// ssldhparam has no NITRO delete operation. Matching the SDK v2 no-op
+	// delete, we simply let the framework drop the resource from state.
+	tflog.Debug(ctx, "Deleting ssldhparam resource (state-only, no NITRO delete)")
 }

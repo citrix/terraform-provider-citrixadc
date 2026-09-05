@@ -1,8 +1,31 @@
 package aaauser_vpnurl_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AaauserVpnurlBindingDataSourceModel is the data-source-specific model. It
+// carries every attribute the data source already exposed PLUS the read-only
+// (GET-only) attributes from the NITRO doc read-only set
+// (zion73x_readonly/aaauser_vpnurl_binding.json). All non-key attributes are
+// Computed; the read-only attributes are never settable and are populated from
+// the GET response (Null when the appliance omits them).
+type AaauserVpnurlBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Urlname                types.String `tfsdk:"urlname"`
+	Username               types.String `tfsdk:"username"`
+
+	// Read-only (GET-only) attributes surfaced by the data source.
+	Acttype types.Int64 `tfsdk:"acttype"`
+}
 
 func AaauserVpnurlBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -23,6 +46,34 @@ func AaauserVpnurlBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "User account to which to bind the policy.",
 			},
+
+			// Read-only (GET-only) attributes. Computed; null when the
+			// appliance omits them.
+			"acttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Action type of the binding (read-only).",
+			},
 		},
 	}
+}
+
+// aaauser_vpnurl_bindingDataSourceSetAttrFromGet projects a NITRO
+// aaauser_vpnurl_binding GET response onto the data-source model. A data source
+// has no plan/apply reconciliation, so attributes are simply filled from the GET
+// (or left Null when the GET omits them) via the shared utils.MapGet* helpers.
+func aaauser_vpnurl_bindingDataSourceSetAttrFromGet(ctx context.Context, data *AaauserVpnurlBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In aaauser_vpnurl_bindingDataSourceSetAttrFromGet Function")
+
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Urlname = utils.MapGetString(g, "urlname")
+	data.Username = utils.MapGetString(g, "username")
+
+	// Read-only (GET-only) attributes.
+	data.Acttype = utils.MapGetInt64(g, "acttype")
+
+	// Set the composite ID (comma-separated key:UrlEncode(value) pairs).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("urlname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Urlname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("username:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Username.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

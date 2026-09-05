@@ -82,6 +82,8 @@ func (d *LsnclientNsaclBindingDataSource) Read(ctx context.Context, req datasour
 			continue
 		}
 
+		// td is not part of the identity and is omitted from the GET response when
+		// it is the default; it is resolved via SetAttrFromGet, not filtered here.
 		if match {
 			foundIndex = i
 			break

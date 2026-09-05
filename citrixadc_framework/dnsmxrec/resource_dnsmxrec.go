@@ -3,6 +3,7 @@ package dnsmxrec
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -10,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,22 +58,28 @@ func (r *DnsmxrecResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating dnsmxrec resource")
 
-	// dnsmxrec := dnsmxrecGetThePayloadFromtheConfig(ctx, &data)
+	dnsmxrec := dnsmxrecGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsmxrec.Type(), &dnsmxrec)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsmxrec, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsmxrec-config")
+	// Named resource - use AddResource (NITRO add is POST)
+	dnsmxrecName := data.Domain.ValueString()
+	_, err := r.client.AddResource(service.Dnsmxrec.Type(), dnsmxrecName, &dnsmxrec)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsmxrec, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsmxrec resource")
 
+	// Set ID for the resource before reading state (plain value = domain, matches SDK v2)
+	data.Id = types.StringValue(dnsmxrecName)
+
 	// Read the updated state back
-	r.readDnsmxrecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsmxrecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsmxrec not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +97,79 @@ func (r *DnsmxrecResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading dnsmxrec resource")
 
-	r.readDnsmxrecFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsmxrecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsmxrecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsmxrecResourceModel
+	var data, config, state DnsmxrecResourceModel
 
+	// Read Terraform prior state to detect changes and preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnsmxrec resource")
 
-	// Create API request body from the model
-	// dnsmxrec := dnsmxrecGetThePayloadFromtheConfig(ctx, &data)
+	dnsmxrec, hasChange := dnsmxrecGetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsmxrec.Type(), &dnsmxrec)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsmxrec, got error: %s", err))
-	//	 return
-	// }
+	// Detect optional attributes removed from config so they can be unset
+	// (reverted to their NITRO defaults) after any update.
+	attributesToUnset := []string{}
+	if !data.Ttl.Equal(state.Ttl) && config.Ttl.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ttl")
+	}
 
-	tflog.Trace(ctx, "Updated dnsmxrec resource")
+	if hasChange {
+		// Named resource - use UpdateResource (domain is the resource name)
+		dnsmxrecName := data.Domain.ValueString()
+		_, err := r.client.UpdateResource(service.Dnsmxrec.Type(), dnsmxrecName, &dnsmxrec)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsmxrec, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated dnsmxrec resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dnsmxrec resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. The unset payload keys on domain and mx (both mandatory in
+	// the NITRO dnsmxrec unset operation).
+	unsetIdPayload := map[string]interface{}{
+		"domain": data.Domain.ValueString(),
+		"mx":     data.Mx.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsmxrec.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsmxrec attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readDnsmxrecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsmxrecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsmxrec not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +187,40 @@ func (r *DnsmxrecResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting dnsmxrec resource")
 
-	// For dnsmxrec, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsmxrec resource from state")
+	// Named resource - delete keyed on domain, with mx (required) and ecssubnet
+	// (optional) as delete args, matching the NITRO delete endpoint and SDK v2.
+	dnsmxrecName := data.Id.ValueString()
+	argsMap := make(map[string]string)
+	argsMap["mx"] = url.QueryEscape(data.Mx.ValueString())
+	if !data.Ecssubnet.IsNull() && !data.Ecssubnet.IsUnknown() && data.Ecssubnet.ValueString() != "" {
+		argsMap["ecssubnet"] = url.QueryEscape(data.Ecssubnet.ValueString())
+	}
+
+	err := r.client.DeleteResourceWithArgsMap(service.Dnsmxrec.Type(), dnsmxrecName, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsmxrec, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted dnsmxrec resource")
 }
 
-// Helper function to read dnsmxrec data from API
-func (r *DnsmxrecResource) readDnsmxrecFromApi(ctx context.Context, data *DnsmxrecResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsmxrec.Type(), "")
+// Helper function to read dnsmxrec data from API.
+// Returns false (without adding an error) when the resource no longer exists.
+func (r *DnsmxrecResource) readDnsmxrecFromApi(ctx context.Context, data *DnsmxrecResourceModel, diags *diag.Diagnostics) bool {
+	// ID is the plain domain value (matches SDK v2)
+	dnsmxrecName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnsmxrec.Type(), dnsmxrecName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsmxrec, got error: %s", err))
-		return
+		return false
 	}
 
 	dnsmxrecSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

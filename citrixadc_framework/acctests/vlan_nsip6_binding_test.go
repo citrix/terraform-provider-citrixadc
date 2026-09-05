@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVlan_nsip6_binding_basic = `
@@ -54,6 +57,49 @@ const testAccVlan_nsip6_binding_basic_step2 = `
 		type = "VIP"
 	}
 `
+
+func TestAccVlan_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: vlanid,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"vlanid", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_nsip6_binding_basic},
+			{Config: testAccVlan_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccVlan_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
 
 func TestAccVlan_nsip6_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -104,10 +150,12 @@ func testAccCheckVlan_nsip6_bindingExist(n string, id *string) resource.TestChec
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vlanid := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vlanid", "ipaddress"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		vlanid := idMap["vlanid"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vlan_nsip6_binding",
@@ -231,6 +279,70 @@ const testAccVlan_nsip6_bindingDataSource_basic = `
 	}
 `
 
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// config values (same terraform resource labels) so the Exist/Destroy helpers
+// and resource addresses match. It is valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema.
+const testAccVlan_nsip6_binding_upgrade_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+		aliasname = "VLAN"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001::a/96"
+		type = "VIP"
+	}
+
+	resource "citrixadc_vlan_nsip6_binding" "tf_vlan_nsip6_binding" {
+		vlanid    = citrixadc_vlan.tf_vlan.vlanid
+		ipaddress = citrixadc_nsip6.tf_nsip6.ipv6address
+	}
+`
+
+// TestAccVlan_nsip6_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (legacy comma-joined id "vlanid,ipaddress") is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (legacy id "2,2001::a/96"); step 2 refreshes/plans the
+// same config through the current Framework provider, whose Read parses the legacy
+// id and recomputes it to the new "vlanid:<v>,ipaddress:<v>" canonical format
+// (SetAttrFromGet).
+func TestAccVlan_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlan_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVlan_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_nsip6_bindingExist("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "id", "2,2001::a/96"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVlan_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_nsip6_bindingExist("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "id", "vlanid:2,ipaddress:2001%3A%3Aa%2F96"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVlan_nsip6_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -242,6 +354,34 @@ func TestAccVlan_nsip6_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "vlanid", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "ipaddress", "2001::a/96"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVlan_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vlan_nsip6_binding.Type(), "2", []string{fmt.Sprintf("ipaddress:%s", utils.UrlEncode("2001::a/96"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_nsip6_bindingExist(resAddr, nil)),
 			},
 		},
 	})

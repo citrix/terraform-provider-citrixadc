@@ -35,7 +35,7 @@ func (d *RadiusnodeDataSource) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *RadiusnodeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RadiusnodeResourceModel
+	var data RadiusnodeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *RadiusnodeDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	radiusnodeSetAttrFromGet(ctx, &data, getResponseData)
+	radiusnodeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

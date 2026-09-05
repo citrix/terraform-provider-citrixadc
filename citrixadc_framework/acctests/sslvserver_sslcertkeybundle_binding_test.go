@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslvserver_sslcertkeybundle_binding joins an SSL vserver (the SSL view of an
@@ -286,6 +286,34 @@ func TestAccSslvserver_sslcertkeybundle_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkeybundle_binding.tf_sslvserver_sslcertkeybundle_binding", "vservername", "tf_sslvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkeybundle_binding.tf_sslvserver_sslcertkeybundle_binding", "certkeybundlename", "tf_sslcertkeybundle"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslvserver_sslcertkeybundle_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslcertkeybundle_binding.tf_sslvserver_sslcertkeybundle_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeybundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslcertkeybundle_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslcertkeybundle_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslcertkeybundle_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslcertkeybundle_binding.Type(), "tf_sslvserver", map[string]string{"certkeybundlename": "tf_sslcertkeybundle"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_sslcertkeybundle_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslcertkeybundle_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -105,7 +105,7 @@ func (d *LbvserverContentinspectionpolicyBindingDataSource) Read(ctx context.Con
 		return
 	}
 
-	lbvserver_contentinspectionpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_contentinspectionpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -16,103 +16,56 @@ limitations under the License.
 package citrixadc
 
 import (
-	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func yes(t *testing.T) {
+// NOTE on the rnat_clear resource:
+//   - Models a *set* of legacy (UNNAMED) RNAT rules under one synthetic handle
+//     (rnatsname). `rnat` is a Framework SetNestedBlock, so it uses the SDK v2
+//     BLOCK HCL syntax `rnat { ... }` (not `rnat = [ { ... } ]`).
+//   - The unnamed `set rnat` path is UNSUPPORTED on NetScaler 14.1+ (errorcode 275
+//     "Operation not supported by device"): RNAT moved to the named RNAT4 model,
+//     which is the separate `citrixadc_rnat` resource. Create/Update now SURFACE
+//     that failure instead of silently swallowing it (as SDK v2 did), so on 14.1.x
+//     firmware the apply legitimately fails rather than reporting a phantom success.
+//
+// The test therefore (1) proves the block HCL syntax is accepted via a
+// firmware-independent PlanOnly step, and (2) proves the failed `set rnat` is now
+// surfaced via an ExpectError step (all current lab firmware is 14.1.x). On older
+// firmware where unnamed RNAT is supported, step 2 would need to become a real
+// apply + appliance check.
+
+const testAccRnatClear_basic = `
+resource "citrixadc_rnat_clear" "foo" {
+  rnatsname = "tf_rnat_clear"
+  rnat {
+    network = "192.168.96.0"
+    netmask = "255.255.240.0"
+  }
+}
+`
+
+func TestAccRnatClear_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckRnatClearDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRnatClear_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRnatClearExist("citrixadc_rnat_clear.foo", nil),
-				),
+				// (A) The `rnat { ... }` block HCL syntax is accepted and plans.
+				// Plan-only, so this is firmware-independent (no NITRO apply).
+				Config:             testAccRnatClear_basic,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				// (B) A failed `set rnat` is now surfaced (not swallowed). Unnamed
+				// RNAT is unsupported on 14.1.x -> errorcode 275.
+				Config:      testAccRnatClear_basic,
+				ExpectError: regexp.MustCompile(`(?i)Unable to apply rnat rule`),
 			},
 		},
 	})
 }
-
-func testAccCheckRnatClearExist(n string, id *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No rnat name is set")
-		}
-
-		if id != nil {
-			if *id != "" && *id != rs.Primary.ID {
-				return fmt.Errorf("Resource ID has changed!")
-			}
-
-			*id = rs.Primary.ID
-		}
-
-		// Use the shared utility function to get a configured client
-		client, err := testAccGetFrameworkClient()
-		if err != nil {
-			return fmt.Errorf("Failed to get test client: %v", err)
-		}
-		//d, err := client.FindFilteredResourceArray(service.RnatClear.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
-		d, err := client.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0"})
-
-		if err != nil {
-			return err
-		}
-
-		if len(d) != 1 {
-			return fmt.Errorf("RnatClear rule %s not found", n)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckRnatClearDestroy(s *terraform.State) error {
-	// Use the shared utility function to get a configured client
-	client, err := testAccGetFrameworkClient()
-	if err != nil {
-		return fmt.Errorf("Failed to get test client: %v", err)
-	}
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_rnat_clear" {
-			continue
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No name is set")
-		}
-
-		_, err := client.FindFilteredResourceArray(service.Rnat.Type(), map[string]string{"network": "192.168.96.0", "netmask": "255.255.240.0", "natip": "*"})
-		if err == nil {
-			return fmt.Errorf("RnatClear rule %s still exists", rs.Primary.ID)
-		}
-
-	}
-
-	return nil
-}
-
-const testAccRnatClear_basic = `
-
-
-resource "citrixadc_rnat_clear" "foo" {
-	rnatsname = "foo"
-	rnat {
-           network = "192.168.96.0"
-           netmask = "255.255.240.0"
-	}
-}
-`

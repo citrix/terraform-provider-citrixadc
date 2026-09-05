@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnskey_add = `
@@ -327,12 +328,15 @@ func TestAccDnskeyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnskeyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnskey.dnskey", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "keyname", "adckey_ds_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "expires", "120"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units1", "DAYS"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "notificationperiod", "7"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units2", "DAYS"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "ttl", "3600"),
+					// Read-only metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnskey.dnskey", "state"),
 				),
 			},
 		},
@@ -451,9 +455,42 @@ func TestAccDnskey_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccDnskey_add,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDnskey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnskey.dnskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnskeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnskey.Type(), "adckey_1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnskey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnskeyExist(resAddr, nil)),
 			},
 		},
 	})

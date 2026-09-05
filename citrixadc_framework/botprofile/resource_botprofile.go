@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *BotprofileResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating botprofile resource")
 
-	// botprofile := botprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	botprofile := botprofileGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile.Type(), &botprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botprofile-config")
+	// Named resource - use AddResource
+	botprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Botprofile.Type(), botprofileName, &botprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(botprofileName)
+
 	// Read the updated state back
-	r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,200 @@ func (r *BotprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading botprofile resource")
 
-	r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotprofileResourceModel
+	var data, config, state BotprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating botprofile resource")
 
-	// Create API request body from the model
-	// botprofile := botprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Addcookieflags.Equal(state.Addcookieflags) {
+		if config.Addcookieflags.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "addcookieflags")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.BotEnableBlackList.Equal(state.BotEnableBlackList) {
+		if config.BotEnableBlackList.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_black_list")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.BotEnableIpReputation.Equal(state.BotEnableIpReputation) {
+		if config.BotEnableIpReputation.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_ip_reputation")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.BotEnableRateLimit.Equal(state.BotEnableRateLimit) {
+		if config.BotEnableRateLimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_rate_limit")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.BotEnableTps.Equal(state.BotEnableTps) {
+		if config.BotEnableTps.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_tps")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.BotEnableWhiteList.Equal(state.BotEnableWhiteList) {
+		if config.BotEnableWhiteList.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_white_list")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Clientipexpression.Equal(state.Clientipexpression) {
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		hasChange = true
+	}
+	if !data.Devicefingerprint.Equal(state.Devicefingerprint) {
+		if config.Devicefingerprint.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "devicefingerprint")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Devicefingerprintaction.Equal(state.Devicefingerprintaction) {
+		hasChange = true
+	}
+	if !data.Devicefingerprintmobile.Equal(state.Devicefingerprintmobile) {
+		hasChange = true
+	}
+	if !data.Dfprequestlimit.Equal(state.Dfprequestlimit) {
+		hasChange = true
+	}
+	if !data.Errorurl.Equal(state.Errorurl) {
+		hasChange = true
+	}
+	if !data.Headlessbrowserdetection.Equal(state.Headlessbrowserdetection) {
+		if config.Headlessbrowserdetection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "headlessbrowserdetection")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Kmdetection.Equal(state.Kmdetection) {
+		hasChange = true
+	}
+	if !data.Kmeventspostbodylimit.Equal(state.Kmeventspostbodylimit) {
+		hasChange = true
+	}
+	if !data.Kmjavascriptname.Equal(state.Kmjavascriptname) {
+		hasChange = true
+	}
+	if !data.Sessioncookiename.Equal(state.Sessioncookiename) {
+		hasChange = true
+	}
+	if !data.Sessiontimeout.Equal(state.Sessiontimeout) {
+		hasChange = true
+	}
+	if !data.Signature.Equal(state.Signature) {
+		hasChange = true
+	}
+	if !data.Signaturemultipleuseragentheaderaction.Equal(state.Signaturemultipleuseragentheaderaction) {
+		hasChange = true
+	}
+	if !data.Signaturenouseragentheaderaction.Equal(state.Signaturenouseragentheaderaction) {
+		hasChange = true
+	}
+	if !data.Spoofedreqaction.Equal(state.Spoofedreqaction) {
+		hasChange = true
+	}
+	if !data.Trap.Equal(state.Trap) {
+		if config.Trap.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trap")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Trapaction.Equal(state.Trapaction) {
+		hasChange = true
+	}
+	if !data.Trapurl.Equal(state.Trapurl) {
+		hasChange = true
+	}
+	if !data.Verboseloglevel.Equal(state.Verboseloglevel) {
+		if config.Verboseloglevel.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "verboseloglevel")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile.Type(), &botprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		botprofile := botprofileGetThePayloadFromthePlan(ctx, &data)
+		// name is the identifier for the PUT body
+		botprofile.Name = data.Name.ValueString()
 
-	tflog.Trace(ctx, "Updated botprofile resource")
+		// Named resource - use UpdateResource
+		botprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Botprofile.Type(), botprofileName, &botprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated botprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for botprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Botprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset botprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +307,33 @@ func (r *BotprofileResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting botprofile resource")
 
-	// For botprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botprofile resource from state")
+	// Named resource - delete using DeleteResource
+	botprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Botprofile.Type(), botprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botprofile resource")
 }
 
 // Helper function to read botprofile data from API
-func (r *BotprofileResource) readBotprofileFromApi(ctx context.Context, data *BotprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botprofile.Type(), "")
+func (r *BotprofileResource) readBotprofileFromApi(ctx context.Context, data *BotprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	botprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Botprofile.Type(), botprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	botprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

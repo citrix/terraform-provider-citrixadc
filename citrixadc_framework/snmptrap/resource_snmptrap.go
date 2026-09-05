@@ -3,6 +3,7 @@ package snmptrap
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -10,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,22 +58,30 @@ func (r *SnmptrapResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating snmptrap resource")
 
-	// snmptrap := snmptrapGetThePayloadFromtheConfig(ctx, &data)
+	snmptrap := snmptrapGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmptrap.Type(), &snmptrap)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmptrap, got error: %s", err))
-	//	 return
-	// }
+	// SDK v2 backward-compatible composite ID: "trapclass,trapdestination,version".
+	snmptrapId := fmt.Sprintf("%s,%s,%s", data.Trapclass.ValueString(), data.Trapdestination.ValueString(), data.Version.ValueString())
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("snmptrap-config")
+	// Named/array-filter resource -- created via AddResource (POST).
+	_, err := r.client.AddResource(service.Snmptrap.Type(), snmptrapId, &snmptrap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmptrap, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created snmptrap resource")
 
+	// Set ID before reading state back so the read helper can resolve the record.
+	data.Id = types.StringValue(snmptrapId)
+
 	// Read the updated state back
-	r.readSnmptrapFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmptrapFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmptrap not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +99,125 @@ func (r *SnmptrapResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading snmptrap resource")
 
-	r.readSnmptrapFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSnmptrapFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SnmptrapResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SnmptrapResourceModel
+	var data, config, state SnmptrapResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating snmptrap resource")
 
-	// Create API request body from the model
-	// snmptrap := snmptrapGetThePayloadFromtheConfig(ctx, &data)
+	// Only the non-ForceNew attributes can reach Update; trapclass/trapdestination/version
+	// are RequiresReplace and force recreation instead.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Allpartitions.Equal(state.Allpartitions) {
+		tflog.Debug(ctx, "allpartitions has changed for snmptrap")
+		if config.Allpartitions.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "allpartitions")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Communityname.Equal(state.Communityname) {
+		tflog.Debug(ctx, "communityname has changed for snmptrap")
+		hasChange = true
+	}
+	if !data.Destport.Equal(state.Destport) {
+		tflog.Debug(ctx, "destport has changed for snmptrap")
+		if config.Destport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "destport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Severity.Equal(state.Severity) {
+		tflog.Debug(ctx, "severity has changed for snmptrap")
+		// severity is a SPECIFIC-trapclass-only argument; sending or unsetting it
+		// on any other trapclass is rejected by NITRO with ec1093. Skip it for
+		// non-specific traps (the read-back normalizes it to the default anyway).
+		if data.Trapclass.ValueString() != "specific" {
+			tflog.Debug(ctx, "ignoring severity change for non-specific snmptrap")
+		} else if config.Severity.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "severity")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Srcip.Equal(state.Srcip) {
+		tflog.Debug(ctx, "srcip has changed for snmptrap")
+		hasChange = true
+	}
+	if !data.Td.Equal(state.Td) {
+		tflog.Debug(ctx, "td has changed for snmptrap")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmptrap.Type(), &snmptrap)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmptrap, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Build the payload with the identity keys plus the configured values.
+		snmptrap := snmptrapGetThePayloadFromthePlan(ctx, &data)
+		// The identity keys must always be present so NITRO can locate the instance.
+		snmptrap.Trapclass = data.Trapclass.ValueString()
+		snmptrap.Trapdestination = data.Trapdestination.ValueString()
+		snmptrap.Version = data.Version.ValueString()
 
-	tflog.Trace(ctx, "Updated snmptrap resource")
+		err := r.client.UpdateUnnamedResource(service.Snmptrap.Type(), &snmptrap)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmptrap, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated snmptrap resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for snmptrap resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The composite identity keys must be present so
+	// NITRO can locate the instance.
+	unsetIdPayload := map[string]interface{}{
+		"trapclass":       data.Trapclass.ValueString(),
+		"trapdestination": data.Trapdestination.ValueString(),
+		"version":         data.Version.ValueString(),
+	}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		unsetIdPayload["td"] = data.Td.ValueInt64()
+	}
+	if err := utils.ExecuteUnset(r.client, service.Snmptrap.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset snmptrap attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readSnmptrapFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmptrapFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmptrap not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +235,80 @@ func (r *SnmptrapResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting snmptrap resource")
 
-	// For snmptrap, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted snmptrap resource from state")
-}
+	trapclass, trapdestination, version := parseSnmptrapId(data.Id.ValueString())
 
-// Helper function to read snmptrap data from API
-func (r *SnmptrapResource) readSnmptrapFromApi(ctx context.Context, data *SnmptrapResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Snmptrap.Type(), "")
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("trapdestination:%s", trapdestination))
+	args = append(args, fmt.Sprintf("version:%s", version))
+	// Mirror SDK v2 GetOk semantics: only pass td when it is set to a non-zero value.
+	if !data.Td.IsNull() && !data.Td.IsUnknown() && data.Td.ValueInt64() != 0 {
+		args = append(args, fmt.Sprintf("td:%d", data.Td.ValueInt64()))
+	}
+
+	err := r.client.DeleteResourceWithArgs(service.Snmptrap.Type(), trapclass, args)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmptrap, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete snmptrap, got error: %s", err))
 		return
 	}
 
-	snmptrapSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted snmptrap resource")
+}
 
+// parseSnmptrapId splits the SDK v2 backward-compatible composite ID
+// "trapclass,trapdestination,version". It also normalizes the legacy 2-element
+// ID form ("trapclass,trapdestination") that predates v1.33.0 by defaulting the
+// version to "V2".
+func parseSnmptrapId(id string) (trapclass, trapdestination, version string) {
+	idSlice := strings.SplitN(id, ",", 3)
+	if len(idSlice) >= 1 {
+		trapclass = idSlice[0]
+	}
+	if len(idSlice) >= 2 {
+		trapdestination = idSlice[1]
+	}
+	if len(idSlice) >= 3 {
+		version = idSlice[2]
+	} else {
+		version = "V2"
+	}
+	return
+}
+
+// Helper function to read snmptrap data from API.
+// Returns false (without adding an error) when the record no longer exists so
+// callers can clear it from state.
+func (r *SnmptrapResource) readSnmptrapFromApi(ctx context.Context, data *SnmptrapResourceModel, diags *diag.Diagnostics) bool {
+	trapclass, trapdestination, version := parseSnmptrapId(data.Id.ValueString())
+
+	// Keep the normalized ID (covers legacy 2-element IDs).
+	data.Id = types.StringValue(fmt.Sprintf("%s,%s,%s", trapclass, trapdestination, version))
+
+	findParams := service.FindParams{
+		ResourceType: service.Snmptrap.Type(),
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmptrap, got error: %s", err))
+		return false
+	}
+
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["trapclass"] == trapclass && v["trapdestination"] == trapdestination && v["version"] == version {
+			foundIndex = i
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		return false
+	}
+
+	snmptrapSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	return true
 }

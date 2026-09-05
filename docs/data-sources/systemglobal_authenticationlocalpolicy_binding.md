@@ -30,9 +30,10 @@ output "feature" {
 
 In addition to the arguments, the following attributes are available:
 
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type.
 * `feature` - The feature to be checked while applying this config.
 * `globalbindtype` - The global bind type for the binding.
 * `gotopriorityexpression` - Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE. Specify one of the following values: NEXT - Evaluate the policy with the next higher priority number. END - End policy evaluation.
 * `id` - The id of the systemglobal_authenticationlocalpolicy_binding. It has the same value as the `policyname` attribute.
 * `nextfactor` - On success invoke label. Applicable for advanced authentication policy binding.
-* `priority` - The priority of the authentication local policy.
+* `priority` - The priority of the policy.

@@ -6,7 +6,7 @@ subcategory: "SNMP"
 
 The snmptrap_snmpuser_binding data source allows you to retrieve information about an snmp trap snmp user binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_snmptrap_snmpuser_binding" "tf_binding" {
@@ -33,10 +33,10 @@ output "username" {
 * `trapdestination` - (Required) IPv4 or the IPv6 address of the trap listener to which the Citrix ADC is to send SNMP trap messages.
 * `username` - (Required) Name of the SNMP user that will send the SNMPv3 traps.
 * `version` - (Required) SNMP version, which determines the format of trap messages sent to the trap listener. This setting must match the setting on the trap listener. Otherwise, the listener drops the trap messages.
+* `securitylevel` - (Optional) Security level of the SNMPv3 trap.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `securitylevel` - Security level of the SNMPv3 trap.
 * `id` - The id of the snmptrap_snmpuser_binding. It is a system-generated identifier.

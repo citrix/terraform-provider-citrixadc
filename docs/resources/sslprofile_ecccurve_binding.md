@@ -36,3 +36,12 @@ resource "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslprofile_ecccurve_binding. It has is the conatenation of the `name` and `ecccurvename` attributes.
+
+
+## Import
+
+A sslprofile_ecccurve_binding can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding <id>
+```

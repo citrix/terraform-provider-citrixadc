@@ -35,25 +35,31 @@ func (r *AppfwxmlerrorpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the XML error object.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Indicates name of the imported xml error page to be removed.",
 			},
 			"overwrite": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrite any existing XML error object of the same name.",
 			},
 			"src": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -68,24 +74,58 @@ func appfwxmlerrorpageGetThePayloadFromtheConfig(ctx context.Context, data *Appf
 
 	// Create API request body from the model
 	appfwxmlerrorpage := appfw.Appfwxmlerrorpage{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwxmlerrorpage.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwxmlerrorpage.Name = data.Name.ValueString()
 	}
-	if !data.Overwrite.IsNull() {
+	if !data.Overwrite.IsNull() && !data.Overwrite.IsUnknown() {
 		appfwxmlerrorpage.Overwrite = data.Overwrite.ValueBool()
 	}
-	if !data.Src.IsNull() {
+	if !data.Src.IsNull() && !data.Src.IsUnknown() {
 		appfwxmlerrorpage.Src = data.Src.ValueString()
 	}
 
 	return appfwxmlerrorpage
 }
 
+// appfwxmlerrorpageSetAttrFromGet is used by the resource. It mirrors the SDK v2
+// read semantics, which only refresh the name from the API. The NITRO GET does
+// not return comment/overwrite and returns src in a normalized (basename) form,
+// so the configured values are preserved to remain backward compatible and to
+// avoid "inconsistent result after apply" errors.
 func appfwxmlerrorpageSetAttrFromGet(ctx context.Context, data *AppfwxmlerrorpageResourceModel, getResponseData map[string]interface{}) *AppfwxmlerrorpageResourceModel {
 	tflog.Debug(ctx, "In appfwxmlerrorpageSetAttrFromGet Function")
+
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+
+	// Resolve unknown values for Optional+Computed attributes that are not
+	// returned by the NITRO GET so that a known value is always written to state.
+	if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+	if data.Overwrite.IsUnknown() {
+		data.Overwrite = types.BoolNull()
+	}
+	if data.Src.IsUnknown() {
+		data.Src = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	return data
+}
+
+// appfwxmlerrorpageSetAttrFromGetForDatasource is used by the datasource. It
+// copies every attribute returned by the NITRO GET into the model (Pattern 7
+// datasource split).
+func appfwxmlerrorpageSetAttrFromGetForDatasource(ctx context.Context, data *AppfwxmlerrorpageResourceModel, getResponseData map[string]interface{}) *AppfwxmlerrorpageResourceModel {
+	tflog.Debug(ctx, "In appfwxmlerrorpageSetAttrFromGetForDatasource Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {

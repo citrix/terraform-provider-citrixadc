@@ -40,8 +40,9 @@ In addition to the arguments, the following attributes are available:
 
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `id` - The id of the appfwprofile_xmlxss_binding. It is a system-generated identifier.
+* `id` - The id of the `appfwprofile_xmlxss_binding`. It is the concatenation of the `name`, `xmlxss` and `as_scan_location_xmlxss` attributes separated by a comma.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `isregex_xmlxss` - Is the XML XSS exempted field name a regular expression?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

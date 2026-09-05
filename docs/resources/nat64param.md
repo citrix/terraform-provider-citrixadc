@@ -34,3 +34,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nat64param. It is a unique string prefixed with "tf-nat64param-"
 
+
+## Import
+
+A nat64param can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nat64param.tf_nat64param nat64param-config
+```

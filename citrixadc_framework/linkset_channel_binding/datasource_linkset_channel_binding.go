@@ -3,6 +3,7 @@ package linkset_channel_binding
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -42,16 +43,19 @@ func (d *LinksetChannelBindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	linksetid_Name := data.Linksetid.ValueString()
+	// Case 4: Array filter with parent ID.
+	// The user-facing "linkset_id" attribute maps to the NITRO resource name.
+	linkset_id_Name := data.LinksetId.ValueString()
 	ifnum_Name := data.Ifnum
 
 	var dataArr []map[string]interface{}
 	var err error
 
+	// The linkset id (e.g. "LS/3") contains a '/', so it must be double
+	// URL-encoded for the NITRO GET path (matches SDK v2 behavior).
 	findParams := service.FindParams{
 		ResourceType:             service.Linkset_channel_binding.Type(),
-		ResourceName:             linksetid_Name,
+		ResourceName:             url.QueryEscape(url.QueryEscape(linkset_id_Name)),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -93,7 +97,7 @@ func (d *LinksetChannelBindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	linkset_channel_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	linkset_channel_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

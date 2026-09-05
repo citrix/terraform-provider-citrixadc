@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -19,7 +18,6 @@ import (
 // AaauserResourceModel describes the resource data model.
 type AaauserResourceModel struct {
 	Id                types.String `tfsdk:"id"`
-	Loggedin          types.Bool   `tfsdk:"loggedin"`
 	Password          types.String `tfsdk:"password"`
 	PasswordWo        types.String `tfsdk:"password_wo"`
 	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
@@ -33,15 +31,6 @@ func (r *AaauserResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the aaauser resource.",
-			},
-			"loggedin": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
-					boolplanmodifier.UseStateForUnknown(),
-				},
-				Description: "Show whether the user is logged in or not.",
 			},
 			"password": schema.StringAttribute{
 				Optional:    true,
@@ -76,9 +65,6 @@ func aaauserGetThePayloadFromthePlan(ctx context.Context, data *AaauserResourceM
 
 	// Create API request body from the model
 	aaauser := aaa.Aaauser{}
-	if !data.Loggedin.IsNull() && !data.Loggedin.IsUnknown() {
-		aaauser.Loggedin = data.Loggedin.ValueBool()
-	}
 	if !data.Password.IsNull() && !data.Password.IsUnknown() {
 		aaauser.Password = data.Password.ValueString()
 	}
@@ -125,11 +111,6 @@ func aaauserSetAttrFromGet(ctx context.Context, data *AaauserResourceModel, getR
 	tflog.Debug(ctx, "In aaauserSetAttrFromGet Function")
 
 	// Convert API response to model
-	if val, ok := getResponseData["loggedin"]; ok && val != nil {
-		data.Loggedin = types.BoolValue(val.(bool))
-	} else {
-		data.Loggedin = types.BoolNull()
-	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
 	// password_wo is not returned by NITRO API (secret/ephemeral) - retain from config
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config

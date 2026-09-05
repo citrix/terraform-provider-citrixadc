@@ -53,9 +53,11 @@ func (r *AuthenticationcaptchaactionResource) Schema(ctx context.Context, req re
 				Description: "Name for the new captcha action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the NetScaler CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"scorethreshold": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(5),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 5},
+				},
 				Description: "This is the score threshold value for recaptcha v3.",
 			},
 			"secretkey": schema.StringAttribute{

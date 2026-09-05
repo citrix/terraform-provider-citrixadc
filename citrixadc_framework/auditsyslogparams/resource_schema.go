@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -21,6 +23,7 @@ type AuditsyslogparamsResourceModel struct {
 	Appflowexport        types.String `tfsdk:"appflowexport"`
 	Contentinspectionlog types.String `tfsdk:"contentinspectionlog"`
 	Dateformat           types.String `tfsdk:"dateformat"`
+	Denylistviolations   types.String `tfsdk:"denylistviolations"`
 	Dns                  types.String `tfsdk:"dns"`
 	Logfacility          types.String `tfsdk:"logfacility"`
 	Loglevel             types.List   `tfsdk:"loglevel"`
@@ -68,7 +71,13 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 			"dateformat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("MMDDYYYY"),
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY. European style  -date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
+			},
+			"denylistviolations": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Log denylist violations.",
 			},
 			"dns": schema.StringAttribute{
 				Optional:    true,
@@ -92,8 +101,11 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Log the LSN messages",
 			},
 			"protocolviolations": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "NONE"},
+				},
 				Description: "Log protocol violations",
 			},
 			"serverip": schema.StringAttribute{
@@ -112,8 +124,11 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Log SSL Interceptionn event information",
 			},
 			"streamanalytics": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Export log stream analytics statistics to syslog server",
 			},
 			"subscriberlog": schema.StringAttribute{
@@ -124,6 +139,7 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 			"tcp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Log TCP messages.",
 			},
 			"timezone": schema.StringAttribute{
@@ -150,58 +166,66 @@ func auditsyslogparamsGetThePayloadFromtheConfig(ctx context.Context, data *Audi
 
 	// Create API request body from the model
 	auditsyslogparams := audit.Auditsyslogparams{}
-	if !data.Acl.IsNull() {
+	if !data.Acl.IsNull() && !data.Acl.IsUnknown() {
 		auditsyslogparams.Acl = data.Acl.ValueString()
 	}
-	if !data.Alg.IsNull() {
+	if !data.Alg.IsNull() && !data.Alg.IsUnknown() {
 		auditsyslogparams.Alg = data.Alg.ValueString()
 	}
-	if !data.Appflowexport.IsNull() {
+	if !data.Appflowexport.IsNull() && !data.Appflowexport.IsUnknown() {
 		auditsyslogparams.Appflowexport = data.Appflowexport.ValueString()
 	}
-	if !data.Contentinspectionlog.IsNull() {
+	if !data.Contentinspectionlog.IsNull() && !data.Contentinspectionlog.IsUnknown() {
 		auditsyslogparams.Contentinspectionlog = data.Contentinspectionlog.ValueString()
 	}
-	if !data.Dateformat.IsNull() {
+	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditsyslogparams.Dateformat = data.Dateformat.ValueString()
 	}
-	if !data.Dns.IsNull() {
+	if !data.Denylistviolations.IsNull() && !data.Denylistviolations.IsUnknown() {
+		auditsyslogparams.Denylistviolations = data.Denylistviolations.ValueString()
+	}
+	if !data.Dns.IsNull() && !data.Dns.IsUnknown() {
 		auditsyslogparams.Dns = data.Dns.ValueString()
 	}
-	if !data.Logfacility.IsNull() {
+	if !data.Logfacility.IsNull() && !data.Logfacility.IsUnknown() {
 		auditsyslogparams.Logfacility = data.Logfacility.ValueString()
 	}
-	if !data.Lsn.IsNull() {
+	if !data.Loglevel.IsNull() && !data.Loglevel.IsUnknown() {
+		var loglevelList []string
+		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
+		auditsyslogparams.Loglevel = loglevelList
+	}
+	if !data.Lsn.IsNull() && !data.Lsn.IsUnknown() {
 		auditsyslogparams.Lsn = data.Lsn.ValueString()
 	}
-	if !data.Protocolviolations.IsNull() {
+	if !data.Protocolviolations.IsNull() && !data.Protocolviolations.IsUnknown() {
 		auditsyslogparams.Protocolviolations = data.Protocolviolations.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		auditsyslogparams.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		auditsyslogparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Sslinterception.IsNull() {
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
 		auditsyslogparams.Sslinterception = data.Sslinterception.ValueString()
 	}
-	if !data.Streamanalytics.IsNull() {
+	if !data.Streamanalytics.IsNull() && !data.Streamanalytics.IsUnknown() {
 		auditsyslogparams.Streamanalytics = data.Streamanalytics.ValueString()
 	}
-	if !data.Subscriberlog.IsNull() {
+	if !data.Subscriberlog.IsNull() && !data.Subscriberlog.IsUnknown() {
 		auditsyslogparams.Subscriberlog = data.Subscriberlog.ValueString()
 	}
-	if !data.Tcp.IsNull() {
+	if !data.Tcp.IsNull() && !data.Tcp.IsUnknown() {
 		auditsyslogparams.Tcp = data.Tcp.ValueString()
 	}
-	if !data.Timezone.IsNull() {
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
 		auditsyslogparams.Timezone = data.Timezone.ValueString()
 	}
-	if !data.Urlfiltering.IsNull() {
+	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
 		auditsyslogparams.Urlfiltering = data.Urlfiltering.ValueString()
 	}
-	if !data.Userdefinedauditlog.IsNull() {
+	if !data.Userdefinedauditlog.IsNull() && !data.Userdefinedauditlog.IsUnknown() {
 		auditsyslogparams.Userdefinedauditlog = data.Userdefinedauditlog.ValueString()
 	}
 
@@ -237,6 +261,11 @@ func auditsyslogparamsSetAttrFromGet(ctx context.Context, data *Auditsyslogparam
 	} else {
 		data.Dateformat = types.StringNull()
 	}
+	if val, ok := getResponseData["denylistviolations"]; ok && val != nil {
+		data.Denylistviolations = types.StringValue(val.(string))
+	} else {
+		data.Denylistviolations = types.StringNull()
+	}
 	if val, ok := getResponseData["dns"]; ok && val != nil {
 		data.Dns = types.StringValue(val.(string))
 	} else {
@@ -246,6 +275,17 @@ func auditsyslogparamsSetAttrFromGet(ctx context.Context, data *Auditsyslogparam
 		data.Logfacility = types.StringValue(val.(string))
 	} else {
 		data.Logfacility = types.StringNull()
+	}
+	if val, ok := getResponseData["loglevel"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Loglevel = listValue
+		} else {
+			data.Loglevel = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Loglevel = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))

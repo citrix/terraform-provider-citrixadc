@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnpool_basic = `
@@ -78,6 +81,153 @@ func TestAccLsnpool_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccLsnpool_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnpool.tf_lsnpool"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnpoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnpool_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnpool.Type(), "my_lsn_pool"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnpool_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnpool_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnpool.tf_lsnpool"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnpoolDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnpool_basic},
+			{
+				Config:                  testAccLsnpool_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccLsnpool_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnpoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLsnpool_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_lsnpool", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnpool_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_lsnpool", nil)),
+			},
+		},
+	})
+}
+
+// lsnpool unset test: maxportrealloctmq and portrealloctimeout are the only
+// updatable (non-ForceNew) attributes that NITRO supports unsetting. Step 1
+// sets them to non-default values; step 2 removes them from config so the
+// provider unsets them, reverting to NITRO defaults (maxportrealloctmq=65536,
+// portrealloctimeout=0).
+const testAccLsnpool_unset_step1 = `
+	resource "citrixadc_lsnpool" "tf_unset" {
+		poolname            = "tf_test_lsnpool_unset"
+		nattype             = "DYNAMIC"
+		portblockallocation = "DISABLED"
+		maxportrealloctmq   = 50
+		portrealloctimeout  = 50
+	}
+`
+
+const testAccLsnpool_unset_step2 = `
+	resource "citrixadc_lsnpool" "tf_unset" {
+		poolname            = "tf_test_lsnpool_unset"
+		nattype             = "DYNAMIC"
+		portblockallocation = "DISABLED"
+		# maxportrealloctmq and portrealloctimeout removed -> provider unsets them.
+	}
+`
+
+func TestAccLsnpool_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnpoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnpool_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnpool.tf_unset", "maxportrealloctmq", "50"),
+					resource.TestCheckResourceAttr("citrixadc_lsnpool.tf_unset", "portrealloctimeout", "50"),
+				),
+			},
+			{
+				Config: testAccLsnpool_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnpool.tf_unset", "maxportrealloctmq", "65536"),
+					resource.TestCheckResourceAttr("citrixadc_lsnpool.tf_unset", "portrealloctimeout", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLsnpoolADCValue("tf_test_lsnpool_unset", "maxportrealloctmq", "65536"),
+					testAccCheckLsnpoolADCValue("tf_test_lsnpool_unset", "portrealloctimeout", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLsnpoolADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLsnpoolADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lsnpool.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lsnpool %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lsnpool %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckLsnpoolExist(n string, id *string) resource.TestCheckFunc {

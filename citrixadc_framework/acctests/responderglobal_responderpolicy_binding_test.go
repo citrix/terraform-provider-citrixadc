@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccResponderglobal_responderpolicy_binding_basic = `
@@ -227,7 +228,110 @@ func TestAccResponderglobal_responderpolicy_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "policyname", "tf_responderpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					// Universal runtime-binding proof; read-only GET-only fields
+					// (numpol/flowtype) are context-dependent for a bindpoint binding.
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+const testAccResponderglobal_responderpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_responderglobal_responderpolicy_binding" "tf_responderglobal_responderpolicy_binding" {
+		globalbindtype = "SYSTEM_GLOBAL"
+		priority   = 50
+		policyname =citrixadc_responderpolicy.tf_responderpolicy.name
+	}
+
+
+	resource "citrixadc_responderpolicy" "tf_responderpolicy" {
+		name    = "tf_responderpolicy"
+		action = "NOOP"
+		rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+	}
+`
+
+func TestAccResponderglobal_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderglobal_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccResponderglobal_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderglobal_responderpolicy_bindingExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id", "tf_responderpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises the legacy id and SetAttrFromGet
+				// recomputes the id. This binding is single-key (policyname), so the
+				// canonical new id is the plain policyname value (== the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderglobal_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderglobal_responderpolicy_bindingExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id", "tf_responderpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccResponderglobal_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderglobal_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderglobal_responderpolicy_binding_basic},
+			{Config: testAccResponderglobal_responderpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccResponderglobal_responderpolicy_binding_selfHealing verifies the provider
+// re-creates the global binding when it is deleted out-of-band between apply steps
+// (drift recovery). The delete args (policyname/type/priority) match the resource's
+// own Delete; REQ_DEFAULT is the default bind point for this binding.
+func TestAccResponderglobal_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderglobal_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderglobal_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderglobal_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Responderglobal_responderpolicy_binding.Type(), "", []string{"policyname:tf_responderpolicy", "type:REQ_DEFAULT", "priority:50"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderglobal_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderglobal_responderpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

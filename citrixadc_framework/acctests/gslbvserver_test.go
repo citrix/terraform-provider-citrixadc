@@ -18,12 +18,14 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccGslbvserver_basic(t *testing.T) {
@@ -240,6 +242,215 @@ data "citrixadc_gslbvserver" "tf_gslbvserver" {
 }
 `
 
+const testAccGslbvserver_cookiedomain = `
+resource "citrixadc_gslbvserver" "cd" {
+  name          = "tf_gslbvserver_cd"
+  servicetype   = "HTTP"
+  dnsrecordtype = "A"
+  domain {
+    domainname   = "www.cdtest.co"
+    ttl          = 60
+    cookiedomain = ".cdtest.co"
+  }
+}
+`
+
+// TestAccGslbvserver_cookiedomain exercises the kept HCL attribute name
+// "cookiedomain" inside the domain{} block. cookiedomain is a per-domain-binding
+// attribute (NITRO wire key "cookie_domain"); it must round-trip: create binds it
+// and Read populates it back via the correct wire key. Guards against the rename
+// (cookie_domain) and the domain-block read-key regressions.
+func TestAccGslbvserver_cookiedomain(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_cookiedomain,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("citrixadc_gslbvserver.cd", nil),
+					resource.TestCheckTypeSetElemNestedAttrs("citrixadc_gslbvserver.cd", "domain.*", map[string]string{
+						"domainname":   "www.cdtest.co",
+						"cookiedomain": ".cdtest.co",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbvserver.Type(), "GSLB-East-Coast-Vserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbvserver_basic},
+			{
+				Config:                  testAccGslbvserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"domain.#", "domain.0.%", "domain.0.cookietimeout", "domain.0.domainname", "domain.0.name", "domain.0.sitedomainttl", "domain.0.ttl", "domain.1.%", "domain.1.cookietimeout", "domain.1.domainname", "domain.1.name", "domain.1.sitedomainttl", "domain.1.ttl"},
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist("citrixadc_gslbvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist("citrixadc_gslbvserver.foo", nil)),
+			},
+		},
+	})
+}
+
+// The gslbvserver unset test covers the type-independent, low-prerequisite
+// unset-eligible attributes for a plain HTTP GSLB vserver. step1 sets each to a
+// valid non-default value; step2 removes them, and the provider must unset them
+// (revert to the documented NITRO defaults) with an empty post-apply plan.
+const testAccGslbvserver_unset_step1 = `
+resource "citrixadc_gslbvserver" "tf_unset" {
+  name                   = "tf_test_gslbvserver_unset"
+  servicetype            = "HTTP"
+  appflowlog             = "DISABLED"
+  considereffectivestate = "STATE_ONLY"
+  disableprimaryondown   = "ENABLED"
+  dnsrecordtype          = "AAAA"
+  ecs                    = "ENABLED"
+  ecsaddrvalidation      = "ENABLED"
+  edr                    = "ENABLED"
+  lbmethod               = "ROUNDROBIN"
+  toggleorder            = "DESCENDING"
+}
+`
+
+const testAccGslbvserver_unset_step2 = `
+resource "citrixadc_gslbvserver" "tf_unset" {
+  name        = "tf_test_gslbvserver_unset"
+  servicetype = "HTTP"
+  # All unset-eligible attributes removed from config -> the provider must unset
+  # them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccGslbvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccGslbvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "considereffectivestate", "STATE_ONLY"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "disableprimaryondown", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "dnsrecordtype", "AAAA"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecsaddrvalidation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "edr", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "lbmethod", "ROUNDROBIN"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "toggleorder", "DESCENDING"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccGslbvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "considereffectivestate", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "disableprimaryondown", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "dnsrecordtype", "A"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecsaddrvalidation", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "edr", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "lbmethod", "LEASTCONNECTION"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "toggleorder", "ASCENDING"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckGslbvserverADCValue("tf_test_gslbvserver_unset", "appflowlog", "ENABLED"),
+					testAccCheckGslbvserverADCValue("tf_test_gslbvserver_unset", "edr", "DISABLED"),
+					testAccCheckGslbvserverADCValue("tf_test_gslbvserver_unset", "lbmethod", "LEASTCONNECTION"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckGslbvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("gslbvserver %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("gslbvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccGslbvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -249,6 +460,8 @@ func TestAccGslbvserverDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbvserverDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbvserver.tf_gslbvserver", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "name", "tf_test_gslbvserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "dnsrecordtype", "A"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "servicetype", "HTTP"),

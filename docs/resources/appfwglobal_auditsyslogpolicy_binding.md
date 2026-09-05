@@ -40,7 +40,7 @@ resource "citrixadc_appfwglobal_auditsyslogpolicy_binding" "tf_binding" {
 * `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - (Optional) Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.
 * `labeltype` - (Optional) Type of policy label to invoke if the current policy evaluates to TRUE and the invoke parameter is set. Available settings function as follows: * reqvserver. Invoke the unnamed policy label associated with the specified request virtual server. * policylabel. Invoke the specified user-defined policy label.
-* `priority` - (Optional) The priority of the policy.
+* `priority` - (Required) The priority of the policy.
 * `state` - (Optional) Enable or disable the binding to activate or deactivate the policy. This is applicable to classic policies only.
 * `type` - (Optional) Bind point to which to policy is bound.
 
@@ -49,13 +49,13 @@ resource "citrixadc_appfwglobal_auditsyslogpolicy_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwglobal_auditsyslogpolicy_binding. It has the same value as the `policyname` attribute.
+* `id` - The id of the appfwglobal_auditsyslogpolicy_binding. It is the concatenation of the `policyname` and `type` attributes separated by a comma.
 
 
 ## Import
 
-A appfwglobal_auditsyslogpolicy_binding can be imported using its policyname, e.g.
+A appfwglobal_auditsyslogpolicy_binding can be imported using the concatenation of its `policyname` and `type` attributes separated by a comma, e.g.
 
 ```shell
-terraform import citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding tf_auditsyslogpolicy
+terraform import citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding tf_auditsyslogpolicy,NONE
 ```

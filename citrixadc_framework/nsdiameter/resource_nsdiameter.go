@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,16 +56,16 @@ func (r *NsdiameterResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nsdiameter resource")
 
-	// nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
+	nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsdiameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource (mirrors SDK v2 create).
+	err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsdiameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static ID for this singleton configuration resource
 	data.Id = types.StringValue("nsdiameter-config")
 
 	tflog.Trace(ctx, "Created nsdiameter resource")
@@ -95,10 +96,14 @@ func (r *NsdiameterResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NsdiameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsdiameterResourceModel
+	var data, config, state NsdiameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +111,52 @@ func (r *NsdiameterResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating nsdiameter resource")
 
-	// Create API request body from the model
-	// nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve the singleton ID across the update.
+	data.Id = types.StringValue("nsdiameter-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsdiameter, got error: %s", err))
-	//	 return
-	// }
+	// Detect changes and, for unset-eligible attributes removed from config,
+	// collect them to unset (revert to NITRO defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Identity.Equal(state.Identity) {
+		hasChange = true
+	}
+	if !data.Ownernode.Equal(state.Ownernode) {
+		hasChange = true
+	}
+	if !data.Realm.Equal(state.Realm) {
+		hasChange = true
+	}
+	if !data.Serverclosepropagation.Equal(state.Serverclosepropagation) {
+		if config.Serverclosepropagation.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverclosepropagation")
+		} else {
+			hasChange = true
+		}
+	}
 
-	tflog.Trace(ctx, "Updated nsdiameter resource")
+	if hasChange {
+		// Create API request body from the model
+		nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
+
+		// Singleton resource - use UpdateUnnamedResource (mirrors SDK v2 update).
+		err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsdiameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nsdiameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsdiameter resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nsdiameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsdiameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNsdiameterFromApi(ctx, &data, &resp.Diagnostics)

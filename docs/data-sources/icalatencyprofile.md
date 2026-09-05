@@ -40,3 +40,12 @@ The following attributes are available:
 * `l7latencythresholdfactor` - L7 Latency threshold factor. This is the factor by which the active latency should be greater than the minimum observed value to determine that the latency is high and may need to be reported.
 * `l7latencywaittime` - L7 Latency Wait time. This is the time for which the Citrix ADC waits after the threshold is exceeded before it sends out a Notification to the Insight Center.
 * `name` - Name for the ICA latencyprofile.
+
+### Read-only icalatencyprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_icalatencyprofile` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `refcnt` - Number of entities using this l7latencyprofile.
+* `builtin` - Indicates that the ICA latencyprofile is a built-in (SYSTEM INTERNAL) type. A list of strings (possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.
+* `isdefault` - A value of true is returned if it is a default l7latencyprofile.

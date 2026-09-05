@@ -29,6 +29,7 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 * `proxyprotocol` - (Optional) Proxy Protocol Action (Enabled/Disabled). Possible values: [ ENABLED, DISABLED ]
 * `proxyprotocoltxversion` - (Optional) Proxy Protocol Version (V1/V2). Possible values: [ V1, V2 ]
 * `proxyprotocolaftertlshandshake` - (Optional)
+* `badipactionthreshold` - (Optional) Number of protocol violation from an IP address before taking action. Default value: 0 Minimum value = 0 Maximum value = 100000
 
 
 ## Attribute Reference

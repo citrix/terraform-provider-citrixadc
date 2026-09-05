@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // nscentralmanagementserver is a create+delete (no-update) resource. All schema
@@ -120,6 +120,10 @@ func TestAccNscentralmanagementserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "type", "ONPREM"),
 					resource.TestCheckResourceAttr("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "ipaddress", "10.101.132.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "username", "nsroot"),
+					// id is the universal runtime-binding proof. Read-only ADM-service
+					// metadata (instanceid/customerid/admservice*) is connection-dependent
+					// and may be null, so it is not asserted here.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "id"),
 				),
 			},
 		},
@@ -320,6 +324,36 @@ func TestAccNscentralmanagementserver_adcpassword_wo_ephemeral(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "type", "ONPREM"),
 					resource.TestCheckResourceAttr("citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "adcpassword_wo_version", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNscentralmanagementserver_selfHealing(t *testing.T) {
+	t.Skip("Requires valid NetScaler Console Credentials.")
+	t.Setenv("TF_VAR_nscentralmanagementserver_password", "admpassword123")
+	const resAddr = "citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNscentralmanagementserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscentralmanagementserver_password_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNscentralmanagementserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nscentralmanagementserver.Type(), "ONPREM"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNscentralmanagementserver_password_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNscentralmanagementserverExist(resAddr, nil)),
 			},
 		},
 	})

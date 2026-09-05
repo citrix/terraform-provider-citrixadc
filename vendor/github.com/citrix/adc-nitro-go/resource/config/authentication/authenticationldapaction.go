@@ -259,9 +259,14 @@ type Authenticationldapaction struct {
 	* The Citrix ADC uses the cloud attributes to extract additional attributes from LDAP servers required for Citrix Cloud operations
 	*/
 	Cloudattributes string `json:"cloudattributes,omitempty"`
+	/**
+	* This feature configures NetScaler management access to use LDAP exclusively for retrieving user group information. It ensures that LDAP is not used for authenticating user logins (i.e., verifying passwords) for NetScaler management access.
+	*/
+	Passwordlessmgmtaccess string `json:"passwordlessmgmtaccess,omitempty"`
 
 	//------- Read only Parameter ---------;
 
+	Ldapcontimeout string `json:"ldapcontimeout,omitempty"`
 	Success string `json:"success,omitempty"`
 	Failure string `json:"failure,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`

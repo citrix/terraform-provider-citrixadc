@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Step 1 creates the parent appfwprofile and binds a gRPC validation relaxation
@@ -317,6 +317,34 @@ func TestAccAppfwprofileGrpcvalidationBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_grpcvalidation_binding.tf_appfwprofile_grpcvalidation_binding", "grpcvalidation", "bookstore.api.doc.AddBook"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_grpcvalidation_binding.tf_appfwprofile_grpcvalidation_binding", "grpc_relax_validation_action", "log"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofileGrpcvalidationBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_grpcvalidation_binding.tf_appfwprofile_grpcvalidation_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileGrpcvalidationBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileGrpcvalidationBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileGrpcvalidationBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_grpcvalidation_binding.Type(), "tf_appfwprofile_grpcvalidation", map[string]string{"grpcvalidation": "bookstore.api.doc.AddBook", "grpc_relax_validation_action": "log"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileGrpcvalidationBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileGrpcvalidationBindingExist(resAddr, nil)),
 			},
 		},
 	})

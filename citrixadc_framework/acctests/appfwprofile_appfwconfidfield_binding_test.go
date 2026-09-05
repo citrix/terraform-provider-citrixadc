@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Step 1 creates the parent appfwprofile and binds a confidential field to it.
@@ -312,6 +312,37 @@ func TestAccAppfwprofileAppfwconfidfieldBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_appfwconfidfield_binding.tf_appfwprofile_appfwconfidfield_binding", "confidfield", "tf_confidfield"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_appfwconfidfield_binding.tf_appfwprofile_appfwconfidfield_binding", "cffield_url", "http://www.example.com"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAppfwprofileAppfwconfidfieldBinding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band on the ADC, the next refresh's Read must
+// detect it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwprofileAppfwconfidfieldBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_appfwconfidfield_binding.tf_appfwprofile_appfwconfidfield_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileAppfwconfidfieldBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileAppfwconfidfieldBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileAppfwconfidfieldBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_appfwconfidfield_binding.Type(), "tf_appfwprofile_confidfield", map[string]string{"cffield_url": utils.UrlEncode("http://www.example.com"), "confidfield": "tf_confidfield"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileAppfwconfidfieldBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileAppfwconfidfieldBindingExist(resAddr, nil)),
 			},
 		},
 	})

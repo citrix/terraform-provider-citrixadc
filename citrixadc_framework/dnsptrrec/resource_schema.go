@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -46,7 +45,9 @@ func (r *DnsptrrecResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Subnet for which the cached PTR record need to be removed.",
 			},
@@ -54,7 +55,9 @@ func (r *DnsptrrecResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique number that identifies the cluster node.",
 			},
@@ -67,10 +70,12 @@ func (r *DnsptrrecResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"ttl": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(3600),
 				Description: "Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.",
 			},
 		},
@@ -82,19 +87,19 @@ func dnsptrrecGetThePayloadFromtheConfig(ctx context.Context, data *DnsptrrecRes
 
 	// Create API request body from the model
 	dnsptrrec := dns.Dnsptrrec{}
-	if !data.Domain.IsNull() {
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		dnsptrrec.Domain = data.Domain.ValueString()
 	}
-	if !data.Ecssubnet.IsNull() {
+	if !data.Ecssubnet.IsNull() && !data.Ecssubnet.IsUnknown() {
 		dnsptrrec.Ecssubnet = data.Ecssubnet.ValueString()
 	}
-	if !data.Nodeid.IsNull() {
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		dnsptrrec.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
-	if !data.Reversedomain.IsNull() {
+	if !data.Reversedomain.IsNull() && !data.Reversedomain.IsUnknown() {
 		dnsptrrec.Reversedomain = data.Reversedomain.ValueString()
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnsptrrec.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 
@@ -104,39 +109,41 @@ func dnsptrrecGetThePayloadFromtheConfig(ctx context.Context, data *DnsptrrecRes
 func dnsptrrecSetAttrFromGet(ctx context.Context, data *DnsptrrecResourceModel, getResponseData map[string]interface{}) *DnsptrrecResourceModel {
 	tflog.Debug(ctx, "In dnsptrrecSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// domain and reversedomain are Required (never Computed); only overwrite when the
+	// GET actually returns them so a configured value is never nulled.
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
-		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecssubnet.IsUnknown() {
+		// NITRO omits ecssubnet from GET when unset; only null it when the value is
+		// still unknown (fresh create/import) so a configured value is preserved.
 		data.Ecssubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
+		// NITRO omits nodeid (default 0) from GET when unset; only null it when the
+		// value is still unknown so a configured 0 is preserved.
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["reversedomain"]; ok && val != nil {
 		data.Reversedomain = types.StringValue(val.(string))
-	} else {
-		data.Reversedomain = types.StringNull()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Use reversedomain as ID
+	// Single unique attribute (reversedomain) - use plain value as ID
 	data.Id = types.StringValue(data.Reversedomain.ValueString())
 
 	return data

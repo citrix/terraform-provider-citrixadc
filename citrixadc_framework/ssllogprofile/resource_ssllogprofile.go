@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SsllogprofileResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating ssllogprofile resource")
 
-	// ssllogprofile := ssllogprofileGetThePayloadFromtheConfig(ctx, &data)
+	ssllogprofile := ssllogprofileGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ssllogprofile.Type(), &ssllogprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ssllogprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("ssllogprofile-config")
+	// Named resource - use AddResource
+	ssllogprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Ssllogprofile.Type(), ssllogprofileName, &ssllogprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ssllogprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created ssllogprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(ssllogprofileName)
+
 	// Read the updated state back
-	r.readSsllogprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSsllogprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ssllogprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,108 @@ func (r *SsllogprofileResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading ssllogprofile resource")
 
-	r.readSsllogprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSsllogprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SsllogprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SsllogprofileResourceModel
+	var data, config, state SsllogprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating ssllogprofile resource")
 
-	// Create API request body from the model
-	// ssllogprofile := ssllogprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	// (name is ForceNew/RequiresReplace and never reaches Update)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Ssllogclauth.Equal(state.Ssllogclauth) {
+		tflog.Debug(ctx, "ssllogclauth has changed for ssllogprofile")
+		if config.Ssllogclauth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssllogclauth")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ssllogclauthfailures.Equal(state.Ssllogclauthfailures) {
+		tflog.Debug(ctx, "ssllogclauthfailures has changed for ssllogprofile")
+		if config.Ssllogclauthfailures.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssllogclauthfailures")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Sslloghs.Equal(state.Sslloghs) {
+		tflog.Debug(ctx, "sslloghs has changed for ssllogprofile")
+		if config.Sslloghs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslloghs")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Sslloghsfailures.Equal(state.Sslloghsfailures) {
+		tflog.Debug(ctx, "sslloghsfailures has changed for ssllogprofile")
+		if config.Sslloghsfailures.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslloghsfailures")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ssllogprofile.Type(), &ssllogprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ssllogprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		ssllogprofile := ssllogprofileGetThePayloadFromtheConfig(ctx, &data)
+		// Named resource - use UpdateResource
+		ssllogprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Ssllogprofile.Type(), ssllogprofileName, &ssllogprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ssllogprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated ssllogprofile resource")
+		tflog.Trace(ctx, "Updated ssllogprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ssllogprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ssllogprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ssllogprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readSsllogprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSsllogprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ssllogprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +214,33 @@ func (r *SsllogprofileResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting ssllogprofile resource")
 
-	// For ssllogprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted ssllogprofile resource from state")
+	// Named resource - delete using DeleteResource
+	ssllogprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Ssllogprofile.Type(), ssllogprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete ssllogprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted ssllogprofile resource")
 }
 
 // Helper function to read ssllogprofile data from API
-func (r *SsllogprofileResource) readSsllogprofileFromApi(ctx context.Context, data *SsllogprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Ssllogprofile.Type(), "")
+func (r *SsllogprofileResource) readSsllogprofileFromApi(ctx context.Context, data *SsllogprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	ssllogprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Ssllogprofile.Type(), ssllogprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read ssllogprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	ssllogprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

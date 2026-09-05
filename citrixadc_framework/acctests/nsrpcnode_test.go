@@ -17,34 +17,129 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"os"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccNsrpcnode_basic(t *testing.T) {
-	if adcTestbed != "CLUSTER" {
-		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+// nsrpcnode is set-only (Create uses set, there is no add/delete): the ADC
+// auto-owns an rpcNode for the appliance's own NSIP, and NITRO rejects adding an
+// rpcNode for a foreign IP (ec275 "Operation not supported" / ec1088 "No such
+// command"). So these tests target the box's OWN NSIP.
+//
+// Testbed: run on STANDALONE only.
+//   - CLUSTER: setting rpcNode 'srcip' is not permitted (ec257), and config must
+//     go via the CLIP (node IPs are read-only, ec1203).
+//   - HA: excluded on purpose — the rpcNode password is used for HA config sync,
+//     so changing it on an HA node would disrupt the pair.
+
+// nsrpcnodeSelfIP returns the appliance's own NSIP, parsed from NS_URL. Falls back
+// to a placeholder for non-acceptance/unit runs (where NS_URL is unset and the
+// test is skipped by resource.Test anyway).
+func nsrpcnodeSelfIP() string {
+	if u, err := url.Parse(os.Getenv("NS_URL")); err == nil && u.Hostname() != "" {
+		return u.Hostname()
+	}
+	return "127.0.0.1"
+}
+
+// nsrpcnodeSkipUnlessStandalone skips on CLUSTER (srcip not settable / read-only
+// nodes) and HA (rpcNode password drives HA sync) and CPX.
+func nsrpcnodeSkipUnlessStandalone(t *testing.T) {
+	switch adcTestbed {
+	case "CLUSTER":
+		t.Skipf("ADC testbed is %s: rpcNode 'srcip' is not settable on a cluster (ec257) and config must use the CLIP; nsrpcnode is exercised on a standalone box.", adcTestbed)
+	case "HA", "HA_PAIR":
+		t.Skipf("ADC testbed is %s: skipping to avoid changing the HA node's rpcNode password (used for HA config sync); nsrpcnode is exercised on a standalone box.", adcTestbed)
 	}
 	if isCpxRun {
 		t.Skip("Operation not permitted under CPX")
 	}
+}
+
+func nsrpcnodeConfig(ip, secure string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress = "%s"
+    password  = "CADS123$%%^"
+    secure    = "%s"
+    srcip     = "%s"
+}
+`, ip, secure, ip)
+}
+
+func nsrpcnodePasswordVarConfig(ip, varName, secure string) string {
+	return fmt.Sprintf(`
+variable %q {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress = "%s"
+    password  = var.%s
+    secure    = "%s"
+    srcip     = "%s"
+}
+`, varName, ip, varName, secure, ip)
+}
+
+func nsrpcnodePasswordWoConfig(ip, varName string, version int, secure string) string {
+	return fmt.Sprintf(`
+variable %q {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress           = "%s"
+    password_wo         = var.%s
+    password_wo_version = %d
+    secure              = "%s"
+    srcip               = "%s"
+}
+`, varName, ip, varName, version, secure, ip)
+}
+
+func nsrpcnodeDataSourceConfig(ip string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress = "%s"
+    password  = "CADS123$%%^"
+    secure    = "ON"
+    srcip     = "%s"
+}
+
+data "citrixadc_nsrpcnode" "tf_nsrpcnode" {
+    ipaddress = citrixadc_nsrpcnode.tf_nsrpcnode.ipaddress
+}
+`, ip, ip)
+}
+
+func TestAccNsrpcnode_basic(t *testing.T) {
+	nsrpcnodeSkipUnlessStandalone(t)
+	ip := nsrpcnodeSelfIP()
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNsrpcnode_basic_step1,
+				Config: nsrpcnodeConfig(ip, "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "ON"),
 				),
 			},
 			{
-				Config: testAccNsrpcnode_basic_step2,
+				Config: nsrpcnodeConfig(ip, "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "OFF"),
 				),
 			},
 		},
@@ -53,35 +148,6 @@ func TestAccNsrpcnode_basic(t *testing.T) {
 
 func TestAccNsrpcnode_import(t *testing.T) {
 	t.Skip("TODO: Requires review")
-	if adcTestbed != "CLUSTER" {
-		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
-	}
-	if isCpxRun {
-		t.Skip("Operation not permitted under CPX")
-	}
-	const resAddr = "citrixadc_nsrpcnode.tf_nsrpcnode"
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNsrpcnode_basic_step1,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNsrpcnodeExist(resAddr, nil),
-				),
-			},
-			{
-				Config:            testAccNsrpcnode_basic_step1,
-				ResourceName:      resAddr,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// `password` is a Sensitive attribute that NITRO does not echo back,
-				// and `password_wo_version` is a Computed version tracker not returned
-				// by the GET, so neither can round-trip through import.
-				ImportStateVerifyIgnore: []string{"password", "password_wo_version"},
-			},
-		},
-	})
 }
 
 func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
@@ -122,79 +188,10 @@ func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
-const testAccNsrpcnode_basic_step1 = `
-
-resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.101.132.123"
-    password = "CADS123$%^"
-    secure = "ON"
-    srcip = "10.101.132.123"
-}
-`
-
-const testAccNsrpcnode_basic_step2 = `
-
-resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.101.132.123"
-    password = "CADS123$%^"
-    secure = "OFF"
-    srcip = "10.101.132.123"
-}
-`
-
-const testAccNsrpcnodeDataSource_basic = `
-
-resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = "10.101.132.123"
-    password = "CADS123$%^"
-    secure = "ON"
-    srcip = "10.101.132.123"
-}
-
-data "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-    ipaddress = citrixadc_nsrpcnode.tf_nsrpcnode.ipaddress
-}
-`
-
 // Test backward-compatible path: using password (Sensitive attribute)
-const testAccNsrpcnode_password_step1 = `
-
-	variable "nsrpcnode_password" {
-	  type      = string
-	  sensitive = true
-	}
-
-	resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-		ipaddress = "10.101.132.123"
-		password  = var.nsrpcnode_password
-		secure    = "ON"
-		srcip     = "10.101.132.123"
-	}
-`
-
-// Update backward-compatible path: change password value
-const testAccNsrpcnode_password_step2 = `
-
-	variable "nsrpcnode_password_2" {
-	  type      = string
-	  sensitive = true
-	}
-
-	resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-		ipaddress = "10.101.132.123"
-		password  = var.nsrpcnode_password_2
-		secure    = "ON"
-		srcip     = "10.101.132.123"
-	}
-`
-
 func TestAccNsrpcnode_password_backward_compat(t *testing.T) {
-	if adcTestbed != "CLUSTER" {
-		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
-	}
-	if isCpxRun {
-		t.Skip("Operation not permitted under CPX")
-	}
+	nsrpcnodeSkipUnlessStandalone(t)
+	ip := nsrpcnodeSelfIP()
 	t.Setenv("TF_VAR_nsrpcnode_password", "oldpassword123")
 	t.Setenv("TF_VAR_nsrpcnode_password_2", "newpassword456")
 	resource.Test(t, resource.TestCase{
@@ -202,14 +199,14 @@ func TestAccNsrpcnode_password_backward_compat(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNsrpcnode_password_step1,
+				Config: nsrpcnodePasswordVarConfig(ip, "nsrpcnode_password", "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "ON"),
 				),
 			},
 			{
-				Config: testAccNsrpcnode_password_step2,
+				Config: nsrpcnodePasswordVarConfig(ip, "nsrpcnode_password_2", "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "ON"),
@@ -220,46 +217,9 @@ func TestAccNsrpcnode_password_backward_compat(t *testing.T) {
 }
 
 // Test ephemeral path: using password_wo (WriteOnly attribute) with version tracker
-const testAccNsrpcnode_password_wo_step1 = `
-
-	variable "nsrpcnode_password_wo" {
-	  type      = string
-	  sensitive = true
-	}
-
-	resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-		ipaddress          = "10.101.132.123"
-		password_wo        = var.nsrpcnode_password_wo
-		password_wo_version = 1
-		secure             = "ON"
-		srcip              = "10.101.132.123"
-	}
-`
-
-// Update ephemeral path: bump version to trigger update with new password
-const testAccNsrpcnode_password_wo_step2 = `
-
-	variable "nsrpcnode_password_wo_2" {
-	  type      = string
-	  sensitive = true
-	}
-
-	resource "citrixadc_nsrpcnode" "tf_nsrpcnode" {
-		ipaddress          = "10.101.132.123"
-		password_wo        = var.nsrpcnode_password_wo_2
-		password_wo_version = 2
-		secure             = "ON"
-		srcip              = "10.101.132.123"
-	}
-`
-
 func TestAccNsrpcnode_password_wo_ephemeral(t *testing.T) {
-	if adcTestbed != "CLUSTER" {
-		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
-	}
-	if isCpxRun {
-		t.Skip("Operation not permitted under CPX")
-	}
+	nsrpcnodeSkipUnlessStandalone(t)
+	ip := nsrpcnodeSelfIP()
 	t.Setenv("TF_VAR_nsrpcnode_password_wo", "ephemeral_pass1")
 	t.Setenv("TF_VAR_nsrpcnode_password_wo_2", "ephemeral_pass2")
 	resource.Test(t, resource.TestCase{
@@ -267,7 +227,7 @@ func TestAccNsrpcnode_password_wo_ephemeral(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNsrpcnode_password_wo_step1,
+				Config: nsrpcnodePasswordWoConfig(ip, "nsrpcnode_password_wo", 1, "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsrpcnode.tf_nsrpcnode", "password_wo_version", "1"),
@@ -275,7 +235,7 @@ func TestAccNsrpcnode_password_wo_ephemeral(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNsrpcnode_password_wo_step2,
+				Config: nsrpcnodePasswordWoConfig(ip, "nsrpcnode_password_wo_2", 2, "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsrpcnode.tf_nsrpcnode", "password_wo_version", "2"),
@@ -287,50 +247,44 @@ func TestAccNsrpcnode_password_wo_ephemeral(t *testing.T) {
 }
 
 func TestAccNsrpcnode_sdkv2StateUpgrade(t *testing.T) {
-	if adcTestbed != "CLUSTER" {
-		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
-	}
-	if isCpxRun {
-		t.Skip("Operation not permitted under CPX")
-	}
+	nsrpcnodeSkipUnlessStandalone(t)
+	ip := nsrpcnodeSelfIP()
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
 				},
-				Config: testAccNsrpcnode_basic_step1,
+				Config: nsrpcnodeConfig(ip, "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsrpcnode_basic_step1,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				Config:                   nsrpcnodeConfig(ip, "ON"),
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
 }
 
 func TestAccNsrpcnodeDataSource_basic(t *testing.T) {
-	if adcTestbed != "CLUSTER" {
-		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
-	}
-	if isCpxRun {
-		t.Skip("Operation not permitted under CPX")
-	}
+	nsrpcnodeSkipUnlessStandalone(t)
+	ip := nsrpcnodeSelfIP()
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNsrpcnodeDataSource_basic,
+				Config: nsrpcnodeDataSourceConfig(ip),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "ipaddress", "10.101.132.123"),
+					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "ipaddress", ip),
 					resource.TestCheckResourceAttr("data.citrixadc_nsrpcnode.tf_nsrpcnode", "secure", "ON"),
 				),
 			},

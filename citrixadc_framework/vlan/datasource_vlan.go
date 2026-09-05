@@ -35,7 +35,7 @@ func (d *VlanDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 }
 
 func (d *VlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VlanResourceModel
+	var data VlanDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	vlanSetAttrFromGet(ctx, &data, getResponseData)
+	vlanDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

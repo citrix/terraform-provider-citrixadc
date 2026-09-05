@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *CsvserverAnalyticsprofileBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the csvserver_analyticsprofile_binding resource.",
 			},
 			"analyticsprofile": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the analytics profile bound to the LB vserver.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the content switching virtual server to which the content switching policy applies.",
 			},
 		},
 	}
 }
 
-func csvserver_analyticsprofile_bindingGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverAnalyticsprofileBindingResourceModel) cs.Csvserveranalyticsprofilebinding {
-	tflog.Debug(ctx, "In csvserver_analyticsprofile_bindingGetThePayloadFromtheConfig Function")
+func csvserver_analyticsprofile_bindingGetThePayloadFromthePlan(ctx context.Context, data *CsvserverAnalyticsprofileBindingResourceModel) cs.Csvserveranalyticsprofilebinding {
+	tflog.Debug(ctx, "In csvserver_analyticsprofile_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	csvserver_analyticsprofile_binding := cs.Csvserveranalyticsprofilebinding{}
-	if !data.Analyticsprofile.IsNull() {
+	if !data.Analyticsprofile.IsNull() && !data.Analyticsprofile.IsUnknown() {
 		csvserver_analyticsprofile_binding.Analyticsprofile = data.Analyticsprofile.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		csvserver_analyticsprofile_binding.Name = data.Name.ValueString()
 	}
 

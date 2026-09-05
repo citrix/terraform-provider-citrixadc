@@ -6,7 +6,7 @@ subcategory: "NS"
 
 The nstrafficdomain_vxlan_binding data source allows you to retrieve information about the binding between a traffic domain and a VXLAN.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_nstrafficdomain_vxlan_binding" "tf_binding" {

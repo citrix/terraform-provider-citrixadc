@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnclient_nsacl6_binding_basic = `
@@ -95,10 +98,12 @@ func testAccCheckLsnclient_nsacl6_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		clientname := idSlice[0]
-		acl6name := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"clientname", "acl6name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		clientname := idMap["clientname"]
+		acl6name := idMap["acl6name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnclient_nsacl6_binding",
@@ -137,13 +142,12 @@ func testAccCheckLsnclient_nsacl6_bindingNotExist(n string, id string) resource.
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"clientname", "acl6name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		clientname := idSlice[0]
-		acl6name := idSlice[1]
+		clientname := idMap["clientname"]
+		acl6name := idMap["acl6name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsnclient_nsacl6_binding",
@@ -233,6 +237,132 @@ func TestAccLsnclient_nsacl6_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "clientname", "my_lsn_client"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "acl6name", "my_acl6"),
 				),
+			},
+		},
+	})
+}
+
+const testAccLsnclient_nsacl6_binding_upgrade_basic = `
+
+resource "citrixadc_lsnclient" "tf_lsnclient" {
+	clientname = "my_lsn_client"
+}
+
+resource "citrixadc_nsacl6" "tf_nsacl6" {
+	acl6name   = "my_acl6"
+	acl6action = "ALLOW"
+}
+
+resource "citrixadc_lsnclient_nsacl6_binding" "tf_lsnclient_nsacl6_binding" {
+	clientname = citrixadc_lsnclient.tf_lsnclient.clientname
+	acl6name   = citrixadc_nsacl6.tf_nsacl6.acl6name
+}
+`
+
+func TestAccLsnclient_nsacl6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnclient_nsacl6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource with the last SDK v2 release (2.2.0),
+			// which writes state using the legacy comma-separated ID format.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLsnclient_nsacl6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_nsacl6_bindingExist("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "id", "my_lsn_client,my_acl6"),
+				),
+			},
+			// Step 2: refresh the legacy-ID state through the current (Framework)
+			// provider. Read parses the legacy ID via ParseIdString and recomputes
+			// the ID into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnclient_nsacl6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnclient_nsacl6_bindingExist("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding", "id", "acl6name:my_acl6,clientname:my_lsn_client"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLsnclient_nsacl6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: clientname,acl6name) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"clientname", "acl6name"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_nsacl6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnclient_nsacl6_binding_basic},
+			{Config: testAccLsnclient_nsacl6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccLsnclient_nsacl6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccLsnclient_nsacl6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_nsacl6_binding.tf_lsnclient_nsacl6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_nsacl6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_nsacl6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_nsacl6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsnclient_nsacl6_binding.Type(), "my_lsn_client", map[string]string{"acl6name": "my_acl6"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnclient_nsacl6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_nsacl6_bindingExist(resAddr, nil)),
 			},
 		},
 	})

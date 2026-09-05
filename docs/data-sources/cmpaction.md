@@ -43,11 +43,10 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 * `varyheadervalue` - The value of the HTTP Vary header for compressed responses.
 
+### Read-only cmpaction metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cmpaction` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
 
-A cmpaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_cmpaction.tf_cmpaction my_cmpaction
-```
+* `builtin` - Flag to determine whether compression is default or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `isdefault` - A value of true is returned if it is a default policy.

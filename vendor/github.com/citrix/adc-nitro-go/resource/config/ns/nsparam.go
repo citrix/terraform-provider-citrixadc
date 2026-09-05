@@ -27,11 +27,11 @@ type Nsparam struct {
 	/**
 	* Maximum number of connections that will be made from the appliance to the web server(s) attached to it. The value entered here is applied globally to all attached servers.
 	*/
-	Maxconn *int `json:"maxconn"` // Zero is a valid value
+	Maxconn *int `json:"maxconn,omitempty"`
 	/**
 	* Maximum number of requests that the system can pass on a particular connection between the appliance and a server attached to it. Setting this value to 0 allows an unlimited number of requests to be passed. This value is overridden by the maximum number of requests configured on the individual service.
 	*/
-	Maxreq *int `json:"maxreq"` // Zero is a valid value
+	Maxreq *int `json:"maxreq,omitempty"`
 	/**
 	* Enable or disable the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.
 		* If the CIP header is specified, it will be used as the client IP header.
@@ -45,7 +45,7 @@ type Nsparam struct {
 	/**
 	* Version of the cookie inserted by the system.
 	*/
-	Cookieversion string `json:"cookieversion"` // Zero is a valid value
+	Cookieversion string `json:"cookieversion,omitempty"`
 	/**
 	* Enable or disable secure flag for persistence cookie.
 	*/
@@ -74,11 +74,11 @@ type Nsparam struct {
 	* Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining maxclient quota after distribution of exclusive quota to PEs.
 		Example: In a 2 PE NetScaler system if configured maxclient is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.
 	*/
-	Grantquotamaxclient *int `json:"grantquotamaxclient"` // Zero is a valid value
+	Grantquotamaxclient *int `json:"grantquotamaxclient,omitempty"`
 	/**
 	* Percentage of maxClient threshold to be divided equally among PEs.
 	*/
-	Exclusivequotamaxclient *int `json:"exclusivequotamaxclient"` // Zero is a valid value
+	Exclusivequotamaxclient *int `json:"exclusivequotamaxclient,omitempty"`
 	/**
 	* Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining spillover quota after distribution of exclusive quota to PEs.
 		Example: In a 2 PE NetScaler system if configured spillover is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.
@@ -87,7 +87,7 @@ type Nsparam struct {
 	/**
 	* Percentage of spillover threshold to be divided equally among PEs.
 	*/
-	Exclusivequotaspillover *int `json:"exclusivequotaspillover"` // Zero is a valid value
+	Exclusivequotaspillover *int `json:"exclusivequotaspillover,omitempty"`
 	/**
 	* Enable/Disable use_proxy_port setting
 	*/
@@ -140,6 +140,7 @@ type Nsparam struct {
 
 	//------- Read only Parameter ---------;
 
-	Autoscaleoption    string `json:"autoscaleoption,omitempty"`
+	Autoscaleoption string `json:"autoscaleoption,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

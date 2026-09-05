@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPolicydataset_value_binding_basic(t *testing.T) {
@@ -74,10 +77,12 @@ func testAccCheckPolicydatasetValue(n string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		name := idSlice[0]
-		value := idSlice[1]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "value"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		name := idMap["name"]
+		value := idMap["value"]
 
 		findParams := service.FindParams{
 			ResourceType:             "policydataset_value_binding",
@@ -237,6 +242,154 @@ func TestAccPolicydataset_value_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "value", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "index", "111"),
 					resource.TestCheckResourceAttr("data.citrixadc_policydataset_value_binding.tf_value1", "endrange", "150"),
+				),
+			},
+		},
+	})
+}
+
+// testAccPolicydataset_value_binding_upgrade_basic mirrors the tf_value1 entry from
+// _basic_step1 (a policydataset parent plus a single value binding). It is valid
+// under BOTH the SDK v2 2.2.0 schema and the current framework schema, so it can be
+// created with the old provider in step 1 and re-planned with the new provider in
+// step 2 of the state-upgrade test below.
+const testAccPolicydataset_value_binding_upgrade_basic = `
+resource "citrixadc_policydataset" "tf_dataset" {
+  name    = "tf_dataset"
+  type    = "number"
+  comment = "hello"
+}
+
+resource "citrixadc_policydataset_value_binding" "tf_value1" {
+  name = citrixadc_policydataset.tf_dataset.name
+
+  value    = 100
+  index    = 111
+  endrange = 150
+}
+`
+
+func TestAccPolicydataset_value_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_policydataset_value_binding.tf_value1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,value) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "value"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicydataset_value_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicydataset_value_binding_basic_step1},
+			{Config: testAccPolicydataset_value_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccPolicydataset_value_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccPolicydataset_value_binding_sdkv2StateUpgrade verifies that a binding
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy comma-joined
+// id "name,value" — is refreshed and re-applied correctly by the CURRENT framework
+// provider. Step 2 exercises ParseIdString on the legacy id during the framework
+// Read; the framework SetAttrFromGet then recomputes data.Id into the canonical new
+// "key:value" format, so the id upgrades in place.
+func TestAccPolicydataset_value_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicydataset_value_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id "name,value".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccPolicydataset_value_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value1"),
+					resource.TestCheckResourceAttr("citrixadc_policydataset_value_binding.tf_value1", "id", "tf_dataset,100"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id), then plans/applies. SetAttrFromGet
+			// recomputes the id to the new "key:value" format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicydataset_value_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value1"),
+					resource.TestCheckResourceAttr("citrixadc_policydataset_value_binding.tf_value1", "id", "endrange:150,name:tf_dataset,value:100"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPolicydataset_value_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policydataset_value_binding.tf_value1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicydataset_value_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicydataset_value_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue(resAddr),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value2"),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// Delete the tf_value1 binding out of band (value=100, endrange=150).
+					if err := client.DeleteResourceWithArgsMap(service.Policydataset_value_binding.Type(), "tf_dataset", map[string]string{"endrange": "150", "value": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicydataset_value_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue(resAddr),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value2"),
 				),
 			},
 		},

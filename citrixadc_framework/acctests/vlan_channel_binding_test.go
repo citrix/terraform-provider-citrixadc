@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVlan_channel_binding_basic = `
@@ -77,6 +80,60 @@ func TestAccVlan_channel_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccVlan_channel_binding_upgrade_basic = `
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid = 2
+	}
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/3"
+		tagall     = "ON"
+		speed      = "1000"
+	}
+	resource "citrixadc_vlan_channel_binding" "tf_vlan_channel_binding" {
+		vlanid = citrixadc_vlan.tf_vlan.vlanid
+		ifnum  = citrixadc_channel.tf_channel.channel_id
+		tagged = false
+	}
+`
+
+func TestAccVlan_channel_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlan_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVlan_channel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_channel_bindingExist("citrixadc_vlan_channel_binding.tf_vlan_channel_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "id", "2,LA/3"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVlan_channel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_channel_bindingExist("citrixadc_vlan_channel_binding.tf_vlan_channel_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "id", "vlanid:2,ifnum:LA%2F3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVlan_channel_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -104,10 +161,12 @@ func testAccCheckVlan_channel_bindingExist(n string, id *string) resource.TestCh
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vlanid := idSlice[0]
-		ifnum := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vlanid", "ifnum"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		vlanid := idMap["vlanid"]
+		ifnum := idMap["ifnum"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vlan_channel_binding",
@@ -199,9 +258,26 @@ func testAccCheckVlan_channel_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Vlan_channel_binding.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("vlan_channel_binding %s still exists", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vlanid", "ifnum"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", rs.Primary.ID, err)
+		}
+		vlanid := idMap["vlanid"]
+		ifnum := idMap["ifnum"]
+
+		findParams := service.FindParams{
+			ResourceType:             service.Vlan_channel_binding.Type(),
+			ResourceName:             vlanid,
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			continue
+		}
+		for _, v := range dataArr {
+			if val, ok := v["ifnum"].(string); ok && val == ifnum {
+				return fmt.Errorf("vlan_channel_binding %s still exists", rs.Primary.ID)
+			}
 		}
 
 	}
@@ -244,6 +320,77 @@ func TestAccVlan_channel_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "ifnum", "LA/3"),
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "tagged", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVlan_channel_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan_channel_binding.tf_vlan_channel_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: vlanid,ifnum) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"vlanid", "ifnum"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_channel_binding_basic},
+			{Config: testAccVlan_channel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccVlan_channel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVlan_channel_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan_channel_binding.tf_vlan_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_channel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_channel_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vlan_channel_binding.Type(), "2", []string{fmt.Sprintf("ifnum:%s", utils.UrlEncode("LA/3")), "tagged:false"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_channel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_channel_bindingExist(resAddr, nil)),
 			},
 		},
 	})

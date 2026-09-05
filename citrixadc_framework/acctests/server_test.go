@@ -29,12 +29,14 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -268,6 +270,150 @@ const testAccServerDataSource_basic = `
 	}
 `
 
+func TestAccServer_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_server.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Server.Type(), "test_server"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccServer_import(t *testing.T) {
+	const resAddr = "citrixadc_server.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccServer_basic},
+			{
+				Config:                  testAccServer_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccServer_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist("citrixadc_server.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist("citrixadc_server.foo", nil)),
+			},
+		},
+	})
+}
+
+// testAccCheckServerADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An attribute NITRO omits from GET (its default) is treated as "".
+func testAccCheckServerADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Server.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("server %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("server %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+const testAccServer_unset_step1 = `
+resource "citrixadc_server" "tf_unset" {
+	name      = "tf_test_server_unset"
+	ipaddress = "192.168.77.61"
+	comment   = "unset test comment"
+}
+`
+
+const testAccServer_unset_step2 = `
+resource "citrixadc_server" "tf_unset" {
+	name      = "tf_test_server_unset"
+	ipaddress = "192.168.77.61"
+	# comment removed from config -> the provider must unset it (revert to the
+	# NITRO default, empty).
+}
+`
+
+func TestAccServer_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccServer_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExist("citrixadc_server.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_server.tf_unset", "comment", "unset test comment"),
+					testAccCheckServerADCValue("tf_test_server_unset", "comment", "unset test comment"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: the appliance reverts to
+				// the documented NITRO default (empty) and the implicit post-apply
+				// plan must be empty.
+				Config: testAccServer_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExist("citrixadc_server.tf_unset", nil),
+					testAccCheckServerADCValue("tf_test_server_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccServerDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -279,6 +425,9 @@ func TestAccServerDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_server.tf_server", "name", "test_server_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_server.tf_server", "ipaddress", "192.168.11.14"),
+					// Read-only server metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_server.tf_server", "id"),
 				),
 			},
 		},

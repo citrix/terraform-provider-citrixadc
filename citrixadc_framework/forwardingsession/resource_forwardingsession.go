@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *ForwardingsessionResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating forwardingsession resource")
 
-	// forwardingsession := forwardingsessionGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	forwardingsession := forwardingsessionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Forwardingsession.Type(), &forwardingsession)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create forwardingsession, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("forwardingsession-config")
+	// Named resource - use AddResource
+	forwardingsessionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Forwardingsession.Type(), forwardingsessionName, &forwardingsession)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create forwardingsession, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created forwardingsession resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", forwardingsessionName))
+
 	// Read the updated state back
-	r.readForwardingsessionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readForwardingsessionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "forwardingsession not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *ForwardingsessionResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading forwardingsession resource")
 
-	r.readForwardingsessionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readForwardingsessionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ForwardingsessionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ForwardingsessionResourceModel
+	var data, state ForwardingsessionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,65 @@ func (r *ForwardingsessionResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating forwardingsession resource")
 
-	// Create API request body from the model
-	// forwardingsession := forwardingsessionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Acl6name.Equal(state.Acl6name) {
+		tflog.Debug(ctx, "acl6name has changed for forwardingsession")
+		hasChange = true
+	}
+	if !data.Aclname.Equal(state.Aclname) {
+		tflog.Debug(ctx, "aclname has changed for forwardingsession")
+		hasChange = true
+	}
+	if !data.Connfailover.Equal(state.Connfailover) {
+		tflog.Debug(ctx, "connfailover has changed for forwardingsession")
+		hasChange = true
+	}
+	if !data.Processlocal.Equal(state.Processlocal) {
+		tflog.Debug(ctx, "processlocal has changed for forwardingsession")
+		hasChange = true
+	}
+	if !data.Sourceroutecache.Equal(state.Sourceroutecache) {
+		tflog.Debug(ctx, "sourceroutecache has changed for forwardingsession")
+		hasChange = true
+	}
+	if !data.Td.Equal(state.Td) {
+		tflog.Debug(ctx, "td has changed for forwardingsession")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Forwardingsession.Type(), &forwardingsession)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update forwardingsession, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model, restricted to NITRO-updatable fields
+		// (excludes create-only params network, netmask, td).
+		forwardingsession := forwardingsessionGetTheUpdatePayloadFromThePlan(ctx, &data)
+		// Set the name key to the live id so the PUT addresses the existing resource.
+		forwardingsession.Name = data.Id.ValueString()
+		// Make API call
+		// Named resource - use UpdateResource
+		forwardingsessionName := data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Forwardingsession.Type(), forwardingsessionName, &forwardingsession)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update forwardingsession, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated forwardingsession resource")
+		tflog.Trace(ctx, "Updated forwardingsession resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for forwardingsession resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readForwardingsessionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readForwardingsessionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "forwardingsession not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +198,34 @@ func (r *ForwardingsessionResource) Delete(ctx context.Context, req resource.Del
 
 	tflog.Debug(ctx, "Deleting forwardingsession resource")
 
-	// For forwardingsession, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted forwardingsession resource from state")
+	// Named resource - delete using DeleteResource keyed on the live ID (name)
+	forwardingsessionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Forwardingsession.Type(), forwardingsessionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete forwardingsession, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted forwardingsession resource")
 }
 
-// Helper function to read forwardingsession data from API
-func (r *ForwardingsessionResource) readForwardingsessionFromApi(ctx context.Context, data *ForwardingsessionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Forwardingsession.Type(), "")
+// Helper function to read forwardingsession data from API.
+// Returns false (without an error diagnostic) when the resource no longer exists.
+func (r *ForwardingsessionResource) readForwardingsessionFromApi(ctx context.Context, data *ForwardingsessionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	forwardingsessionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Forwardingsession.Type(), forwardingsessionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read forwardingsession, got error: %s", err))
-		return
+		return false
 	}
 
 	forwardingsessionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

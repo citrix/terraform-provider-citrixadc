@@ -2,13 +2,11 @@ package dnsaaaarec
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -40,7 +38,9 @@ func (r *DnsaaaarecResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Subnet for which the cached records need to be removed.",
 			},
@@ -62,16 +62,20 @@ func (r *DnsaaaarecResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique number that identifies the cluster node.",
 			},
 			"ttl": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(3600),
 				Description: "Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.",
 			},
 		},
@@ -83,19 +87,19 @@ func dnsaaaarecGetThePayloadFromtheConfig(ctx context.Context, data *DnsaaaarecR
 
 	// Create API request body from the model
 	dnsaaaarec := dns.Dnsaaaarec{}
-	if !data.Ecssubnet.IsNull() {
+	if !data.Ecssubnet.IsNull() && !data.Ecssubnet.IsUnknown() {
 		dnsaaaarec.Ecssubnet = data.Ecssubnet.ValueString()
 	}
-	if !data.Hostname.IsNull() {
+	if !data.Hostname.IsNull() && !data.Hostname.IsUnknown() {
 		dnsaaaarec.Hostname = data.Hostname.ValueString()
 	}
-	if !data.Ipv6address.IsNull() {
+	if !data.Ipv6address.IsNull() && !data.Ipv6address.IsUnknown() {
 		dnsaaaarec.Ipv6address = data.Ipv6address.ValueString()
 	}
-	if !data.Nodeid.IsNull() {
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		dnsaaaarec.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnsaaaarec.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 
@@ -108,7 +112,10 @@ func dnsaaaarecSetAttrFromGet(ctx context.Context, data *DnsaaaarecResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecssubnet.IsUnknown() {
+		// ecssubnet is a cache-flush action parameter and is typically not returned
+		// by GET. Only null it when unresolved (create/import); otherwise preserve
+		// the configured value to avoid "inconsistent result after apply".
 		data.Ecssubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
@@ -125,19 +132,22 @@ func dnsaaaarecSetAttrFromGet(ctx context.Context, data *DnsaaaarecResourceModel
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
+		// nodeid default (0) is omitted from GET on non-cluster deployments.
+		// Preserve a configured/state value; only null when unresolved.
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Hostname.ValueString(), data.Ipv6address.ValueString()))
+	// Set ID for the resource.
+	// Single unique attribute (hostname) - use plain value as ID to preserve
+	// backward compatibility with the SDK v2 resource (d.SetId(hostname)).
+	data.Id = types.StringValue(data.Hostname.ValueString())
 	return data
 }

@@ -1,8 +1,91 @@
 package nstcpprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// NstcpprofileDataSourceModel is the data-source-specific model, decoupled from
+// NstcpprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// Every non-key attribute is Computed; the Framework's per-attribute model
+// <-> schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type NstcpprofileDataSourceModel struct {
+	Id                          types.String `tfsdk:"id"`
+	Ackaggregation              types.String `tfsdk:"ackaggregation"`
+	Ackonpush                   types.String `tfsdk:"ackonpush"`
+	Applyadaptivetcp            types.String `tfsdk:"applyadaptivetcp"`
+	Buffersize                  types.Int64  `tfsdk:"buffersize"`
+	Burstratecontrol            types.String `tfsdk:"burstratecontrol"`
+	Clientiptcpoption           types.String `tfsdk:"clientiptcpoption"`
+	Clientiptcpoptionnumber     types.Int64  `tfsdk:"clientiptcpoptionnumber"`
+	Delayedack                  types.Int64  `tfsdk:"delayedack"`
+	Dropestconnontimeout        types.String `tfsdk:"dropestconnontimeout"`
+	Drophalfclosedconnontimeout types.String `tfsdk:"drophalfclosedconnontimeout"`
+	Dsack                       types.String `tfsdk:"dsack"`
+	Dupackthresh                types.Int64  `tfsdk:"dupackthresh"`
+	Dynamicreceivebuffering     types.String `tfsdk:"dynamicreceivebuffering"`
+	Ecn                         types.String `tfsdk:"ecn"`
+	Establishclientconn         types.String `tfsdk:"establishclientconn"`
+	Fack                        types.String `tfsdk:"fack"`
+	Flavor                      types.String `tfsdk:"flavor"`
+	Frto                        types.String `tfsdk:"frto"`
+	Hystart                     types.String `tfsdk:"hystart"`
+	Initialcwnd                 types.Int64  `tfsdk:"initialcwnd"`
+	Ka                          types.String `tfsdk:"ka"`
+	Kaconnidletime              types.Int64  `tfsdk:"kaconnidletime"`
+	Kamaxprobes                 types.Int64  `tfsdk:"kamaxprobes"`
+	Kaprobeinterval             types.Int64  `tfsdk:"kaprobeinterval"`
+	Kaprobeupdatelastactivity   types.String `tfsdk:"kaprobeupdatelastactivity"`
+	Maxburst                    types.Int64  `tfsdk:"maxburst"`
+	Maxcwnd                     types.Int64  `tfsdk:"maxcwnd"`
+	Maxpktpermss                types.Int64  `tfsdk:"maxpktpermss"`
+	Minrto                      types.Int64  `tfsdk:"minrto"`
+	Mpcapablecbit               types.String `tfsdk:"mpcapablecbit"`
+	Mptcp                       types.String `tfsdk:"mptcp"`
+	Mptcpdropdataonpreestsf     types.String `tfsdk:"mptcpdropdataonpreestsf"`
+	Mptcpfastopen               types.String `tfsdk:"mptcpfastopen"`
+	Mptcpsessiontimeout         types.Int64  `tfsdk:"mptcpsessiontimeout"`
+	Mss                         types.Int64  `tfsdk:"mss"`
+	Nagle                       types.String `tfsdk:"nagle"`
+	Name                        types.String `tfsdk:"name"`
+	Oooqsize                    types.Int64  `tfsdk:"oooqsize"`
+	Pktperretx                  types.Int64  `tfsdk:"pktperretx"`
+	Rateqmax                    types.Int64  `tfsdk:"rateqmax"`
+	Rfc5961compliance           types.String `tfsdk:"rfc5961compliance"`
+	Rstmaxack                   types.String `tfsdk:"rstmaxack"`
+	Rstwindowattenuate          types.String `tfsdk:"rstwindowattenuate"`
+	Sack                        types.String `tfsdk:"sack"`
+	Sendbuffsize                types.Int64  `tfsdk:"sendbuffsize"`
+	Sendclientportintcpoption   types.String `tfsdk:"sendclientportintcpoption"`
+	Slowstartincr               types.Int64  `tfsdk:"slowstartincr"`
+	Slowstartthreshold          types.Int64  `tfsdk:"slowstartthreshold"`
+	Spoofsyndrop                types.String `tfsdk:"spoofsyndrop"`
+	Syncookie                   types.String `tfsdk:"syncookie"`
+	Taillossprobe               types.String `tfsdk:"taillossprobe"`
+	Tcpfastopen                 types.String `tfsdk:"tcpfastopen"`
+	Tcpfastopencookiesize       types.Int64  `tfsdk:"tcpfastopencookiesize"`
+	Tcpmode                     types.String `tfsdk:"tcpmode"`
+	Tcprate                     types.Int64  `tfsdk:"tcprate"`
+	Tcpsegoffload               types.String `tfsdk:"tcpsegoffload"`
+	Timestamp                   types.String `tfsdk:"timestamp"`
+	Ws                          types.String `tfsdk:"ws"`
+	Wsval                       types.Int64  `tfsdk:"wsval"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/nstcpprofile.json). Never settable; populated from GET.
+	Refcnt  types.Int64  `tfsdk:"refcnt"`
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func NstcpprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -304,6 +387,101 @@ func NstcpprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Factor used to calculate the new window size.\nThis argument is needed only when window scaling is enabled.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"refcnt": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of entities using this profile.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if tcp profile is built-in or not.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// nstcpprofileDataSourceSetAttrFromGet projects a NITRO nstcpprofile GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func nstcpprofileDataSourceSetAttrFromGet(ctx context.Context, data *NstcpprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nstcpprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Ackaggregation = utils.MapGetString(g, "ackaggregation")
+	data.Ackonpush = utils.MapGetString(g, "ackonpush")
+	data.Applyadaptivetcp = utils.MapGetString(g, "applyadaptivetcp")
+	data.Buffersize = utils.MapGetInt64(g, "buffersize")
+	data.Burstratecontrol = utils.MapGetString(g, "burstratecontrol")
+	data.Clientiptcpoption = utils.MapGetString(g, "clientiptcpoption")
+	data.Clientiptcpoptionnumber = utils.MapGetInt64(g, "clientiptcpoptionnumber")
+	data.Delayedack = utils.MapGetInt64(g, "delayedack")
+	data.Dropestconnontimeout = utils.MapGetString(g, "dropestconnontimeout")
+	data.Drophalfclosedconnontimeout = utils.MapGetString(g, "drophalfclosedconnontimeout")
+	data.Dsack = utils.MapGetString(g, "dsack")
+	data.Dupackthresh = utils.MapGetInt64(g, "dupackthresh")
+	data.Dynamicreceivebuffering = utils.MapGetString(g, "dynamicreceivebuffering")
+	data.Ecn = utils.MapGetString(g, "ecn")
+	data.Establishclientconn = utils.MapGetString(g, "establishclientconn")
+	data.Fack = utils.MapGetString(g, "fack")
+	data.Flavor = utils.MapGetString(g, "flavor")
+	data.Frto = utils.MapGetString(g, "frto")
+	data.Hystart = utils.MapGetString(g, "hystart")
+	data.Initialcwnd = utils.MapGetInt64(g, "initialcwnd")
+	data.Ka = utils.MapGetString(g, "ka")
+	data.Kaconnidletime = utils.MapGetInt64(g, "kaconnidletime")
+	data.Kamaxprobes = utils.MapGetInt64(g, "kamaxprobes")
+	data.Kaprobeinterval = utils.MapGetInt64(g, "kaprobeinterval")
+	data.Kaprobeupdatelastactivity = utils.MapGetString(g, "kaprobeupdatelastactivity")
+	data.Maxburst = utils.MapGetInt64(g, "maxburst")
+	data.Maxcwnd = utils.MapGetInt64(g, "maxcwnd")
+	data.Maxpktpermss = utils.MapGetInt64(g, "maxpktpermss")
+	data.Minrto = utils.MapGetInt64(g, "minrto")
+	data.Mpcapablecbit = utils.MapGetString(g, "mpcapablecbit")
+	data.Mptcp = utils.MapGetString(g, "mptcp")
+	data.Mptcpdropdataonpreestsf = utils.MapGetString(g, "mptcpdropdataonpreestsf")
+	data.Mptcpfastopen = utils.MapGetString(g, "mptcpfastopen")
+	data.Mptcpsessiontimeout = utils.MapGetInt64(g, "mptcpsessiontimeout")
+	data.Mss = utils.MapGetInt64(g, "mss")
+	data.Nagle = utils.MapGetString(g, "nagle")
+	data.Oooqsize = utils.MapGetInt64(g, "oooqsize")
+	data.Pktperretx = utils.MapGetInt64(g, "pktperretx")
+	data.Rateqmax = utils.MapGetInt64(g, "rateqmax")
+	data.Rfc5961compliance = utils.MapGetString(g, "rfc5961compliance")
+	data.Rstmaxack = utils.MapGetString(g, "rstmaxack")
+	data.Rstwindowattenuate = utils.MapGetString(g, "rstwindowattenuate")
+	data.Sack = utils.MapGetString(g, "sack")
+	data.Sendbuffsize = utils.MapGetInt64(g, "sendbuffsize")
+	data.Sendclientportintcpoption = utils.MapGetString(g, "sendclientportintcpoption")
+	data.Slowstartincr = utils.MapGetInt64(g, "slowstartincr")
+	data.Slowstartthreshold = utils.MapGetInt64(g, "slowstartthreshold")
+	data.Spoofsyndrop = utils.MapGetString(g, "spoofsyndrop")
+	data.Syncookie = utils.MapGetString(g, "syncookie")
+	data.Taillossprobe = utils.MapGetString(g, "taillossprobe")
+	data.Tcpfastopen = utils.MapGetString(g, "tcpfastopen")
+	data.Tcpfastopencookiesize = utils.MapGetInt64(g, "tcpfastopencookiesize")
+	data.Tcpmode = utils.MapGetString(g, "tcpmode")
+	data.Tcprate = utils.MapGetInt64(g, "tcprate")
+	data.Tcpsegoffload = utils.MapGetString(g, "tcpsegoffload")
+	data.Timestamp = utils.MapGetString(g, "timestamp")
+	data.Ws = utils.MapGetString(g, "ws")
+	data.Wsval = utils.MapGetInt64(g, "wsval")
+
+	// Read-only attributes.
+	data.Refcnt = utils.MapGetInt64(g, "refcnt")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

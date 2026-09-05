@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -31,20 +33,26 @@ func (r *VpnalwaysonprofileResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"clientcontrol": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DENY"),
 				Description: "Allow/Deny user to log off and connect to another Gateway",
 			},
 			"locationbasedvpn": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("Remote"),
 				Description: "Option to decide if tunnel should be established when in enterprise network. When locationBasedVPN is remote, client tries to detect if it is located in enterprise network or not and establishes the tunnel if not in enterprise network. Dns suffixes configured using -add dns suffix- are used to decide if the client is in the enterprise network or not. If the resolution of the DNS suffix results in private IP, client is said to be in enterprise network. When set to EveryWhere, the client skips the check to detect if it is on the enterprise network and tries to establish the tunnel",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "name of AlwaysON profile",
 			},
 			"networkaccessonvpnfailure": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("fullAccess"),
 				Description: "Option to block network traffic when tunnel is not established(and the config requires that tunnel be established). When set to onlyToGateway, the network traffic to and from the client (except Gateway IP) is blocked. When set to fullAccess, the network traffic is not blocked",
 			},
@@ -57,16 +65,16 @@ func vpnalwaysonprofileGetThePayloadFromtheConfig(ctx context.Context, data *Vpn
 
 	// Create API request body from the model
 	vpnalwaysonprofile := vpn.Vpnalwaysonprofile{}
-	if !data.Clientcontrol.IsNull() {
+	if !data.Clientcontrol.IsNull() && !data.Clientcontrol.IsUnknown() {
 		vpnalwaysonprofile.Clientcontrol = data.Clientcontrol.ValueString()
 	}
-	if !data.Locationbasedvpn.IsNull() {
+	if !data.Locationbasedvpn.IsNull() && !data.Locationbasedvpn.IsUnknown() {
 		vpnalwaysonprofile.Locationbasedvpn = data.Locationbasedvpn.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnalwaysonprofile.Name = data.Name.ValueString()
 	}
-	if !data.Networkaccessonvpnfailure.IsNull() {
+	if !data.Networkaccessonvpnfailure.IsNull() && !data.Networkaccessonvpnfailure.IsUnknown() {
 		vpnalwaysonprofile.Networkaccessonvpnfailure = data.Networkaccessonvpnfailure.ValueString()
 	}
 
@@ -76,30 +84,32 @@ func vpnalwaysonprofileGetThePayloadFromtheConfig(ctx context.Context, data *Vpn
 func vpnalwaysonprofileSetAttrFromGet(ctx context.Context, data *VpnalwaysonprofileResourceModel, getResponseData map[string]interface{}) *VpnalwaysonprofileResourceModel {
 	tflog.Debug(ctx, "In vpnalwaysonprofileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches so a value NITRO omits from GET does not clobber a
+	// known/configured value (omit-on-default trap); only null when still unknown.
 	if val, ok := getResponseData["clientcontrol"]; ok && val != nil {
 		data.Clientcontrol = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcontrol.IsUnknown() {
 		data.Clientcontrol = types.StringNull()
 	}
 	if val, ok := getResponseData["locationbasedvpn"]; ok && val != nil {
 		data.Locationbasedvpn = types.StringValue(val.(string))
-	} else {
+	} else if data.Locationbasedvpn.IsUnknown() {
 		data.Locationbasedvpn = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["networkaccessonvpnfailure"]; ok && val != nil {
 		data.Networkaccessonvpnfailure = types.StringValue(val.(string))
-	} else {
+	} else if data.Networkaccessonvpnfailure.IsUnknown() {
 		data.Networkaccessonvpnfailure = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

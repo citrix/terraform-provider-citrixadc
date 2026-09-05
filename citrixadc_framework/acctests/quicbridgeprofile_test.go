@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccQuicbridgeprofile_add = `
@@ -63,6 +66,59 @@ func TestAccQuicbridgeprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tfAcc_quicbridge", "routingalgorithm", "PLAINTEXT"),
 					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tfAcc_quicbridge", "serveridlength", "6"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccQuicbridgeprofile_selfHealing(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	const resAddr = "citrixadc_quicbridgeprofile.tfAcc_quicbridge"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Quicbridgeprofile.Type(), "tfAcc_quicbridge"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccQuicbridgeprofile_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	const resAddr = "citrixadc_quicbridgeprofile.tfAcc_quicbridge"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccQuicbridgeprofile_add},
+			{
+				Config:                  testAccQuicbridgeprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -132,6 +188,115 @@ func testAccCheckQuicbridgeprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccQuicbridgeprofile_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist("citrixadc_quicbridgeprofile.tfAcc_quicbridge", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist("citrixadc_quicbridgeprofile.tfAcc_quicbridge", nil)),
+			},
+		},
+	})
+}
+
+// quicbridgeprofile has one unset-eligible mutable attribute exercisable here:
+// serveridlength (NITRO default 4). routingalgorithm is also unset-wired but its
+// only possible value is PLAINTEXT (== its default), so it cannot be driven to a
+// non-default value and is not asserted here.
+const testAccQuicbridgeprofile_unset_step1 = `
+resource "citrixadc_quicbridgeprofile" "tf_unset" {
+	name             = "tfAcc_quicbridge_unset"
+	routingalgorithm = "PLAINTEXT"
+	serveridlength   = 6
+}
+`
+
+const testAccQuicbridgeprofile_unset_step2 = `
+resource "citrixadc_quicbridgeprofile" "tf_unset" {
+	name = "tfAcc_quicbridge_unset"
+	# unset-eligible attributes removed from config -> provider must unset them
+	# (revert to NITRO defaults: serveridlength = 4).
+}
+`
+
+func TestAccQuicbridgeprofile_unset(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccQuicbridgeprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuicbridgeprofileExist("citrixadc_quicbridgeprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tf_unset", "serveridlength", "6"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccQuicbridgeprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuicbridgeprofileExist("citrixadc_quicbridgeprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tf_unset", "serveridlength", "4"),
+					// routingalgorithm's only valid value is its default PLAINTEXT, so it
+					// is never actually unset; the state check above suffices. The raw
+					// appliance drops routingalgorithm from GET when serveridlength alone
+					// is unset, so a raw-appliance assertion on it is not meaningful.
+					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tf_unset", "routingalgorithm", "PLAINTEXT"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckQuicbridgeprofileADCValue("tfAcc_quicbridge_unset", "serveridlength", "4"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckQuicbridgeprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckQuicbridgeprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Quicbridgeprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("quicbridgeprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("quicbridgeprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccQuicbridgeprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -144,6 +309,9 @@ func TestAccQuicbridgeprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "id"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "routingalgorithm"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "serveridlength"),
+					// Read-only metadata exposed only by the data source (counter-style,
+					// always populated for a freshly-created object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "refcnt"),
 				),
 			},
 		},

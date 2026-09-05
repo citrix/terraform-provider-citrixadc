@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // lbglobal_lbpolicy_binding is a KEYLESS global binding (lbglobal singleton has no
@@ -287,7 +287,42 @@ func TestAccLbglobal_lbpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "policyname", "tf_pol"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "type", "REQ_DEFAULT"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "id"),
+					// Read-only (GET-only) metadata: numpol is a counter always populated for a bound policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "numpol"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccLbglobal_lbpolicy_binding_selfHealing verifies drift recovery: after the binding
+// is created, it is deleted out-of-band on the ADC; the next apply of the same config must
+// detect the missing binding and recreate it.
+func TestAccLbglobal_lbpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbglobal_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbglobal_lbpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbglobal_lbpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbglobal_lbpolicy_binding.Type(), "", map[string]string{"policyname": "tf_pol", "type": "REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbglobal_lbpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbglobal_lbpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

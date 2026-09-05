@@ -3,6 +3,7 @@ package bridgetable
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -35,7 +36,7 @@ func (d *BridgetableDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *BridgetableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BridgetableResourceModel
+	var data BridgetableDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -43,17 +44,45 @@ func (d *BridgetableDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	// Case 1: Simple find without ID
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Bridgetable.Type(), "")
+	// bridgetable is a collection; fetch all entries and select the one matching
+	// any supplied identity keys (mac/vxlan/vtep). With no keys supplied, the first
+	// entry is returned.
+	findParams := service.FindParams{
+		ResourceType: service.Bridgetable.Type(),
+	}
+	dataArray, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read bridgetable, got error: %s", err))
 		return
 	}
+	if len(dataArray) == 0 {
+		resp.Diagnostics.AddError("Client Error", "No bridgetable entries found")
+		return
+	}
 
-	bridgetableSetAttrFromGet(ctx, &data, getResponseData)
+	foundIndex := -1
+	for i, entry := range dataArray {
+		match := true
+		if !data.Mac.IsNull() && fmt.Sprintf("%v", entry["mac"]) != data.Mac.ValueString() {
+			match = false
+		}
+		if !data.Vxlan.IsNull() && fmt.Sprintf("%v", entry["vxlan"]) != strconv.Itoa(int(data.Vxlan.ValueInt64())) {
+			match = false
+		}
+		if !data.Vtep.IsNull() && fmt.Sprintf("%v", entry["vtep"]) != data.Vtep.ValueString() {
+			match = false
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		resp.Diagnostics.AddError("Client Error", "No matching bridgetable entry found")
+		return
+	}
+
+	bridgetableDataSourceSetAttrFromGet(ctx, &data, dataArray[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

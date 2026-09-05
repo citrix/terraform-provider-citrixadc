@@ -20,8 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccNsfeature_basic(t *testing.T) {
@@ -146,10 +147,57 @@ resource "citrixadc_nsfeature" "tf_nsfeature" {
 
 `
 
+func TestAccNsfeature_import(t *testing.T) {
+	const resAddr = "citrixadc_nsfeature.tf_nsfeature"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsfeature_basic_step1},
+			{
+				Config:                  testAccNsfeature_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsfeatureDataSource_basic = `
 data "citrixadc_nsfeature" "tf_nsfeature_ds" {
 }
 `
+
+func TestAccNsfeature_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsfeature_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnabledDisabledFeatures([]string{"cs", "lb"}, []string{"ssl", "appfw"}),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsfeature_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnabledDisabledFeatures([]string{"cs", "lb"}, []string{"ssl", "appfw"}),
+				),
+			},
+		},
+	})
+}
 
 func TestAccNsfeatureDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

@@ -143,3 +143,16 @@ In addition to the arguments, the following attributes are available:
 * `vendorspecificauthapplicationids` - List of Vendor-Specific-Auth-Application-Id attribute value pairs (AVPs) for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers. A maximum of eight of these AVPs are supported in a monitoring message.
 * `vendorspecificvendorid` - Vendor-Id to use in the Vendor-Specific-Application-Id grouped attribute-value pair (AVP) in the monitoring CER message.
 * `id` - The id of the lbmonitor. It has the same value as the `monitorname` attribute.
+
+### Read-only lbmonitor metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbmonitor` resource). They are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `lrtmconf` - State of LRTM configuration on the monitor.
+* `lrtmconfstr` - State of LRTM configuration on the monitor as a string (for example `ENABLED`, `DISABLED`).
+* `dynamicresponsetimeout` - Response timeout of the DRTM enabled monitor, calculated dynamically based on the history and current response time.
+* `dynamicinterval` - Interval between monitoring probes for a DRTM enabled monitor, calculated dynamically based on monitor response time.
+* `multimetrictable` - Metric table to which to bind metrics, to be used only for output purposes. A list of strings.
+* `dup_state` - State of the duplicate monitor (for example `ENABLED`, `DISABLED`).
+* `dup_weight` - Weight of the duplicate monitor.
+* `weight` - Weight of the monitor.

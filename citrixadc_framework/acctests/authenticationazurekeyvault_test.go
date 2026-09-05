@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testAccCheckAuthenticationazurekeyvaultExist(n string, id *string) resource.TestCheckFunc {
@@ -349,6 +349,36 @@ func TestAccAuthenticationazurekeyvault_unset(t *testing.T) {
 					testAccCheckAuthenticationazurekeyvaultADCValue("tf_test_authenticationazurekeyvault_unset", "refreshinterval", "50"),
 					testAccCheckAuthenticationazurekeyvaultADCValue("tf_test_authenticationazurekeyvault_unset", "signaturealg", "RS256"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAuthenticationazurekeyvault_selfHealing reuses the (non-skipped) _unset test's
+// step-1 config as the base config, since this resource has no plain _basic config.
+func TestAccAuthenticationazurekeyvault_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationazurekeyvault.tf_unset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationazurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationazurekeyvault_unset_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationazurekeyvaultExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationazurekeyvault.Type(), "tf_test_authenticationazurekeyvault_unset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationazurekeyvault_unset_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationazurekeyvaultExist(resAddr, nil)),
 			},
 		},
 	})

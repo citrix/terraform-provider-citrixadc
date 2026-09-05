@@ -2,6 +2,7 @@ package vpnglobal_vpnsessionpolicy_binding
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func VpnglobalVpnsessionpolicyBindingDataSourceSchema() schema.Schema {
@@ -9,6 +10,12 @@ func VpnglobalVpnsessionpolicyBindingDataSourceSchema() schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+			},
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
 			"feature": schema.StringAttribute{
 				Optional:    true,

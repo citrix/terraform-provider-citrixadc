@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,26 @@ func (r *AaacertparamsResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating aaacertparams resource")
 
-	// aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
+	aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaacertparams, got error: %s", err))
-	//	 return
-	// }
+	// aaacertparams is an unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaacertparams, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate stable ID for this singleton configuration resource
 	data.Id = types.StringValue("aaacertparams-config")
 
 	tflog.Trace(ctx, "Created aaacertparams resource")
 
 	// Read the updated state back
 	r.readAaacertparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,10 +100,12 @@ func (r *AaacertparamsResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *AaacertparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaacertparamsResourceModel
+	var data, config, state AaacertparamsResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan and config into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,20 +113,63 @@ func (r *AaacertparamsResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Updating aaacertparams resource")
 
-	// Create API request body from the model
-	// aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Determine which attributes changed, and which were removed from config so
+	// they must be unset (reverted to their appliance defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
+		if config.Defaultauthenticationgroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultauthenticationgroup")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Groupnamefield.Equal(state.Groupnamefield) {
+		if config.Groupnamefield.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "groupnamefield")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Usernamefield.Equal(state.Usernamefield) {
+		if config.Usernamefield.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "usernamefield")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaacertparams, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated aaacertparams resource")
+		// Make API call
+		// aaacertparams is an unnamed (singleton) resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaacertparams, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated aaacertparams resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaacertparams resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. aaacertparams is a singleton, so the unset payload
+	// carries no identifying key.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaacertparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaacertparams attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readAaacertparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

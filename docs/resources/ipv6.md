@@ -35,3 +35,12 @@ resource "citrixadc_ipv6" "tf_ipv6" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the ipv6. It is a unique string prefixed with "tf-ipv6-"
+
+
+## Import
+
+A ipv6 can be imported using its td, e.g.
+
+```shell
+terraform import citrixadc_ipv6.tf_ipv6 <td>
+```

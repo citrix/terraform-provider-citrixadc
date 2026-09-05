@@ -35,7 +35,7 @@ func (d *ContentinspectionactionDataSource) Schema(ctx context.Context, req data
 }
 
 func (d *ContentinspectionactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ContentinspectionactionResourceModel
+	var data ContentinspectionactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *ContentinspectionactionDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	contentinspectionactionSetAttrFromGet(ctx, &data, getResponseData)
+	contentinspectionactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

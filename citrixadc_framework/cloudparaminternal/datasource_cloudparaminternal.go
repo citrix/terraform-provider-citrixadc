@@ -38,7 +38,7 @@ func (d *CloudparaminternalDataSource) Schema(ctx context.Context, req datasourc
 }
 
 func (d *CloudparaminternalDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudparaminternalResourceModel
+	var data CloudparaminternalDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -57,6 +57,7 @@ func (d *CloudparaminternalDataSource) Read(ctx context.Context, req datasource.
 		if strings.Contains(err.Error(), "not supported on this platform") {
 			tflog.Warn(ctx, "cloudparaminternal GET not supported on this platform; datasource returns null value")
 			data.Nonftumode = types.StringNull()
+			data.Iamperm = types.StringNull()
 			data.Id = types.StringValue("cloudparaminternal-config")
 			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 			return
@@ -65,7 +66,7 @@ func (d *CloudparaminternalDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	cloudparaminternalSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	cloudparaminternalDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

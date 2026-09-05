@@ -6,7 +6,7 @@ subcategory: "VPN"
 
 The vpnglobal_intranetip_binding data source allows you to retrieve information about a binding between vpnglobal configuration and an intranet IP address or range.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnglobal_intranetip_binding" "tf_bind" {
@@ -32,6 +32,6 @@ The following arguments are required:
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnglobal_intranetip_binding. It is a system-generated identifier.
+* `id` - The id of the vpnglobal_intranetip_binding. It is the concatenation of `intranetip` and `netmask` attributes separated by a comma.
 * `netmask` - The intranet ip address or range's netmask.
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.

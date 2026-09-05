@@ -35,25 +35,31 @@ func (r *AppfwhtmlerrorpageResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op); avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the HTML error object.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the XML error object to remove.",
 			},
 			"overwrite": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op); avoid spurious destroy+recreate on upgrade
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrite any existing HTML error object of the same name.",
 			},
 			"src": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -68,26 +74,63 @@ func appfwhtmlerrorpageGetThePayloadFromtheConfig(ctx context.Context, data *App
 
 	// Create API request body from the model
 	appfwhtmlerrorpage := appfw.Appfwhtmlerrorpage{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwhtmlerrorpage.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwhtmlerrorpage.Name = data.Name.ValueString()
 	}
-	if !data.Overwrite.IsNull() {
+	if !data.Overwrite.IsNull() && !data.Overwrite.IsUnknown() {
 		appfwhtmlerrorpage.Overwrite = data.Overwrite.ValueBool()
 	}
-	if !data.Src.IsNull() {
+	if !data.Src.IsNull() && !data.Src.IsUnknown() {
 		appfwhtmlerrorpage.Src = data.Src.ValueString()
 	}
 
 	return appfwhtmlerrorpage
 }
 
+// appfwhtmlerrorpageSetAttrFromGet updates the resource state after a create/read.
+// The NITRO GET for appfwhtmlerrorpage only returns "name" (and read-only fields);
+// it does NOT return comment, overwrite, or src. Mirroring the SDK v2 resource
+// (which only refreshes "name"), we refresh name from the API response and preserve
+// the plan/state values for the remaining attributes to avoid spurious diffs and
+// "inconsistent result after apply" errors.
 func appfwhtmlerrorpageSetAttrFromGet(ctx context.Context, data *AppfwhtmlerrorpageResourceModel, getResponseData map[string]interface{}) *AppfwhtmlerrorpageResourceModel {
 	tflog.Debug(ctx, "In appfwhtmlerrorpageSetAttrFromGet Function")
 
-	// Convert API response to model
+	// name: refresh from the API response (primary key)
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+
+	// comment: not returned by the NITRO GET - preserve plan/state value,
+	// resolving an unknown (Optional+Computed, omitted in config) to null.
+	if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+
+	// overwrite: not returned by the NITRO GET - preserve plan/state value,
+	// resolving an unknown (Optional+Computed, omitted in config) to null.
+	if data.Overwrite.IsUnknown() {
+		data.Overwrite = types.BoolNull()
+	}
+
+	// src: Required + ForceNew - not refreshed by SDK v2; preserve plan/state value.
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	return data
+}
+
+// appfwhtmlerrorpageSetAttrFromGetForDatasource populates the datasource state from
+// the NITRO GET response, copying every attribute the API returns (and nulling the
+// ones it does not) and setting the ID.
+func appfwhtmlerrorpageSetAttrFromGetForDatasource(ctx context.Context, data *AppfwhtmlerrorpageResourceModel, getResponseData map[string]interface{}) *AppfwhtmlerrorpageResourceModel {
+	tflog.Debug(ctx, "In appfwhtmlerrorpageSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
@@ -110,7 +153,7 @@ func appfwhtmlerrorpageSetAttrFromGet(ctx context.Context, data *Appfwhtmlerrorp
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsencryptionkey_add = `
@@ -411,9 +412,42 @@ func TestAccNsencryptionkey_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccNsencryptionkey_add,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+			},
+		},
+	})
+}
+
+func TestAccNsencryptionkey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsencryptionkey.tf_encryptionkey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsencryptionkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsencryptionkey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsencryptionkeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsencryptionkey.Type(), "tf_encryptionkey"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsencryptionkey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsencryptionkeyExist(resAddr, nil)),
 			},
 		},
 	})

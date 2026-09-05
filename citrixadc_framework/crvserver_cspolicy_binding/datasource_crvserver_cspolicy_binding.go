@@ -35,7 +35,7 @@ func (d *CrvserverCspolicyBindingDataSource) Schema(ctx context.Context, req dat
 }
 
 func (d *CrvserverCspolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CrvserverCspolicyBindingResourceModel
+	var data CrvserverCspolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *CrvserverCspolicyBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	crvserver_cspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	crvserver_cspolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

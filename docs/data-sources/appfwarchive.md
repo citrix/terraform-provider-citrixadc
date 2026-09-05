@@ -43,3 +43,9 @@ In addition to the argument above, the following attributes are exported:
 * `comment` - Comments associated with this archive.
 * `src` - URL of the form `<protocol>://<host>[:<port>][/<path>]` indicating the source of the tar archive file that was imported.
 * `target` - Path to the file to be exported (export-action attribute; populated only if it was set in configuration).
+
+### Read-only appfwarchive metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwarchive` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `response` - Response returned by the appliance for the appfwarchive operation.

@@ -37,7 +37,9 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attr
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Remove all RNAT global config",
 			},
@@ -52,7 +54,9 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Schema(ctx context.Context,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attr
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority of the policy.",
 			},

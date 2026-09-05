@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *VpnvserverVpnnexthopserverBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the vpnvserver_vpnnexthopserver_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"nexthopserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the next hop server bound to the VPN virtual server.",
 			},
 		},
 	}
 }
 
-func vpnvserver_vpnnexthopserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverVpnnexthopserverBindingResourceModel) vpn.Vpnvservervpnnexthopserverbinding {
-	tflog.Debug(ctx, "In vpnvserver_vpnnexthopserver_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_vpnnexthopserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverVpnnexthopserverBindingResourceModel) vpn.Vpnvservervpnnexthopserverbinding {
+	tflog.Debug(ctx, "In vpnvserver_vpnnexthopserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_vpnnexthopserver_binding := vpn.Vpnvservervpnnexthopserverbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_vpnnexthopserver_binding.Name = data.Name.ValueString()
 	}
-	if !data.Nexthopserver.IsNull() {
+	if !data.Nexthopserver.IsNull() && !data.Nexthopserver.IsUnknown() {
 		vpnvserver_vpnnexthopserver_binding.Nexthopserver = data.Nexthopserver.ValueString()
 	}
 

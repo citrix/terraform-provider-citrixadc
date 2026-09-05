@@ -50,10 +50,8 @@ In addition to the arguments, the following attributes are available:
 * `sipalg` - Enable the SIP ALG. Possible values: [ ENABLED, DISABLED ]
 * `snmptraplimit` - Maximum number of SNMP Trap messages that can be generated for the LSN group in one minute.
 
-## Import
+### Read-only lsngroup metadata
 
-A lsngroup can be imported using its groupname, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lsngroup` resource) and are `Computed`/GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_lsngroup.tf_lsngroup my_lsngroup_ds
-```
+* `groupid` - Unique identifier assigned to the LSN group by the appliance.

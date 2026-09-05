@@ -32,7 +32,13 @@ output "ownergroup" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the bridgegroup_nsip_binding. It is a system-generated identifier.
+* `id` - The id of the bridgegroup_nsip_binding. It is the concatenation of the `bridgegroup_id` and `ipaddress` attributes separated by a comma.
 * `netmask` - The network mask for the subnet defined for the bridge group.
 * `ownergroup` - The owner node group in a Cluster for this vlan.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
+
+### Read-only bridgegroup_nsip_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_bridgegroup_nsip_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `rnat` - Temporary flag used for internal purpose.

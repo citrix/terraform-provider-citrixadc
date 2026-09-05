@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *AuthenticationsamlpolicyResource) Create(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Creating authenticationsamlpolicy resource")
 
-	// authenticationsamlpolicy := authenticationsamlpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	authenticationsamlpolicy := authenticationsamlpolicyGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationsamlpolicy.Type(), &authenticationsamlpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationsamlpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationsamlpolicy-config")
+	// Named resource - use AddResource
+	authenticationsamlpolicyName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName, &authenticationsamlpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationsamlpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationsamlpolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(authenticationsamlpolicyName)
+
 	// Read the updated state back
-	r.readAuthenticationsamlpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsamlpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsamlpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *AuthenticationsamlpolicyResource) Read(ctx context.Context, req resourc
 
 	tflog.Debug(ctx, "Reading authenticationsamlpolicy resource")
 
-	r.readAuthenticationsamlpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationsamlpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationsamlpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationsamlpolicyResourceModel
+	var data, state AuthenticationsamlpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,46 @@ func (r *AuthenticationsamlpolicyResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationsamlpolicy resource")
 
-	// Create API request body from the model
-	// authenticationsamlpolicy := authenticationsamlpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Reqaction.Equal(state.Reqaction) {
+		tflog.Debug(ctx, "reqaction has changed for authenticationsamlpolicy, starting update")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for authenticationsamlpolicy, starting update")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationsamlpolicy.Type(), &authenticationsamlpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationsamlpolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationsamlpolicy := authenticationsamlpolicyGetThePayloadFromtheConfig(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		authenticationsamlpolicyName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName, &authenticationsamlpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationsamlpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationsamlpolicy resource")
+		tflog.Trace(ctx, "Updated authenticationsamlpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationsamlpolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAuthenticationsamlpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsamlpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsamlpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +179,33 @@ func (r *AuthenticationsamlpolicyResource) Delete(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Deleting authenticationsamlpolicy resource")
 
-	// For authenticationsamlpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationsamlpolicy resource from state")
+	// Named resource - delete using DeleteResource
+	authenticationsamlpolicyName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationsamlpolicy, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationsamlpolicy resource")
 }
 
 // Helper function to read authenticationsamlpolicy data from API
-func (r *AuthenticationsamlpolicyResource) readAuthenticationsamlpolicyFromApi(ctx context.Context, data *AuthenticationsamlpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationsamlpolicy.Type(), "")
+func (r *AuthenticationsamlpolicyResource) readAuthenticationsamlpolicyFromApi(ctx context.Context, data *AuthenticationsamlpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	authenticationsamlpolicyName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Authenticationsamlpolicy.Type(), authenticationsamlpolicyName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationsamlpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationsamlpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

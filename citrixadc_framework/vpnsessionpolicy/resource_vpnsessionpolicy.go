@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *VpnsessionpolicyResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating vpnsessionpolicy resource")
 
-	// vpnsessionpolicy := vpnsessionpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	vpnsessionpolicy := vpnsessionpolicyGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnsessionpolicy.Type(), &vpnsessionpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnsessionpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnsessionpolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnsessionpolicy.Type(), name_value, &vpnsessionpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnsessionpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnsessionpolicy resource")
 
+	// Set ID for the resource before reading state (backward-compatible: ID is the policy name)
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readVpnsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnsessionpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnsessionpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *VpnsessionpolicyResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading vpnsessionpolicy resource")
 
-	r.readVpnsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnsessionpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnsessionpolicyResourceModel
+	var data, state VpnsessionpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,46 @@ func (r *VpnsessionpolicyResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnsessionpolicy resource")
 
-	// Create API request body from the model
-	// vpnsessionpolicy := vpnsessionpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes (name is RequiresReplace)
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for vpnsessionpolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for vpnsessionpolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnsessionpolicy.Type(), &vpnsessionpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnsessionpolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		vpnsessionpolicy := vpnsessionpolicyGetThePayloadFromtheConfig(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Vpnsessionpolicy.Type(), name_value, &vpnsessionpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnsessionpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnsessionpolicy resource")
+		tflog.Trace(ctx, "Updated vpnsessionpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnsessionpolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readVpnsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnsessionpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnsessionpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +178,33 @@ func (r *VpnsessionpolicyResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting vpnsessionpolicy resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vpnsessionpolicy.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnsessionpolicy, got error: %s", err))
+		return
+	}
 
-	// For vpnsessionpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnsessionpolicy resource from state")
+	tflog.Trace(ctx, "Deleted vpnsessionpolicy resource")
 }
 
 // Helper function to read vpnsessionpolicy data from API
-func (r *VpnsessionpolicyResource) readVpnsessionpolicyFromApi(ctx context.Context, data *VpnsessionpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnsessionpolicy.Type(), "")
+func (r *VpnsessionpolicyResource) readVpnsessionpolicyFromApi(ctx context.Context, data *VpnsessionpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain policy name
+	name_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnsessionpolicy.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnsessionpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnsessionpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

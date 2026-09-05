@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,33 +35,42 @@ func (r *NsservicepathNsservicefunctionBindingResource) Schema(ctx context.Conte
 				Description: "The ID of the nsservicepath_nsservicefunction_binding resource.",
 			},
 			"index": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "The serviceindex of each servicefunction in path.",
 			},
 			"servicefunction": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "List of service functions constituting the chain.",
 			},
 			"servicepathname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Service path. Must begin with an ASCII alphanumeric or underscore (_) character, and must\n      contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-)\n      characters.",
 			},
 		},
 	}
 }
 
-func nsservicepath_nsservicefunction_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NsservicepathNsservicefunctionBindingResourceModel) ns.Nsservicepathnsservicefunctionbinding {
-	tflog.Debug(ctx, "In nsservicepath_nsservicefunction_bindingGetThePayloadFromtheConfig Function")
+func nsservicepath_nsservicefunction_bindingGetThePayloadFromthePlan(ctx context.Context, data *NsservicepathNsservicefunctionBindingResourceModel) ns.Nsservicepathnsservicefunctionbinding {
+	tflog.Debug(ctx, "In nsservicepath_nsservicefunction_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nsservicepath_nsservicefunction_binding := ns.Nsservicepathnsservicefunctionbinding{}
-	if !data.Index.IsNull() {
+	if !data.Index.IsNull() && !data.Index.IsUnknown() {
 		nsservicepath_nsservicefunction_binding.Index = utils.IntPtr(int(data.Index.ValueInt64()))
 	}
-	if !data.Servicefunction.IsNull() {
+	if !data.Servicefunction.IsNull() && !data.Servicefunction.IsUnknown() {
 		nsservicepath_nsservicefunction_binding.Servicefunction = data.Servicefunction.ValueString()
 	}
-	if !data.Servicepathname.IsNull() {
+	if !data.Servicepathname.IsNull() && !data.Servicepathname.IsUnknown() {
 		nsservicepath_nsservicefunction_binding.Servicepathname = data.Servicepathname.ValueString()
 	}
 

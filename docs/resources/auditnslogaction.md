@@ -43,6 +43,7 @@ resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
 * `urlfiltering` - (Optional) Log URL filtering event information
 * `userdefinedauditlog` - (Optional) Log user-configurable log messages to nslog. Setting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria.
 * `protocolviolations` - (Optional) Log protocol violations
+* `denylistviolations` - (Optional) Log denylist violations.
 
 
 ## Attribute Reference

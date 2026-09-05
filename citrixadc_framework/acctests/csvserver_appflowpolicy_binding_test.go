@@ -16,12 +16,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCsvserver_appflowpolicy_binding_basic = `
@@ -136,10 +139,12 @@ func testAccCheckCsvserver_appflowpolicy_bindingExist(n string, id *string) reso
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		csvserverName := idSlice[0]
-		policyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		csvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_appflowpolicy_binding",
@@ -239,6 +244,49 @@ func testAccCheckCsvserver_appflowpolicy_bindingDestroy(s *terraform.State) erro
 	return nil
 }
 
+func TestAccCsvserver_appflowpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_appflowpolicy_binding_basic},
+			{Config: testAccCsvserver_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCsvserver_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 const testAccCsvserver_appflowpolicy_bindingDataSource_basic = `
 resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
 	name      = "tf_appflowpolicy"
@@ -297,6 +345,117 @@ func TestAccCsvserver_appflowpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "invoke", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "labeltype", "reqvserver"),
 				),
+			},
+		},
+	})
+}
+
+// testAccCsvserver_appflowpolicy_binding_upgrade_basic is used by the sdkv2 -> Framework
+// state-upgrade test. It reuses the same config values as the _basic test and MUST be
+// valid under BOTH the SDK v2 2.2.0 schema (step 1) and the current Framework schema
+// (step 2). The resource label is kept identical so the Exist/Destroy helpers match.
+const testAccCsvserver_appflowpolicy_binding_upgrade_basic = `
+resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	name      = "tf_appflowpolicy"
+	action    = citrixadc_appflowaction.tf_appflowaction.name
+	rule      = "client.TCP.DSTPORT.EQ(22)"
+}
+resource "citrixadc_appflowaction" "tf_appflowaction" {
+	name = "test_action"
+	collectors     = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	securityinsight = "ENABLED"
+	botinsight      = "ENABLED"
+	videoanalytics  = "ENABLED"
+}
+resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	name      = "col1"
+	ipaddress = "192.168.2.2"
+	port      = 80
+}
+resource "citrixadc_csvserver_appflowpolicy_binding" "tf_csvserver_appflowpolicy_binding" {
+	name = citrixadc_csvserver.tf_csvserver.name
+	policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+	labelname = citrixadc_csvserver.tf_csvserver.name
+	gotopriorityexpression = "END"
+	invoke = true
+	labeltype = "reqvserver"
+	priority = 1
+	lifecycle {
+		ignore_changes = [bindpoint]
+	}
+}
+resource "citrixadc_csvserver" "tf_csvserver" {
+	name        = "tf_csvserver"
+	ipv46       = "10.10.10.33"
+	port        = 80
+	servicetype = "HTTP"
+}
+`
+
+// TestAccCsvserver_appflowpolicy_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (2.2.0), which writes the legacy comma-joined ID,
+// upgrades cleanly when refreshed/planned through the current Framework provider. On the
+// Framework Read the ID is recomputed into the new key:value format (see
+// csvserver_appflowpolicy_bindingSetAttrFromGet in resource_schema.go).
+func TestAccCsvserver_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state holds the legacy ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCsvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_appflowpolicy_bindingExist("citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "id", "tf_csvserver,tf_appflowpolicy"),
+				),
+			},
+			// Step 2: same config through the current Framework provider; Read recomputes
+			// the legacy ID into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_appflowpolicy_bindingExist("citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding", "id", "name:tf_csvserver,policyname:tf_appflowpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_appflowpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_appflowpolicy_binding.tf_csvserver_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_appflowpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_appflowpolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_appflowpolicy", "priority": "1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_appflowpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

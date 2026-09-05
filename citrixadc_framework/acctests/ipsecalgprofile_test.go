@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIpsecalgprofile_basic = `
@@ -137,6 +140,53 @@ func testAccCheckIpsecalgprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccIpsecalgprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipsecalgprofile.tf_ipsecalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecalgprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ipsecalgprofile.Type(), "my_ipsecalgprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpsecalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecalgprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIpsecalgprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ipsecalgprofile.tf_ipsecalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpsecalgprofile_basic},
+			{
+				Config:                  testAccIpsecalgprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccIpsecalgprofileDataSource_basic = `
 	resource "citrixadc_ipsecalgprofile" "tf_ipsecalgprofile_ds" {
 		name              = "my_ipsecalgprofile_ds"
@@ -149,6 +199,112 @@ const testAccIpsecalgprofileDataSource_basic = `
 		name = citrixadc_ipsecalgprofile.tf_ipsecalgprofile_ds.name
 	}
 `
+
+func TestAccIpsecalgprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpsecalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccIpsecalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecalgprofileExist("citrixadc_ipsecalgprofile.tf_ipsecalgprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIpsecalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecalgprofileExist("citrixadc_ipsecalgprofile.tf_ipsecalgprofile", nil)),
+			},
+		},
+	})
+}
+
+// TestAccIpsecalgprofile_unset verifies that removing unset-eligible attributes
+// from config reverts them to their documented NITRO defaults (connfailover
+// ENABLED, espgatetimeout 30, espsessiontimeout 60, ikesessiontimeout 60).
+const testAccIpsecalgprofile_unset_step1 = `
+resource "citrixadc_ipsecalgprofile" "tf_unset" {
+  name              = "tf_test_ipsecalgprofile_unset"
+  connfailover      = "DISABLED"
+  espgatetimeout    = 100
+  espsessiontimeout = 120
+  ikesessiontimeout = 90
+}
+`
+
+const testAccIpsecalgprofile_unset_step2 = `
+resource "citrixadc_ipsecalgprofile" "tf_unset" {
+  name = "tf_test_ipsecalgprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccIpsecalgprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIpsecalgprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecalgprofileExist("citrixadc_ipsecalgprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "connfailover", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "espgatetimeout", "100"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "espsessiontimeout", "120"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "ikesessiontimeout", "90"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccIpsecalgprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecalgprofileExist("citrixadc_ipsecalgprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "connfailover", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "espgatetimeout", "30"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "espsessiontimeout", "60"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecalgprofile.tf_unset", "ikesessiontimeout", "60"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIpsecalgprofileADCValue("tf_test_ipsecalgprofile_unset", "connfailover", "ENABLED"),
+					testAccCheckIpsecalgprofileADCValue("tf_test_ipsecalgprofile_unset", "espgatetimeout", "30"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIpsecalgprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckIpsecalgprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Ipsecalgprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("ipsecalgprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("ipsecalgprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccIpsecalgprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

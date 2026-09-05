@@ -176,6 +176,11 @@ SSL policy binding supports the following:
 * `probesuccessresponsecode` - (Optional) HTTP code to return in SUCCESS case.
 * `quicprofilename` - (Optional) Name of QUIC profile which will be attached to the VServer.
 * `toggleorder` - (Optional) Configure this option to toggle order preference
+* `aigwprofilename` - (Optional) Name of the AIGW frontend profile. For the LB vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add lb vserver, it cannot be unset.
+* `mcpprofilename` - (Optional) Name of the MCP profile to attach to this lb vserver. Enables MCP protocol processing.
+* `order` - (Optional) Order number to be assigned to the service when it is bound to the lb vserver.
+* `tcpprobeport` - (Optional) Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.
+* `wasmmodule` - (Optional) Name of the WASM module to assign to this virtual server.
 
 
 ## Attribute Reference

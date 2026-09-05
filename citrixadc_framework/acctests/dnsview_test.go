@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnsview_basic = `
@@ -114,6 +115,34 @@ func testAccCheckDnsviewDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnsview_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnsview.tf_dnsview"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsviewExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnsview.Type(), "view3"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnsview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsviewExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccDnsviewDataSource_basic = `
 	resource "citrixadc_dnsview" "tf_dnsview_ds" {
 		viewname = "view_ds_test"
@@ -135,6 +164,49 @@ func TestAccDnsviewDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsview.tf_dnsview_ds", "viewname", "view_ds_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsview.tf_dnsview_ds", "id", "view_ds_test"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDnsview_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnsview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsviewExist("citrixadc_dnsview.tf_dnsview", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnsview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsviewExist("citrixadc_dnsview.tf_dnsview", nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnsview_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsview.tf_dnsview"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsviewDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsview_basic},
+			{
+				Config:                  testAccDnsview_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

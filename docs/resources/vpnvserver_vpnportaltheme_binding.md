@@ -37,7 +37,7 @@ resource "citrixadc_vpnvserver_vpnportaltheme_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_vpnportaltheme_binding. It is the concatenation `name` and `portaltheme` attributes seperated by comma.
+* `id` - The id of the vpnvserver_vpnportaltheme_binding. It is the concatenation of the `name` and `portaltheme` attributes separated by a comma.
 
 
 ## Import

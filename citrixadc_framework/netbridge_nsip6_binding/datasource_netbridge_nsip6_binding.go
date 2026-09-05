@@ -66,7 +66,8 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the requested ipaddress.
+	// Identity is (name, ipaddress); netmask is not a lookup key.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -81,7 +82,6 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 			match = false
 			continue
 		}
-
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +94,7 @@ func (d *NetbridgeNsip6BindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	netbridge_nsip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	netbridge_nsip6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

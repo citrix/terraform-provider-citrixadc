@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccPolicypatset_basic_step1 = `
@@ -126,6 +128,147 @@ func testAccCheckPolicypatsetDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccPolicypatset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policypatset.tf_patset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policypatset.Type(), "tf_patset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicypatset_import(t *testing.T) {
+	const resAddr = "citrixadc_policypatset.tf_patset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicypatset_basic_step1},
+			{
+				Config:                  testAccPolicypatset_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccPolicypatset_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_patset", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_patset", nil)),
+			},
+		},
+	})
+}
+
+// step1 sets the only unset-eligible attribute (dynamic) to a non-default
+// value; step2 removes it so the provider must unset it back to the NITRO
+// default ("NO").
+const testAccPolicypatset_unset_step1 = `
+resource "citrixadc_policypatset" "tf_unset" {
+    name    = "tf_patset_unset"
+    dynamic = "YES"
+}
+`
+
+const testAccPolicypatset_unset_step2 = `
+resource "citrixadc_policypatset" "tf_unset" {
+    name = "tf_patset_unset"
+    # dynamic removed from config -> the provider must unset it (revert to "NO").
+}
+`
+
+func TestAccPolicypatset_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccPolicypatset_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policypatset.tf_unset", "dynamic", "YES"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccPolicypatset_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policypatset.tf_unset", "dynamic", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckPolicypatsetADCValue("tf_patset_unset", "dynamic", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckPolicypatsetADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckPolicypatsetADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Policypatset.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("policypatset %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("policypatset %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccPolicypatsetDataSource_basic = `

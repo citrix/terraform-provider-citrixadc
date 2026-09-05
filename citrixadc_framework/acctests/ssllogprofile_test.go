@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSsllogprofile_basic = `
@@ -89,6 +92,34 @@ func TestAccSsllogprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccSsllogprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ssllogprofile.demo_ssllogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ssllogprofile.Type(), "demo_ssllogprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSsllogprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -151,6 +182,127 @@ func testAccCheckSsllogprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSsllogprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ssllogprofile.demo_ssllogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSsllogprofile_basic},
+			{
+				Config:                  testAccSsllogprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSsllogprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist("citrixadc_ssllogprofile.demo_ssllogprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist("citrixadc_ssllogprofile.demo_ssllogprofile", nil)),
+			},
+		},
+	})
+}
+
+const testAccSsllogprofile_unset_step1 = `
+resource "citrixadc_ssllogprofile" "tf_unset" {
+    name                 = "tf_test_ssllogprofile_unset"
+    ssllogclauth         = "ENABLED"
+    ssllogclauthfailures = "ENABLED"
+    sslloghs             = "ENABLED"
+    sslloghsfailures     = "ENABLED"
+}
+`
+
+const testAccSsllogprofile_unset_step2 = `
+resource "citrixadc_ssllogprofile" "tf_unset" {
+    name = "tf_test_ssllogprofile_unset"
+    # All unset-eligible attributes removed from config -> the provider must
+    # unset them (revert to NITRO defaults, "DISABLED").
+}
+`
+
+func TestAccSsllogprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSsllogprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSsllogprofileExist("citrixadc_ssllogprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "ssllogclauth", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "ssllogclauthfailures", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "sslloghs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "sslloghsfailures", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSsllogprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSsllogprofileExist("citrixadc_ssllogprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "ssllogclauth", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "ssllogclauthfailures", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "sslloghs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_ssllogprofile.tf_unset", "sslloghsfailures", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSsllogprofileADCValue("tf_test_ssllogprofile_unset", "ssllogclauth", "DISABLED"),
+					testAccCheckSsllogprofileADCValue("tf_test_ssllogprofile_unset", "sslloghs", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSsllogprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckSsllogprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Ssllogprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("ssllogprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("ssllogprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSsllogprofileDataSource_basic(t *testing.T) {

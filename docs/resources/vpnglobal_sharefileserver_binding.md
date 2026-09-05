@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_sharefileserver_binding
 
-The vpnglobal_sharefileserver_binding resource is used to bind sharefileserver to vpnglobal congiguration.
+The vpnglobal_sharefileserver_binding resource is used to bind a sharefileserver to vpnglobal configuration.
 
 
 ## Example usage

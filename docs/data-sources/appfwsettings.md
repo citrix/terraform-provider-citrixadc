@@ -56,3 +56,11 @@ The following attributes are available:
 * `undefaction` - Profile to use when an application firewall policy evaluates to undefined (UNDEF). An UNDEF event indicates an internal error condition. The APPFW_BLOCK built-in profile is the default setting. You can specify a different built-in or user-created profile as the UNDEF profile.
 * `useconfigurablesecretkey` - Use configurable secret key in AppFw operations. Possible values: [ ON, OFF ]
 * `id` - The id of the appfwsettings. It is a system-generated identifier.
+
+### Read-only appfwsettings metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwsettings` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `learning` - Global learning option that overrides the profile level learning (for example `ON`, `OFF`).
+* `builtin` - Flag to determine if application firewall settings is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

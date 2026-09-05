@@ -35,7 +35,7 @@ func (d *VideooptimizationpacingactionDataSource) Schema(ctx context.Context, re
 }
 
 func (d *VideooptimizationpacingactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VideooptimizationpacingactionResourceModel
+	var data VideooptimizationpacingactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VideooptimizationpacingactionDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	videooptimizationpacingactionSetAttrFromGet(ctx, &data, getResponseData)
+	videooptimizationpacingactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

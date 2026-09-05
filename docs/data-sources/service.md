@@ -48,3 +48,37 @@ The following attributes are available:
 * `clttimeout` - Time, in seconds, after which to terminate an idle client connection.
 * `svrtimeout` - Time, in seconds, after which to terminate an idle server connection.
 * `comment` - Any information about the service.
+
+### Read-only service metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_service` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `numofconnections` - The number of client side connections that are still open.
+* `policyname` - The name of the policy for which this service is bound.
+* `serviceconftype` - The configuration type of the service.
+* `serviceconftype2` - The configuration type of the service (`Internal`/`Dynamic`/`Configured`).
+* `value` - SSL status of the service.
+* `gslb` - The GSLB option for the corresponding virtual server (`REMOTE`, `LOCAL`).
+* `dup_state` - State value from table (`ENABLED`, `DISABLED`).
+* `publicip` - Public IP of the service.
+* `publicport` - Public port of the service.
+* `svrstate` - The state of the service (for example `UP`, `DOWN`, `OUT OF SERVICE`).
+* `monitor_state` - The running state of the monitor on this service.
+* `monstatcode` - The code indicating the monitor response.
+* `lastresponse` - The string form of `monstatcode`.
+* `responsetime` - Response time of this monitor.
+* `monstatparam1` - First parameter for use with the message code.
+* `monstatparam2` - Second parameter for use with the message code.
+* `monstatparam3` - Third parameter for use with the message code.
+* `statechangetimesec` - Time when the last state change happened (seconds part).
+* `statechangetimemsec` - Time at which the last state change happened (milliseconds part).
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `stateupdatereason` - State update reason on the secondary node.
+* `clmonowner` - The monitoring owner of the service.
+* `clmonview` - The view id of the monitoring owner.
+* `serviceipstr` - The DBS services IP.
+* `oracleserverversion` - Oracle server version (`10G`, `11G`).
+* `nodefaultbindings` - Whether the configuration will have default SSL CIPHER and ECC curve bindings (`YES`, `NO`).
+* `monuserstatusmesg` - User monitor failure reasons.
+* `builtin` - Whether the service is built-in. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this configuration.

@@ -93,7 +93,7 @@ func (d *AppfwprofileDenyurlBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	appfwprofile_denyurl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_denyurl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

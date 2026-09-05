@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSystemgroup_basic(t *testing.T) {
@@ -239,6 +240,34 @@ resource "citrixadc_systemgroup" "tf_systemgroup" {
 
 `
 
+func TestAccSystemgroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup.tf_systemgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroup_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systemgroup.Type(), "testgroupname"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemgroup_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccSystemgroupDataSource_basic = `
 resource "citrixadc_systemparameter" "tf_systemparameter_ds" {
     passwordhistorycontrol = "ENABLED"
@@ -257,6 +286,49 @@ data "citrixadc_systemgroup" "tf_systemgroup_datasource" {
     groupname = citrixadc_systemgroup.tf_systemgroup_ds.groupname
 }
 `
+
+func TestAccSystemgroup_import(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup.tf_systemgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemgroup_basic_step1},
+			{
+				Config:                  testAccSystemgroup_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cmdpolicybinding.#", "cmdpolicybinding.0.%", "cmdpolicybinding.0.policyname", "cmdpolicybinding.0.priority", "cmdpolicybinding.1.%", "cmdpolicybinding.1.policyname", "cmdpolicybinding.1.priority", "systemusers.#", "systemusers.0", "systemusers.1"},
+			},
+		},
+	})
+}
+
+func TestAccSystemgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSystemgroup_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemgroup_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil)),
+			},
+		},
+	})
+}
 
 func TestAccSystemgroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

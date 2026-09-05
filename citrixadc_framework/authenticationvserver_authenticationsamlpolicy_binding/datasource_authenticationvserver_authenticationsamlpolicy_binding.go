@@ -35,7 +35,7 @@ func (d *AuthenticationvserverAuthenticationsamlpolicyBindingDataSource) Schema(
 }
 
 func (d *AuthenticationvserverAuthenticationsamlpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverAuthenticationsamlpolicyBindingResourceModel
+	var data AuthenticationvserverAuthenticationsamlpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -66,22 +66,11 @@ func (d *AuthenticationvserverAuthenticationsamlpolicyBindingDataSource) Read(ct
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding for the requested policy. NITRO GET only echoes
+	// name/policy/priority/secondary, so match on the discriminating policy key.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && !policy_Name.IsNull() && val == policy_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -89,11 +78,11 @@ func (d *AuthenticationvserverAuthenticationsamlpolicyBindingDataSource) Read(ct
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationsamlpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationsamlpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_authenticationsamlpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationsamlpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

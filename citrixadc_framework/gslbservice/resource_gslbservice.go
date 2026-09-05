@@ -4,13 +4,37 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
+	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// attrChanged reports whether a non-key binding attribute was edited between the
+// prior state (oldV) and the plan (newV). A newV that is unknown — an
+// unconfigured Computed attribute at plan time — is treated as unchanged so that
+// editing one set element does not force a spurious rebind of its siblings.
+func attrChanged(oldV, newV attr.Value) bool {
+	if newV.IsUnknown() {
+		return false
+	}
+	return !oldV.Equal(newV)
+}
+
+// lbmonitorBindingChanged reports whether a non-identity sub-attribute of an
+// lbmonitor binding (matched on monitor_name) was edited. Weight/monstate edits
+// are invisible to a name-only diff, so they must trigger a rebind.
+func lbmonitorBindingChanged(o, n LbmonitorbindingModel) bool {
+	return attrChanged(o.Weight, n.Weight) ||
+		attrChanged(o.Monstate, n.Monstate)
+}
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &GslbserviceResource{}
@@ -35,121 +59,411 @@ func (r *GslbserviceResource) Metadata(ctx context.Context, req resource.Metadat
 }
 
 func (r *GslbserviceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
 	}
-	// Set the client for the resource.
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
 func (r *GslbserviceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data GslbserviceResourceModel
 
-	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating gslbservice resource")
 
-	// gslbservice := gslbserviceGetThePayloadFromtheConfig(ctx, &data)
+	servicename := data.Servicename.ValueString()
+	gslbservice := gslbserviceGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Gslbservice.Type(), &gslbservice)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbservice, got error: %s", err))
-	//	 return
-	// }
+	_, err := r.client.AddResource(service.Gslbservice.Type(), servicename, &gslbservice)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbservice, got error: %s", err))
+		return
+	}
+	data.Id = types.StringValue(servicename)
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("gslbservice-config")
+	// Add lbmonitor bindings from the plan (old set is empty on create).
+	resp.Diagnostics.Append(r.syncLbmonitorBindings(ctx, servicename, types.SetNull(types.ObjectType{AttrTypes: lbmonitorbindingAttrTypes}), data.Lbmonitorbinding)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Trace(ctx, "Created gslbservice resource")
 
-	// Read the updated state back
 	r.readGslbserviceFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *GslbserviceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data GslbserviceResourceModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Reading gslbservice resource")
 
-	r.readGslbserviceFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readGslbserviceFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *GslbserviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data GslbserviceResourceModel
+	var state GslbserviceResourceModel
+	var config GslbserviceResourceModel
 
-	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Updating gslbservice resource")
 
-	// Create API request body from the model
-	// gslbservice := gslbserviceGetThePayloadFromtheConfig(ctx, &data)
+	servicename := data.Servicename.ValueString()
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Gslbservice.Type(), &gslbservice)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbservice, got error: %s", err))
-	//	 return
-	// }
+	gslbservice := gslb.Gslbservice{Servicename: servicename}
+	hasChange := false
+	attributesToUnset := []string{}
+
+	if !data.Appflowlog.Equal(state.Appflowlog) {
+		if config.Appflowlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		} else {
+			gslbservice.Appflowlog = data.Appflowlog.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Cip.Equal(state.Cip) {
+		if config.Cip.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cip")
+		} else {
+			gslbservice.Cip = data.Cip.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Cipheader.Equal(state.Cipheader) {
+		gslbservice.Cipheader = data.Cipheader.ValueString()
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		gslbservice.Comment = data.Comment.ValueString()
+		hasChange = true
+	}
+	if !data.Downstateflush.Equal(state.Downstateflush) {
+		gslbservice.Downstateflush = data.Downstateflush.ValueString()
+		hasChange = true
+	}
+	if !data.Hashid.Equal(state.Hashid) {
+		gslbservice.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Healthmonitor.Equal(state.Healthmonitor) {
+		if config.Healthmonitor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "healthmonitor")
+		} else {
+			gslbservice.Healthmonitor = data.Healthmonitor.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Ipaddress.Equal(state.Ipaddress) {
+		gslbservice.Ipaddress = data.Ipaddress.ValueString()
+		hasChange = true
+	}
+	if !data.Maxaaausers.Equal(state.Maxaaausers) {
+		gslbservice.Maxaaausers = utils.IntPtr(int(data.Maxaaausers.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Maxbandwidth.Equal(state.Maxbandwidth) {
+		gslbservice.Maxbandwidth = utils.IntPtr(int(data.Maxbandwidth.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Maxclient.Equal(state.Maxclient) {
+		gslbservice.Maxclient = utils.IntPtr(int(data.Maxclient.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Monitornamesvc.Equal(state.Monitornamesvc) {
+		gslbservice.Monitornamesvc = data.Monitornamesvc.ValueString()
+		hasChange = true
+	}
+	if !data.Monthreshold.Equal(state.Monthreshold) {
+		gslbservice.Monthreshold = utils.IntPtr(int(data.Monthreshold.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Naptrdomainttl.Equal(state.Naptrdomainttl) {
+		gslbservice.Naptrdomainttl = utils.IntPtr(int(data.Naptrdomainttl.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Naptrorder.Equal(state.Naptrorder) {
+		gslbservice.Naptrorder = utils.IntPtr(int(data.Naptrorder.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Naptrpreference.Equal(state.Naptrpreference) {
+		gslbservice.Naptrpreference = utils.IntPtr(int(data.Naptrpreference.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Naptrreplacement.Equal(state.Naptrreplacement) {
+		gslbservice.Naptrreplacement = data.Naptrreplacement.ValueString()
+		hasChange = true
+	}
+	if !data.Naptrservices.Equal(state.Naptrservices) {
+		gslbservice.Naptrservices = data.Naptrservices.ValueString()
+		hasChange = true
+	}
+	if !data.Publicip.Equal(state.Publicip) {
+		gslbservice.Publicip = data.Publicip.ValueString()
+		hasChange = true
+	}
+	if !data.Publicport.Equal(state.Publicport) {
+		gslbservice.Publicport = utils.IntPtr(int(data.Publicport.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Sitepersistence.Equal(state.Sitepersistence) {
+		gslbservice.Sitepersistence = data.Sitepersistence.ValueString()
+		hasChange = true
+	}
+	if !data.Siteprefix.Equal(state.Siteprefix) {
+		gslbservice.Siteprefix = data.Siteprefix.ValueString()
+		hasChange = true
+	}
+	if !data.Viewip.Equal(state.Viewip) {
+		gslbservice.Viewip = data.Viewip.ValueString()
+		hasChange = true
+	}
+	if !data.Viewname.Equal(state.Viewname) {
+		gslbservice.Viewname = data.Viewname.ValueString()
+		hasChange = true
+	}
+	if !data.Weight.Equal(state.Weight) {
+		gslbservice.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
+		hasChange = true
+	}
+
+	if hasChange {
+		_, err := r.client.UpdateResource(service.Gslbservice.Type(), servicename, &gslbservice)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbservice %s, got error: %s", servicename, err))
+			return
+		}
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"servicename": data.Servicename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Gslbservice.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset gslbservice attributes, got error: %s", err))
+		return
+	}
+
+	// State change is applied via an enable/disable action, not the update payload.
+	if !data.State.Equal(state.State) && !data.State.IsNull() && !data.State.IsUnknown() {
+		if err := r.doGslbServiceStateChange(ctx, &data); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to change state of gslbservice %s, got error: %s", servicename, err))
+			return
+		}
+	}
+
+	// Reconcile lbmonitor bindings.
+	resp.Diagnostics.Append(r.syncLbmonitorBindings(ctx, servicename, state.Lbmonitorbinding, data.Lbmonitorbinding)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Trace(ctx, "Updated gslbservice resource")
 
-	// Read the updated state back
 	r.readGslbserviceFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *GslbserviceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data GslbserviceResourceModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Deleting gslbservice resource")
 
-	// For gslbservice, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted gslbservice resource from state")
+	err := r.client.DeleteResource(service.Gslbservice.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete gslbservice %s, got error: %s", data.Id.ValueString(), err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted gslbservice resource")
 }
 
-// Helper function to read gslbservice data from API
-func (r *GslbserviceResource) readGslbserviceFromApi(ctx context.Context, data *GslbserviceResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Gslbservice.Type(), "")
+// readGslbserviceFromApi reads the gslbservice (and its lbmonitor bindings) into the model.
+// Returns false if the resource no longer exists on the ADC.
+func (r *GslbserviceResource) readGslbserviceFromApi(ctx context.Context, data *GslbserviceResourceModel, diags *diag.Diagnostics) bool {
+	servicename := data.Id.ValueString()
+	if servicename == "" {
+		servicename = data.Servicename.ValueString()
+	}
+
+	getResponseData, err := r.client.FindResource(service.Gslbservice.Type(), servicename)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbservice, got error: %s", err))
-		return
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbservice %s, got error: %s", servicename, err))
+		return false
+	}
+	if getResponseData == nil {
+		return false
 	}
 
 	gslbserviceSetAttrFromGet(ctx, data, getResponseData)
 
+	// Refresh lbmonitor bindings only when the resource manages them (state/plan non-null).
+	if !data.Lbmonitorbinding.IsNull() {
+		diags.Append(r.readLbmonitorBindings(ctx, servicename, data)...)
+	}
+
+	return true
+}
+
+// doGslbServiceStateChange enables/disables the underlying service, mirroring SDK v2.
+func (r *GslbserviceResource) doGslbServiceStateChange(ctx context.Context, data *GslbserviceResourceModel) error {
+	svc := basic.Service{Name: data.Servicename.ValueString()}
+	newstate := data.State.ValueString()
+
+	switch newstate {
+	case "ENABLED":
+		return r.client.ActOnResource(service.Service.Type(), svc, "enable")
+	case "DISABLED":
+		if !data.Delay.IsNull() && !data.Delay.IsUnknown() {
+			svc.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))
+		}
+		return r.client.ActOnResource(service.Service.Type(), svc, "disable")
+	default:
+		return fmt.Errorf("%q is not a valid state; use ENABLED or DISABLED", newstate)
+	}
+}
+
+// syncLbmonitorBindings adds/removes gslbservice_lbmonitor_binding entries to match newSet.
+func (r *GslbserviceResource) syncLbmonitorBindings(ctx context.Context, servicename string, oldSet, newSet types.Set) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	var oldBindings, newBindings []LbmonitorbindingModel
+	if !oldSet.IsNull() && !oldSet.IsUnknown() {
+		diags.Append(oldSet.ElementsAs(ctx, &oldBindings, false)...)
+	}
+	if !newSet.IsNull() && !newSet.IsUnknown() {
+		diags.Append(newSet.ElementsAs(ctx, &newBindings, false)...)
+	}
+	if diags.HasError() {
+		return diags
+	}
+
+	newByName := make(map[string]LbmonitorbindingModel)
+	for _, b := range newBindings {
+		if mn := b.MonitorName.ValueString(); mn != "" {
+			newByName[mn] = b
+		}
+	}
+	oldByName := make(map[string]LbmonitorbindingModel)
+	for _, b := range oldBindings {
+		if mn := b.MonitorName.ValueString(); mn != "" {
+			oldByName[mn] = b
+		}
+	}
+
+	// Remove bindings dropped from config, plus the stale copy of any binding
+	// whose weight/monstate changed (it is re-added below).
+	for _, b := range oldBindings {
+		mn := b.MonitorName.ValueString()
+		if mn == "" {
+			continue
+		}
+		if nb, ok := newByName[mn]; ok && !lbmonitorBindingChanged(b, nb) {
+			continue
+		}
+		args := []string{fmt.Sprintf("monitor_name:%s", mn)}
+		if err := r.client.DeleteResourceWithArgs("gslbservice_lbmonitor_binding", servicename, args); err != nil {
+			diags.AddError("Client Error", fmt.Sprintf("Unable to delete lbmonitor binding %s from gslbservice %s: %s", mn, servicename, err))
+			return diags
+		}
+	}
+
+	// Add new bindings, plus re-add any binding whose weight/monstate changed so
+	// the edit is pushed to the appliance (SDK v2 full-hash parity).
+	for _, b := range newBindings {
+		mn := b.MonitorName.ValueString()
+		if mn == "" {
+			continue
+		}
+		if ob, ok := oldByName[mn]; ok && !lbmonitorBindingChanged(ob, b) {
+			continue
+		}
+		bind := gslb.Gslbservicemonitorbinding{Servicename: servicename}
+		if !b.Weight.IsNull() && !b.Weight.IsUnknown() {
+			bind.Weight = uint32(b.Weight.ValueInt64())
+		}
+		bind.Monitorname = mn
+		if !b.Monstate.IsNull() && !b.Monstate.IsUnknown() {
+			bind.Monstate = b.Monstate.ValueString()
+		}
+		if _, err := r.client.UpdateResource("gslbservice_lbmonitor_binding", servicename, bind); err != nil {
+			diags.AddError("Client Error", fmt.Sprintf("Unable to add lbmonitor binding %s to gslbservice %s: %s", mn, servicename, err))
+			return diags
+		}
+	}
+
+	return diags
+}
+
+// readLbmonitorBindings populates data.Lbmonitorbinding from the ADC.
+func (r *GslbserviceResource) readLbmonitorBindings(ctx context.Context, servicename string, data *GslbserviceResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	bindings, _ := r.client.FindResourceArray("gslbservice_lbmonitor_binding", servicename)
+	elems := make([]LbmonitorbindingModel, 0, len(bindings))
+	for _, m := range bindings {
+		e := LbmonitorbindingModel{
+			Weight:      types.Int64Null(),
+			MonitorName: types.StringNull(),
+			Monstate:    types.StringNull(),
+		}
+		if v, ok := m["weight"]; ok && v != nil {
+			if iv, err := utils.ConvertToInt64(v); err == nil {
+				e.Weight = types.Int64Value(iv)
+			}
+		}
+		if v, ok := m["monitor_name"]; ok && v != nil {
+			if s, isStr := v.(string); isStr {
+				e.MonitorName = types.StringValue(s)
+			}
+		}
+		if v, ok := m["monstate"]; ok && v != nil {
+			if s, isStr := v.(string); isStr {
+				e.Monstate = types.StringValue(s)
+			}
+		}
+		elems = append(elems, e)
+	}
+
+	setVal, d := types.SetValueFrom(ctx, types.ObjectType{AttrTypes: lbmonitorbindingAttrTypes}, elems)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+	data.Lbmonitorbinding = setVal
+	return diags
 }

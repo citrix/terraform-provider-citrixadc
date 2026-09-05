@@ -4,7 +4,7 @@ subcategory: "Cache Redirection"
 
 # Data Source: crvserver_spilloverpolicy_binding
 
-This data source is used to retrieve information about a specific spillover policy binding to a cache redirection virtual server.
+The crvserver_spilloverpolicy_binding data source allows you to retrieve information about a specific binding between a cache redirection virtual server and a spillover policy.
 
 ## Example Usage
 
@@ -25,16 +25,15 @@ output "target_vserver" {
 
 ## Argument Reference
 
-The following arguments are required:
-
 * `name` - (Required) Name of the cache redirection virtual server to which to bind the cache redirection policy.
 * `policyname` - (Required) Policies bound to this vserver.
 
 ## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the binding.
+* `id` - The id of the crvserver_spilloverpolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
+* `bindpoint` - The bindpoint to which the policy is bound.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - Invoke a policy label if this policy's rule evaluates to TRUE.
 * `priority` - The priority for the policy.

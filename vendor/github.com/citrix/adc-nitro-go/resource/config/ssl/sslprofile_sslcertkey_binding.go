@@ -21,6 +21,14 @@ package ssl
 */
 type Sslprofilesslcertkeybinding struct {
 	/**
+	* The certkey (CA certificate + private key) to be bound with profile.
+	*/
+	Certkeyname string `json:"certkeyname,omitempty"`
+	/**
+	* The certkey (CA certificate + private key) to be used for signing Forged Client Certificate.
+	*/
+	Forgingcacertkey bool `json:"forgingcacertkey,omitempty"`
+	/**
 	* The certkey (CA certificate + private key) to be used for SSL interception.
 	*/
 	Sslicacertkey string `json:"sslicacertkey,omitempty"`

@@ -63,3 +63,14 @@ The following attributes are available:
 * `snienable` - State of TLS Server Name Indication (SNI) processing on the virtual server. If SNI is enabled on a virtual server, a domain name (FQDN) can be associated with that virtual server for performing SNI-based certificate selections or to reject requests with an invalid SNI.
 * `ssllogprofile` - The name of the ssllogprofile.
 * `id` - The id of the sslaction. It is a system-generated identifier.
+
+### Read-only sslaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslaction` resource) and are Computed. Any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `referencecount` - The number of references to the action.
+* `description` - Description of the action.
+* `builtin` - Flag to determine whether the SSL action is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,16 @@ func (r *LocationparameterResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating locationparameter resource")
 
-	// locationparameter := locationparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	locationparameter := locationparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Locationparameter.Type(), &locationparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create locationparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Locationparameter.Type(), &locationparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create locationparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("locationparameter-config")
@@ -71,6 +74,9 @@ func (r *LocationparameterResource) Create(ctx context.Context, req resource.Cre
 
 	// Read the updated state back
 	r.readLocationparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +94,108 @@ func (r *LocationparameterResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading locationparameter resource")
 
-	r.readLocationparameterFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLocationparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LocationparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LocationparameterResourceModel
+	var data, config, state LocationparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating locationparameter resource")
 
-	// Create API request body from the model
-	// locationparameter := locationparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Context.Equal(state.Context) {
+		tflog.Debug(ctx, "context has changed for locationparameter")
+		hasChange = true
+	}
+	if !data.Matchwildcardtoany.Equal(state.Matchwildcardtoany) {
+		tflog.Debug(ctx, "matchwildcardtoany has changed for locationparameter")
+		if config.Matchwildcardtoany.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "matchwildcardtoany")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Q1label.Equal(state.Q1label) {
+		tflog.Debug(ctx, "q1label has changed for locationparameter")
+		hasChange = true
+	}
+	if !data.Q2label.Equal(state.Q2label) {
+		tflog.Debug(ctx, "q2label has changed for locationparameter")
+		hasChange = true
+	}
+	if !data.Q3label.Equal(state.Q3label) {
+		tflog.Debug(ctx, "q3label has changed for locationparameter")
+		hasChange = true
+	}
+	if !data.Q4label.Equal(state.Q4label) {
+		tflog.Debug(ctx, "q4label has changed for locationparameter")
+		hasChange = true
+	}
+	if !data.Q5label.Equal(state.Q5label) {
+		tflog.Debug(ctx, "q5label has changed for locationparameter")
+		hasChange = true
+	}
+	if !data.Q6label.Equal(state.Q6label) {
+		tflog.Debug(ctx, "q6label has changed for locationparameter")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Locationparameter.Type(), &locationparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update locationparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		locationparameter := locationparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated locationparameter resource")
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Locationparameter.Type(), &locationparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update locationparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated locationparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for locationparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Locationparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset locationparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readLocationparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +213,25 @@ func (r *LocationparameterResource) Delete(ctx context.Context, req resource.Del
 
 	tflog.Debug(ctx, "Deleting locationparameter resource")
 
-	// For locationparameter, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// locationparameter is a singleton configuration resource with no DELETE
+	// operation on the ADC (matches SDK v2 behavior). Just remove it from state.
 	tflog.Trace(ctx, "Deleted locationparameter resource from state")
 }
 
 // Helper function to read locationparameter data from API
-func (r *LocationparameterResource) readLocationparameterFromApi(ctx context.Context, data *LocationparameterResourceModel, diags *diag.Diagnostics) {
+func (r *LocationparameterResource) readLocationparameterFromApi(ctx context.Context, data *LocationparameterResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 1: Simple find without ID (singleton)
 	getResponseData, err := r.client.FindResource(service.Locationparameter.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read locationparameter, got error: %s", err))
-		return
+		return false
 	}
 
 	locationparameterSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

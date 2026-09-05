@@ -23,8 +23,10 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_starturl_binding_basic = `
@@ -90,6 +92,49 @@ func TestAccAppfwprofile_starturl_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofile_starturl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,starturl) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "starturl"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_starturl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_starturl_binding_basic},
+			{Config: testAccAppfwprofile_starturl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_starturl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckAppfwprofile_starturl_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -116,14 +161,12 @@ func testAccCheckAppfwprofile_starturl_bindingExist(n string, id *string) resour
 		}
 
 		bindingID := rs.Primary.ID
-		idSlice := strings.SplitN(bindingID, ",", 2)
-
-		if len(idSlice) < 2 {
-			return fmt.Errorf("Cannot deduce appfwprofile and starturl from ID string")
+		idMap, _, err := utils.ParseIdString(bindingID, []string{"name", "starturl"}, nil)
+		if err != nil {
+			return fmt.Errorf("Cannot deduce appfwprofile and starturl from ID string: %v", err)
 		}
-
-		profileName := idSlice[0]
-		startURL := idSlice[1]
+		profileName := idMap["name"]
+		startURL := idMap["starturl"]
 
 		findParams := service.FindParams{
 			ResourceType: service.Appfwprofile_starturl_binding.Type(),
@@ -253,6 +296,59 @@ const testAccAppfwprofileStarturlBindingDataSource_basic = `
 	}
 `
 
+const testAccAppfwprofile_starturl_binding_upgrade_basic = `
+	resource citrixadc_appfwprofile demo_appfw {
+		name = "tfAcc_appfwprofile"
+		type = ["HTML"]
+	}
+
+	resource citrixadc_appfwprofile_starturl_binding appfwprofile_starturl1 {
+		name = citrixadc_appfwprofile.demo_appfw.name
+		starturl = "^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"
+		alertonly      = "OFF"
+		isautodeployed = "NOTAUTODEPLOYED"
+		state          = "ENABLED"
+	}
+`
+
+func TestAccAppfwprofile_starturl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_starturl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_starturl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_starturl_bindingExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "id", "tfAcc_appfwprofile,^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_starturl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_starturl_bindingExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "id", "name:tfAcc_appfwprofile,starturl:%5E%5B%5E%3F%5D%2B%5B.%5D%28html%3F%7Cshtml%7Cjs%7Cgif%7Cjpg%7Cjpeg%7Cpng%7Cswf%7Cpif%7Cpdf%7Ccss%7Ccsv%29%24"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAppfwprofileStarturlBindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -272,6 +368,34 @@ func TestAccAppfwprofileStarturlBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "isautodeployed", "NOTAUTODEPLOYED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl2_data", "state", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_starturl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_starturl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_starturl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_starturl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_starturl_binding.Type(), "tfAcc_appfwprofile", []string{fmt.Sprintf("starturl:%s", utils.UrlEncode("^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_starturl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_starturl_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -15,6 +15,7 @@ import (
 // SnmpoptionResourceModel describes the resource data model.
 type SnmpoptionResourceModel struct {
 	Id                   types.String `tfsdk:"id"`
+	Customtrap           types.String `tfsdk:"customtrap"`
 	Partitionnameintrap  types.String `tfsdk:"partitionnameintrap"`
 	Severityinfointrap   types.String `tfsdk:"severityinfointrap"`
 	Snmpset              types.String `tfsdk:"snmpset"`
@@ -29,6 +30,11 @@ func (r *SnmpoptionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the snmpoption resource.",
+			},
+			"customtrap": schema.StringAttribute{
+				Optional:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
+				Description: "By default, Customtrap will be disabled, set to enabled when using the feature.",
 			},
 			"partitionnameintrap": schema.StringAttribute{
 				Optional:    true,
@@ -64,6 +70,9 @@ func snmpoptionGetThePayloadFromtheConfig(ctx context.Context, data *SnmpoptionR
 
 	// Create API request body from the model
 	snmpoption := snmp.Snmpoption{}
+	if !data.Customtrap.IsNull() {
+		snmpoption.Customtrap = data.Customtrap.ValueString()
+	}
 	if !data.Partitionnameintrap.IsNull() {
 		snmpoption.Partitionnameintrap = data.Partitionnameintrap.ValueString()
 	}
@@ -87,6 +96,11 @@ func snmpoptionSetAttrFromGet(ctx context.Context, data *SnmpoptionResourceModel
 	tflog.Debug(ctx, "In snmpoptionSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["customtrap"]; ok && val != nil {
+		data.Customtrap = types.StringValue(val.(string))
+	} else {
+		data.Customtrap = types.StringNull()
+	}
 	if val, ok := getResponseData["partitionnameintrap"]; ok && val != nil {
 		data.Partitionnameintrap = types.StringValue(val.(string))
 	} else {

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *NetprofileSrcportsetBindingResource) Schema(ctx context.Context, req re
 				Description: "The ID of the netprofile_srcportset_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the netprofile to which to bind port ranges.",
 			},
 			"srcportrange": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "When the source port range is configured and associated with the netprofile bound to a service group, Citrix ADC will choose a port from the range configured for connection establishment at the backend servers.",
 			},
 		},
 	}
 }
 
-func netprofile_srcportset_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NetprofileSrcportsetBindingResourceModel) network.Netprofilesrcportsetbinding {
-	tflog.Debug(ctx, "In netprofile_srcportset_bindingGetThePayloadFromtheConfig Function")
+func netprofile_srcportset_bindingGetThePayloadFromthePlan(ctx context.Context, data *NetprofileSrcportsetBindingResourceModel) network.Netprofilesrcportsetbinding {
+	tflog.Debug(ctx, "In netprofile_srcportset_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	netprofile_srcportset_binding := network.Netprofilesrcportsetbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netprofile_srcportset_binding.Name = data.Name.ValueString()
 	}
-	if !data.Srcportrange.IsNull() {
+	if !data.Srcportrange.IsNull() && !data.Srcportrange.IsUnknown() {
 		netprofile_srcportset_binding.Srcportrange = data.Srcportrange.ValueString()
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,16 +56,17 @@ func (r *CmpparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating cmpparameter resource")
 
-	// cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cmpparameter, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - cmpparameter is a singleton config resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cmpparameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate the static ID for this singleton configuration resource
 	data.Id = types.StringValue("cmpparameter-config")
 
 	tflog.Trace(ctx, "Created cmpparameter resource")
@@ -95,10 +97,12 @@ func (r *CmpparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *CmpparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CmpparameterResourceModel
+	var data, config, state CmpparameterResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan, and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +110,139 @@ func (r *CmpparameterResource) Update(ctx context.Context, req resource.UpdateRe
 
 	tflog.Debug(ctx, "Updating cmpparameter resource")
 
-	// Create API request body from the model
-	// cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve the singleton ID across the update
+	data.Id = types.StringValue("cmpparameter-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cmpparameter, got error: %s", err))
-	//	 return
-	// }
+	// Determine changes: attributes removed from config (now null) that differ
+	// from prior state must be unset (reverted to their NITRO defaults); other
+	// changed attributes are pushed via the update payload.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Addvaryheader.Equal(state.Addvaryheader) {
+		if config.Addvaryheader.IsNull() {
+			attributesToUnset = append(attributesToUnset, "addvaryheader")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cmpbypasspct.Equal(state.Cmpbypasspct) {
+		if config.Cmpbypasspct.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cmpbypasspct")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cmplevel.Equal(state.Cmplevel) {
+		if config.Cmplevel.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cmplevel")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cmponpush.Equal(state.Cmponpush) {
+		if config.Cmponpush.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cmponpush")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Externalcache.Equal(state.Externalcache) {
+		if config.Externalcache.IsNull() {
+			attributesToUnset = append(attributesToUnset, "externalcache")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Heurexpiry.Equal(state.Heurexpiry) {
+		if config.Heurexpiry.IsNull() {
+			attributesToUnset = append(attributesToUnset, "heurexpiry")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Heurexpiryhistwt.Equal(state.Heurexpiryhistwt) {
+		if config.Heurexpiryhistwt.IsNull() {
+			attributesToUnset = append(attributesToUnset, "heurexpiryhistwt")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Heurexpirythres.Equal(state.Heurexpirythres) {
+		if config.Heurexpirythres.IsNull() {
+			attributesToUnset = append(attributesToUnset, "heurexpirythres")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Minressize.Equal(state.Minressize) {
+		hasChange = true
+	}
+	if !data.Policytype.Equal(state.Policytype) {
+		hasChange = true
+	}
+	if !data.Quantumsize.Equal(state.Quantumsize) {
+		if config.Quantumsize.IsNull() {
+			attributesToUnset = append(attributesToUnset, "quantumsize")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Randomgzipfilename.Equal(state.Randomgzipfilename) {
+		if config.Randomgzipfilename.IsNull() {
+			attributesToUnset = append(attributesToUnset, "randomgzipfilename")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Randomgzipfilenamemaxlength.Equal(state.Randomgzipfilenamemaxlength) {
+		if config.Randomgzipfilenamemaxlength.IsNull() {
+			attributesToUnset = append(attributesToUnset, "randomgzipfilenamemaxlength")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Randomgzipfilenameminlength.Equal(state.Randomgzipfilenameminlength) {
+		if config.Randomgzipfilenameminlength.IsNull() {
+			attributesToUnset = append(attributesToUnset, "randomgzipfilenameminlength")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Servercmp.Equal(state.Servercmp) {
+		if config.Servercmp.IsNull() {
+			attributesToUnset = append(attributesToUnset, "servercmp")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Varyheadervalue.Equal(state.Varyheadervalue) {
+		hasChange = true
+	}
 
-	tflog.Trace(ctx, "Updated cmpparameter resource")
+	if hasChange {
+		// Create API request body from the plan
+		cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call - cmpparameter is a singleton config resource, use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cmpparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated cmpparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for cmpparameter resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. cmpparameter is a singleton resource, so the unset payload
+	// carries no identifying key.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Cmpparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset cmpparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readCmpparameterFromApi(ctx, &data, &resp.Diagnostics)

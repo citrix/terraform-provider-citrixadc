@@ -43,3 +43,13 @@ In addition to the arguments, the following attributes are available:
   * `NOLBACTION` - Does not consider LB action in making LB decision.
   * `SELECTIONORDER` - Services bound to vserver with order specified in value parameter is considered for lb/gslb decision.
 * `value` - The selection order list used during lb/gslb decision. Preference of services during lb/gslb decision is as follows - services corresponding to first order specified in the sequence is considered first, services corresponding to second order specified in the sequence is considered next and so on. For example, if -value 2 1 3 is specified here and service-1 bound to a vserver with order 1, service-2 bound to a vserver with order 2 and service-3 bound to a vserver with order 3. Then preference of selecting services in LB decision is as follows: service-2, service-1, service-3.
+
+### Read-only lbaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `feature` - The feature to be checked while applying this config.
+* `builtin` - Flag to determine whether LB action is built-in or not. A list of strings.

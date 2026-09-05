@@ -37,3 +37,18 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslpolicylabel. It has the same value as the `labelname` attribute.
 * `type` - Type of policies that the policy label can contain.
+
+### Read-only sslpolicylabel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslpolicylabel` resource). Any attribute the appliance does not return is `null`.
+
+* `numpol` - Number of polices bound to label.
+* `hits` - Number of times policy label was invoked.
+* `policyname` - Name of the SSL policy to bind to the policy label.
+* `priority` - Specifies the priority of the policy.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `invoke` - Invoke flag.
+* `labeltype` - Type of policy label invocation. Possible values = vserver, service, policylabel.
+* `invoke_labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
+* `flowtype` - Flowtype of the bound SSL policy.
+* `description` - Description of the policylabel.

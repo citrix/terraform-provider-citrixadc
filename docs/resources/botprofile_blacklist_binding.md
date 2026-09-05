@@ -63,3 +63,4 @@ A botprofile_blacklist_binding can be imported using its id, e.g.
 
 ```shell
 terraform import citrixadc_botprofile_blacklist_binding.tf_binding tf_botprofile,1.3.5.7
+```

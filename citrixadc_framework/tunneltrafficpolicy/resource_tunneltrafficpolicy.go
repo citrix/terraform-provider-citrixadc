@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *TunneltrafficpolicyResource) Create(ctx context.Context, req resource.C
 
 	tflog.Debug(ctx, "Creating tunneltrafficpolicy resource")
 
-	// tunneltrafficpolicy := tunneltrafficpolicyGetThePayloadFromtheConfig(ctx, &data)
+	tunneltrafficpolicy := tunneltrafficpolicyGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tunneltrafficpolicy.Type(), &tunneltrafficpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tunneltrafficpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("tunneltrafficpolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Tunneltrafficpolicy.Type(), name_value, &tunneltrafficpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tunneltrafficpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created tunneltrafficpolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readTunneltrafficpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTunneltrafficpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tunneltrafficpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,100 @@ func (r *TunneltrafficpolicyResource) Read(ctx context.Context, req resource.Rea
 
 	tflog.Debug(ctx, "Reading tunneltrafficpolicy resource")
 
-	r.readTunneltrafficpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readTunneltrafficpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *TunneltrafficpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data TunneltrafficpolicyResourceModel
+	var data, config, state TunneltrafficpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish an attribute removed from config (-> unset) from
+	// one merely changed (-> update).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating tunneltrafficpolicy resource")
 
-	// Create API request body from the model
-	// tunneltrafficpolicy := tunneltrafficpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for tunneltrafficpolicy")
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for tunneltrafficpolicy")
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Logaction.Equal(state.Logaction) {
+		tflog.Debug(ctx, "logaction has changed for tunneltrafficpolicy")
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for tunneltrafficpolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tunneltrafficpolicy.Type(), &tunneltrafficpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tunneltrafficpolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		tunneltrafficpolicy := tunneltrafficpolicyGetThePayloadFromthePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Tunneltrafficpolicy.Type(), name_value, &tunneltrafficpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tunneltrafficpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated tunneltrafficpolicy resource")
+		tflog.Trace(ctx, "Updated tunneltrafficpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for tunneltrafficpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Tunneltrafficpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tunneltrafficpolicy attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readTunneltrafficpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTunneltrafficpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tunneltrafficpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +206,33 @@ func (r *TunneltrafficpolicyResource) Delete(ctx context.Context, req resource.D
 
 	tflog.Debug(ctx, "Deleting tunneltrafficpolicy resource")
 
-	// For tunneltrafficpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted tunneltrafficpolicy resource from state")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Tunneltrafficpolicy.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete tunneltrafficpolicy, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted tunneltrafficpolicy resource")
 }
 
 // Helper function to read tunneltrafficpolicy data from API
-func (r *TunneltrafficpolicyResource) readTunneltrafficpolicyFromApi(ctx context.Context, data *TunneltrafficpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Tunneltrafficpolicy.Type(), "")
+func (r *TunneltrafficpolicyResource) readTunneltrafficpolicyFromApi(ctx context.Context, data *TunneltrafficpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	tunneltrafficpolicyName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Tunneltrafficpolicy.Type(), tunneltrafficpolicyName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read tunneltrafficpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	tunneltrafficpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

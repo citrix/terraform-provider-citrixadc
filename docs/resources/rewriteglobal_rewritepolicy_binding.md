@@ -11,25 +11,25 @@ The rewriteglobal_rewritepolicy_binding resource is used to bind a rewrite polic
 
 ```hcl
 resource "citrixadc_rewriteglobal_rewritepolicy_binding" "tf_rewriteglobal_rewritepolicy_binding" {
-	policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
-	priority = 5
-	type = "REQ_DEFAULT"
-	globalbindtype = "SYSTEM_GLOBAL"
-	gotopriorityexpression = "END"
-	invoke = "true"
-	labelname = citrixadc_rewritepolicylabel.tf_rewritepolicylabel.labelname
-	labeltype = "policylabel"
+  policyname             = citrixadc_rewritepolicy.tf_rewrite_policy.name
+  priority               = 5
+  type                   = "REQ_DEFAULT"
+  globalbindtype         = "SYSTEM_GLOBAL"
+  gotopriorityexpression = "END"
+  invoke                 = true
+  labelname              = citrixadc_rewritepolicylabel.tf_rewritepolicylabel.labelname
+  labeltype              = "policylabel"
 }
 
 resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
-	name = "tf_rewrite_policy"
-	action = "DROP"
-	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+  name   = "tf_rewrite_policy"
+  action = "DROP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
 }
 
 resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
-	labelname = "tf_rewritepolicylabel"
-	transform = "http_req"
+  labelname = "tf_rewritepolicylabel"
+  transform = "http_req"
 }
 ```
 
@@ -43,7 +43,7 @@ resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
 * `invoke` - (Optional) Terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labeltype` - (Optional) Type of invocation. Available settings function as follows: * reqvserver - Forward the request to the specified request virtual server. * resvserver - Forward the response to the specified response virtual server. * policylabel - Invoke the specified policy label. Possible values: [ reqvserver, resvserver, policylabel ]
 * `labelname` - (Optional) * If labelType is policylabel, name of the policy label to invoke.  * If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request of response.
-* `globalbindtype` - (Optional) . Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL ]
+* `globalbindtype` - (Optional) The bind point at which the policy is bound globally. Defaults to `"SYSTEM_GLOBAL"`. Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL ]
 
 
 ## Attribute Reference

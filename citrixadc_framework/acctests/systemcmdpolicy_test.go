@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSystemcmdpolicy_basic(t *testing.T) {
@@ -47,6 +48,77 @@ func TestAccSystemcmdpolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemcmdpolicyExist("citrixadc_systemcmdpolicy.tf_policy", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSystemcmdpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemcmdpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemcmdpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemcmdpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemcmdpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systemcmdpolicy.Type(), "tf_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemcmdpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemcmdpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSystemcmdpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_systemcmdpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemcmdpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemcmdpolicy_basic_step1},
+			{
+				Config:                  testAccSystemcmdpolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSystemcmdpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemcmdpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSystemcmdpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemcmdpolicyExist("citrixadc_systemcmdpolicy.tf_policy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemcmdpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemcmdpolicyExist("citrixadc_systemcmdpolicy.tf_policy", nil)),
 			},
 		},
 	})
@@ -162,6 +234,8 @@ func TestAccSystemcmdpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "policyname", "tf_policy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "action", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "cmdspec", "show.*"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemcmdpolicy.tf_policy", "id"),
 				),
 			},
 		},

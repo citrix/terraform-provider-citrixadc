@@ -44,3 +44,15 @@ The following attributes are available:
 * `username` - Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `vcpu` - Licensed using vcpu pool.
 * `id` - The id of the nscapacity. It is a system-generated identifier.
+
+### Read-only nscapacity metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nscapacity` resource). They are Computed / GET-only, and any attribute the appliance does not return (for example, those tied to a different license type) is `null`.
+
+* `actualbandwidth` - Bandwith in MBPS.
+* `vcpucount` - Number of vCPUs licensed.
+* `maxvcpucount` - Number of max vCPUs.
+* `maxbandwidth` - Maximum Bandwidth.
+* `minbandwidth` - Minimum Bandwidth.
+* `instancecount` - VPX will consume one instance and MPX will consume zero instance.
+* `daystoexpiration` - Days to expire.

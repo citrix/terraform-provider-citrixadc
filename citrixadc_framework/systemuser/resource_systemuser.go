@@ -79,7 +79,7 @@ func (r *SystemuserResource) ValidateConfig(ctx context.Context, req resource.Va
 	if data.Username.ValueString() == "nsroot" {
 		return
 	}
-	if data.Externalauth.IsUnknown() || strings.EqualFold(data.Externalauth.ValueString(), "ENABLED") {
+	if data.Externalauth.IsNull() || data.Externalauth.IsUnknown() || strings.EqualFold(data.Externalauth.ValueString(), "ENABLED") {
 		return
 	}
 

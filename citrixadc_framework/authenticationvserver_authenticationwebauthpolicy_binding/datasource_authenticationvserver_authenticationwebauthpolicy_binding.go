@@ -35,14 +35,14 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Sche
 }
 
 func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverAuthenticationwebauthpolicyBindingResourceModel
+	var data AuthenticationvserverAuthenticationwebauthpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Lookup identity is name (parent) + policy.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,7 +66,7 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -89,11 +89,11 @@ func (d *AuthenticationvserverAuthenticationwebauthpolicyBindingDataSource) Read
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationwebauthpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("authenticationvserver_authenticationwebauthpolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	authenticationvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationwebauthpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

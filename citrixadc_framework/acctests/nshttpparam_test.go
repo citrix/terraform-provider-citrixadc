@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNshttpparam_add = `
@@ -83,6 +85,128 @@ func TestAccNshttpparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccNshttpparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNshttpparam_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshttpparamExist("citrixadc_nshttpparam.tf_nshttpparam", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNshttpparam_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshttpparamExist("citrixadc_nshttpparam.tf_nshttpparam", nil),
+				),
+			},
+		},
+	})
+}
+
+// nshttpparam is a singleton config resource. Step 1 applies non-default
+// values for every unset-eligible attribute; step 2 removes them all from
+// config, so the provider must unset them (revert to the documented NITRO
+// defaults) and the post-apply plan must be empty.
+const testAccNshttpparam_unset_step1 = `
+	resource "citrixadc_nshttpparam" "tf_unset" {
+		conmultiplex              = "DISABLED"
+		dropinvalreqs             = "ON"
+		http2serverside           = "ON"
+		ignoreconnectcodingscheme = "ENABLED"
+		insnssrvrhdr              = "ON"
+		logerrresp                = "OFF"
+		markconnreqinval          = "ON"
+		markhttp09inval           = "ON"
+		maxreusepool              = 5
+	}
+`
+
+const testAccNshttpparam_unset_step2 = `
+	resource "citrixadc_nshttpparam" "tf_unset" {
+	}
+`
+
+func TestAccNshttpparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNshttpparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshttpparamExist("citrixadc_nshttpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "conmultiplex", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "dropinvalreqs", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "http2serverside", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "ignoreconnectcodingscheme", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "insnssrvrhdr", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "logerrresp", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "markconnreqinval", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "markhttp09inval", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "maxreusepool", "5"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccNshttpparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshttpparamExist("citrixadc_nshttpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "conmultiplex", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "dropinvalreqs", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "http2serverside", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "ignoreconnectcodingscheme", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "insnssrvrhdr", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "logerrresp", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "markconnreqinval", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "markhttp09inval", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nshttpparam.tf_unset", "maxreusepool", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNshttpparamADCValue("conmultiplex", "ENABLED"),
+					testAccCheckNshttpparamADCValue("dropinvalreqs", "OFF"),
+					testAccCheckNshttpparamADCValue("logerrresp", "ON"),
+					testAccCheckNshttpparamADCValue("maxreusepool", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNshttpparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNshttpparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nshttpparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nshttpparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nshttpparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
+
 func testAccCheckNshttpparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -121,6 +245,25 @@ func testAccCheckNshttpparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNshttpparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nshttpparam.tf_nshttpparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNshttpparam_add},
+			{
+				Config:                  testAccNshttpparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNshttpparamDataSource_basic = `
 	resource "citrixadc_nshttpparam" "tf_nshttpparam_ds" {
 		dropinvalreqs             = "ON"
@@ -154,6 +297,8 @@ func TestAccNshttpparamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "conmultiplex", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "http2serverside", "OFF"),
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "ignoreconnectcodingscheme", "ENABLED"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "id"),
 				),
 			},
 		},

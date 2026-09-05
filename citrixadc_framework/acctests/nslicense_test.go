@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccNslicense_basic(t *testing.T) {
@@ -37,6 +38,29 @@ func TestAccNslicense_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNslicense_import(t *testing.T) {
+	t.Skip("ssh does not work correctly with CPX")
+	if isCpxRun {
+		t.Skip("ssh does not work correctly with CPX")
+	}
+	const resAddr = "citrixadc_nslicense.tf_license"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNslicense_basic},
+			{
+				Config:                  testAccNslicense_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -72,6 +96,34 @@ resource "citrixadc_nslicense" "tf_license" {
     ssh_host_pubkey = "AAAAB3NzaC1kc3MAAACBAJ2yRBTkiCIR94oYfCmabSKPi7EjyYS7FxLPV0j8zAsWtarS16UTiPyW+tTpd5I9HNJPqIkGKTLWw9DakXd+lyRnXAusOGXIfiV+wdyLn8hg/T/dZMA7r6QssIfIUza0Bqcjn7eCGStwOHzSgUH5qS9YmIlZuZ/hKOU3Zs0N7wF5AAAAFQC6iGTFqcADv83/ItKiHh+6pEWe2wAAAIB3pcTDxth1IASlwNgzm1HQYaOm5ttcGve468w3c97BpzEXCbiwObd6T8Ynt2GFMH2NHOFFqid4nRXvT2Ba5JlLYgyrDTU53J6eDxkXtBSuxTcMss0P6EEtcqOJzi1e+OZWFPKtxaIsKBtScBw+S/dNFkY4H+Eo5vl5/ChahdOchAAAAIBd4sHyDMVWzI6vG9Z/HYNM6los0fXqCL8ait+LpFN5+hOScdDKNgzIfM5md35ToV6cM28nPQL3bum3sLLO4R4o5Rqp3QFW82+mipswjzycNIgKy3gcSSuFA7ALivIsZUxqpyQYU7GyBKnkJsf5om0tcr7PawHL08CqJf0/mLXZcw=="
 }
 `
+
+func TestAccNslicense_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("ssh does not work correctly with CPX")
+	if isCpxRun {
+		t.Skip("ssh does not work correctly with CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNslicense_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNslicense_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil)),
+			},
+		},
+	})
+}
 
 func TestAccNslicenseDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

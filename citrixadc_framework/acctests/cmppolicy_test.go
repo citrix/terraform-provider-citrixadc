@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCmppolicy_basic_step1 = `
@@ -130,6 +131,53 @@ func testAccCheckCmppolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCmppolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicy.tf_cmppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cmppolicy.Type(), "tf_cmppolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCmppolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicy.tf_cmppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmppolicy_basic_step1},
+			{
+				Config:                  testAccCmppolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccCmppolicyDataSource_basic = `
 
 resource "citrixadc_cmppolicy" "tf_cmppolicy" {
@@ -145,6 +193,30 @@ data "citrixadc_cmppolicy" "tf_cmppolicy_datasource" {
 
 `
 
+func TestAccCmppolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist("citrixadc_cmppolicy.tf_cmppolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist("citrixadc_cmppolicy.tf_cmppolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCmppolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -156,6 +228,8 @@ func TestAccCmppolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "name", "tf_cmppolicy_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "rule", "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "resaction", "COMPRESS"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "id"),
 				),
 			},
 		},

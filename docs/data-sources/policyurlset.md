@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `privateset` - Whether this urlset is prevented from being exported.
 * `subdomainexactmatch` - Whether exact subdomain matching is enforced.
 * `imported` - When set, indicates the urlset has been imported.
+
+### Read-only policyurlset metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_policyurlset` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `patterncount` - Number of patterns in this urlset.

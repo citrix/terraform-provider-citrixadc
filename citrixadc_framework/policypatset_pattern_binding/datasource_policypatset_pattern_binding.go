@@ -42,19 +42,45 @@ func (d *PolicypatsetPatternBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Case 2: Find with single ID attribute
+	// Array filter with parent ID - look up the patset by name, filter array by String.
 	name_Name := data.Name.ValueString()
+	stringText := data.String
 
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Policypatset_pattern_binding.Type(), name_Name)
+	findParams := service.FindParams{
+		ResourceType:             service.Policypatset_pattern_binding.Type(),
+		ResourceName:             name_Name,
+		ResourceMissingErrorCode: 2823,
+	}
+	dataArr, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read policypatset_pattern_binding, got error: %s", err))
 		return
 	}
 
-	policypatset_pattern_bindingSetAttrFromGet(ctx, &data, getResponseData)
+	// Resource is missing
+	if len(dataArr) == 0 {
+		resp.Diagnostics.AddError("Client Error", "policypatset_pattern_binding returned empty array.")
+		return
+	}
+
+	// Iterate through results to find the one with the right String
+	foundIndex := -1
+	for i, v := range dataArr {
+		if val, ok := v["String"].(string); ok {
+			if stringText.IsNull() || val == stringText.ValueString() {
+				foundIndex = i
+				break
+			}
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("policypatset_pattern_binding with string %s not found", stringText))
+		return
+	}
+
+	policypatset_pattern_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

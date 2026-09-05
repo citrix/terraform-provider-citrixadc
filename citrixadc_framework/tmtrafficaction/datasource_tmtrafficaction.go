@@ -55,7 +55,7 @@ func (d *TmtrafficactionDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	tmtrafficactionSetAttrFromGet(ctx, &data, getResponseData)
+	tmtrafficactionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

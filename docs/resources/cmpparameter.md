@@ -43,3 +43,12 @@ resource "citrixadc_cmpparameter" "tf_cmpparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the cmpparameter. It is a unique string prefixed with `tf-cmpparameter-`.
+
+
+## Import
+
+A cmpparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_cmpparameter.tf_cmpparameter cmpparameter-config
+```

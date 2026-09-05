@@ -23,6 +23,7 @@ resource "citrixadc_icaaction" "tf_icaaction" {
 * `name` - (Required) Name for the ICA action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the ICA action is added. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my ica action" or 'my ica action'). Minimum length =  1
 * `accessprofilename` - (Optional) Name of the ica accessprofile to be associated with this action.
 * `latencyprofilename` - (Optional) Name of the ica latencyprofile to be associated with this action.
+* `newname` - (Optional) New name for the ICA action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#),period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks ( for example, "my ica action" or 'my ica action').
 
 ## Attribute Reference
 

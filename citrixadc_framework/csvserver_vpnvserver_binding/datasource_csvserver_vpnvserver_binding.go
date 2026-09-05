@@ -35,7 +35,7 @@ func (d *CsvserverVpnvserverBindingDataSource) Schema(ctx context.Context, req d
 }
 
 func (d *CsvserverVpnvserverBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CsvserverVpnvserverBindingResourceModel
+	var data CsvserverVpnvserverBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *CsvserverVpnvserverBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	csvserver_vpnvserver_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	csvserver_vpnvserver_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

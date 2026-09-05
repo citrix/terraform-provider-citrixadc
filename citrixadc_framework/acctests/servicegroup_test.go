@@ -18,12 +18,14 @@ package citrixadc
 import (
 	"fmt"
 	// "os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -278,6 +280,167 @@ const testAccServicegroupDataSource_basic = `
 	}
 `
 
+func TestAccServicegroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Servicegroup.Type(), "test_servicegroup"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccServicegroup_import(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccServicegroup_basic},
+			{
+				Config:                  testAccServicegroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delay", "graceful", "lbvservers", "servicegroupmembers"},
+			},
+		},
+	})
+}
+
+func TestAccServicegroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccServicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroupExist("citrixadc_servicegroup.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccServicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroupExist("citrixadc_servicegroup.foo", nil)),
+			},
+		},
+	})
+}
+
+// The servicegroup unset test covers the mutable attributes wired into
+// attributesToUnset. step1 applies non-default values; step2 removes them from
+// config and the provider must issue ?action=unset, reverting them to the
+// documented NITRO defaults.
+const testAccServicegroup_unset_step1 = `
+resource "citrixadc_servicegroup" "tf_unset" {
+	servicegroupname   = "tf_servicegroup_unset"
+	servicetype        = "HTTP"
+	appflowlog         = "DISABLED"
+	cacheable          = "YES"
+	downstateflush     = "DISABLED"
+	healthmonitor      = "NO"
+	monconnectionclose = "RESET"
+	sp                 = "ON"
+}
+`
+
+const testAccServicegroup_unset_step2 = `
+resource "citrixadc_servicegroup" "tf_unset" {
+	servicegroupname = "tf_servicegroup_unset"
+	servicetype      = "HTTP"
+	# All unset-eligible attributes removed -> provider must unset them (revert to
+	# NITRO defaults).
+}
+`
+
+func TestAccServicegroup_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccServicegroup_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroupExist("citrixadc_servicegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "cacheable", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "downstateflush", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "healthmonitor", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "monconnectionclose", "RESET"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "sp", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccServicegroup_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroupExist("citrixadc_servicegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "cacheable", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "downstateflush", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "healthmonitor", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "monconnectionclose", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup.tf_unset", "sp", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckServicegroupADCValue("tf_servicegroup_unset", "appflowlog", "ENABLED"),
+					testAccCheckServicegroupADCValue("tf_servicegroup_unset", "healthmonitor", "YES"),
+					testAccCheckServicegroupADCValue("tf_servicegroup_unset", "cacheable", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckServicegroupADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckServicegroupADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Servicegroup.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("servicegroup %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("servicegroup %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccServicegroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -289,6 +452,8 @@ func TestAccServicegroupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup.tf_servicegroup", "servicegroupname", "test_servicegroup_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup.tf_servicegroup", "servicetype", "HTTP"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup.tf_servicegroup", "id"),
 				),
 			},
 		},

@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccContentinspectioncallout_basic = `
@@ -99,6 +102,158 @@ func TestAccContentinspectioncallout_basic(t *testing.T) {
 	})
 }
 
+// serverport is the only cleanly-unsettable attribute: Optional/mutable with a
+// documented NITRO default (1344). step1 sets a non-default port; step2 removes
+// it from config so the provider must NITRO-unset it back to 1344.
+const testAccContentinspectioncallout_unset_step1 = `
+
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+	name             = "new-profile"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
+resource "citrixadc_contentinspectioncallout" "tf_unset" {
+	name        = "tf_ci_callout_unset"
+	type        = "ICAP"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	serverip    = "2.2.2.2"
+	serverport  = 2048
+	returntype  = "TEXT"
+	resultexpr  = "true"
+}
+`
+
+const testAccContentinspectioncallout_unset_step2 = `
+
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+	name             = "new-profile"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
+resource "citrixadc_contentinspectioncallout" "tf_unset" {
+	name        = "tf_ci_callout_unset"
+	type        = "ICAP"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	serverip    = "2.2.2.2"
+	returntype  = "TEXT"
+	resultexpr  = "true"
+	# serverport removed from config -> provider must unset it (revert to 1344).
+}
+`
+
+func TestAccContentinspectioncallout_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccContentinspectioncallout_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_unset", "serverport", "2048"),
+				),
+			},
+			{
+				// Removing serverport must unset it: state reverts to the NITRO
+				// default 1344, and the implicit post-apply plan must be empty.
+				Config: testAccContentinspectioncallout_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_unset", "serverport", "1344"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckContentinspectioncalloutADCValue("tf_ci_callout_unset", "serverport", "1344"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckContentinspectioncalloutADCValue asserts an attribute's value
+// directly on the appliance (not just Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckContentinspectioncalloutADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Contentinspectioncallout.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("contentinspectioncallout %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("contentinspectioncallout %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccContentinspectioncallout_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccContentinspectioncallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccContentinspectioncallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_contentinspectioncalloout", nil)),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectioncallout_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectioncallout.tf_contentinspectioncalloout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectioncallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectioncalloutExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectioncallout.Type(), "my_ci_callout"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectioncallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectioncalloutExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckContentinspectioncalloutExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -163,6 +318,25 @@ func testAccCheckContentinspectioncalloutDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccContentinspectioncallout_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectioncallout.tf_contentinspectioncalloout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectioncallout_basic},
+			{
+				Config:                  testAccContentinspectioncallout_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccContentinspectioncalloutDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -178,6 +352,9 @@ func TestAccContentinspectioncalloutDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "serverip", "2.2.2.2"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "returntype", "TEXT"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "resultexpr", "true"),
+					// Runtime-binding proof; read-only metadata (hits/undefhits/
+					// undefreason) is exposed but may be omitted for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "id"),
 				),
 			},
 		},

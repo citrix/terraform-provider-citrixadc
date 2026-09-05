@@ -66,22 +66,15 @@ func (d *VpnvserverAuthenticationoauthidppolicyBindingDataSource) Read(ctx conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy.
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
 		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
+			if policy_Name.IsNull() || val == policy_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		} else if policy_Name.IsNull() {
 			foundIndex = i
 			break
 		}
@@ -93,7 +86,7 @@ func (d *VpnvserverAuthenticationoauthidppolicyBindingDataSource) Read(ctx conte
 		return
 	}
 
-	vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationoauthidppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

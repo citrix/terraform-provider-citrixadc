@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccArp_basic = `
@@ -158,6 +159,77 @@ func testAccCheckArpDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccArp_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_arp.tf_arp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckArpDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccArp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckArpExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Arp.Type(), "10.222.74.175"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccArp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckArpExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccArp_import(t *testing.T) {
+	const resAddr = "citrixadc_arp.tf_arp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckArpDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccArp_basic},
+			{
+				Config:                  testAccArp_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"mac"},
+			},
+		},
+	})
+}
+
+func TestAccArp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckArpDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccArp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckArpExist("citrixadc_arp.tf_arp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccArp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckArpExist("citrixadc_arp.tf_arp", nil)),
+			},
+		},
+	})
+}
+
 func TestAccArpDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -167,6 +239,7 @@ func TestAccArpDataSource_basic(t *testing.T) {
 			{
 				Config: testAccArpDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_arp.tf_arp_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "ipaddress", "10.222.74.175"),
 					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "mac", "3b:fd:37:27:a1:f8"),
 					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "vxlan", "2"),

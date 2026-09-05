@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccApiprofile_basic_step1 = `
@@ -241,6 +241,34 @@ func TestAccApiprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_apiprofile.tf_apiprofile", "name", "test_apiprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_apiprofile.tf_apiprofile", "apivisibility", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccApiprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_apiprofile.tf_apiprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApiprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApiprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApiprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Apiprofile.Type(), "test_apiprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccApiprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApiprofileExist(resAddr, nil)),
 			},
 		},
 	})

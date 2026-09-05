@@ -28,3 +28,9 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vpnportaltheme. It is the same as the `name` attribute.
 * `basetheme` - Base theme for the portal
+
+### Read-only vpnportaltheme metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnportaltheme` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `feature` - The feature to be checked while applying this config.

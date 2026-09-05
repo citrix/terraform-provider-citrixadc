@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic = `
@@ -100,6 +103,76 @@ func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic(
 	})
 }
 
+const testAccAuthenticationvserver_authenticationloginschemapolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationloginschema" "tf_loginschema" {
+		name                    = "tf_loginschema"
+		authenticationschema    = "LoginSchema/SingleAuth.xml"
+		ssocredentials          = "YES"
+		authenticationstrength  = "30"
+		passwordcredentialindex = "10"
+	}
+	resource "citrixadc_authenticationloginschemapolicy" "tf_loginschemapolicy" {
+		name    = "tf_loginschemapolicy"
+		rule    = "true"
+		action  = citrixadc_authenticationloginschema.tf_loginschema.name
+		comment = "samplenew_testing"
+	}
+	resource "citrixadc_authenticationvserver_authenticationloginschemapolicy_binding" "tf_binding" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy.name
+		priority  = 77
+		bindpoint = "REQUEST"
+	}
+`
+
+// TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_sdkv2StateUpgrade
+// verifies that state written by the last SDK v2 release (2.2.0), which stored the
+// legacy composite ID "name,policy", is correctly upgraded and refreshed by the current
+// Framework provider. On the step-2 refresh the Framework Read recomputes the ID into the
+// new "name:value,policy:value" form (SetAttrFromGet -> ComposeId).
+func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release -> legacy id "name,policy".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "id", "tf_authenticationvserver,tf_loginschemapolicy"),
+				),
+			},
+			{
+				// Step 2: refresh the legacy-id state through the current Framework provider.
+				// Read parses the legacy id and recomputes it to the new format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "id", "name:tf_authenticationvserver,policy:tf_loginschemapolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -127,10 +200,12 @@ func testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingEx
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_authenticationloginschemapolicy_binding",
@@ -172,10 +247,12 @@ func testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingNo
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_authenticationloginschemapolicy_binding",
@@ -276,10 +353,82 @@ func TestAccAuthenticationvserverAuthenticationloginschemapolicyBindingDataSourc
 			{
 				Config: testAccAuthenticationvserverAuthenticationloginschemapolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "policy", "tf_loginschemapolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "priority", "77"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "priority"}},
+			{Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint", "priority"}},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationloginschemapolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Authenticationvserver_authenticationloginschemapolicy_binding.Type(), "tf_authenticationvserver", []string{"policy:tf_loginschemapolicy", "bindpoint:REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_authenticationloginschemapolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationvserver_authenticationloginschemapolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

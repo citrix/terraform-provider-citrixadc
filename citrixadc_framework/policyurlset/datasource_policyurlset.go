@@ -35,7 +35,7 @@ func (d *PolicyurlsetDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *PolicyurlsetDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data PolicyurlsetResourceModel
+	var data PolicyurlsetDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -60,7 +60,7 @@ func (d *PolicyurlsetDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	policyurlsetSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	policyurlsetDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

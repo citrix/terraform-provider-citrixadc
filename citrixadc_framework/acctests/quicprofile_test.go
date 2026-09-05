@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccQuicprofile_basic_step1 = `
@@ -216,6 +216,10 @@ func TestAccQuicprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_quicprofile.tf_quicprofile", "activeconnectionidlimit", "3"),
 					resource.TestCheckResourceAttr("data.citrixadc_quicprofile.tf_quicprofile", "maxackdelay", "20"),
 					resource.TestCheckResourceAttr("data.citrixadc_quicprofile.tf_quicprofile", "maxudppayloadsize", "1472"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicprofile.tf_quicprofile", "id"),
+					// Read-only metadata exposed only by the data source (counter-style,
+					// always populated for a freshly-created object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicprofile.tf_quicprofile", "refcnt"),
 				),
 			},
 		},
@@ -353,4 +357,34 @@ func testAccCheckQuicprofileADCValue(name, attr, want string) resource.TestCheck
 		}
 		return nil
 	}
+}
+
+// TestAccQuicprofile_selfHealing verifies the provider re-creates the quicprofile when
+// it is deleted out-of-band between apply steps (drift recovery).
+func TestAccQuicprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_quicprofile.tf_quicprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuicprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Quicprofile.Type(), "tf_quicprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccQuicprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicprofileExist(resAddr, nil)),
+			},
+		},
+	})
 }

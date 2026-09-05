@@ -105,7 +105,7 @@ func (d *AppfwprofileCreditcardnumberBindingDataSource) Read(ctx context.Context
 		return
 	}
 
-	appfwprofile_creditcardnumber_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_creditcardnumber_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

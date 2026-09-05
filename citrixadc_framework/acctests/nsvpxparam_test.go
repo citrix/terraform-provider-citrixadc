@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsvpxparam_basic_step1 = `
@@ -120,6 +121,50 @@ func TestAccNsvpxparam_cluster(t *testing.T) {
 	})
 }
 
+func TestAccNsvpxparam_import(t *testing.T) {
+	t.Skip("Use case is applicable for standalone VPX")
+	const resAddr = "citrixadc_nsvpxparam.tf_vpxparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsvpxparamDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsvpxparam_basic_step1},
+			{
+				Config:                  testAccNsvpxparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNsvpxparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsvpxparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsvpxparam_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsvpxparam_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNsvpxparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -178,6 +223,9 @@ func TestAccNsvpxparamDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "id"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "cpuyield"),
+					// Read-only status/environment attributes exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "vpxenvironment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "memorystatus"),
 				),
 			},
 		},

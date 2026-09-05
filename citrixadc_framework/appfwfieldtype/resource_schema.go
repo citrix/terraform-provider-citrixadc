@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -39,19 +39,20 @@ func (r *AppfwfieldtypeResource) Schema(ctx context.Context, req resource.Schema
 				Description: "Comment describing the type of field that this field type is intended to match.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the field type.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the field type is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my field type\" or 'my field type').",
 			},
 			"nocharmaps": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "will not show internal field types added as part of FieldFormat learn rules deployment",
 			},
 			"priority": schema.Int64Attribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Positive integer specifying the priority of the field type. A lower number specifies a higher priority. Field types are checked in the order of their priority numbers.",
 			},
 			"regex": schema.StringAttribute{
@@ -67,19 +68,19 @@ func appfwfieldtypeGetThePayloadFromtheConfig(ctx context.Context, data *Appfwfi
 
 	// Create API request body from the model
 	appfwfieldtype := appfw.Appfwfieldtype{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwfieldtype.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwfieldtype.Name = data.Name.ValueString()
 	}
-	if !data.Nocharmaps.IsNull() {
+	if !data.Nocharmaps.IsNull() && !data.Nocharmaps.IsUnknown() {
 		appfwfieldtype.Nocharmaps = data.Nocharmaps.ValueBool()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		appfwfieldtype.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Regex.IsNull() {
+	if !data.Regex.IsNull() && !data.Regex.IsUnknown() {
 		appfwfieldtype.Regex = data.Regex.ValueString()
 	}
 
@@ -119,7 +120,7 @@ func appfwfieldtypeSetAttrFromGet(ctx context.Context, data *AppfwfieldtypeResou
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

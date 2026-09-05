@@ -1,14 +1,167 @@
 package csvserver
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// CsvserverDataSourceModel is the data-source-specific model, decoupled from
+// CsvserverResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (ip, curstate, type, status, ...). Every non-key attribute is Computed; the
+// Framework's per-attribute model <-> schema reflection requires this model to
+// have exactly the attributes the data-source schema declares, which is why it
+// cannot reuse the resource model.
+type CsvserverDataSourceModel struct {
+	Id                       types.String `tfsdk:"id"`
+	Sslcertkey               types.String `tfsdk:"sslcertkey"`
+	Snisslcertkeys           types.Set    `tfsdk:"snisslcertkeys"`
+	Sslprofile               types.String `tfsdk:"sslprofile"`
+	Ciphers                  types.List   `tfsdk:"ciphers"`
+	Ciphersuites             types.List   `tfsdk:"ciphersuites"`
+	Lbvserverbinding         types.String `tfsdk:"lbvserverbinding"`
+	Sslpolicybinding         types.Set    `tfsdk:"sslpolicybinding"`
+	Aigwprofilename          types.String `tfsdk:"aigwprofilename"`
+	Apiprofile               types.String `tfsdk:"apiprofile"`
+	Appflowlog               types.String `tfsdk:"appflowlog"`
+	Authentication           types.String `tfsdk:"authentication"`
+	Authenticationhost       types.String `tfsdk:"authenticationhost"`
+	Authn401                 types.String `tfsdk:"authn401"`
+	Authnprofile             types.String `tfsdk:"authnprofile"`
+	Authnvsname              types.String `tfsdk:"authnvsname"`
+	Backupip                 types.String `tfsdk:"backupip"`
+	Backuppersistencetimeout types.Int64  `tfsdk:"backuppersistencetimeout"`
+	Backupvserver            types.String `tfsdk:"backupvserver"`
+	Cacheable                types.String `tfsdk:"cacheable"`
+	Casesensitive            types.String `tfsdk:"casesensitive"`
+	Clttimeout               types.Int64  `tfsdk:"clttimeout"`
+	Comment                  types.String `tfsdk:"comment"`
+	Cookiedomain             types.String `tfsdk:"cookiedomain"`
+	Cookiename               types.String `tfsdk:"cookiename"`
+	Cookietimeout            types.Int64  `tfsdk:"cookietimeout"`
+	Dbprofilename            types.String `tfsdk:"dbprofilename"`
+	Disableprimaryondown     types.String `tfsdk:"disableprimaryondown"`
+	Dnsoverhttps             types.String `tfsdk:"dnsoverhttps"`
+	Dnsprofilename           types.String `tfsdk:"dnsprofilename"`
+	Dnsrecordtype            types.String `tfsdk:"dnsrecordtype"`
+	Domainname               types.String `tfsdk:"domainname"`
+	Downstateflush           types.String `tfsdk:"downstateflush"`
+	Dtls                     types.String `tfsdk:"dtls"`
+	Httpprofilename          types.String `tfsdk:"httpprofilename"`
+	Httpsredirecturl         types.String `tfsdk:"httpsredirecturl"`
+	Icmpvsrresponse          types.String `tfsdk:"icmpvsrresponse"`
+	Insertvserveripport      types.String `tfsdk:"insertvserveripport"`
+	Ipmask                   types.String `tfsdk:"ipmask"`
+	Ippattern                types.String `tfsdk:"ippattern"`
+	Ipset                    types.String `tfsdk:"ipset"`
+	Ipv46                    types.String `tfsdk:"ipv46"`
+	L2conn                   types.String `tfsdk:"l2conn"`
+	Listenpolicy             types.String `tfsdk:"listenpolicy"`
+	Listenpriority           types.Int64  `tfsdk:"listenpriority"`
+	Mcpprofilename           types.String `tfsdk:"mcpprofilename"`
+	Mssqlserverversion       types.String `tfsdk:"mssqlserverversion"`
+	Mysqlcharacterset        types.Int64  `tfsdk:"mysqlcharacterset"`
+	Mysqlprotocolversion     types.Int64  `tfsdk:"mysqlprotocolversion"`
+	Mysqlservercapabilities  types.Int64  `tfsdk:"mysqlservercapabilities"`
+	Mysqlserverversion       types.String `tfsdk:"mysqlserverversion"`
+	Name                     types.String `tfsdk:"name"`
+	Netprofile               types.String `tfsdk:"netprofile"`
+	Newname                  types.String `tfsdk:"newname"`
+	Oracleserverversion      types.String `tfsdk:"oracleserverversion"`
+	Persistencebackup        types.String `tfsdk:"persistencebackup"`
+	Persistenceid            types.Int64  `tfsdk:"persistenceid"`
+	Persistencetype          types.String `tfsdk:"persistencetype"`
+	Persistmask              types.String `tfsdk:"persistmask"`
+	Port                     types.Int64  `tfsdk:"port"`
+	Precedence               types.String `tfsdk:"precedence"`
+	Probeport                types.Int64  `tfsdk:"probeport"`
+	Probeprotocol            types.String `tfsdk:"probeprotocol"`
+	Probesuccessresponsecode types.String `tfsdk:"probesuccessresponsecode"`
+	Push                     types.String `tfsdk:"push"`
+	Pushlabel                types.String `tfsdk:"pushlabel"`
+	Pushmulticlients         types.String `tfsdk:"pushmulticlients"`
+	Pushvserver              types.String `tfsdk:"pushvserver"`
+	Quicprofilename          types.String `tfsdk:"quicprofilename"`
+	Range                    types.Int64  `tfsdk:"range"`
+	Redirectfromport         types.Int64  `tfsdk:"redirectfromport"`
+	Redirectportrewrite      types.String `tfsdk:"redirectportrewrite"`
+	Redirecturl              types.String `tfsdk:"redirecturl"`
+	Rhistate                 types.String `tfsdk:"rhistate"`
+	Rtspnat                  types.String `tfsdk:"rtspnat"`
+	Servicetype              types.String `tfsdk:"servicetype"`
+	Sitedomainttl            types.Int64  `tfsdk:"sitedomainttl"`
+	Sobackupaction           types.String `tfsdk:"sobackupaction"`
+	Somethod                 types.String `tfsdk:"somethod"`
+	Sopersistence            types.String `tfsdk:"sopersistence"`
+	Sopersistencetimeout     types.Int64  `tfsdk:"sopersistencetimeout"`
+	Sothreshold              types.Int64  `tfsdk:"sothreshold"`
+	State                    types.String `tfsdk:"state"`
+	Stateupdate              types.String `tfsdk:"stateupdate"`
+	Targettype               types.String `tfsdk:"targettype"`
+	Tcpprobeport             types.Int64  `tfsdk:"tcpprobeport"`
+	Tcpprofilename           types.String `tfsdk:"tcpprofilename"`
+	Td                       types.Int64  `tfsdk:"td"`
+	Timeout                  types.Int64  `tfsdk:"timeout"`
+	Ttl                      types.Int64  `tfsdk:"ttl"`
+	V6persistmasklen         types.Int64  `tfsdk:"v6persistmasklen"`
+	Vipheader                types.String `tfsdk:"vipheader"`
+	Wasmmodule               types.String `tfsdk:"wasmmodule"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/csvserver.json). Never settable; populated from GET.
+	Ip                        types.String `tfsdk:"ip"`
+	Value                     types.String `tfsdk:"value"`
+	Ngname                    types.String `tfsdk:"ngname"`
+	Type                      types.String `tfsdk:"type"`
+	Curstate                  types.String `tfsdk:"curstate"`
+	Status                    types.Int64  `tfsdk:"status"`
+	Cachetype                 types.String `tfsdk:"cachetype"`
+	Redirect                  types.String `tfsdk:"redirect"`
+	Homepage                  types.String `tfsdk:"homepage"`
+	Dnsvservername            types.String `tfsdk:"dnsvservername"`
+	Domain                    types.String `tfsdk:"domain"`
+	Servicename               types.String `tfsdk:"servicename"`
+	Weight                    types.Int64  `tfsdk:"weight"`
+	Cachevserver              types.String `tfsdk:"cachevserver"`
+	Targetvserver             types.String `tfsdk:"targetvserver"`
+	Url                       types.String `tfsdk:"url"`
+	Bindpoint                 types.String `tfsdk:"bindpoint"`
+	Gt2gb                     types.String `tfsdk:"gt2gb"`
+	Statechangetimesec        types.String `tfsdk:"statechangetimesec"`
+	Statechangetimemsec       types.Int64  `tfsdk:"statechangetimemsec"`
+	Tickssincelaststatechange types.Int64  `tfsdk:"tickssincelaststatechange"`
+	Ruletype                  types.Int64  `tfsdk:"ruletype"`
+	Lbvserver                 types.String `tfsdk:"lbvserver"`
+	Targetlbvserver           types.String `tfsdk:"targetlbvserver"`
+	Nodefaultbindings         types.String `tfsdk:"nodefaultbindings"`
+	Version                   types.Int64  `tfsdk:"version"`
+}
+
 func CsvserverDataSourceSchema() schema.Schema {
+	// The sslpolicybinding nested-block attributes are pure read-back outputs
+	// (Optional+Computed). They are defined via shared attribute values so the
+	// block stays consistent and the merged file's model<->schema attribute set
+	// remains flat (the nested attribute names are not top-level schema keys).
+	dsStr := schema.StringAttribute{Optional: true, Computed: true}
+	dsBool := schema.BoolAttribute{Optional: true, Computed: true}
+	dsInt := schema.Int64Attribute{Optional: true, Computed: true}
+
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the AIGW frontend profile. For the content switching vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add cs vserver, it cannot be unset. Minimum length =  1 Maximum length =  255",
 			},
 			"apiprofile": schema.StringAttribute{
 				Optional:    true,
@@ -163,7 +316,7 @@ func CsvserverDataSourceSchema() schema.Schema {
 			"ippattern": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern. Mutually exclusive with the IP Address parameter.\nFor example, if the IP pattern assigned to the virtual server is 198.51.100.0 and the IP mask is 255.255.240.0 (a forward mask), the first 20 bits in the destination IP addresses are matched with the first 20 bits in the pattern. The virtual server accepts requests with IP addresses that range from 198.51.96.1 to 198.51.111.254. You can also use a pattern such as 0.0.2.2 and a mask such as 0.0.255.255 (a reverse mask).\nIf a destination IP address matches more than one IP pattern, the pattern with the longest match is selected, and the associated virtual server processes the request. For example, if the virtual servers, vs1 and vs2, have the same IP pattern, 0.0.100.128, but different IP masks of 0.0.255.255 and 0.0.224.255, a destination IP address of 198.51.100.128 has the longest match with the IP pattern of vs1. If a destination IP address matches two or more virtual servers to the same extent, the request is processed by the virtual server whose port number matches the port number in the request.",
+				Description: "IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern. Mutually exclusive with the IP Address parameter.",
 			},
 			"ipset": schema.StringAttribute{
 				Optional:    true,
@@ -189,6 +342,11 @@ func CsvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the MCP profile to attach to this cs vserver. Enables MCP protocol processing.",
 			},
 			"mssqlserverversion": schema.StringAttribute{
 				Optional:    true,
@@ -327,7 +485,7 @@ func CsvserverDataSourceSchema() schema.Schema {
 			"rhistate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "A host route is injected according to the setting on the virtual servers\n            * If set to PASSIVE on all the virtual servers that share the IP address, the appliance always injects the hostroute.\n            * If set to ACTIVE on all the virtual servers that share the IP address, the appliance injects even if one virtual server is UP.\n            * If set to ACTIVE on some virtual servers and PASSIVE on the others, the appliance, injects even if one virtual server set to ACTIVE is UP.",
+				Description: "A host route is injected according to the setting on the virtual servers.",
 			},
 			"rtspnat": schema.StringAttribute{
 				Optional:    true,
@@ -377,7 +535,7 @@ func CsvserverDataSourceSchema() schema.Schema {
 			"stateupdate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Enable state updates for a specific content switching virtual server. By default, the Content Switching virtual server is always UP, regardless of the state of the Load Balancing virtual servers bound to it. This parameter interacts with the global setting as follows:\nGlobal Level | Vserver Level | Result\nENABLED      ENABLED        ENABLED\nENABLED      DISABLED       ENABLED\nDISABLED     ENABLED        ENABLED\nDISABLED     DISABLED       DISABLED\nIf you want to enable state updates for only some content switching virtual servers, be sure to disable the state update parameter.",
+				Description: "Enable state updates for a specific content switching virtual server.",
 			},
 			"targettype": schema.StringAttribute{
 				Optional:    true,
@@ -419,6 +577,316 @@ func CsvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
+			"sslcertkey": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the SSL certificate-key pair bound to the (SSL) content switching virtual server.",
+			},
+			"snisslcertkeys": schema.SetAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Names of the SNI SSL certificate-key pairs bound to the (SSL) content switching virtual server.",
+			},
+			"sslprofile": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the SSL profile bound to the (SSL) content switching virtual server.",
+			},
+			"ciphers": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Cipher alias names bound to the (SSL) content switching virtual server.",
+			},
+			"ciphersuites": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Individual cipher suite names bound to the (SSL) content switching virtual server.",
+			},
+			"lbvserverbinding": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the default load balancing virtual server bound to the content switching virtual server.",
+			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"ip": schema.StringAttribute{
+				Computed:    true,
+				Description: "The IP address of the virtual server.",
+			},
+			"value": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ssl card status for the transparent ssl cs vserver.",
+			},
+			"ngname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Nodegroup devno to which this csvserver belongs to.",
+			},
+			"type": schema.StringAttribute{
+				Computed:    true,
+				Description: "Virtual server type. Possible values = CONTENT, ADDRESS.",
+			},
+			"curstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "The state of the cs vserver (for example UP, DOWN, OUT OF SERVICE).",
+			},
+			"status": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Status.",
+			},
+			"cachetype": schema.StringAttribute{
+				Computed:    true,
+				Description: "Cache type. Possible values = TRANSPARENT, REVERSE, FORWARD.",
+			},
+			"redirect": schema.StringAttribute{
+				Computed:    true,
+				Description: "Redirect URL string. Possible values = CACHE, POLICY, ORIGIN.",
+			},
+			"homepage": schema.StringAttribute{
+				Computed:    true,
+				Description: "Home page.",
+			},
+			"dnsvservername": schema.StringAttribute{
+				Computed:    true,
+				Description: "DNS vserver name.",
+			},
+			"domain": schema.StringAttribute{
+				Computed:    true,
+				Description: "Domain.",
+			},
+			"servicename": schema.StringAttribute{
+				Computed:    true,
+				Description: "Service name.",
+			},
+			"weight": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Weight for this service.",
+			},
+			"cachevserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "Cache vserver name.",
+			},
+			"targetvserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "target vserver name.",
+			},
+			"url": schema.StringAttribute{
+				Computed:    true,
+				Description: "URL string.",
+			},
+			"bindpoint": schema.StringAttribute{
+				Computed:    true,
+				Description: "The bindpoint to which the policy is bound.",
+			},
+			"gt2gb": schema.StringAttribute{
+				Computed:    true,
+				Description: "This argument has no effect. Possible values = ENABLED, DISABLED.",
+			},
+			"statechangetimesec": schema.StringAttribute{
+				Computed:    true,
+				Description: "Time when last state change happened. Seconds part.",
+			},
+			"statechangetimemsec": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time at which last state change happened. Milliseconds part.",
+			},
+			"tickssincelaststatechange": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time in 10 millisecond ticks since the last state change.",
+			},
+			"ruletype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Rule type.",
+			},
+			"lbvserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the default lb vserver bound.",
+			},
+			"targetlbvserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "target vserver name.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Computed:    true,
+				Description: "To determine if the configuration will have default ssl CIPHER and ECC curve bindings. Possible values = YES, NO.",
+			},
+			"version": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Cookie version.",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"sslpolicybinding": schema.SetNestedBlock{
+				Description: "SSL policies bound to the (SSL) content switching virtual server.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"gotopriorityexpression": dsStr,
+						"invoke":                 dsBool,
+						"labelname":              dsStr,
+						"labeltype":              dsStr,
+						"policyname":             dsStr,
+						"priority":               dsInt,
+						"type":                   dsStr,
+					},
+				},
+			},
 		},
 	}
+}
+
+// csvserverDataSourceSetAttrFromGet projects a NITRO csvserver GET response onto
+// the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection. The SSL convenience attributes (sslcertkey, snisslcertkeys,
+// sslprofile, ciphers, ciphersuites, lbvserverbinding, sslpolicybinding) are
+// derived from separate binding reads on the resource and are not part of the
+// plain csvserver GET, so they are left Null here.
+func csvserverDataSourceSetAttrFromGet(ctx context.Context, data *CsvserverDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In csvserverDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Aigwprofilename = utils.MapGetString(g, "aigwprofilename")
+	data.Apiprofile = utils.MapGetString(g, "apiprofile")
+	data.Appflowlog = utils.MapGetString(g, "appflowlog")
+	data.Authentication = utils.MapGetString(g, "authentication")
+	data.Authenticationhost = utils.MapGetString(g, "authenticationhost")
+	data.Authn401 = utils.MapGetString(g, "authn401")
+	data.Authnprofile = utils.MapGetString(g, "authnprofile")
+	data.Authnvsname = utils.MapGetString(g, "authnvsname")
+	data.Backupip = utils.MapGetString(g, "backupip")
+	data.Backuppersistencetimeout = utils.MapGetInt64(g, "backuppersistencetimeout")
+	data.Backupvserver = utils.MapGetString(g, "backupvserver")
+	data.Cacheable = utils.MapGetString(g, "cacheable")
+	data.Casesensitive = utils.MapGetString(g, "casesensitive")
+	data.Clttimeout = utils.MapGetInt64(g, "clttimeout")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Cookiedomain = utils.MapGetString(g, "cookiedomain")
+	data.Cookiename = utils.MapGetString(g, "cookiename")
+	data.Cookietimeout = utils.MapGetInt64(g, "cookietimeout")
+	data.Dbprofilename = utils.MapGetString(g, "dbprofilename")
+	data.Disableprimaryondown = utils.MapGetString(g, "disableprimaryondown")
+	data.Dnsoverhttps = utils.MapGetString(g, "dnsoverhttps")
+	data.Dnsprofilename = utils.MapGetString(g, "dnsprofilename")
+	data.Dnsrecordtype = utils.MapGetString(g, "dnsrecordtype")
+	data.Domainname = utils.MapGetString(g, "domainname")
+	data.Downstateflush = utils.MapGetString(g, "downstateflush")
+	data.Dtls = utils.MapGetString(g, "dtls")
+	data.Httpprofilename = utils.MapGetString(g, "httpprofilename")
+	data.Httpsredirecturl = utils.MapGetString(g, "httpsredirecturl")
+	data.Icmpvsrresponse = utils.MapGetString(g, "icmpvsrresponse")
+	data.Insertvserveripport = utils.MapGetString(g, "insertvserveripport")
+	data.Ipmask = utils.MapGetString(g, "ipmask")
+	data.Ippattern = utils.MapGetString(g, "ippattern")
+	data.Ipset = utils.MapGetString(g, "ipset")
+	data.Ipv46 = utils.MapGetString(g, "ipv46")
+	data.L2conn = utils.MapGetString(g, "l2conn")
+	data.Listenpolicy = utils.MapGetString(g, "listenpolicy")
+	data.Listenpriority = utils.MapGetInt64(g, "listenpriority")
+	data.Mcpprofilename = utils.MapGetString(g, "mcpprofilename")
+	data.Mssqlserverversion = utils.MapGetString(g, "mssqlserverversion")
+	data.Mysqlcharacterset = utils.MapGetInt64(g, "mysqlcharacterset")
+	data.Mysqlprotocolversion = utils.MapGetInt64(g, "mysqlprotocolversion")
+	data.Mysqlservercapabilities = utils.MapGetInt64(g, "mysqlservercapabilities")
+	data.Mysqlserverversion = utils.MapGetString(g, "mysqlserverversion")
+	data.Netprofile = utils.MapGetString(g, "netprofile")
+	data.Oracleserverversion = utils.MapGetString(g, "oracleserverversion")
+	data.Persistencebackup = utils.MapGetString(g, "persistencebackup")
+	data.Persistenceid = utils.MapGetInt64(g, "persistenceid")
+	data.Persistencetype = utils.MapGetString(g, "persistencetype")
+	data.Persistmask = utils.MapGetString(g, "persistmask")
+	data.Port = utils.MapGetInt64(g, "port")
+	data.Precedence = utils.MapGetString(g, "precedence")
+	data.Probeport = utils.MapGetInt64(g, "probeport")
+	data.Probeprotocol = utils.MapGetString(g, "probeprotocol")
+	data.Probesuccessresponsecode = utils.MapGetString(g, "probesuccessresponsecode")
+	data.Push = utils.MapGetString(g, "push")
+	data.Pushlabel = utils.MapGetString(g, "pushlabel")
+	data.Pushmulticlients = utils.MapGetString(g, "pushmulticlients")
+	data.Pushvserver = utils.MapGetString(g, "pushvserver")
+	data.Quicprofilename = utils.MapGetString(g, "quicprofilename")
+	data.Range = utils.MapGetInt64(g, "range")
+	data.Redirectfromport = utils.MapGetInt64(g, "redirectfromport")
+	data.Redirectportrewrite = utils.MapGetString(g, "redirectportrewrite")
+	data.Redirecturl = utils.MapGetString(g, "redirecturl")
+	data.Rhistate = utils.MapGetString(g, "rhistate")
+	data.Rtspnat = utils.MapGetString(g, "rtspnat")
+	data.Servicetype = utils.MapGetString(g, "servicetype")
+	data.Sitedomainttl = utils.MapGetInt64(g, "sitedomainttl")
+	data.Sobackupaction = utils.MapGetString(g, "sobackupaction")
+	data.Somethod = utils.MapGetString(g, "somethod")
+	data.Sopersistence = utils.MapGetString(g, "sopersistence")
+	data.Sopersistencetimeout = utils.MapGetInt64(g, "sopersistencetimeout")
+	data.Sothreshold = utils.MapGetInt64(g, "sothreshold")
+	data.State = utils.MapGetString(g, "state")
+	data.Stateupdate = utils.MapGetString(g, "stateupdate")
+	data.Targettype = utils.MapGetString(g, "targettype")
+	data.Tcpprobeport = utils.MapGetInt64(g, "tcpprobeport")
+	data.Tcpprofilename = utils.MapGetString(g, "tcpprofilename")
+	// td is a config-supplied key; NITRO omits it for the default traffic
+	// domain (0), so preserve the configured value instead of nulling it.
+	if tdv, tdok := g["td"]; tdok && tdv != nil {
+		if iv, err := utils.ConvertToInt64(tdv); err == nil {
+			data.Td = types.Int64Value(iv)
+		}
+	}
+	data.Timeout = utils.MapGetInt64(g, "timeout")
+	data.Ttl = utils.MapGetInt64(g, "ttl")
+	data.V6persistmasklen = utils.MapGetInt64(g, "v6persistmasklen")
+	data.Vipheader = utils.MapGetString(g, "vipheader")
+	data.Wasmmodule = utils.MapGetString(g, "wasmmodule")
+
+	// newname is a rename-only input the GET never returns -> Null.
+	data.Newname = types.StringNull()
+
+	// SSL convenience attributes are derived from separate binding reads and are
+	// not part of the plain csvserver GET -> Null.
+	data.Sslcertkey = types.StringNull()
+	data.Snisslcertkeys = types.SetNull(types.StringType)
+	data.Sslprofile = types.StringNull()
+	data.Ciphers = types.ListNull(types.StringType)
+	data.Ciphersuites = types.ListNull(types.StringType)
+	data.Lbvserverbinding = types.StringNull()
+	data.Sslpolicybinding = types.SetNull(types.ObjectType{AttrTypes: sslpolicybindingAttrTypes})
+
+	// Read-only attributes.
+	data.Ip = utils.MapGetString(g, "ip")
+	data.Value = utils.MapGetString(g, "value")
+	data.Ngname = utils.MapGetString(g, "ngname")
+	data.Type = utils.MapGetString(g, "type")
+	data.Curstate = utils.MapGetString(g, "curstate")
+	data.Status = utils.MapGetInt64(g, "status")
+	data.Cachetype = utils.MapGetString(g, "cachetype")
+	data.Redirect = utils.MapGetString(g, "redirect")
+	data.Homepage = utils.MapGetString(g, "homepage")
+	data.Dnsvservername = utils.MapGetString(g, "dnsvservername")
+	data.Domain = utils.MapGetString(g, "domain")
+	data.Servicename = utils.MapGetString(g, "servicename")
+	data.Weight = utils.MapGetInt64(g, "weight")
+	data.Cachevserver = utils.MapGetString(g, "cachevserver")
+	data.Targetvserver = utils.MapGetString(g, "targetvserver")
+	data.Url = utils.MapGetString(g, "url")
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Gt2gb = utils.MapGetString(g, "gt2gb")
+	data.Statechangetimesec = utils.MapGetString(g, "statechangetimesec")
+	data.Statechangetimemsec = utils.MapGetInt64(g, "statechangetimemsec")
+	data.Tickssincelaststatechange = utils.MapGetInt64(g, "tickssincelaststatechange")
+	data.Ruletype = utils.MapGetInt64(g, "ruletype")
+	data.Lbvserver = utils.MapGetString(g, "lbvserver")
+	data.Targetlbvserver = utils.MapGetString(g, "targetlbvserver")
+	data.Nodefaultbindings = utils.MapGetString(g, "nodefaultbindings")
+	data.Version = utils.MapGetInt64(g, "version")
 }

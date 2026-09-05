@@ -46,3 +46,10 @@ The following attributes are exported:
 * `rnatsecuresrcport` - (Number) Port number with which to match the source port in server-initiated SIP over SSL traffic. The rport parameter is added, without a value, to SIP packets that have a matching source port number, and CALL-ID based persistence is implemented for the responses received by the virtual server. Range: 1-65535.
 * `rnatsrcport` - (Number) Port number with which to match the source port in server-initiated SIP traffic. The rport parameter is added, without a value, to SIP packets that have a matching source port number, and CALL-ID based persistence is implemented for the responses received by the virtual server.
 * `sip503ratethreshold` - (Number) Maximum number of 503 Service Unavailable responses to generate, once every 10 milliseconds, when a SIP virtual server becomes unavailable.
+
+### Read-only lbsipparameters metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbsipparameters` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if the SIP param is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

@@ -37,3 +37,9 @@ In addition to the arguments, the following attributes are available:
 * `priority` - The priority of the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `feature` - The feature to be checked while applying this config.
+
+### Read-only tmglobal_tmsessionpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tmglobal_tmsessionpolicy_binding` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `bindpolicytype` - Bound policy type.

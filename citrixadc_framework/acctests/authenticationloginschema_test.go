@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationloginschema_add = `
@@ -135,6 +137,145 @@ func testAccCheckAuthenticationloginschemaDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationloginschema_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationloginschema.tf_loginschema"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationloginschema.Type(), "tf_loginschema"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// The authenticationloginschema unset test covers ssocredentials, the only
+// mutable attribute with a documented NITRO default ("NO"). Step 1 sets it to a
+// non-default value ("YES"); step 2 removes it from config, so the provider must
+// unset it and the appliance reverts it to the default.
+const testAccAuthenticationloginschema_unset_step1 = `
+	resource "citrixadc_authenticationloginschema" "tf_unset" {
+		name                 = "tf_loginschema_unset"
+		authenticationschema = "LoginSchema/SingleAuth.xml"
+		ssocredentials       = "YES"
+	}
+`
+
+const testAccAuthenticationloginschema_unset_step2 = `
+	resource "citrixadc_authenticationloginschema" "tf_unset" {
+		name                 = "tf_loginschema_unset"
+		authenticationschema = "LoginSchema/SingleAuth.xml"
+		# ssocredentials removed from config -> provider must unset it (revert to "NO").
+	}
+`
+
+func TestAccAuthenticationloginschema_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschema_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationloginschema.tf_unset", "ssocredentials", "YES"),
+				),
+			},
+			{
+				Config: testAccAuthenticationloginschema_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationloginschema.tf_unset", "ssocredentials", "NO"),
+					testAccCheckAuthenticationloginschemaADCValue("tf_loginschema_unset", "ssocredentials", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationloginschemaADCValue asserts an attribute's value
+// directly on the appliance, proving the unset actually reverted it.
+func testAccCheckAuthenticationloginschemaADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationloginschema.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationloginschema %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationloginschema %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccAuthenticationloginschema_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationloginschema.tf_loginschema"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationloginschema_add},
+			{
+				Config:                  testAccAuthenticationloginschema_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationloginschema_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_loginschema", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_loginschema", nil)),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationloginschemaDataSource_basic = `
 	resource "citrixadc_authenticationloginschema" "tf_loginschema_ds" {
 		name                    = "tf_loginschema_ds"
@@ -161,6 +302,7 @@ func TestAccAuthenticationloginschemaDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "ssocredentials", "NO"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "authenticationstrength", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "passwordcredentialindex", "10"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "id"),
 				),
 			},
 		},

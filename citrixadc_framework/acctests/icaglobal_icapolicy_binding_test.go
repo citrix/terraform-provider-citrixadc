@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIcaglobal_icapolicy_binding_basic = `
@@ -104,6 +106,19 @@ func TestAccIcaglobal_icapolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccIcaglobal_icapolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaglobal_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcaglobal_icapolicy_binding_basic},
+			{Config: testAccIcaglobal_icapolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckIcaglobal_icapolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -129,7 +144,11 @@ func testAccCheckIcaglobal_icapolicy_bindingExist(n string, id *string) resource
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "icaglobal_icapolicy_binding",
@@ -236,7 +255,100 @@ func TestAccIcaglobal_icapolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "policyname", "tf_icapolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "type", "ICA_REQ_DEFAULT"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id"),
+					// Read-only (GET-only) metadata: numpol is a counter always populated for a bound policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "numpol"),
 				),
+			},
+		},
+	})
+}
+
+const testAccIcaglobal_icapolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_icaaction" "tf_icaaction" {
+		name              = "tf_icaaction"
+		accessprofilename = "default_ica_accessprofile"
+	}
+	resource "citrixadc_icapolicy" "tf_icapolicy" {
+		name   = "tf_icapolicy"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction.name
+	}
+
+	resource "citrixadc_icaglobal_icapolicy_binding" "tf_icaglobal_icapolicy_binding" {
+		policyname = citrixadc_icapolicy.tf_icapolicy.name
+		priority   = 100
+		type       = "ICA_REQ_DEFAULT"
+	}
+`
+
+// TestAccIcaglobal_icapolicy_binding_sdkv2StateUpgrade verifies that a binding created
+// with the last SDK v2 release (legacy plain-policyname id) is refreshed and upgraded to
+// the new key:value id format by the current Framework provider.
+func TestAccIcaglobal_icapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIcaglobal_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release. State is written with the legacy id (policyname).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccIcaglobal_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaglobal_icapolicy_bindingExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id", "tf_icapolicy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current (Framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the id to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIcaglobal_icapolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaglobal_icapolicy_bindingExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id", "policyname:tf_icapolicy,type:ICA_REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccIcaglobal_icapolicy_binding_selfHealing verifies drift recovery: after the
+// binding is created, it is deleted out-of-band on the ADC; the next apply of the same
+// config must detect the missing binding and recreate it.
+func TestAccIcaglobal_icapolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaglobal_icapolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaglobal_icapolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaglobal_icapolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Icaglobal_icapolicy_binding.Type(), "", map[string]string{"policyname": "tf_icapolicy", "type": "ICA_REQ_DEFAULT", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIcaglobal_icapolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaglobal_icapolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

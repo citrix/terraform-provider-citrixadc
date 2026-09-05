@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbvserver_servicegroup_binding_basic = `
@@ -93,6 +96,49 @@ func TestAccLbvserver_servicegroup_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_servicegroup_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_servicegroup_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,servicegroupname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "servicegroupname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_servicegroup_binding_basic},
+			{Config: testAccLbvserver_servicegroup_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccLbvserver_servicegroup_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbvserver_servicegroup_bindingExist(n string, id *string, expectedValues map[string]interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -120,9 +166,14 @@ func testAccCheckLbvserver_servicegroup_bindingExist(n string, id *string, expec
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		name := idSlice[0]
-		servicegroupname := idSlice[1]
+		// ID-parse helper line updated for the new key:value ID format (migration adopts
+		// the Framework ID format; ParseIdString also decodes the legacy "name,servicegroupname" form).
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "servicegroupname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		servicegroupname := idMap["servicegroupname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_servicegroup_binding",
@@ -181,7 +232,13 @@ func testAccCheckLbvserver_servicegroup_bindingDestroy(s *terraform.State) error
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Lbvserver_servicegroup_binding.Type(), rs.Primary.ID)
+		// ID-parse helper line updated for the new key:value ID format (ParseIdString also
+		// decodes the legacy "name,servicegroupname" form). FindResource call shape unchanged.
+		idMap, _, perr := utils.ParseIdString(rs.Primary.ID, []string{"name", "servicegroupname"}, nil)
+		if perr != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", rs.Primary.ID, perr)
+		}
+		_, err := client.FindResource(service.Lbvserver_servicegroup_binding.Type(), idMap["name"])
 		if err == nil {
 			return fmt.Errorf("lbvserver_servicegroup_binding %s still exists", rs.Primary.ID)
 		}
@@ -227,6 +284,101 @@ func TestAccLbvserver_servicegroup_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_servicegroup_binding.tf_binding", "name", "tf_lbvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_servicegroup_binding.tf_binding", "servicegroupname", "tf_servicegroup"),
 				),
+			},
+		},
+	})
+}
+
+const testAccLbvserver_servicegroup_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_lbvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+    servicegroupname = "tf_servicegroup"
+    servicetype  = "HTTP"
+}
+
+resource "citrixadc_lbvserver_servicegroup_binding" "tf_binding" {
+  name = citrixadc_lbvserver.tf_lbvserver.name
+  servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+}
+`
+
+// TestAccLbvserver_servicegroup_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "tf_lbvserver,tf_servicegroup"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the
+// legacy id; because the Framework recomputes the id on Read (SetAttrFromGet),
+// the id upgrades to the new "key:value" form.
+func TestAccLbvserver_servicegroup_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_lbvserver_servicegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLbvserver_servicegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_servicegroup_bindingExist(resourceAddr, nil, map[string]interface{}{}),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_lbvserver,tf_servicegroup"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_servicegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_servicegroup_bindingExist(resourceAddr, nil, map[string]interface{}{}),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_lbvserver,servicegroupname:tf_servicegroup"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLbvserver_servicegroup_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLbvserver_servicegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_servicegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_servicegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_servicegroup_bindingExist(resAddr, nil, map[string]interface{}{})),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_servicegroup_binding.Type(), "tf_lbvserver", map[string]string{"servicegroupname": "tf_servicegroup"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_servicegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_servicegroup_bindingExist(resAddr, nil, map[string]interface{}{})),
 			},
 		},
 	})

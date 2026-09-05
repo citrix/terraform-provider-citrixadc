@@ -6,7 +6,7 @@ subcategory: "VPN"
 
 The vpnvserver_sharefileserver_binding data source allows you to retrieve information about a ShareFile server binding to a VPN virtual server.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnvserver_sharefileserver_binding" "tf_bind" {
@@ -33,3 +33,9 @@ output "sharefile" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vpnvserver_sharefileserver_binding. It is the concatenation of `name` and `sharefile` attributes separated by a comma.
+
+### Read-only vpnvserver_sharefileserver_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnvserver_sharefileserver_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `acttype` - Action type of the binding.

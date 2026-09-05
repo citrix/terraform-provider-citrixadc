@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *NstrafficdomainBridgegroupBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the nstrafficdomain_bridgegroup_binding resource.",
 			},
 			"bridgegroup": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the configured bridge to bind to this traffic domain. More than one bridge group can be bound to a traffic domain, but the same bridge group cannot be a part of multiple traffic domains.",
 			},
 			"td": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer value that uniquely identifies a traffic domain.",
 			},
 		},
 	}
 }
 
-func nstrafficdomain_bridgegroup_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NstrafficdomainBridgegroupBindingResourceModel) ns.Nstrafficdomainbridgegroupbinding {
-	tflog.Debug(ctx, "In nstrafficdomain_bridgegroup_bindingGetThePayloadFromtheConfig Function")
+func nstrafficdomain_bridgegroup_bindingGetThePayloadFromthePlan(ctx context.Context, data *NstrafficdomainBridgegroupBindingResourceModel) ns.Nstrafficdomainbridgegroupbinding {
+	tflog.Debug(ctx, "In nstrafficdomain_bridgegroup_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nstrafficdomain_bridgegroup_binding := ns.Nstrafficdomainbridgegroupbinding{}
-	if !data.Bridgegroup.IsNull() {
+	if !data.Bridgegroup.IsNull() && !data.Bridgegroup.IsUnknown() {
 		nstrafficdomain_bridgegroup_binding.Bridgegroup = utils.IntPtr(int(data.Bridgegroup.ValueInt64()))
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		nstrafficdomain_bridgegroup_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 

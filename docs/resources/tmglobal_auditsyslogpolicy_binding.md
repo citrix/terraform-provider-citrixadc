@@ -39,7 +39,7 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A tmglobal_auditsyslogpolicy_bindingcan be imported using its name, e.g.
+A tmglobal_auditsyslogpolicy_binding can be imported using its name, e.g.
 
 ```shell
 terraform import citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding tf_auditsyslogpolicy

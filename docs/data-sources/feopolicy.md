@@ -44,11 +44,11 @@ In addition to the arguments, the following attributes are available:
 * `action` - The front end optimization action that has to be performed when the rule matches.
 * `rule` - The rule associated with the front end optimization policy.
 
+### Read-only feopolicy metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_feopolicy` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
 
-A feopolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_feopolicy.tf_feopolicy my_feopolicy
-```
+* `builtin` - Flag to determine if the front end optimization policy is built-in or not. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `hits` - Total number of hits.
+* `undefhits` - Total number of undefined policy hits.

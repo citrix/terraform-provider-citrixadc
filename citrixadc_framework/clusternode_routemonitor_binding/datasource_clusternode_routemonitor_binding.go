@@ -3,6 +3,7 @@ package clusternode_routemonitor_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -35,7 +36,7 @@ func (d *ClusternodeRoutemonitorBindingDataSource) Schema(ctx context.Context, r
 }
 
 func (d *ClusternodeRoutemonitorBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ClusternodeRoutemonitorBindingResourceModel
+	var data ClusternodeRoutemonitorBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -43,7 +44,7 @@ func (d *ClusternodeRoutemonitorBindingDataSource) Read(ctx context.Context, req
 	}
 
 	// Case 4: Array filter with parent ID
-	nodeid_Name := fmt.Sprintf("%d", data.Nodeid.ValueInt64())
+	nodeid_Name := strconv.FormatInt(data.Nodeid.ValueInt64(), 10)
 	netmask_Name := data.Netmask
 	routemonitor_Name := data.Routemonitor
 
@@ -105,7 +106,7 @@ func (d *ClusternodeRoutemonitorBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	clusternode_routemonitor_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	clusternode_routemonitor_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

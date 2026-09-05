@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -29,8 +28,7 @@ func (r *AppalgparamResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "The ID of the appalgparam resource.",
 			},
 			"pptpgreidletimeout": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(9000),
+				Required:    true,
 				Description: "Interval in sec, after which data sessions of PPTP GRE is cleared.",
 			},
 		},

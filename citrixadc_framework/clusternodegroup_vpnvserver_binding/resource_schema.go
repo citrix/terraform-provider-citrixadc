@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,12 +33,17 @@ func (r *ClusternodegroupVpnvserverBindingResource) Schema(ctx context.Context, 
 				Description: "The ID of the clusternodegroup_vpnvserver_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 			"vserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "vserver that need to be bound to this nodegroup.",
 			},
 		},
@@ -48,10 +55,10 @@ func clusternodegroup_vpnvserver_bindingGetThePayloadFromtheConfig(ctx context.C
 
 	// Create API request body from the model
 	clusternodegroup_vpnvserver_binding := cluster.Clusternodegroupvpnvserverbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		clusternodegroup_vpnvserver_binding.Name = data.Name.ValueString()
 	}
-	if !data.Vserver.IsNull() {
+	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
 		clusternodegroup_vpnvserver_binding.Vserver = data.Vserver.ValueString()
 	}
 

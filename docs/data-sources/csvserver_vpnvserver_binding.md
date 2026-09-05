@@ -7,7 +7,7 @@ subcategory: "Content Switching"
 The csvserver_vpnvserver_binding data source allows you to retrieve information about a csvserver_vpnvserver_binding.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_csvserver_vpnvserver_binding" "tf_csvserver_vpnvserver_binding" {
@@ -36,3 +36,9 @@ output "vserver" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the csvserver_vpnvserver_binding. It is the concatenation of the `name` and `vserver` attributes separated by a comma.
+
+### Read-only csvserver_vpnvserver_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csvserver_vpnvserver_binding` resource). Each is Computed and is `null` when the appliance does not return it.
+
+* `hits` - Number of hits.

@@ -7,6 +7,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*LinksetDataSource)(nil)
@@ -35,7 +36,7 @@ func (d *LinksetDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 }
 
 func (d *LinksetDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LinksetResourceModel
+	var data LinksetDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -46,17 +47,46 @@ func (d *LinksetDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	// Case 2: Find with single ID attribute
 	id_Name := data.Linksetid.ValueString()
 
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Linkset.Type(), id_Name)
+	getResponseData, err := d.client.FindResource(service.Linkset.Type(), id_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read linkset, got error: %s", err))
 		return
 	}
 
-	linksetSetAttrFromGet(ctx, &data, getResponseData)
+	linksetDataSourceSetAttrFromGet(ctx, &data, getResponseData)
+
+	// Populate the interfacebinding convenience block from the ADC.
+	if err := linksetDataSourceReadInterfaceBindings(ctx, d.client, &data, id_Name); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read linkset interface bindings, got error: %s", err))
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// linksetDataSourceReadInterfaceBindings reads the interface bindings for the
+// linkset and populates the interfacebinding set on the data-source model.
+// Matching the SDK v2 behavior, a "not found" / error while listing bindings is
+// treated as "no bindings" (empty set) rather than a hard failure.
+func linksetDataSourceReadInterfaceBindings(ctx context.Context, client *service.NitroClient, data *LinksetDataSourceModel, linksetName string) error {
+	bindings, err := client.FindResourceArray(service.Linkset_interface_binding.Type(), linksetName)
+	if err != nil {
+		bindings = []map[string]interface{}{}
+	}
+
+	processedBindings := make([]string, 0, len(bindings))
+	for _, val := range bindings {
+		if ifnum, ok := val["ifnum"].(string); ok {
+			processedBindings = append(processedBindings, ifnum)
+		}
+	}
+
+	interfaceSet, diags := types.SetValueFrom(ctx, types.StringType, processedBindings)
+	if diags.HasError() {
+		return fmt.Errorf("error converting interface bindings to set")
+	}
+	data.Interfacebinding = interfaceSet
+
+	return nil
 }

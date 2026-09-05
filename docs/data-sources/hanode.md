@@ -58,10 +58,16 @@ In addition to the arguments, the following attributes are available:
 * `state` - HA master state.
 * `id` - The id of the hanode. It has the same value as the `hanode_id` attribute.
 
-## Import
+### Read-only hanode metadata
 
-A hanode can be imported using its hanode_id, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_hanode` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
 
-```shell
-terraform import citrixadc_hanode.local_node 0
-```
+* `name` - Node Name.
+* `flags` - The flags for this entry.
+* `disifaces` - Disabled interfaces.
+* `hamonifaces` - HAMON ON interfaces.
+* `haheartbeatifaces` - HAHEARTBEAT OFF interfaces.
+* `pfifaces` - Interfaces causing Partial Failure.
+* `ifaces` - Interfaces on which non-multicast is not seen.
+* `hasyncfailurereason` - Displays the reason for HA SYNC Failure.
+* `secureheartbeatstate` - Displays the current state of HA secure heartbeats (`ENABLED`, `DISABLED`).

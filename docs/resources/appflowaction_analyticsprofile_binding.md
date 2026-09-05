@@ -1,5 +1,5 @@
 ---
-subcategory: "Appflow"
+subcategory: "AppFlow"
 ---
 
 # Resource: appflowaction_analyticsprofile_binding
@@ -12,7 +12,7 @@ The appflowaction_analyticsprofile_binding resource is used to create appflowact
 ```hcl
 
 resource "citrixadc_appflowaction_analyticsprofile_binding" "tf_appflowaction_analyticsprofile_binding" {
-  name      = citrixadc_appflowaction.tf_appflowaction.name
+  name             = citrixadc_appflowaction.tf_appflowaction.name
   analyticsprofile = "ns_analytics_global_profile"
 }
 

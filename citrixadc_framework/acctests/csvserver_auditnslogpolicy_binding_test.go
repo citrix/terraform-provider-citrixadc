@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCsvserver_auditnslogpolicy_binding_basic = `
@@ -126,6 +129,49 @@ func TestAccCsvserver_auditnslogpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_auditnslogpolicy_binding_basic},
+			{Config: testAccCsvserver_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCsvserver_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckCsvserver_auditnslogpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -153,10 +199,12 @@ func testAccCheckCsvserver_auditnslogpolicy_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_auditnslogpolicy_binding",
@@ -195,13 +243,12 @@ func testAccCheckCsvserver_auditnslogpolicy_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		csvserverName := idSlice[0]
-		policyName := idSlice[1]
+		csvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_auditnslogpolicy_binding",
@@ -271,6 +318,111 @@ func TestAccCsvserver_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "policyname", "tf_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding", "priority", "5"),
 				),
+			},
+		},
+	})
+}
+
+// testAccCsvserver_auditnslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccCsvserver_auditnslogpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "tf_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "tf_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+
+	resource "citrixadc_csvserver_auditnslogpolicy_binding" "tf_csvserver_auditnslogpolicy_binding" {
+        name 		= citrixadc_csvserver.tf_csvserver.name
+        policyname 	= citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+        priority 	= 5
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name 		= "tf_csvserver"
+		ipv46 		= "10.202.11.11"
+		port 		= 8080
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccCsvserver_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "tf_csvserver,tf_auditnslogpolicy"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy
+// id; because the Framework recomputes the id on Read (SetAttrFromGet), the id
+// upgrades to the new "key:value" form.
+func TestAccCsvserver_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCsvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_csvserver,tf_auditnslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_csvserver,policyname:tf_auditnslogpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_auditnslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_auditnslogpolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_auditnslogpolicy", "priority": "5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

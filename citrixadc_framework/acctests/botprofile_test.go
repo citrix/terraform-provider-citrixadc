@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccBotprofile_basic(t *testing.T) {
@@ -205,6 +208,183 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 }
 `
 
+// The botprofile unset test covers the type-independent, unset-eligible string
+// flag attributes that carry a documented NITRO default. Setting them to
+// non-default values in step1 and removing them from config in step2 must make
+// the provider unset them (revert to the NITRO defaults).
+const testAccBotprofile_unset_step1 = `
+resource "citrixadc_botprofile" "tf_unset" {
+	name                     = "tf_botprofile_unset"
+	errorurl                 = "http://www.citrix.com"
+	trapurl                  = "/http://www.citrix.com"
+	devicefingerprintaction  = ["LOG", "RESET"]
+	trapaction               = ["LOG", "RESET"]
+	addcookieflags           = "secure"
+	bot_enable_white_list    = "ON"
+	bot_enable_black_list    = "ON"
+	bot_enable_rate_limit    = "ON"
+	bot_enable_ip_reputation = "ON"
+	bot_enable_tps           = "ON"
+	devicefingerprint        = "ON"
+	trap                     = "ON"
+	headlessbrowserdetection = "ON"
+	verboseloglevel          = "HTTP_FULL_HEADER"
+}
+`
+
+const testAccBotprofile_unset_step2 = `
+resource "citrixadc_botprofile" "tf_unset" {
+	name = "tf_botprofile_unset"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccBotprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccBotprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofileExist("citrixadc_botprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "addcookieflags", "secure"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_white_list", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_black_list", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_rate_limit", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_ip_reputation", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_tps", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "devicefingerprint", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "trap", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "headlessbrowserdetection", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "verboseloglevel", "HTTP_FULL_HEADER"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccBotprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofileExist("citrixadc_botprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "addcookieflags", "httpOnly"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_white_list", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_black_list", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_rate_limit", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_ip_reputation", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "bot_enable_tps", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "devicefingerprint", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "trap", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "headlessbrowserdetection", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botprofile.tf_unset", "verboseloglevel", "NONE"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckBotprofileADCValue("tf_botprofile_unset", "bot_enable_white_list", "OFF"),
+					testAccCheckBotprofileADCValue("tf_botprofile_unset", "addcookieflags", "httpOnly"),
+					testAccCheckBotprofileADCValue("tf_botprofile_unset", "verboseloglevel", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckBotprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckBotprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Botprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("botprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("botprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccBotprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile.tf_botprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Botprofile.Type(), "tf_botprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile.tf_botprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_basic},
+			{
+				Config:                  testAccBotprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccBotprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -214,6 +394,7 @@ func TestAccBotprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_botprofile.tf_botprofile_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "name", "tf_botprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "addcookieflags", "secure"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "dfprequestlimit", "25"),

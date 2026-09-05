@@ -31,7 +31,10 @@ func (r *NsweblogparamResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the nsweblogparam resource.",
 			},
 			"buffersizemb": schema.Int64Attribute{
+				// Optional + Computed with the NITRO server default so that removing
+				// it from config produces a plan diff, letting Update fire the unset.
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(16),
 				Description: "Buffer size, in MB, allocated for log transaction data on the system. The maximum value is limited to the memory available on the system.",
 			},
@@ -56,8 +59,18 @@ func nsweblogparamGetThePayloadFromtheConfig(ctx context.Context, data *Nsweblog
 
 	// Create API request body from the model
 	nsweblogparam := ns.Nsweblogparam{}
-	if !data.Buffersizemb.IsNull() {
+	if !data.Buffersizemb.IsNull() && !data.Buffersizemb.IsUnknown() {
 		nsweblogparam.Buffersizemb = utils.IntPtr(int(data.Buffersizemb.ValueInt64()))
+	}
+	if !data.Customreqhdrs.IsNull() && !data.Customreqhdrs.IsUnknown() {
+		var customreqhdrsList []string
+		data.Customreqhdrs.ElementsAs(ctx, &customreqhdrsList, false)
+		nsweblogparam.Customreqhdrs = customreqhdrsList
+	}
+	if !data.Customrsphdrs.IsNull() && !data.Customrsphdrs.IsUnknown() {
+		var customrsphdrsList []string
+		data.Customrsphdrs.ElementsAs(ctx, &customrsphdrsList, false)
+		nsweblogparam.Customrsphdrs = customrsphdrsList
 	}
 
 	return nsweblogparam
@@ -71,12 +84,44 @@ func nsweblogparamSetAttrFromGet(ctx context.Context, data *NsweblogparamResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Buffersizemb = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Buffersizemb.IsUnknown() {
 		data.Buffersizemb = types.Int64Null()
+	}
+	if val, ok := getResponseData["customreqhdrs"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, utils.ToStringList(v))
+			data.Customreqhdrs = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Customreqhdrs = listValue
+		default:
+			if data.Customreqhdrs.IsUnknown() {
+				data.Customreqhdrs = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Customreqhdrs.IsUnknown() {
+		data.Customreqhdrs = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["customrsphdrs"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, utils.ToStringList(v))
+			data.Customrsphdrs = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Customrsphdrs = listValue
+		default:
+			if data.Customrsphdrs.IsUnknown() {
+				data.Customrsphdrs = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Customrsphdrs.IsUnknown() {
+		data.Customrsphdrs = types.ListNull(types.StringType)
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Case 1: No unique attributes (singleton) - static ID
 	data.Id = types.StringValue("nsweblogparam-config")
 
 	return data

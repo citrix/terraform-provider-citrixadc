@@ -28,5 +28,5 @@ output "vlan" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vxlanvlanmap_vxlan_binding. It is a system-generated identifier.
+* `id` - The id of the vxlanvlanmap_vxlan_binding. It is the concatenation of the `name` and `vxlan` attributes separated by a comma.
 * `vlan` - The vlan id or the range of vlan ids in the on-premise network.

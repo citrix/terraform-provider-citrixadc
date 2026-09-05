@@ -38,3 +38,10 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.
 * `labeltype` - Type of invocation. Available settings function as follows: `vserver` - Invokes the unnamed policy label associated with the specified virtual server; `policylabel` - Invoke the specified policy label.
 * `globalbindtype` - Global bind type discriminator (defaults to `SYSTEM_GLOBAL`).
+
+### Read-only lbglobal_lbpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbglobal_lbpolicy_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `flowtype` - flowtype of the bound LB policy.
+* `numpol` - number of polices bound to label.

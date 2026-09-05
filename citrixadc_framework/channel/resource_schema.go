@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -24,7 +26,7 @@ type ChannelResourceModel struct {
 	Flowctl         types.String `tfsdk:"flowctl"`
 	Haheartbeat     types.String `tfsdk:"haheartbeat"`
 	Hamonitor       types.String `tfsdk:"hamonitor"`
-	Channelid       types.String `tfsdk:"channelid"`
+	ChannelId       types.String `tfsdk:"channel_id"`
 	Ifalias         types.String `tfsdk:"ifalias"`
 	Ifnum           types.List   `tfsdk:"ifnum"`
 	Lamac           types.String `tfsdk:"lamac"`
@@ -48,6 +50,13 @@ func (r *ChannelResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Description: "The ID of the channel resource.",
 			},
+			"channel_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "ID for the LA channel or cluster LA channel or LR channel to be created. Specify an LA channel in LA/x notation, where x can range from 1 to 8 or cluster LA channel in CLA/x notation or Link redundant channel in LR/x notation, where x can range from 1 to 4. Cannot be changed after the LA channel is created.",
+			},
 			"bandwidthhigh": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -70,21 +79,19 @@ func (r *ChannelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"haheartbeat": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "In a High Availability (HA) configuration, configure the LA channel for sending heartbeats. LA channel that has HA Heartbeat disabled should not send the heartbeats.",
 			},
 			"hamonitor": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "In a High Availability (HA) configuration, monitor the LA channel for failure events. Failure of any LA channel that has HA MON enabled triggers HA failover.",
-			},
-			"channelid": schema.StringAttribute{
-				Required:    true,
-				Description: "ID for the LA channel or cluster LA channel or LR channel to be created. Specify an LA channel in LA/x notation, where x can range from 1 to 8 or cluster LA channel in CLA/x notation or Link redundant channel in LR/x notation, where x can range from 1 to 4. Cannot be changed after the LA channel is created.",
 			},
 			"ifalias": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString(" "),
+				Computed:    true,
 				Description: "Alias name for the LA channel. Used only to enhance readability. To perform any operations, you have to specify the LA channel ID.",
 			},
 			"ifnum": schema.ListAttribute{
@@ -120,22 +127,25 @@ func (r *ChannelResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"mtu": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(1500),
 				Description: "The Maximum Transmission Unit (MTU) is the largest packet size, measured in bytes excluding 14 bytes ethernet header and 4 bytes CRC, that can be transmitted and received by an interface. The default value of MTU is 1500 on all the interface of Citrix ADC, some Cloud Platforms will restrict Citrix ADC to use the lesser default value. Any MTU value more than 1500 is called Jumbo MTU and will make the interface as jumbo enabled. The Maximum Jumbo MTU in Citrix ADC is 9216, however, some Virtualized / Cloud Platforms will have lesser Maximum Jumbo MTU Value (9000). In the case of Cluster, the Backplane interface requires an MTU value of 78 bytes more than the Max MTU configured on any other Data-Plane Interface. When the Data plane interfaces are all at default 1500 MTU, Cluster Back Plane will be automatically set to 1578 (1500 + 78) MTU. If a Backplane interface is reset to Data Plane Interface, then the 1578 MTU will be automatically reset to the default MTU of 1500(or whatever lesser default value). If any data plane interface of a Cluster is configured with a Jumbo MTU ( > 1500), then all backplane interfaces require to be configured with a minimum MTU of 'Highest Data Plane MTU in the Cluster + 78'. That makes the maximum Jumbo MTU for any Data-Plane Interface in a Cluster System to be '9138 (9216 - 78)., where 9216 is the maximum Jumbo MTU. On certain Virtualized / Cloud Platforms, the maximum  possible MTU is restricted to a lesser value, Similar calculation can be applied, Maximum Data Plane MTU in Cluster = (Maximum possible MTU - 78).",
 			},
 			"speed": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("AUTO"),
+				Computed:    true,
 				Description: "Ethernet speed of the channel, in Mbps. If the speed of any bound interface is greater than or equal to the value set for this parameter, the state of the interface is UP. Otherwise, the state is INACTIVE. Bound Interfaces whose state is INACTIVE do not process any traffic.",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable the LA channel.",
 			},
 			"tagall": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Adds a four-byte 802.1q tag to every packet sent on this channel.  The ON setting applies tags for all VLANs that are bound to this channel. OFF applies the tag for all VLANs other than the native VLAN.",
 			},
 			"throughput": schema.Int64Attribute{
@@ -157,62 +167,68 @@ func channelGetThePayloadFromtheConfig(ctx context.Context, data *ChannelResourc
 
 	// Create API request body from the model
 	channel := network.Channel{}
-	if !data.Bandwidthhigh.IsNull() {
-		channel.Bandwidthhigh = utils.IntPtr(int(data.Bandwidthhigh.ValueInt64()))
+	// channel_id maps to the NITRO "id" primary key attribute
+	if !data.ChannelId.IsNull() && !data.ChannelId.IsUnknown() {
+		channel.Id = data.ChannelId.ValueString()
 	}
-	if !data.Bandwidthnormal.IsNull() {
-		channel.Bandwidthnormal = utils.IntPtr(int(data.Bandwidthnormal.ValueInt64()))
+	if !data.Ifnum.IsNull() && !data.Ifnum.IsUnknown() {
+		var ifnumList []string
+		data.Ifnum.ElementsAs(ctx, &ifnumList, false)
+		channel.Ifnum = ifnumList
 	}
-	if !data.Conndistr.IsNull() {
-		channel.Conndistr = data.Conndistr.ValueString()
-	}
-	if !data.Flowctl.IsNull() {
-		channel.Flowctl = data.Flowctl.ValueString()
-	}
-	if !data.Haheartbeat.IsNull() {
-		channel.Haheartbeat = data.Haheartbeat.ValueString()
-	}
-	if !data.Hamonitor.IsNull() {
-		channel.Hamonitor = data.Hamonitor.ValueString()
-	}
-	if !data.Id.IsNull() {
-		channel.Id = data.Id.ValueString()
-	}
-	if !data.Ifalias.IsNull() {
-		channel.Ifalias = data.Ifalias.ValueString()
-	}
-	if !data.Lamac.IsNull() {
-		channel.Lamac = data.Lamac.ValueString()
-	}
-	if !data.Linkredundancy.IsNull() {
-		channel.Linkredundancy = data.Linkredundancy.ValueString()
-	}
-	if !data.Lrminthroughput.IsNull() {
-		channel.Lrminthroughput = utils.IntPtr(int(data.Lrminthroughput.ValueInt64()))
-	}
-	if !data.Macdistr.IsNull() {
-		channel.Macdistr = data.Macdistr.ValueString()
-	}
-	if !data.Mode.IsNull() {
-		channel.Mode = data.Mode.ValueString()
-	}
-	if !data.Mtu.IsNull() {
-		channel.Mtu = utils.IntPtr(int(data.Mtu.ValueInt64()))
-	}
-	if !data.Speed.IsNull() {
-		channel.Speed = data.Speed.ValueString()
-	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		channel.State = data.State.ValueString()
 	}
-	if !data.Tagall.IsNull() {
+	if !data.Mode.IsNull() && !data.Mode.IsUnknown() {
+		channel.Mode = data.Mode.ValueString()
+	}
+	if !data.Conndistr.IsNull() && !data.Conndistr.IsUnknown() {
+		channel.Conndistr = data.Conndistr.ValueString()
+	}
+	if !data.Macdistr.IsNull() && !data.Macdistr.IsUnknown() {
+		channel.Macdistr = data.Macdistr.ValueString()
+	}
+	if !data.Lamac.IsNull() && !data.Lamac.IsUnknown() {
+		channel.Lamac = data.Lamac.ValueString()
+	}
+	if !data.Speed.IsNull() && !data.Speed.IsUnknown() {
+		channel.Speed = data.Speed.ValueString()
+	}
+	if !data.Flowctl.IsNull() && !data.Flowctl.IsUnknown() {
+		channel.Flowctl = data.Flowctl.ValueString()
+	}
+	if !data.Hamonitor.IsNull() && !data.Hamonitor.IsUnknown() {
+		channel.Hamonitor = data.Hamonitor.ValueString()
+	}
+	if !data.Haheartbeat.IsNull() && !data.Haheartbeat.IsUnknown() {
+		channel.Haheartbeat = data.Haheartbeat.ValueString()
+	}
+	if !data.Tagall.IsNull() && !data.Tagall.IsUnknown() {
 		channel.Tagall = data.Tagall.ValueString()
 	}
-	if !data.Throughput.IsNull() {
-		channel.Throughput = utils.IntPtr(int(data.Throughput.ValueInt64()))
-	}
-	if !data.Trunk.IsNull() {
+	if !data.Trunk.IsNull() && !data.Trunk.IsUnknown() {
 		channel.Trunk = data.Trunk.ValueString()
+	}
+	if !data.Ifalias.IsNull() && !data.Ifalias.IsUnknown() {
+		channel.Ifalias = data.Ifalias.ValueString()
+	}
+	if !data.Linkredundancy.IsNull() && !data.Linkredundancy.IsUnknown() {
+		channel.Linkredundancy = data.Linkredundancy.ValueString()
+	}
+	if !data.Bandwidthhigh.IsNull() && !data.Bandwidthhigh.IsUnknown() {
+		channel.Bandwidthhigh = utils.IntPtr(int(data.Bandwidthhigh.ValueInt64()))
+	}
+	if !data.Bandwidthnormal.IsNull() && !data.Bandwidthnormal.IsUnknown() {
+		channel.Bandwidthnormal = utils.IntPtr(int(data.Bandwidthnormal.ValueInt64()))
+	}
+	if !data.Lrminthroughput.IsNull() && !data.Lrminthroughput.IsUnknown() {
+		channel.Lrminthroughput = utils.IntPtr(int(data.Lrminthroughput.ValueInt64()))
+	}
+	if !data.Mtu.IsNull() && !data.Mtu.IsUnknown() {
+		channel.Mtu = utils.IntPtr(int(data.Mtu.ValueInt64()))
+	}
+	if !data.Throughput.IsNull() && !data.Throughput.IsUnknown() {
+		channel.Throughput = utils.IntPtr(int(data.Throughput.ValueInt64()))
 	}
 
 	return channel
@@ -221,116 +237,138 @@ func channelGetThePayloadFromtheConfig(ctx context.Context, data *ChannelResourc
 func channelSetAttrFromGet(ctx context.Context, data *ChannelResourceModel, getResponseData map[string]interface{}) *ChannelResourceModel {
 	tflog.Debug(ctx, "In channelSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// The else-branches are guarded with IsUnknown() so that a user-configured
+	// value for an Optional+Computed attribute is preserved when the NITRO GET
+	// response omits that attribute (several channel attributes such as
+	// conndistr/macdistr/speed/flowctl/throughput are never echoed by GET).
+	// This prevents "inconsistent result after apply" errors.
+
+	// id maps to the channel_id (NITRO primary key) attribute
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		data.ChannelId = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ifnum"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Ifnum = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Ifnum = listValue
+		default:
+			if data.Ifnum.IsUnknown() {
+				data.Ifnum = types.ListNull(types.StringType)
+			}
+		}
+	} else if data.Ifnum.IsUnknown() {
+		data.Ifnum = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["bandwidthhigh"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bandwidthhigh = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bandwidthhigh.IsUnknown() {
 		data.Bandwidthhigh = types.Int64Null()
 	}
 	if val, ok := getResponseData["bandwidthnormal"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bandwidthnormal = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bandwidthnormal.IsUnknown() {
 		data.Bandwidthnormal = types.Int64Null()
 	}
 	if val, ok := getResponseData["conndistr"]; ok && val != nil {
 		data.Conndistr = types.StringValue(val.(string))
-	} else {
+	} else if data.Conndistr.IsUnknown() {
 		data.Conndistr = types.StringNull()
 	}
 	if val, ok := getResponseData["flowctl"]; ok && val != nil {
 		data.Flowctl = types.StringValue(val.(string))
-	} else {
+	} else if data.Flowctl.IsUnknown() {
 		data.Flowctl = types.StringNull()
 	}
 	if val, ok := getResponseData["haheartbeat"]; ok && val != nil {
 		data.Haheartbeat = types.StringValue(val.(string))
-	} else {
+	} else if data.Haheartbeat.IsUnknown() {
 		data.Haheartbeat = types.StringNull()
 	}
 	if val, ok := getResponseData["hamonitor"]; ok && val != nil {
 		data.Hamonitor = types.StringValue(val.(string))
-	} else {
+	} else if data.Hamonitor.IsUnknown() {
 		data.Hamonitor = types.StringNull()
-	}
-	if val, ok := getResponseData["id"]; ok && val != nil {
-		data.Id = types.StringValue(val.(string))
-	} else {
-		data.Id = types.StringNull()
 	}
 	if val, ok := getResponseData["ifalias"]; ok && val != nil {
 		data.Ifalias = types.StringValue(val.(string))
-	} else {
+	} else if data.Ifalias.IsUnknown() {
 		data.Ifalias = types.StringNull()
 	}
 	if val, ok := getResponseData["lamac"]; ok && val != nil {
 		data.Lamac = types.StringValue(val.(string))
-	} else {
+	} else if data.Lamac.IsUnknown() {
 		data.Lamac = types.StringNull()
 	}
 	if val, ok := getResponseData["linkredundancy"]; ok && val != nil {
 		data.Linkredundancy = types.StringValue(val.(string))
-	} else {
+	} else if data.Linkredundancy.IsUnknown() {
 		data.Linkredundancy = types.StringNull()
 	}
 	if val, ok := getResponseData["lrminthroughput"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Lrminthroughput = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Lrminthroughput.IsUnknown() {
 		data.Lrminthroughput = types.Int64Null()
 	}
 	if val, ok := getResponseData["macdistr"]; ok && val != nil {
 		data.Macdistr = types.StringValue(val.(string))
-	} else {
+	} else if data.Macdistr.IsUnknown() {
 		data.Macdistr = types.StringNull()
 	}
 	if val, ok := getResponseData["mode"]; ok && val != nil {
 		data.Mode = types.StringValue(val.(string))
-	} else {
+	} else if data.Mode.IsUnknown() {
 		data.Mode = types.StringNull()
 	}
 	if val, ok := getResponseData["mtu"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mtu = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mtu.IsUnknown() {
 		data.Mtu = types.Int64Null()
 	}
 	if val, ok := getResponseData["speed"]; ok && val != nil {
 		data.Speed = types.StringValue(val.(string))
-	} else {
+	} else if data.Speed.IsUnknown() {
 		data.Speed = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["tagall"]; ok && val != nil {
 		data.Tagall = types.StringValue(val.(string))
-	} else {
+	} else if data.Tagall.IsUnknown() {
 		data.Tagall = types.StringNull()
 	}
 	if val, ok := getResponseData["throughput"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Throughput = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Throughput.IsUnknown() {
 		data.Throughput = types.Int64Null()
 	}
 	if val, ok := getResponseData["trunk"]; ok && val != nil {
 		data.Trunk = types.StringValue(val.(string))
-	} else {
+	} else if data.Trunk.IsUnknown() {
 		data.Trunk = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Channelid.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(data.ChannelId.ValueString())
 
 	return data
 }

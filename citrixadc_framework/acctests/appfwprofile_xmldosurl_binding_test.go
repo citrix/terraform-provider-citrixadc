@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_xmldosurl_binding_basic = `
@@ -133,10 +136,12 @@ func testAccCheckAppfwprofile_xmldosurl_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		xmldosurl := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "xmldosurl"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		xmldosurl := idMap["xmldosurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmldosurl_binding",
@@ -178,10 +183,12 @@ func testAccCheckAppfwprofile_xmldosurl_bindingNotExist(n string, id string) res
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		xmldosurl := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "xmldosurl"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		xmldosurl := idMap["xmldosurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_xmldosurl_binding",
@@ -303,6 +310,153 @@ func TestAccAppfwprofile_xmldosurl_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributenamelength", "200"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "xmlmaxattributenamelengthcheck", "ON"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppfwprofile_xmldosurl_binding_upgrade_basic is valid under BOTH the last
+// SDK v2 release (2.2.0) schema and the current Framework schema. It reuses the values
+// from testAccAppfwprofile_xmldosurl_binding_basic and keeps the same resource labels so
+// the Exist/Destroy helpers and addresses match.
+const testAccAppfwprofile_xmldosurl_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_xmldosurl_binding" "tf_binding" {
+		name                           = citrixadc_appfwprofile.tf_appfwprofile.name
+		xmldosurl                      = ".*"
+		state                          = "ENABLED"
+		xmlsoaparraycheck              = "ON"
+		xmlmaxelementdepthcheck        = "ON"
+		xmlmaxfilesize                 = 100000
+		xmlmaxfilesizecheck            = "OFF"
+		xmlmaxnamespaceurilength       = 200
+		xmlmaxnamespaceurilengthcheck  = "ON"
+		xmlmaxelementnamelength        = 300
+		xmlmaxelementnamelengthcheck   = "ON"
+		xmlmaxelements                 = 30
+		xmlmaxelementscheck            = "ON"
+		xmlmaxattributes               = 20
+		xmlmaxattributescheck          = "ON"
+		xmlmaxchardatalength           = 1000
+		xmlmaxchardatalengthcheck      = "ON"
+		xmlmaxnamespaces               = 30
+		xmlmaxnamespacescheck          = "ON"
+		xmlmaxattributenamelength      = 200
+		xmlmaxattributenamelengthcheck = "ON"
+	}
+`
+
+// TestAccAppfwprofile_xmldosurl_binding_sdkv2StateUpgrade verifies that a resource created
+// with the last SDK v2 release (which writes the legacy comma-separated id) is refreshed
+// cleanly through the current Framework provider, and that the Framework Read upgrades the
+// id to the new key:value format.
+func TestAccAppfwprofile_xmldosurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_xmldosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the LAST SDK v2 release. State is written with the
+				// legacy id "name,xmldosurl".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_xmldosurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_xmldosurl_bindingExist("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "id", "tf_appfwprofile,.*"),
+				),
+			},
+			{
+				// Step 2: same config through the CURRENT (framework) provider. Terraform
+				// refreshes the legacy-id state through Read (exercising ParseIdString on the
+				// legacy id) and the framework re-derives the canonical new-format id.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_xmldosurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_xmldosurl_bindingExist("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_xmldosurl_binding.tf_binding", "id", "name:tf_appfwprofile,xmldosurl:.%2A"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_xmldosurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmldosurl_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,xmldosurl) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "xmldosurl"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmldosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_xmldosurl_binding_basic},
+			{Config: testAccAppfwprofile_xmldosurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_xmldosurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_xmldosurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmldosurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmldosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_xmldosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmldosurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_xmldosurl_binding.Type(), "tf_appfwprofile", map[string]string{"xmldosurl": ".%2A"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_xmldosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmldosurl_bindingExist(resAddr, nil)),
 			},
 		},
 	})

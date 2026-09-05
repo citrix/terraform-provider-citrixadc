@@ -67,8 +67,8 @@ resource citrixadc_appfwprofile demo_appfw {
 
 ## Argument Reference
 
-* `name` - Name of the profile to which to bind an exemption or rule.
-* `starturl` - A regular expression that designates a URL on the Start URL list.
+* `name` - (Required) Name of the profile to which to bind an exemption or rule.
+* `starturl` - (Required) A regular expression that designates a URL on the Start URL list.
 * `state` - (Optional) Enabled. Possible values: [ ENABLED, DISABLED ]
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?. Possible values: [ AUTODEPLOYED, NOTAUTODEPLOYED ]
@@ -81,4 +81,13 @@ resource citrixadc_appfwprofile demo_appfw {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the `appfwprofile_starturl_binding`. It has the value of the string `name,starturl`.
+* `id` - The id of the `appfwprofile_starturl_binding`. It is the concatenation of the `name` and `starturl` attributes separated by a comma.
+
+
+## Import
+
+An `appfwprofile_starturl_binding` can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1 demo_appfwprofile1,^[^?]+[.](html?|shtml|js|gif|jpg|jpeg|png|swf|pif|pdf|css|csv)$
+```

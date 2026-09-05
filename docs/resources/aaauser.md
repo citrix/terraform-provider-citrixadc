@@ -57,7 +57,6 @@ resource "citrixadc_aaauser" "tf_aaauser" {
 * `password` - (Optional, Sensitive) Password with which the user logs on. Required for any user account that does not exist on an external authentication server. If you are not using an external authentication server, all user accounts must have a password. If you are using an external authentication server, you must provide a password for local user accounts that do not exist on the authentication server. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
 * `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
 * `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
-* `loggedin` - (Optional) Show whether the user is logged in or not.
 
 
 ## Attribute Reference

@@ -51,6 +51,7 @@ type AppflowparamResourceModel struct {
 	Httpxforwardedfor                   types.String `tfsdk:"httpxforwardedfor"`
 	Identifiername                      types.String `tfsdk:"identifiername"`
 	Identifiersessionname               types.String `tfsdk:"identifiersessionname"`
+	Logalljsonfields                    types.String `tfsdk:"logalljsonfields"`
 	Logstreamovernsip                   types.String `tfsdk:"logstreamovernsip"`
 	Lsnlogging                          types.String `tfsdk:"lsnlogging"`
 	Metrics                             types.String `tfsdk:"metrics"`
@@ -276,6 +277,11 @@ func (r *AppflowparamResource) Schema(ctx context.Context, req resource.SchemaRe
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Include the stream identifier session name to be exported.",
 			},
+			"logalljsonfields": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Overrides the field filtering for all analytics profiles, and sends all the fields for the configured insights.",
+			},
 			"logstreamovernsip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -494,6 +500,9 @@ func appflowparamGetThePayloadFromthePlan(ctx context.Context, data *Appflowpara
 	}
 	if !data.Identifiersessionname.IsNull() && !data.Identifiersessionname.IsUnknown() {
 		appflowparam.Identifiersessionname = data.Identifiersessionname.ValueString()
+	}
+	if !data.Logalljsonfields.IsNull() && !data.Logalljsonfields.IsUnknown() {
+		appflowparam.Logalljsonfields = data.Logalljsonfields.ValueString()
 	}
 	if !data.Logstreamovernsip.IsNull() && !data.Logstreamovernsip.IsUnknown() {
 		appflowparam.Logstreamovernsip = data.Logstreamovernsip.ValueString()
@@ -734,6 +743,11 @@ func appflowparamSetAttrFromGet(ctx context.Context, data *AppflowparamResourceM
 		data.Identifiersessionname = types.StringValue(val.(string))
 	} else {
 		data.Identifiersessionname = types.StringNull()
+	}
+	if val, ok := getResponseData["logalljsonfields"]; ok && val != nil {
+		data.Logalljsonfields = types.StringValue(val.(string))
+	} else {
+		data.Logalljsonfields = types.StringNull()
 	}
 	if val, ok := getResponseData["logstreamovernsip"]; ok && val != nil {
 		data.Logstreamovernsip = types.StringValue(val.(string))

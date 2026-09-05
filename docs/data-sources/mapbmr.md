@@ -41,12 +41,3 @@ In addition to the arguments, the following attributes are available:
 * `psidoffset` - Start bit position of Port Set Identifier(PSID) value in Embedded Address (EA) bits.
 * `ruleipv6prefix` - IPv6 prefix of Customer Edge(CE) device. MAP-T CE will send ipv6 packets with this ipv6 prefix as source ipv6 address prefix.
 * `id` - The id of the mapbmr. It has the same value as the `name` attribute.
-
-
-## Import
-
-A mapbmr can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_mapbmr.tf_mapbmr bmr_rule_1
-```

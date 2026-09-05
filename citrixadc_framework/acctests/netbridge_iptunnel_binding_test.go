@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetbridge_iptunnel_binding_basic = `
@@ -96,6 +99,49 @@ func TestAccNetbridge_iptunnel_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNetbridge_iptunnel_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_iptunnel_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,tunnel) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "tunnel"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_iptunnel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_iptunnel_binding_basic},
+			{Config: testAccNetbridge_iptunnel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNetbridge_iptunnel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckNetbridge_iptunnel_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -123,10 +169,12 @@ func testAccCheckNetbridge_iptunnel_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		tunnel := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "tunnel"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		tunnel := idMap["tunnel"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netbridge_iptunnel_binding",
@@ -272,6 +320,106 @@ func TestAccNetbridge_iptunnel_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_iptunnel_binding.tf_binding", "tunnel", "tf_iptunnel"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_netbridge_iptunnel_binding.tf_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// values and is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema (uses only SDK v2 attribute names).
+const testAccNetbridge_iptunnel_binding_upgrade_basic = `
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "2.2.2.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "tf_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+	resource "citrixadc_iptunnel" "tf_iptunnel" {
+		name             = "tf_iptunnel"
+		remote           = "66.0.0.11"
+		remotesubnetmask = "255.255.255.255"
+		local            = citrixadc_nsip.nsip.ipaddress
+		protocol         = "GRE"
+	}
+	resource "citrixadc_netbridge_iptunnel_binding" "tf_binding" {
+		name   = citrixadc_netbridge.tf_netbridge.name
+		tunnel = citrixadc_iptunnel.tf_iptunnel.name
+	}
+`
+
+// TestAccNetbridge_iptunnel_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-joined id) is transparently upgraded by
+// the current Framework provider. Step 1 creates the binding with citrix/citrixadc
+// 2.2.0 (legacy id "name,tunnel"); step 2 refreshes/plans the same config through
+// the current Framework provider, whose Read parses the legacy id and recomputes
+// it to the new "name:<v>,tunnel:<v>" format (SetAttrFromGet).
+func TestAccNetbridge_iptunnel_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridge_iptunnel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNetbridge_iptunnel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_iptunnel_bindingExist("citrixadc_netbridge_iptunnel_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_iptunnel_binding.tf_binding", "id", "tf_netbridge,tf_iptunnel"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetbridge_iptunnel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_iptunnel_bindingExist("citrixadc_netbridge_iptunnel_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_iptunnel_binding.tf_binding", "id", "name:tf_netbridge,tunnel:tf_iptunnel"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetbridge_iptunnel_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_iptunnel_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_iptunnel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_iptunnel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_iptunnel_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netbridge_iptunnel_binding.Type(), "tf_netbridge", map[string]string{"tunnel": "tf_iptunnel"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetbridge_iptunnel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_iptunnel_bindingExist(resAddr, nil)),
 			},
 		},
 	})

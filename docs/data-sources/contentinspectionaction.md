@@ -48,10 +48,14 @@ In addition to the arguments, the following attributes are available:
   * NSTRACE - capture current and further incoming packets on this transaction.
 * `id` - The id of the contentinspectionaction. It has the same value as the `name` attribute.
 
-## Import
+### Read-only contentinspectionaction metadata
 
-A contentinspectionaction can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_contentinspectionaction` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_contentinspectionaction.tf_contentinspectionaction my_ci_action
-```
+* `reqtimeout` - Time, in seconds, within which the remote service request must complete. This is not supported for NOINSPECTION action type. If the request does not complete within this time, the specified request timeout action is executed. Zero disables the timeout.
+* `reqtimeoutaction` - Name of the action to perform if the Vserver representing the remote service does not respond. This is not supported for NOINSPECTION action type. Possible values = BYPASS, DROP, RESET.
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `builtin` - Flag to determine whether contentinspection action is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

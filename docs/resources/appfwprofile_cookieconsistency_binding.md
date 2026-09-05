@@ -49,8 +49,8 @@ resource citrixadc_appfwprofile demo_appfw {
 
 ## Argument Reference
 
-* `name` - Name of the profile to which to bind an exemption or rule.
-* `cookieconsistency` - The name of the cookie to be checked.
+* `name` - (Required) Name of the profile to which to bind an exemption or rule.
+* `cookieconsistency` - (Required) The name of the cookie to be checked.
 * `isregex` - (Optional) Is the cookie name a regular expression?. Possible values: [ REGEX, NOTREGEX ]
 * `state` - (Optional) Enabled. Possible values: [ ENABLED, DISABLED ]
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
@@ -64,3 +64,12 @@ resource citrixadc_appfwprofile demo_appfw {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwprofile_cookieconsistency_binding`. It is the concatenation of the `name` and `cookieconsistency` attributes separated by a comma.
+
+
+## Import
+
+A appfwprofile_cookieconsistency_binding can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwprofile_cookieconsistency_binding.demo_binding demo_appfwprofile,^logon_[0-9A-Za-z]{2\,15}$
+```

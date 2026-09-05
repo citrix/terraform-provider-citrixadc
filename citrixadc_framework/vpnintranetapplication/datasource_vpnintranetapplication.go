@@ -35,7 +35,7 @@ func (d *VpnintranetapplicationDataSource) Schema(ctx context.Context, req datas
 }
 
 func (d *VpnintranetapplicationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnintranetapplicationResourceModel
+	var data VpnintranetapplicationDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VpnintranetapplicationDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	vpnintranetapplicationSetAttrFromGet(ctx, &data, getResponseData)
+	vpnintranetapplicationDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

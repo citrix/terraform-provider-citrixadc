@@ -118,3 +118,34 @@ In addition to the arguments, the following attributes are available:
 * `ttl` - TTL value.
 * `v6persistmasklen` - Persistence mask for IP based persistence types, for IPv6 virtual servers.
 * `vipheader` - Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.
+
+### Read-only csvserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csvserver` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `ip` - The IP address of the virtual server.
+* `value` - The ssl card status for the transparent ssl cs vserver.
+* `ngname` - Nodegroup devno to which this csvserver belongs to.
+* `type` - Virtual server type (for example `CONTENT`, `ADDRESS`).
+* `curstate` - The state of the cs vserver (for example `UP`, `DOWN`, `OUT OF SERVICE`).
+* `status` - Status.
+* `cachetype` - Cache type (for example `TRANSPARENT`, `REVERSE`, `FORWARD`).
+* `redirect` - Redirect URL string (for example `CACHE`, `POLICY`, `ORIGIN`).
+* `homepage` - Home page.
+* `dnsvservername` - DNS vserver name.
+* `domain` - Domain.
+* `servicename` - Service name.
+* `weight` - Weight for this service.
+* `cachevserver` - Cache vserver name.
+* `targetvserver` - target vserver name.
+* `url` - URL string.
+* `bindpoint` - The bindpoint to which the policy is bound.
+* `gt2gb` - This argument has no effect (for example `ENABLED`, `DISABLED`).
+* `statechangetimesec` - Time when last state change happened. Seconds part.
+* `statechangetimemsec` - Time at which last state change happened. Milliseconds part.
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `ruletype` - Rule type.
+* `lbvserver` - Name of the default lb vserver bound.
+* `targetlbvserver` - target vserver name.
+* `nodefaultbindings` - To determine if the configuration will have default ssl CIPHER and ECC curve bindings (for example `YES`, `NO`).
+* `version` - Cookie version.

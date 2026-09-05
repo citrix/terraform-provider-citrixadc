@@ -1,9 +1,118 @@
 package sslprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslprofileDataSourceModel is the data-source-specific model, decoupled from
+// SslprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the resource attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// Every non-key attribute is Computed; the Framework's per-attribute model <->
+// schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type SslprofileDataSourceModel struct {
+	Id                                types.String `tfsdk:"id"`
+	Allowextendedmastersecret         types.String `tfsdk:"allowextendedmastersecret"`
+	Allowlegacykdf                    types.String `tfsdk:"allowlegacykdf"`
+	Allowunknownsni                   types.String `tfsdk:"allowunknownsni"`
+	Alpnprotocol                      types.String `tfsdk:"alpnprotocol"`
+	Ciphername                        types.String `tfsdk:"ciphername"`
+	Cipherpriority                    types.Int64  `tfsdk:"cipherpriority"`
+	Cipherredirect                    types.String `tfsdk:"cipherredirect"`
+	Cipherurl                         types.String `tfsdk:"cipherurl"`
+	Cleartextport                     types.Int64  `tfsdk:"cleartextport"`
+	Clientauth                        types.String `tfsdk:"clientauth"`
+	Clientauthuseboundcachain         types.String `tfsdk:"clientauthuseboundcachain"`
+	Clientcert                        types.String `tfsdk:"clientcert"`
+	Commonname                        types.String `tfsdk:"commonname"`
+	Defaultsni                        types.String `tfsdk:"defaultsni"`
+	Denysslreneg                      types.String `tfsdk:"denysslreneg"`
+	Dh                                types.String `tfsdk:"dh"`
+	Dhcount                           types.Int64  `tfsdk:"dhcount"`
+	Dhekeyexchangewithpsk             types.String `tfsdk:"dhekeyexchangewithpsk"`
+	Dhfile                            types.String `tfsdk:"dhfile"`
+	Dhkeyexpsizelimit                 types.String `tfsdk:"dhkeyexpsizelimit"`
+	Dropreqwithnohostheader           types.String `tfsdk:"dropreqwithnohostheader"`
+	Dynamicclientcert                 types.String `tfsdk:"dynamicclientcert"`
+	Ecccurvebindings                  types.Set    `tfsdk:"ecccurvebindings"`
+	Encryptedclienthello              types.String `tfsdk:"encryptedclienthello"`
+	Encrypttriggerpktcount            types.Int64  `tfsdk:"encrypttriggerpktcount"`
+	Ersa                              types.String `tfsdk:"ersa"`
+	Ersacount                         types.Int64  `tfsdk:"ersacount"`
+	Hsts                              types.String `tfsdk:"hsts"`
+	Includesubdomains                 types.String `tfsdk:"includesubdomains"`
+	Insertionencoding                 types.String `tfsdk:"insertionencoding"`
+	Maxage                            types.Int64  `tfsdk:"maxage"`
+	Maxrenegrate                      types.Int64  `tfsdk:"maxrenegrate"`
+	Name                              types.String `tfsdk:"name"` // Required lookup key
+	Nodefaultbindings                 types.String `tfsdk:"nodefaultbindings"`
+	Nodefaultcipherbindings           types.Bool   `tfsdk:"nodefaultcipherbindings"`
+	Nodefaultecccurvebindings         types.Bool   `tfsdk:"nodefaultecccurvebindings"`
+	Ocspstapling                      types.String `tfsdk:"ocspstapling"`
+	Preload                           types.String `tfsdk:"preload"`
+	Prevsessionkeylifetime            types.Int64  `tfsdk:"prevsessionkeylifetime"`
+	Pushenctrigger                    types.String `tfsdk:"pushenctrigger"`
+	Pushenctriggertimeout             types.Int64  `tfsdk:"pushenctriggertimeout"`
+	Pushflag                          types.Int64  `tfsdk:"pushflag"`
+	Quantumsize                       types.String `tfsdk:"quantumsize"`
+	Redirectportrewrite               types.String `tfsdk:"redirectportrewrite"`
+	Sendclosenotify                   types.String `tfsdk:"sendclosenotify"`
+	Serverauth                        types.String `tfsdk:"serverauth"`
+	Sessionkeylifetime                types.Int64  `tfsdk:"sessionkeylifetime"`
+	Sessionticket                     types.String `tfsdk:"sessionticket"`
+	Sessionticketkeydata              types.String `tfsdk:"sessionticketkeydata"`
+	Sessionticketkeyrefresh           types.String `tfsdk:"sessionticketkeyrefresh"`
+	Sessionticketlifetime             types.Int64  `tfsdk:"sessionticketlifetime"`
+	Sessreuse                         types.String `tfsdk:"sessreuse"`
+	Sesstimeout                       types.Int64  `tfsdk:"sesstimeout"`
+	Skipclientcertpolicycheck         types.String `tfsdk:"skipclientcertpolicycheck"`
+	Snienable                         types.String `tfsdk:"snienable"`
+	Snihttphostmatch                  types.String `tfsdk:"snihttphostmatch"`
+	Ssl3                              types.String `tfsdk:"ssl3"`
+	Sslclientlogs                     types.String `tfsdk:"sslclientlogs"`
+	Sslimaxsessperserver              types.Int64  `tfsdk:"sslimaxsessperserver"`
+	Sslinterception                   types.String `tfsdk:"sslinterception"`
+	Ssliocspcheck                     types.String `tfsdk:"ssliocspcheck"`
+	Sslireneg                         types.String `tfsdk:"sslireneg"`
+	Ssllogprofile                     types.String `tfsdk:"ssllogprofile"`
+	Sslprofiletype                    types.String `tfsdk:"sslprofiletype"`
+	Sslredirect                       types.String `tfsdk:"sslredirect"`
+	Ssltriggertimeout                 types.Int64  `tfsdk:"ssltriggertimeout"`
+	Strictcachecks                    types.String `tfsdk:"strictcachecks"`
+	Strictclientekucheck              types.String `tfsdk:"strictclientekucheck"`
+	Strictsigdigestcheck              types.String `tfsdk:"strictsigdigestcheck"`
+	Tls1                              types.String `tfsdk:"tls1"`
+	Tls11                             types.String `tfsdk:"tls11"`
+	Tls12                             types.String `tfsdk:"tls12"`
+	Tls13                             types.String `tfsdk:"tls13"`
+	Tls13sessionticketsperauthcontext types.Int64  `tfsdk:"tls13sessionticketsperauthcontext"`
+	Zerorttearlydata                  types.String `tfsdk:"zerorttearlydata"`
+	Cipherbindings                    types.Set    `tfsdk:"cipherbindings"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/sslprofile.json). Never settable; populated from GET.
+	Nonfipsciphers               types.String `tfsdk:"nonfipsciphers"`
+	Crlcheck                     types.String `tfsdk:"crlcheck"`
+	Ocspcheck                    types.String `tfsdk:"ocspcheck"`
+	Snicert                      types.Bool   `tfsdk:"snicert"`
+	Skipcaname                   types.Bool   `tfsdk:"skipcaname"`
+	Invoke                       types.Bool   `tfsdk:"invoke"`
+	Labeltype                    types.String `tfsdk:"labeltype"`
+	Service                      types.Int64  `tfsdk:"service"`
+	Builtin                      types.List   `tfsdk:"builtin"`
+	Feature                      types.String `tfsdk:"feature"`
+	Sslpfobjecttype              types.Int64  `tfsdk:"sslpfobjecttype"`
+	Ssliverifyservercertforreuse types.String `tfsdk:"ssliverifyservercertforreuse"`
+}
 
 func SslprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -15,6 +124,11 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "When set to YES, attempt to use the TLS Extended Master Secret (EMS, as\ndescribed in RFC 7627) when negotiating TLS 1.0, TLS 1.1 and TLS 1.2\nconnection parameters. EMS must be supported by both the TLS client and server\nin order to be enabled during a handshake. This setting applies to both\nfrontend and backend SSL profiles.",
+			},
+			"allowlegacykdf": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "FIPS 140-3 certification requires all handshakes without EMS be blocked. Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs when needed. This setting applies to both frontend and backend SSL profiles.",
 			},
 			"allowunknownsni": schema.StringAttribute{
 				Optional:    true,
@@ -111,6 +225,16 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.",
 			},
+			"dynamicclientcert": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable Dynamic Client Certificate Generation for SSL sessions.",
+			},
+			"ecccurvebindings": schema.SetAttribute{
+				Computed:    true,
+				Description: "Set of ECC curve names bound to the SSL profile.",
+				ElementType: types.StringType,
+			},
 			"encryptedclienthello": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -171,11 +295,6 @@ func SslprofileDataSourceSchema() schema.Schema {
 			"nodefaultecccurvebindings": schema.BoolAttribute{
 				Computed:    true,
 				Description: "When set to true, removes the default ECC curve bindings from the SSL profile.",
-			},
-			"ecccurvebindings": schema.SetAttribute{
-				Computed:    true,
-				Description: "Set of ECC curve names bound to the SSL profile.",
-				ElementType: types.StringType,
 			},
 			"ocspstapling": schema.StringAttribute{
 				Optional:    true,
@@ -240,16 +359,8 @@ func SslprofileDataSourceSchema() schema.Schema {
 			"sessionticketkeydata": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Session ticket enc/dec key , admin can set it",
-			},
-			"sessionticketkeydata_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Session ticket enc/dec key , admin can set it",
-			},
-			"sessionticketkeydata_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a sessionticketkeydata_wo update.",
 			},
 			"sessionticketkeyrefresh": schema.StringAttribute{
 				Optional:    true,
@@ -341,6 +452,11 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enable strict CA certificate checks on the appliance.",
 			},
+			"strictclientekucheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable strict EKU extension check during client authentication.",
+			},
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -376,6 +492,58 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "State of TLS 1.3 0-RTT early data support for the SSL Virtual Server. This setting only has an effect if resumption is enabled, as early data cannot be sent along with an initial handshake.\nEarly application data has significantly different security properties - in particular there is no guarantee that the data cannot be replayed.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"nonfipsciphers": schema.StringAttribute{
+				Computed:    true,
+				Description: "State of usage of ciphers that are not FIPS approved. Valid only for an SSL service bound with a FIPS key and certificate.",
+			},
+			"crlcheck": schema.StringAttribute{
+				Computed:    true,
+				Description: "The state of the CRL check parameter. (Mandatory/Optional).",
+			},
+			"ocspcheck": schema.StringAttribute{
+				Computed:    true,
+				Description: "The state of the OCSP check parameter. (Mandatory/Optional).",
+			},
+			"snicert": schema.BoolAttribute{
+				Computed:    true,
+				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
+			},
+			"skipcaname": schema.BoolAttribute{
+				Computed:    true,
+				Description: "The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.",
+			},
+			"invoke": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Invoke flag. This attribute is relevant only for ADVANCED policies.",
+			},
+			"labeltype": schema.StringAttribute{
+				Computed:    true,
+				Description: "Type of policy label invocation. Possible values = vserver, service, policylabel",
+			},
+			"service": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Service.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether ssl profile is built-in or not. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
+			"sslpfobjecttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Internal flag to indicate what type of object binds this profile: monitor or service.",
+			},
+			"ssliverifyservercertforreuse": schema.StringAttribute{
+				Computed:    true,
+				Description: "Verify the origin server's certificate before reusing the front-end SSL session.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"cipherbindings": schema.SetNestedBlock{
@@ -395,4 +563,116 @@ func SslprofileDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+// sslprofileDataSourceSetAttrFromGet projects a NITRO sslprofile GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func sslprofileDataSourceSetAttrFromGet(ctx context.Context, data *SslprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Allowextendedmastersecret = utils.MapGetString(g, "allowextendedmastersecret")
+	data.Allowlegacykdf = utils.MapGetString(g, "allowlegacykdf")
+	data.Allowunknownsni = utils.MapGetString(g, "allowunknownsni")
+	data.Alpnprotocol = utils.MapGetString(g, "alpnprotocol")
+	data.Ciphername = utils.MapGetString(g, "ciphername")
+	data.Cipherpriority = utils.MapGetInt64(g, "cipherpriority")
+	data.Cipherredirect = utils.MapGetString(g, "cipherredirect")
+	data.Cipherurl = utils.MapGetString(g, "cipherurl")
+	data.Cleartextport = utils.MapGetInt64(g, "cleartextport")
+	data.Clientauth = utils.MapGetString(g, "clientauth")
+	data.Clientauthuseboundcachain = utils.MapGetString(g, "clientauthuseboundcachain")
+	data.Clientcert = utils.MapGetString(g, "clientcert")
+	data.Commonname = utils.MapGetString(g, "commonname")
+	data.Defaultsni = utils.MapGetString(g, "defaultsni")
+	data.Denysslreneg = utils.MapGetString(g, "denysslreneg")
+	data.Dh = utils.MapGetString(g, "dh")
+	data.Dhcount = utils.MapGetInt64(g, "dhcount")
+	data.Dhekeyexchangewithpsk = utils.MapGetString(g, "dhekeyexchangewithpsk")
+	data.Dhfile = utils.MapGetString(g, "dhfile")
+	data.Dhkeyexpsizelimit = utils.MapGetString(g, "dhkeyexpsizelimit")
+	data.Dropreqwithnohostheader = utils.MapGetString(g, "dropreqwithnohostheader")
+	data.Dynamicclientcert = utils.MapGetString(g, "dynamicclientcert")
+	data.Encryptedclienthello = utils.MapGetString(g, "encryptedclienthello")
+	data.Encrypttriggerpktcount = utils.MapGetInt64(g, "encrypttriggerpktcount")
+	data.Ersa = utils.MapGetString(g, "ersa")
+	data.Ersacount = utils.MapGetInt64(g, "ersacount")
+	data.Hsts = utils.MapGetString(g, "hsts")
+	data.Includesubdomains = utils.MapGetString(g, "includesubdomains")
+	data.Insertionencoding = utils.MapGetString(g, "insertionencoding")
+	data.Maxage = utils.MapGetInt64(g, "maxage")
+	data.Maxrenegrate = utils.MapGetInt64(g, "maxrenegrate")
+	data.Nodefaultbindings = utils.MapGetString(g, "nodefaultbindings")
+	data.Nodefaultcipherbindings = utils.MapGetBool(g, "nodefaultcipherbindings")
+	data.Nodefaultecccurvebindings = utils.MapGetBool(g, "nodefaultecccurvebindings")
+	data.Ocspstapling = utils.MapGetString(g, "ocspstapling")
+	data.Preload = utils.MapGetString(g, "preload")
+	data.Prevsessionkeylifetime = utils.MapGetInt64(g, "prevsessionkeylifetime")
+	data.Pushenctrigger = utils.MapGetString(g, "pushenctrigger")
+	data.Pushenctriggertimeout = utils.MapGetInt64(g, "pushenctriggertimeout")
+	data.Pushflag = utils.MapGetInt64(g, "pushflag")
+	data.Quantumsize = utils.MapGetString(g, "quantumsize")
+	data.Redirectportrewrite = utils.MapGetString(g, "redirectportrewrite")
+	data.Sendclosenotify = utils.MapGetString(g, "sendclosenotify")
+	data.Serverauth = utils.MapGetString(g, "serverauth")
+	data.Sessionkeylifetime = utils.MapGetInt64(g, "sessionkeylifetime")
+	data.Sessionticket = utils.MapGetString(g, "sessionticket")
+	data.Sessionticketkeyrefresh = utils.MapGetString(g, "sessionticketkeyrefresh")
+	data.Sessionticketlifetime = utils.MapGetInt64(g, "sessionticketlifetime")
+	data.Sessreuse = utils.MapGetString(g, "sessreuse")
+	data.Sesstimeout = utils.MapGetInt64(g, "sesstimeout")
+	data.Skipclientcertpolicycheck = utils.MapGetString(g, "skipclientcertpolicycheck")
+	data.Snienable = utils.MapGetString(g, "snienable")
+	data.Snihttphostmatch = utils.MapGetString(g, "snihttphostmatch")
+	data.Ssl3 = utils.MapGetString(g, "ssl3")
+	data.Sslclientlogs = utils.MapGetString(g, "sslclientlogs")
+	data.Sslimaxsessperserver = utils.MapGetInt64(g, "sslimaxsessperserver")
+	data.Sslinterception = utils.MapGetString(g, "sslinterception")
+	data.Ssliocspcheck = utils.MapGetString(g, "ssliocspcheck")
+	data.Sslireneg = utils.MapGetString(g, "sslireneg")
+	data.Ssllogprofile = utils.MapGetString(g, "ssllogprofile")
+	data.Sslprofiletype = utils.MapGetString(g, "sslprofiletype")
+	data.Sslredirect = utils.MapGetString(g, "sslredirect")
+	data.Ssltriggertimeout = utils.MapGetInt64(g, "ssltriggertimeout")
+	data.Strictcachecks = utils.MapGetString(g, "strictcachecks")
+	data.Strictclientekucheck = utils.MapGetString(g, "strictclientekucheck")
+	data.Strictsigdigestcheck = utils.MapGetString(g, "strictsigdigestcheck")
+	data.Tls1 = utils.MapGetString(g, "tls1")
+	data.Tls11 = utils.MapGetString(g, "tls11")
+	data.Tls12 = utils.MapGetString(g, "tls12")
+	data.Tls13 = utils.MapGetString(g, "tls13")
+	data.Tls13sessionticketsperauthcontext = utils.MapGetInt64(g, "tls13sessionticketsperauthcontext")
+	data.Zerorttearlydata = utils.MapGetString(g, "zerorttearlydata")
+
+	// sessionticketkeydata is a secret input the GET never returns -> Null.
+	data.Sessionticketkeydata = types.StringNull()
+
+	// ecccurvebindings and the cipherbindings block are not projected from the
+	// scalar GET response; leave them as typed Null.
+	data.Ecccurvebindings = types.SetNull(types.StringType)
+	data.Cipherbindings = types.SetNull(types.ObjectType{AttrTypes: map[string]attr.Type{
+		"ciphername":     types.StringType,
+		"cipherpriority": types.Int64Type,
+	}})
+
+	// Read-only attributes.
+	data.Nonfipsciphers = utils.MapGetString(g, "nonfipsciphers")
+	data.Crlcheck = utils.MapGetString(g, "crlcheck")
+	data.Ocspcheck = utils.MapGetString(g, "ocspcheck")
+	data.Snicert = utils.MapGetBool(g, "snicert")
+	data.Skipcaname = utils.MapGetBool(g, "skipcaname")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Service = utils.MapGetInt64(g, "service")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
+	data.Sslpfobjecttype = utils.MapGetInt64(g, "sslpfobjecttype")
+	data.Ssliverifyservercertforreuse = utils.MapGetString(g, "ssliverifyservercertforreuse")
 }

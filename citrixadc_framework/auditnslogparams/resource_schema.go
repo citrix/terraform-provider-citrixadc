@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -21,6 +23,7 @@ type AuditnslogparamsResourceModel struct {
 	Appflowexport        types.String `tfsdk:"appflowexport"`
 	Contentinspectionlog types.String `tfsdk:"contentinspectionlog"`
 	Dateformat           types.String `tfsdk:"dateformat"`
+	Denylistviolations   types.String `tfsdk:"denylistviolations"`
 	Logfacility          types.String `tfsdk:"logfacility"`
 	Loglevel             types.List   `tfsdk:"loglevel"`
 	Lsn                  types.String `tfsdk:"lsn"`
@@ -46,31 +49,45 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"acl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Configure auditing to log access control list (ACL) messages.",
 			},
 			"alg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log the ALG messages",
 			},
 			"appflowexport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Export log messages to AppFlow collectors.\nAppflow collectors are entities to which log messages can be sent so that some action can be performed on them.",
 			},
 			"contentinspectionlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log Content Inspection event information",
 			},
 			"dateformat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("MMDDYYYY"),
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY - European style date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
+			},
+			"denylistviolations": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
+				Description: "Log denylist violations",
 			},
 			"logfacility": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("LOCAL0"),
 				Description: "Facility value, as defined in RFC 3164, assigned to the log message.\nLog facility values are numbers 0 to 7 (LOCAL0 through LOCAL7). Each number indicates where a specific message originated from, such as the Citrix ADC itself, the VPN, or external.",
 			},
 			"loglevel": schema.ListAttribute{
@@ -82,11 +99,15 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"lsn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log the LSN messages",
 			},
 			"protocolviolations": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "NONE"},
+				},
 				Description: "Log protocol violations",
 			},
 			"serverip": schema.StringAttribute{
@@ -102,21 +123,25 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"sslinterception": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log SSL Interception event information",
 			},
 			"subscriberlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log subscriber session event information",
 			},
 			"tcp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Configure auditing to log TCP messages.",
 			},
 			"timezone": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("GMT_TIME"),
 				Description: "Time zone used for date and timestamps in the logs.\nSupported settings are:\n* GMT_TIME - Coordinated Universal Time.\n* LOCAL_TIME - Use the server's timezone setting.",
 			},
 			"urlfiltering": schema.StringAttribute{
@@ -127,6 +152,7 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"userdefinedauditlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Log user-configurable log messages to nslog.\nSetting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria.",
 			},
 		},
@@ -138,52 +164,60 @@ func auditnslogparamsGetThePayloadFromtheConfig(ctx context.Context, data *Audit
 
 	// Create API request body from the model
 	auditnslogparams := audit.Auditnslogparams{}
-	if !data.Acl.IsNull() {
+	if !data.Acl.IsNull() && !data.Acl.IsUnknown() {
 		auditnslogparams.Acl = data.Acl.ValueString()
 	}
-	if !data.Alg.IsNull() {
+	if !data.Alg.IsNull() && !data.Alg.IsUnknown() {
 		auditnslogparams.Alg = data.Alg.ValueString()
 	}
-	if !data.Appflowexport.IsNull() {
+	if !data.Appflowexport.IsNull() && !data.Appflowexport.IsUnknown() {
 		auditnslogparams.Appflowexport = data.Appflowexport.ValueString()
 	}
-	if !data.Contentinspectionlog.IsNull() {
+	if !data.Contentinspectionlog.IsNull() && !data.Contentinspectionlog.IsUnknown() {
 		auditnslogparams.Contentinspectionlog = data.Contentinspectionlog.ValueString()
 	}
-	if !data.Dateformat.IsNull() {
+	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditnslogparams.Dateformat = data.Dateformat.ValueString()
 	}
-	if !data.Logfacility.IsNull() {
+	if !data.Denylistviolations.IsNull() && !data.Denylistviolations.IsUnknown() {
+		auditnslogparams.Denylistviolations = data.Denylistviolations.ValueString()
+	}
+	if !data.Logfacility.IsNull() && !data.Logfacility.IsUnknown() {
 		auditnslogparams.Logfacility = data.Logfacility.ValueString()
 	}
-	if !data.Lsn.IsNull() {
+	if !data.Loglevel.IsNull() && !data.Loglevel.IsUnknown() {
+		var loglevelList []string
+		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
+		auditnslogparams.Loglevel = loglevelList
+	}
+	if !data.Lsn.IsNull() && !data.Lsn.IsUnknown() {
 		auditnslogparams.Lsn = data.Lsn.ValueString()
 	}
-	if !data.Protocolviolations.IsNull() {
+	if !data.Protocolviolations.IsNull() && !data.Protocolviolations.IsUnknown() {
 		auditnslogparams.Protocolviolations = data.Protocolviolations.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		auditnslogparams.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		auditnslogparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Sslinterception.IsNull() {
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
 		auditnslogparams.Sslinterception = data.Sslinterception.ValueString()
 	}
-	if !data.Subscriberlog.IsNull() {
+	if !data.Subscriberlog.IsNull() && !data.Subscriberlog.IsUnknown() {
 		auditnslogparams.Subscriberlog = data.Subscriberlog.ValueString()
 	}
-	if !data.Tcp.IsNull() {
+	if !data.Tcp.IsNull() && !data.Tcp.IsUnknown() {
 		auditnslogparams.Tcp = data.Tcp.ValueString()
 	}
-	if !data.Timezone.IsNull() {
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
 		auditnslogparams.Timezone = data.Timezone.ValueString()
 	}
-	if !data.Urlfiltering.IsNull() {
+	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
 		auditnslogparams.Urlfiltering = data.Urlfiltering.ValueString()
 	}
-	if !data.Userdefinedauditlog.IsNull() {
+	if !data.Userdefinedauditlog.IsNull() && !data.Userdefinedauditlog.IsUnknown() {
 		auditnslogparams.Userdefinedauditlog = data.Userdefinedauditlog.ValueString()
 	}
 
@@ -219,10 +253,26 @@ func auditnslogparamsSetAttrFromGet(ctx context.Context, data *AuditnslogparamsR
 	} else {
 		data.Dateformat = types.StringNull()
 	}
+	if val, ok := getResponseData["denylistviolations"]; ok && val != nil {
+		data.Denylistviolations = types.StringValue(val.(string))
+	} else {
+		data.Denylistviolations = types.StringNull()
+	}
 	if val, ok := getResponseData["logfacility"]; ok && val != nil {
 		data.Logfacility = types.StringValue(val.(string))
 	} else {
 		data.Logfacility = types.StringNull()
+	}
+	if val, ok := getResponseData["loglevel"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Loglevel = listValue
+		} else {
+			data.Loglevel = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Loglevel = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))

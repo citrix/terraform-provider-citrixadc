@@ -18,9 +18,6 @@ output "description" {
   value = data.citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding.description
 }
 
-output "cipherdefaulton" {
-  value = data.citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding.cipherdefaulton
-}
 ```
 
 ## Argument Reference
@@ -32,6 +29,5 @@ output "cipherdefaulton" {
 
 In addition to the arguments, the following attributes are available:
 
-* `cipherdefaulton` - Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI.
 * `description` - The cipher suite description.
 * `id` - The id of the sslservice_sslciphersuite_binding. It is a system-generated identifier.

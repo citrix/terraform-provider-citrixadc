@@ -17,19 +17,22 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslcertkey_sslocspresponder_binding_basic = `
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey            = "tf_sslcertkey"
-		cert               = "/nsconfig/ssl/certificate1.crt"
-		key                = "/nsconfig/ssl/key1.pem"
+		cert               = "/nsconfig/ssl/rootcert2.cert"
+		key                = "/nsconfig/ssl/rootcert2.key"
 		notificationperiod = 40
 		expirymonitor      = "ENABLED"
 	}
@@ -48,8 +51,8 @@ const testAccSslcertkey_sslocspresponder_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey            = "tf_sslcertkey"
-		cert               = "/nsconfig/ssl/certificate1.crt"
-		key                = "/nsconfig/ssl/key1.pem"
+		cert               = "/nsconfig/ssl/rootcert2.cert"
+		key                = "/nsconfig/ssl/rootcert2.key"
 		notificationperiod = 40
 		expirymonitor      = "ENABLED"
 	}
@@ -60,9 +63,8 @@ const testAccSslcertkey_sslocspresponder_binding_basic_step2 = `
 `
 
 func TestAccSslcertkey_sslocspresponder_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
 		Steps: []resource.TestStep{
@@ -78,6 +80,49 @@ func TestAccSslcertkey_sslocspresponder_binding_basic(t *testing.T) {
 					testAccCheckSslcertkey_sslocspresponder_bindingNotExist("citrixadc_sslcertkey_sslocspresponder_binding.tf_binding", "tf_sslcertkey,tf_sslocspresponder"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSslcertkey_sslocspresponder_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey_sslocspresponder_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: certkey,ocspresponder) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"certkey", "ocspresponder"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcertkey_sslocspresponder_binding_basic},
+			{Config: testAccSslcertkey_sslocspresponder_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslcertkey_sslocspresponder_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -109,10 +154,13 @@ func testAccCheckSslcertkey_sslocspresponder_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"certkey", "ocspresponder"}, nil)
+		if err != nil {
+			return err
+		}
 
-		certkey := idSlice[0]
-		ocspresponder := idSlice[1]
+		certkey := idMap["certkey"]
+		ocspresponder := idMap["ocspresponder"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcertkey_sslocspresponder_binding",
@@ -151,13 +199,13 @@ func testAccCheckSslcertkey_sslocspresponder_bindingNotExist(n string, id string
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"certkey", "ocspresponder"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
 
-		certkey := idSlice[0]
-		ocspresponder := idSlice[1]
+		certkey := idMap["certkey"]
+		ocspresponder := idMap["ocspresponder"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcertkey_sslocspresponder_binding",
@@ -191,8 +239,8 @@ func testAccCheckSslcertkey_sslocspresponder_bindingNotExist(n string, id string
 const testAccSslcertkey_sslocspresponder_bindingDataSource_basic = `
 	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
 		certkey = "tf_sslcertkey"
-		cert    = "/nsconfig/ssl/ns-root.cert"
-		key     = "/nsconfig/ssl/ns-root.key"
+		cert    = "/nsconfig/ssl/rootcert2.cert"
+		key     = "/nsconfig/ssl/rootcert2.key"
 	}
 	resource "citrixadc_sslocspresponder" "tf_sslocspresponder" {
 		name = "tf_sslocspresponder"
@@ -227,7 +275,13 @@ func testAccCheckSslcertkey_sslocspresponder_bindingDestroy(s *terraform.State) 
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Sslcertkey_sslocspresponder_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"certkey", "ocspresponder"}, nil)
+		if err != nil {
+			return err
+		}
+		certkey := idMap["certkey"]
+
+		_, err = client.FindResource(service.Sslcertkey_sslocspresponder_binding.Type(), certkey)
 		if err == nil {
 			return fmt.Errorf("sslcertkey_sslocspresponder_binding %s still exists", rs.Primary.ID)
 		}
@@ -238,9 +292,8 @@ func testAccCheckSslcertkey_sslocspresponder_bindingDestroy(s *terraform.State) 
 }
 
 func TestAccSslcertkey_sslocspresponder_bindingDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Datasource filtering by 'ca' attribute needs investigation - binding resource created but datasource cannot find it")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -250,6 +303,103 @@ func TestAccSslcertkey_sslocspresponder_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey_sslocspresponder_binding.tf_binding", "ocspresponder", "tf_sslocspresponder"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey_sslocspresponder_binding.tf_binding", "priority", "90"),
 				),
+			},
+		},
+	})
+}
+
+// testAccSslcertkey_sslocspresponder_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccSslcertkey_sslocspresponder_binding_upgrade_basic = `
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey            = "tf_sslcertkey"
+		cert               = "/nsconfig/ssl/rootcert2.cert"
+		key                = "/nsconfig/ssl/rootcert2.key"
+		notificationperiod = 40
+		expirymonitor      = "ENABLED"
+	}
+	resource "citrixadc_sslocspresponder" "tf_sslocspresponder" {
+		name = "tf_sslocspresponder"
+		url  = "http://www.google.com"
+	}
+	resource "citrixadc_sslcertkey_sslocspresponder_binding" "tf_binding" {
+		certkey 	  = citrixadc_sslcertkey.tf_sslcertkey.certkey
+		ocspresponder = citrixadc_sslocspresponder.tf_sslocspresponder.name
+		priority      = 90
+	}
+`
+
+// TestAccSslcertkey_sslocspresponder_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded
+// when the same config is subsequently managed by the current Framework provider.
+// Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_sslcertkey,tf_sslocspresponder"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form.
+func TestAccSslcertkey_sslocspresponder_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_sslcertkey_sslocspresponder_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		CheckDestroy: testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSslcertkey_sslocspresponder_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkey_sslocspresponder_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_sslcertkey,tf_sslocspresponder"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslcertkey_sslocspresponder_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkey_sslocspresponder_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "certkey:tf_sslcertkey,ocspresponder:tf_sslocspresponder"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslcertkey_sslocspresponder_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey_sslocspresponder_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkey_sslocspresponder_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_sslocspresponder_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkey_sslocspresponder_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslcertkey_sslocspresponder_binding.Type(), "tf_sslcertkey", []string{"ocspresponder:tf_sslocspresponder"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcertkey_sslocspresponder_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkey_sslocspresponder_bindingExist(resAddr, nil)),
 			},
 		},
 	})

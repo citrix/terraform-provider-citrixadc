@@ -12,13 +12,13 @@
 *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
- */
+*/
 
 package smpp
 
 /**
 * Configuration for SMPP configuration parameters resource.
- */
+*/
 type Smppparam struct {
 	/**
 	* Mode in which the client binds to the ADC. Applicable settings function as follows:
@@ -38,11 +38,11 @@ type Smppparam struct {
 	/**
 	* Type of Number, such as an international number or a national number, used in the ESME address sent in the bind request.
 	*/
-	Addrton *int `json:"addrton"` // Zero is a valid value
+	Addrton *int `json:"addrton,omitempty"`
 	/**
 	* Numbering Plan Indicator, such as landline, data, or WAP client, used in the ESME address sent in the bind request.
 	*/
-	Addrnpi *int `json:"addrnpi"` // Zero is a valid value
+	Addrnpi *int `json:"addrnpi,omitempty"`
 	/**
 	* Set of SME addresses, sent in the bind request, serviced by the ESME.
 	*/

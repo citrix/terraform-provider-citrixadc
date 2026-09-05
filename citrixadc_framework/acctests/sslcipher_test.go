@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslcipher_add = `
@@ -261,6 +262,133 @@ func testAccCheckSslcipherDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSslcipher_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipherExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcipher.Type(), "tfAccsslcipher"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcipher_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipherExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// TestAccSslcipher_ciphersuitebinding_drift verifies that Read refreshes the
+// ciphersuitebinding set from the appliance, so an out-of-band change to the
+// bound cipher suites is detected as drift (matching SDK v2). The middle step
+// unbinds a ciphersuite behind Terraform's back, then RefreshState +
+// ExpectNonEmptyPlan asserts the refresh surfaces the removal; the last step
+// re-applies to reconcile.
+func TestAccSslcipher_ciphersuitebinding_drift(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipherExist(resAddr, nil),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES-128-SHA256", 3),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("drift: client: %v", err)
+					}
+					args := []string{"ciphername:TLS1.2-ECDHE-RSA-AES-128-SHA256"}
+					if err := client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), "tfAccsslcipher", args); err != nil {
+						t.Fatalf("drift: out-of-band unbind failed: %v", err)
+					}
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccSslcipher_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipherExist(resAddr, nil),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES-128-SHA256", 3),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslcipher_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcipher_add},
+			{
+				Config:            testAccSslcipher_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ciphersuitebinding.#",
+					"ciphersuitebinding.0.%",
+					"ciphersuitebinding.0.ciphername",
+					"ciphersuitebinding.0.cipherpriority",
+					"ciphersuitebinding.1.%",
+					"ciphersuitebinding.1.ciphername",
+					"ciphersuitebinding.1.cipherpriority",
+					"ciphersuitebinding.2.%",
+					"ciphersuitebinding.2.ciphername",
+					"ciphersuitebinding.2.cipherpriority",
+				},
+			},
+		},
+	})
+}
+
+func TestAccSslcipher_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSslcipher_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipherExist("citrixadc_sslcipher.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslcipher_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipherExist("citrixadc_sslcipher.foo", nil)),
+			},
+		},
+	})
 }
 
 func TestAccSslcipherDataSource_basic(t *testing.T) {

@@ -106,6 +106,7 @@ type Lbvserver struct {
 		* SRCIPSRCPORTHASH - Create a hash of the source IP address and source port in the IP header.
 		* CALLIDHASH - Create a hash of the SIP Call-ID header.
 		* USER_TOKEN - Same as TOKEN LB method but token needs to be provided from an extension.
+		* LEASTLLMTOKENLATENCY - Select the service with the least LLM token latency.
 	*/
 	Lbmethod string `json:"lbmethod,omitempty"`
 	/**
@@ -126,6 +127,10 @@ type Lbvserver struct {
 		Valid only if the primary method is based on static proximity.
 	*/
 	Backuplbmethod string `json:"backuplbmethod,omitempty"`
+	/**
+	* Name of the AIGW frontend profile. For the LB vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add lb vserver, it cannot be unset
+	*/
+	Aigwprofilename string `json:"aigwprofilename,omitempty"`
 	/**
 	* Use this parameter to specify the cookie name for COOKIE peristence type. It specifies the name of cookie with a maximum of 32 characters. If not specified, cookie name is internally generated.
 	*/
@@ -223,6 +228,7 @@ type Lbvserver struct {
 		* DYNAMICCONNECTION - Spillover occurs when the number of client connections at the virtual server exceeds the sum of the maximum client (Max Clients) settings for bound services. Do not specify a spillover threshold for this setting, because the threshold is implied by the Max Clients settings of bound services.
 		* BANDWIDTH - Spillover occurs when the bandwidth consumed by the virtual server's incoming and outgoing traffic exceeds the threshold.
 		* HEALTH - Spillover occurs when the percentage of weights of the services that are UP drops below the threshold. For example, if services svc1, svc2, and svc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if svc1 and svc3 or svc2 and svc3 transition to DOWN.
+		* LLMQUOTA - Spillover occurs when the LLM token quota of all the services bound the vserver is exhausted. Do not specify a spillover threshold for this setting, because the threshold is implied by the max tokens settings on the bound services.
 		* NONE - Spillover does not occur.
 	*/
 	Somethod string `json:"somethod,omitempty"`
@@ -317,6 +323,10 @@ type Lbvserver struct {
 	* Name of the DB profile whose settings are to be applied to the virtual server.
 	*/
 	Dbprofilename string `json:"dbprofilename,omitempty"`
+	/**
+	* Name of the MCP profile to attach to this lb vserver. Enables MCP protocol processing.
+	*/
+	Mcpprofilename string `json:"mcpprofilename,omitempty"`
 	/**
 	* Any comments that you might want to associate with the virtual server.
 	*/
@@ -499,6 +509,10 @@ type Lbvserver struct {
 	* This option is used to enable/disable DNS over HTTPS (DoH) processing.
 	*/
 	Dnsoverhttps string `json:"dnsoverhttps,omitempty"`
+	/**
+	* Name of the WASM module to assign to this virtual server.
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
 	/**
 	* Service to bind to the virtual server.
 	*/

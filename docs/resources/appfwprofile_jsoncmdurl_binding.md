@@ -84,7 +84,7 @@ resource "citrixadc_appfwprofile_jsoncmdurl_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_jsoncmdurl_binding. It is the concatenation of `name`,`jsoncmdurl`,`keyname_json_cmd`,`as_value_type_json_cmd` and `as_value_expr_json_cmd`attributes separated by comma.
+* `id` - The id of the appfwprofile_jsoncmdurl_binding. It is the concatenation of the `name`, `jsoncmdurl`, `keyname_json_cmd`, `as_value_type_json_cmd` and `as_value_expr_json_cmd` attributes separated by a comma.
 
 
 ## Import

@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLinkset_channel_binding_basic = `
@@ -244,6 +245,156 @@ func TestAccLinkset_channel_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "linkset_id", "LS/3"),
 					resource.TestCheckResourceAttr("data.citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "ifnum", "LA/3"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLinkset_channel_binding_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_linkset_channel_binding.tf_linkset_channel_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: linkset_id,ifnum) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"linkset_id", "ifnum"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinkset_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLinkset_channel_binding_basic},
+			{Config: testAccLinkset_channel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccLinkset_channel_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// testAccLinkset_channel_binding_upgrade_basic mirrors the _basic config (a
+// linkset + a channel bound together). It uses only the SDK v2 attribute names
+// (linkset_id, ifnum, channel_id) that the migration restored, so it is valid
+// under BOTH the SDK v2 2.2.0 schema and the current framework schema. This lets
+// it be applied with the old provider in step 1 and re-planned with the new
+// provider in step 2 of the state-upgrade test below.
+const testAccLinkset_channel_binding_upgrade_basic = `
+
+resource "citrixadc_linkset" "tf_linkset" {
+	linkset_id = "LS/3"
+}
+
+resource "citrixadc_channel" "tf_channel" {
+	channel_id = "LA/3"
+}
+
+resource "citrixadc_linkset_channel_binding" "tf_linkset_channel_binding" {
+	linkset_id = citrixadc_linkset.tf_linkset.linkset_id
+	ifnum      = citrixadc_channel.tf_channel.channel_id
+}
+`
+
+// TestAccLinkset_channel_binding_sdkv2StateUpgrade verifies that a resource
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "linkset_id,ifnum" (e.g. "LS/3,LA/3") — is refreshed and
+// re-applied correctly by the CURRENT framework provider. Step 2 exercises
+// ParseIdString on the legacy id during the framework Read.
+//
+// On this branch the framework recomputes data.Id into the new key:value form
+// during Read (linkset_channel_bindingSetAttrFromGet in resource_schema.go), so
+// after the step-2 refresh the id becomes the canonical
+// "linkset_id:LS%2F3,ifnum:LA%2F3".
+//
+// Skipped for the same reason as the other tests of this resource (creating the
+// underlying linkset/channel binding is not reliably testable on the shared ADC).
+func TestAccLinkset_channel_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLinkset_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLinkset_channel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkset_channel_bindingExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "id", "LS/3,LA/3"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLinkset_channel_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLinkset_channel_bindingExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "id", "linkset_id:LS%2F3,ifnum:LA%2F3"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLinkset_channel_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLinkset_channel_binding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_linkset_channel_binding.tf_linkset_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinkset_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkset_channel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinkset_channel_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Linkset_channel_binding.Type(), "LS/3", map[string]string{"ifnum": "LA%2F3"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLinkset_channel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinkset_channel_bindingExist(resAddr, nil)),
 			},
 		},
 	})

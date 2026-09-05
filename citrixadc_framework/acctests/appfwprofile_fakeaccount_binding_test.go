@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Step 1 creates the parent appfwprofile and binds a fake-account rule to it.
@@ -369,6 +369,38 @@ func TestAccAppfwprofileFakeaccountBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fakeaccount_binding.tf_appfwprofile_fakeaccount_binding", "tag", "HTTP.REQ.BODY(1000)"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fakeaccount_binding.tf_appfwprofile_fakeaccount_binding", "formurl_fad", "http://www.example.com"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofileFakeaccountBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fakeaccount_binding.tf_appfwprofile_fakeaccount_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileFakeaccountBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileFakeaccountBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileFakeaccountBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_fakeaccount_binding.Type(), "tf_appfwprofile_fakeaccount", map[string]string{
+						"fakeaccount": "username",
+						"formurl_fad": utils.UrlEncode("http://www.example.com"),
+						"tag":         utils.UrlEncode("HTTP.REQ.BODY(1000)"),
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileFakeaccountBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileFakeaccountBindingExist(resAddr, nil)),
 			},
 		},
 	})

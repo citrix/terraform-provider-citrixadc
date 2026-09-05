@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Participating-entity config reused from cspolicylabel_test.go (cspolicylabel,
@@ -320,6 +320,34 @@ func TestAccCspolicylabel_cspolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicylabel_cspolicy_binding.tf_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicylabel_cspolicy_binding.tf_binding", "targetvserver", "tf_cspollabel_lb_ds"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCspolicylabel_cspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cspolicylabel_cspolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicylabel_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCspolicylabel_cspolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicylabel_cspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Cspolicylabel_cspolicy_binding.Type(), "tf_cspolicylabel", map[string]string{"policyname": "tf_cspollabel_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCspolicylabel_cspolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicylabel_cspolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

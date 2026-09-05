@@ -38,19 +38,25 @@ func (r *TmsessionparameterResource) Schema(ctx context.Context, req resource.Sc
 				Computed:    true,
 				Description: "The ID of the tmsessionparameter resource.",
 			},
+			// All attributes are Optional+Computed with no Default to preserve
+			// the SDK v2 contract (SDK v2 had no schema defaults; the value is
+			// read back from the ADC).
 			"defaultauthorizationaction": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DENY"),
 				Description: "Allow or deny access to content for which there is no specific authorization policy.",
 			},
 			"homepage": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("None"),
 				Description: "Web address of the home page that a user is displayed when authentication vserver is bookmarked and used to login.",
 			},
 			"httponlycookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Allow only an HTTP session cookie, in which case the cookie cannot be accessed by scripts.",
 			},
 			"kcdaccount": schema.StringAttribute{
@@ -70,16 +76,19 @@ func (r *TmsessionparameterResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"sesstimeout": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(30),
 				Description: "Session timeout, in minutes. If there is no traffic during the timeout period, the user is disconnected and must reauthenticate to access the intranet resources.",
 			},
 			"sso": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Log users on to all web applications automatically after they authenticate, or pass users to the web application logon page to authenticate for each application. Note that this configuration does not honor the following authentication types for security reason. BASIC, DIGEST, and NTLM (without Negotiate NTLM2 Key or Negotiate Sign Flag). Use TM TrafficAction to configure SSO for these authentication types.",
 			},
 			"ssocredential": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("PRIMARY"),
 				Description: "Use primary or secondary authentication credentials for single sign-on.",
 			},
@@ -95,46 +104,118 @@ func (r *TmsessionparameterResource) Schema(ctx context.Context, req resource.Sc
 func tmsessionparameterGetThePayloadFromtheConfig(ctx context.Context, data *TmsessionparameterResourceModel) tm.Tmsessionparameter {
 	tflog.Debug(ctx, "In tmsessionparameterGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model. Skip null AND unknown values so
+	// unconfigured Optional+Computed attributes are not pushed as empty/zero
+	// (e.g. persistentcookievalidity has a NITRO minimum of 1).
 	tmsessionparameter := tm.Tmsessionparameter{}
-	if !data.Defaultauthorizationaction.IsNull() {
+	if !data.Defaultauthorizationaction.IsNull() && !data.Defaultauthorizationaction.IsUnknown() {
 		tmsessionparameter.Defaultauthorizationaction = data.Defaultauthorizationaction.ValueString()
 	}
-	if !data.Homepage.IsNull() {
+	if !data.Homepage.IsNull() && !data.Homepage.IsUnknown() {
 		tmsessionparameter.Homepage = data.Homepage.ValueString()
 	}
-	if !data.Httponlycookie.IsNull() {
+	if !data.Httponlycookie.IsNull() && !data.Httponlycookie.IsUnknown() {
 		tmsessionparameter.Httponlycookie = data.Httponlycookie.ValueString()
 	}
-	if !data.Kcdaccount.IsNull() {
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
 		tmsessionparameter.Kcdaccount = data.Kcdaccount.ValueString()
 	}
-	if !data.Persistentcookie.IsNull() {
+	if !data.Persistentcookie.IsNull() && !data.Persistentcookie.IsUnknown() {
 		tmsessionparameter.Persistentcookie = data.Persistentcookie.ValueString()
 	}
-	if !data.Persistentcookievalidity.IsNull() {
+	if !data.Persistentcookievalidity.IsNull() && !data.Persistentcookievalidity.IsUnknown() {
 		tmsessionparameter.Persistentcookievalidity = utils.IntPtr(int(data.Persistentcookievalidity.ValueInt64()))
 	}
-	if !data.Sesstimeout.IsNull() {
+	if !data.Sesstimeout.IsNull() && !data.Sesstimeout.IsUnknown() {
 		tmsessionparameter.Sesstimeout = utils.IntPtr(int(data.Sesstimeout.ValueInt64()))
 	}
-	if !data.Sso.IsNull() {
+	if !data.Sso.IsNull() && !data.Sso.IsUnknown() {
 		tmsessionparameter.Sso = data.Sso.ValueString()
 	}
-	if !data.Ssocredential.IsNull() {
+	if !data.Ssocredential.IsNull() && !data.Ssocredential.IsUnknown() {
 		tmsessionparameter.Ssocredential = data.Ssocredential.ValueString()
 	}
-	if !data.Ssodomain.IsNull() {
+	if !data.Ssodomain.IsNull() && !data.Ssodomain.IsUnknown() {
 		tmsessionparameter.Ssodomain = data.Ssodomain.ValueString()
 	}
 
 	return tmsessionparameter
 }
 
+// tmsessionparameterSetAttrFromGet is the resource-side state setter. It adopts
+// the GET value when present, but only nulls an absent attribute when the
+// current value is unknown — never clobbering a known configured value that
+// NITRO omits from GET (omit-on-default trap).
 func tmsessionparameterSetAttrFromGet(ctx context.Context, data *TmsessionparameterResourceModel, getResponseData map[string]interface{}) *TmsessionparameterResourceModel {
 	tflog.Debug(ctx, "In tmsessionparameterSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["defaultauthorizationaction"]; ok && val != nil {
+		data.Defaultauthorizationaction = types.StringValue(val.(string))
+	} else if data.Defaultauthorizationaction.IsUnknown() {
+		data.Defaultauthorizationaction = types.StringNull()
+	}
+	if val, ok := getResponseData["homepage"]; ok && val != nil {
+		data.Homepage = types.StringValue(val.(string))
+	} else if data.Homepage.IsUnknown() {
+		data.Homepage = types.StringNull()
+	}
+	if val, ok := getResponseData["httponlycookie"]; ok && val != nil {
+		data.Httponlycookie = types.StringValue(val.(string))
+	} else if data.Httponlycookie.IsUnknown() {
+		data.Httponlycookie = types.StringNull()
+	}
+	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
+		data.Kcdaccount = types.StringValue(val.(string))
+	} else if data.Kcdaccount.IsUnknown() {
+		data.Kcdaccount = types.StringNull()
+	}
+	if val, ok := getResponseData["persistentcookie"]; ok && val != nil {
+		data.Persistentcookie = types.StringValue(val.(string))
+	} else if data.Persistentcookie.IsUnknown() {
+		data.Persistentcookie = types.StringNull()
+	}
+	if val, ok := getResponseData["persistentcookievalidity"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Persistentcookievalidity = types.Int64Value(intVal)
+		}
+	} else if data.Persistentcookievalidity.IsUnknown() {
+		data.Persistentcookievalidity = types.Int64Null()
+	}
+	if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Sesstimeout = types.Int64Value(intVal)
+		}
+	} else if data.Sesstimeout.IsUnknown() {
+		data.Sesstimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["sso"]; ok && val != nil {
+		data.Sso = types.StringValue(val.(string))
+	} else if data.Sso.IsUnknown() {
+		data.Sso = types.StringNull()
+	}
+	if val, ok := getResponseData["ssocredential"]; ok && val != nil {
+		data.Ssocredential = types.StringValue(val.(string))
+	} else if data.Ssocredential.IsUnknown() {
+		data.Ssocredential = types.StringNull()
+	}
+	if val, ok := getResponseData["ssodomain"]; ok && val != nil {
+		data.Ssodomain = types.StringValue(val.(string))
+	} else if data.Ssodomain.IsUnknown() {
+		data.Ssodomain = types.StringNull()
+	}
+
+	// Singleton resource - static ID
+	data.Id = types.StringValue("tmsessionparameter-config")
+
+	return data
+}
+
+// tmsessionparameterSetAttrFromGetForDatasource is the datasource-side state
+// setter. It unconditionally copies every attribute from the GET response so
+// the datasource always reflects the live ADC values.
+func tmsessionparameterSetAttrFromGetForDatasource(ctx context.Context, data *TmsessionparameterResourceModel, getResponseData map[string]interface{}) *TmsessionparameterResourceModel {
+	tflog.Debug(ctx, "In tmsessionparameterSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["defaultauthorizationaction"]; ok && val != nil {
 		data.Defaultauthorizationaction = types.StringValue(val.(string))
 	} else {
@@ -190,8 +271,7 @@ func tmsessionparameterSetAttrFromGet(ctx context.Context, data *Tmsessionparame
 		data.Ssodomain = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Singleton resource - static ID
 	data.Id = types.StringValue("tmsessionparameter-config")
 
 	return data

@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNtpparam_basic = `
@@ -128,3 +130,122 @@ const testAccNtpparamDataSource_basic = `
 data "citrixadc_ntpparam" "test" {
 }
 `
+
+func TestAccNtpparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNtpparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpparamExist("citrixadc_ntpparam.tf_ntpparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNtpparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpparamExist("citrixadc_ntpparam.tf_ntpparam", nil)),
+			},
+		},
+	})
+}
+
+// testAccNtpparam_unset_step1 sets the unset-eligible scalar attributes to
+// valid NON-default values.
+const testAccNtpparam_unset_step1 = `
+	resource "citrixadc_ntpparam" "tf_unset" {
+		authentication = "NO"
+		autokeylogsec  = 10
+		revokelogsec   = 20
+	}
+`
+
+// testAccNtpparam_unset_step2 removes all unset-eligible attributes -> the
+// provider must unset them (revert to NITRO defaults).
+const testAccNtpparam_unset_step2 = `
+	resource "citrixadc_ntpparam" "tf_unset" {
+	}
+`
+
+func TestAccNtpparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNtpparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNtpparamExist("citrixadc_ntpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ntpparam.tf_unset", "authentication", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_ntpparam.tf_unset", "autokeylogsec", "10"),
+					resource.TestCheckResourceAttr("citrixadc_ntpparam.tf_unset", "revokelogsec", "20"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNtpparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNtpparamExist("citrixadc_ntpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ntpparam.tf_unset", "authentication", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_ntpparam.tf_unset", "autokeylogsec", "12"),
+					resource.TestCheckResourceAttr("citrixadc_ntpparam.tf_unset", "revokelogsec", "16"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNtpparamADCValue("authentication", "YES"),
+					testAccCheckNtpparamADCValue("autokeylogsec", "12"),
+					testAccCheckNtpparamADCValue("revokelogsec", "16"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNtpparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNtpparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Ntpparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("ntpparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("ntpparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccNtpparam_import(t *testing.T) {
+	const resAddr = "citrixadc_ntpparam.tf_ntpparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNtpparam_basic},
+			{
+				Config:                  testAccNtpparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

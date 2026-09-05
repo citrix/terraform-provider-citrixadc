@@ -41,6 +41,31 @@ func SystemgroupDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.",
 			},
+			"systemusers": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Description: "System users bound to the group.",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"cmdpolicybinding": schema.SetNestedBlock{
+				Description: "Command policies bound to the group.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"policyname": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The name of command policy.",
+						},
+						"priority": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The priority of the command policy.",
+						},
+					},
+				},
+			},
 		},
 	}
 }

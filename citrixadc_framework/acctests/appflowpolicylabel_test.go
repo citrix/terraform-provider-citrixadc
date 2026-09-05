@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppflowpolicylabel_basic = `
@@ -127,6 +128,34 @@ func testAccCheckAppflowpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppflowpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicylabel.tf_appflowpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appflowpolicylabel.Type(), "tf_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccAppflowpolicylabelDataSource_basic = `
 
 	resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
@@ -139,6 +168,49 @@ const testAccAppflowpolicylabelDataSource_basic = `
 	}
 `
 
+func TestAccAppflowpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicylabel.tf_appflowpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowpolicylabel_basic},
+			{
+				Config:                  testAccAppflowpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppflowpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist("citrixadc_appflowpolicylabel.tf_appflowpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist("citrixadc_appflowpolicylabel.tf_appflowpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppflowpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -150,6 +222,8 @@ func TestAccAppflowpolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel.tf_appflowpolicylabel", "labelname", "tf_policylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicylabel.tf_appflowpolicylabel", "policylabeltype", "HTTP"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicylabel.tf_appflowpolicylabel", "id"),
 				),
 			},
 		},

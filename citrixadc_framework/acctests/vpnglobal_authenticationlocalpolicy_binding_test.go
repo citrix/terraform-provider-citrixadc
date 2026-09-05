@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_authenticationlocalpolicy_binding_basic = `
@@ -45,6 +46,54 @@ const testAccVpnglobal_authenticationlocalpolicy_binding_basic_step2 = `
 		rule   = "ns_true"
 	}
 `
+
+const testAccVpnglobal_authenticationlocalpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy" {
+		name   = "tf_localpolicy"
+		rule   = "ns_true"
+	}
+	resource "citrixadc_vpnglobal_authenticationlocalpolicy_binding" "tf_bind" {
+		policyname = citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy.name
+		priority   = 20
+	}
+
+`
+
+func TestAccVpnglobal_authenticationlocalpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationlocalpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationlocalpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationlocalpolicy_bindingExist("citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind", "id", "tf_localpolicy"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-id state through the current framework provider
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_authenticationlocalpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationlocalpolicy_bindingExist("citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind", "id", "tf_localpolicy"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccVpnglobal_authenticationlocalpolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -158,6 +207,47 @@ func testAccCheckVpnglobal_authenticationlocalpolicy_bindingNotExist(n string, i
 
 		return nil
 	}
+}
+
+func TestAccVpnglobal_authenticationlocalpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationlocalpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationlocalpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationlocalpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationlocalpolicy_binding.Type(), "", []string{"policyname:tf_localpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_authenticationlocalpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationlocalpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_authenticationlocalpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationlocalpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationlocalpolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationlocalpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"priority"}},
+		},
+	})
 }
 
 func testAccCheckVpnglobal_authenticationlocalpolicy_bindingDestroy(s *terraform.State) error {

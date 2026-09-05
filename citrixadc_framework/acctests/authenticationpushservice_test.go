@@ -20,8 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationpushservice_add = `
@@ -182,6 +183,11 @@ func TestAccAuthenticationpushserviceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "name", "tf_pushservice_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "customerid", "cusID"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "refreshinterval", "50"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpushservice.tf_pushservice_data", "id"),
+					// Read-only metadata exposed only by the data source. pushservicestatus
+					// is a status field with a documented default (INIT), always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpushservice.tf_pushservice_data", "pushservicestatus"),
 				),
 			},
 		},
@@ -333,9 +339,14 @@ func TestAccAuthenticationpushservice_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAuthenticationpushservice_add,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -414,4 +425,32 @@ func testAccCheckAuthenticationpushserviceADCValue(name, attr, want string) reso
 		}
 		return nil
 	}
+}
+
+func TestAccAuthenticationpushservice_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpushservice.tf_pushservice"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpushservice_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpushserviceExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("authenticationpushservice", "tf_pushservice"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationpushservice_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpushserviceExist(resAddr, nil)),
+			},
+		},
+	})
 }

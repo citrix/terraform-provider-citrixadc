@@ -35,7 +35,7 @@ func (d *SslcacertbundleDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *SslcacertbundleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslcacertbundleResourceModel
+	var data SslcacertbundleDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *SslcacertbundleDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	sslcacertbundleSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	sslcacertbundleDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

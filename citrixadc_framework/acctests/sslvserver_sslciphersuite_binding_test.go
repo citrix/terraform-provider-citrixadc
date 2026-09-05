@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslvserver_sslciphersuite_binding_basic = `
@@ -59,14 +62,6 @@ const testAccSslvserver_sslciphersuite_bindingDataSource_basic = `
 		vservername = citrixadc_lbvserver.tf_sslvserver.name
 	}
 
-	resource "citrixadc_sslvserver" "tf_sslvserver_ssl" {
-		vservername = citrixadc_lbvserver.tf_sslvserver.name
-		tls1 = "ENABLED"
-		tls11 = "ENABLED"
-		tls12 = "ENABLED"
-		tls13 = "DISABLED"
-	}
-
 	resource "citrixadc_lbvserver" "tf_sslvserver" {
 		name = "tf_sslvserver_ds"
 		servicetype = "SSL"
@@ -82,7 +77,9 @@ const testAccSslvserver_sslciphersuite_bindingDataSource_basic = `
 `
 
 func TestAccSslvserver_sslciphersuite_binding_basic(t *testing.T) {
-	// t.Skip("TODO: Operation not permitted!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -116,6 +113,52 @@ func TestAccSslvserver_sslciphersuite_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslvserver_sslciphersuite_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: vservername,ciphername) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"vservername", "ciphername"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslvserver_sslciphersuite_binding_basic},
+			{Config: testAccSslvserver_sslciphersuite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslvserver_sslciphersuite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslvserver_sslciphersuite_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -143,15 +186,17 @@ func testAccCheckSslvserver_sslciphersuite_bindingExist(n string, id *string) re
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vservername := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vservername", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		vservername := idMap["vservername"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslciphersuite_binding",
 			ResourceName:             vservername,
-			ResourceMissingErrorCode: 258,
+			ResourceMissingErrorCode: 461,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
@@ -188,15 +233,17 @@ func testAccCheckSslvserver_sslciphersuite_bindingNotExist(n string, id string) 
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"vservername", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["vservername"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslciphersuite_binding",
 			ResourceName:             name,
-			ResourceMissingErrorCode: 258,
+			ResourceMissingErrorCode: 461,
 		}
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 
@@ -238,7 +285,13 @@ func testAccCheckSslvserver_sslciphersuite_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Sslvserver_sslciphersuite_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vservername", "ciphername"}, nil)
+		if err != nil {
+			return err
+		}
+		vservername := idMap["vservername"]
+
+		_, err = client.FindResource(service.Sslvserver_sslciphersuite_binding.Type(), vservername)
 		if err == nil {
 			return fmt.Errorf("sslvserver_sslciphersuite_binding %s still exists", rs.Primary.ID)
 		}
@@ -249,9 +302,8 @@ func testAccCheckSslvserver_sslciphersuite_bindingDestroy(s *terraform.State) er
 }
 
 func TestAccSslvserver_sslciphersuite_bindingDataSource_basic(t *testing.T) {
-	// t.Skip("TODO: Operation not permitted when SSL profiles are enabled!")
 	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. This test is incompatible with SSL profiles.", adcTestbed)
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -263,6 +315,104 @@ func TestAccSslvserver_sslciphersuite_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding", "vservername", "tf_sslvserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding", "ciphername", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
 				),
+			},
+		},
+	})
+}
+
+// testAccSslvserver_sslciphersuite_binding_upgrade_basic reuses the _basic config values
+// (a single binding + its prerequisite lbvserver). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names (ciphername, vservername).
+const testAccSslvserver_sslciphersuite_binding_upgrade_basic = `
+	resource "citrixadc_sslvserver_sslciphersuite_binding" "tf_sslvserver_sslciphersuite_binding" {
+		ciphername = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		vservername = citrixadc_lbvserver.tf_sslvserver.name
+	}
+
+	resource "citrixadc_lbvserver" "tf_sslvserver" {
+		name = "tf_sslvserver"
+		servicetype = "SSL"
+		ipv46 = "5.5.5.5"
+		port = 80
+	}
+`
+
+// TestAccSslvserver_sslciphersuite_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release is correctly upgraded when the same config is subsequently managed
+// by the current Framework provider. Step 1 creates the binding with citrix/citrixadc 2.2.0
+// (writes the legacy comma id "tf_sslvserver,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256" — the SDK v2
+// d.SetId(fmt.Sprintf("%s,%s", vservername, ciphername))). Step 2 refreshes/plans/applies the
+// same config through the Framework provider, exercising ParseIdString on the legacy id; the
+// Framework recomputes the id on Read (SetAttrFromGet), so the canonical new-format id becomes
+// "ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256,vservername:tf_sslvserver".
+func TestAccSslvserver_sslciphersuite_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resourceAddr := "citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslvserver_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSslvserver_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslciphersuite_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_sslvserver,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslvserver_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslciphersuite_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256,vservername:tf_sslvserver"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslvserver_sslciphersuite_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslciphersuite_binding.Type(), "tf_sslvserver", map[string]string{"ciphername": "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslciphersuite_bindingExist(resAddr, nil)),
 			},
 		},
 	})

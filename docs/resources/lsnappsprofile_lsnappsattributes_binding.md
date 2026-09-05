@@ -4,7 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsnappsprofile_lsnappsattributes_binding
 
-The lsnappsprofile_lsnappsattributes_bindingresource is used to create lsnappsprofile_lsnappsattributes_binding.
+The lsnappsprofile_lsnappsattributes_binding resource is used to create lsnappsprofile_lsnappsattributes_binding.
 
 
 ## Example usage

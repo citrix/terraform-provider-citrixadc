@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnclient_basic = `
@@ -136,6 +138,77 @@ data "citrixadc_lsnclient" "tf_lsnclient_ds" {
 	clientname = citrixadc_lsnclient.tf_lsnclient_ds.clientname
 }
 `
+
+func TestAccLsnclient_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient.tf_lsnclient"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnclient.Type(), "my_lsnclient"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnclient_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient.tf_lsnclient"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclientDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnclient_basic},
+			{
+				Config:                  testAccLsnclient_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccLsnclient_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnclientDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist("citrixadc_lsnclient.tf_lsnclient", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist("citrixadc_lsnclient.tf_lsnclient", nil)),
+			},
+		},
+	})
+}
 
 func TestAccLsnclientDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

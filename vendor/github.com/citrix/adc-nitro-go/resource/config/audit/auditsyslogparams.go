@@ -116,6 +116,10 @@ type Auditsyslogparams struct {
 	* Log protocol violations
 	*/
 	Protocolviolations string `json:"protocolviolations,omitempty"`
+	/**
+	* Log denylist violations
+	*/
+	Denylistviolations string `json:"denylistviolations,omitempty"`
 
 	//------- Read only Parameter ---------;
 

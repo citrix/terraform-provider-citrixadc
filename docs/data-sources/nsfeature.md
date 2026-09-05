@@ -79,3 +79,7 @@ The following attributes are available:
 * `ci` - Content Inspection feature status.
 * `bot` - Bot Management feature status.
 * `apigateway` - API Gateway feature status.
+
+### Read-only nsfeature metadata
+
+Every feature-flag attribute listed above is GET-only/Computed: the appliance reports each feature's enabled/disabled state and the data source surfaces it as a boolean. These attributes are not configurable through the data source, and a feature the appliance does not report is treated as disabled (`false`). The read-only NITRO attribute set for `nsfeature` (`wl`, `sp`, `lb`, `cs`, `cr`, `cmp`, `ssl`, `gslb`, `cf`, `ic`, `sslvpn`, `aaa`, `ospf`, `rip`, `bgp`, `rewrite`, `ipv6pt`, `appfw`, `responder`, `push`, `appflow`, `cloudbridge`, `isis`, `ch`, `appqoe`, `contentaccelerator`, `feo`, `lsn`, `rdpproxy`, `rep`, `videooptimization`, `forwardproxy`, `sslinterception`, `adaptivetcp`, `cqa`, `ci`, `bot`, `apigateway`) is already represented by these feature flags.

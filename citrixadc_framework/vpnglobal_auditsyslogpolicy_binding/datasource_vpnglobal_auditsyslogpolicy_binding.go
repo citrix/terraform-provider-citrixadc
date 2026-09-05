@@ -92,7 +92,7 @@ func (d *VpnglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

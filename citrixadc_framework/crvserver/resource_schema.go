@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -71,6 +69,7 @@ type CrvserverResourceModel struct {
 	Useoriginipportforcache  types.String `tfsdk:"useoriginipportforcache"`
 	Useportrange             types.String `tfsdk:"useportrange"`
 	Via                      types.String `tfsdk:"via"`
+	Wasmmodule               types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -83,6 +82,7 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information.",
 			},
@@ -93,7 +93,7 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"backendssl": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Decides whether the backend connection made by Citrix ADC to the origin server will be HTTP or SSL. Applicable only for SSL type CR Forward proxy vserver.",
 			},
 			"backupvserver": schema.StringAttribute{
@@ -102,11 +102,8 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name of the backup virtual server to which traffic is forwarded if the active server becomes unavailable.",
 			},
 			"cachetype": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Mode of operation for the cache redirection virtual server. Available settings function as follows:\n* TRANSPARENT - Intercept all traffic flowing to the appliance and apply cache redirection policies to determine whether content should be served from the cache or from the origin server.\n* FORWARD - Resolve the hostname of the incoming request, by using a DNS server, and forward requests for non-cacheable content to the resolved origin servers. Cacheable requests are sent to the configured cache servers.\n* REVERSE - Configure reverse proxy caches for specific origin servers. Incoming traffic directed to the reverse proxy can either be served from a cache server or be sent to the origin server with or without modification to the URL.\nThe default value for cache type is TRANSPARENT if service is HTTP or SSL whereas the default cache type is FORWARD if the service is HDX.",
 			},
 			"cachevserver": schema.StringAttribute{
@@ -131,12 +128,12 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"disableprimaryondown": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Continue sending traffic to a backup virtual server even after the primary virtual server comes UP from the DOWN state.",
 			},
 			"disallowserviceaccess": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "This is effective when a FORWARD type cr vserver is added. By default, this parameter is DISABLED. When it is ENABLED, backend services cannot be accessed through a FORWARD type cr vserver.",
 			},
 			"dnsvservername": schema.StringAttribute{
@@ -151,23 +148,17 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Perform delayed cleanup of connections to this virtual server.",
 			},
 			"format": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "0",
 			},
 			"ghost": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "0",
 			},
 			"httpprofilename": schema.StringAttribute{
@@ -177,6 +168,7 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"icmpvsrresponse": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("PASSIVE"),
 				Description: "Criterion for responding to PING requests sent to this virtual server. If ACTIVE, respond only if the virtual server is available. If PASSIVE, respond even if the virtual server is not available.",
 			},
@@ -197,24 +189,24 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"listenpolicy": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("NONE"),
+				Computed:    true,
 				Description: "String specifying the listen policy for the cache redirection virtual server. Can be either an in-line expression or the name of a named expression.",
 			},
 			"listenpriority": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(101),
+				Computed:    true,
 				Description: "Priority of the listen policy specified by the Listen Policy parameter. The lower the number, higher the priority.",
 			},
 			"map": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Obsolete.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the cache redirection virtual server is created.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my server\" or 'my server').",
 			},
 			"netprofile": schema.StringAttribute{
@@ -223,16 +215,12 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name of the network profile containing network configurations for the cache redirection virtual server.",
 			},
 			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
 				Description: "New name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my name\" or 'my name').",
 			},
 			"onpolicymatch": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ORIGIN"),
+				Computed:    true,
 				Description: "Redirect requests that match the policy to either the cache or the origin server, as specified.\nNote: For this option to work, you must set the cache redirection type to POLICY.",
 			},
 			"originusip": schema.StringAttribute{
@@ -241,16 +229,13 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Use the client's IP address as the source IP address in requests sent to the origin server.\nNote: You can enable this parameter to implement fully transparent CR deployment.",
 			},
 			"port": schema.Int64Attribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
-				Default:     int64default.StaticInt64(80),
+				Optional:    true,
+				Computed:    true,
 				Description: "Port number of the virtual server.",
 			},
 			"precedence": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RULE"),
+				Computed:    true,
 				Description: "Type of policy (URL or RULE) that takes precedence on the cache redirection virtual server. Applies only to cache redirection virtual servers that have both URL and RULE based policies. If you specify URL, URL based policies are applied first, in the following order:\n1.   Domain and exact URL\n2.   Domain, prefix and suffix\n3.   Domain and suffix\n4.   Domain and prefix\n5.   Domain only\n6.   Exact URL\n7.   Prefix and suffix\n8.   Suffix only\n9.   Prefix only\n10.  Default\nIf you specify RULE, the rule based policies are applied before URL based policies are applied.",
 			},
 			"probeport": schema.Int64Attribute{
@@ -265,20 +250,17 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"probesuccessresponsecode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("200 OK"),
+				Computed:    true,
 				Description: "HTTP code to return in SUCCESS case.",
 			},
 			"range": schema.Int64Attribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
-				Default:     int64default.StaticInt64(1),
+				Optional:    true,
+				Computed:    true,
 				Description: "Number of consecutive IP addresses, starting with the address specified by the IPAddress parameter, to include in a range of addresses assigned to this virtual server.",
 			},
 			"redirect": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("POLICY"),
+				Computed:    true,
 				Description: "Type of cache server to which to redirect HTTP requests. Available settings function as follows:\n* CACHE - Direct all requests to the cache.\n* POLICY - Apply the cache redirection policy to determine whether the request should be directed to the cache or to the origin.\n* ORIGIN - Direct all requests to the origin server.",
 			},
 			"redirecturl": schema.StringAttribute{
@@ -288,35 +270,26 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"reuse": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Reuse TCP connections to the origin server across client connections. Do not set this parameter unless the Service Type parameter is set to HTTP. If you set this parameter to OFF, the possible settings of the Redirect parameter function as follows:\n* CACHE - TCP connections to the cache servers are not reused.\n* ORIGIN - TCP connections to the origin servers are not reused.\n* POLICY - TCP connections to the origin servers are not reused.\nIf you set the Reuse parameter to ON, connections to origin servers and connections to cache servers are reused.",
 			},
 			"rhistate": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("PASSIVE"),
+				Computed:    true,
 				Description: "A host route is injected according to the setting on the virtual servers\n            * If set to PASSIVE on all the virtual servers that share the IP address, the appliance always injects the hostroute.\n            * If set to ACTIVE on all the virtual servers that share the IP address, the appliance injects even if one virtual server is UP.\n            * If set to ACTIVE on some virtual servers and PASSIVE on the others, the appliance, injects even if one virtual server set to ACTIVE is UP.",
 			},
 			"servicetype": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:    true,
 				Description: "Protocol (type of service) handled by the virtual server.",
 			},
 			"sopersistencetimeout": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Time-out, in minutes, for spillover persistence.",
 			},
 			"sothreshold": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "For CONNECTION (or) DYNAMICCONNECTION spillover, the number of connections above which the virtual server enters spillover mode. For BANDWIDTH spillover, the amount of incoming and outgoing traffic (in Kbps) before spillover. For HEALTH spillover, the percentage of active services (by weight) below which spillover occurs.",
 			},
 			"srcipexpr": schema.StringAttribute{
@@ -325,11 +298,8 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Expression used to extract the source IP addresses from the requests originating from the cache. Can be either an in-line expression or the name of a named expression.",
 			},
 			"state": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional:    true,
+				Computed:    true,
 				Description: "Initial state of the cache redirection virtual server.",
 			},
 			"tcpprobeport": schema.Int64Attribute{
@@ -343,11 +313,8 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name of the profile containing TCP configuration information for the cache redirection virtual server.",
 			},
 			"td": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
 			"useoriginipportforcache": schema.StringAttribute{
@@ -358,171 +325,178 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"useportrange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Use a port number from the port range (set by using the set ns param command, or in the Create Virtual Server (Cache Redirection) dialog box) as the source port in the requests sent to the origin server.",
 			},
 			"via": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server. This header indicates whether the request is being sent from a cache server.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
 			},
 		},
 	}
 }
 
-func crvserverGetThePayloadFromtheConfig(ctx context.Context, data *CrvserverResourceModel) cr.Crvserver {
-	tflog.Debug(ctx, "In crvserverGetThePayloadFromtheConfig Function")
+func crvserverGetThePayloadFromthePlan(ctx context.Context, data *CrvserverResourceModel) cr.Crvserver {
+	tflog.Debug(ctx, "In crvserverGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	crvserver := cr.Crvserver{}
-	if !data.Appflowlog.IsNull() {
+	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
 		crvserver.Appflowlog = data.Appflowlog.ValueString()
 	}
-	if !data.Arp.IsNull() {
+	if !data.Arp.IsNull() && !data.Arp.IsUnknown() {
 		crvserver.Arp = data.Arp.ValueString()
 	}
-	if !data.Backendssl.IsNull() {
+	if !data.Backendssl.IsNull() && !data.Backendssl.IsUnknown() {
 		crvserver.Backendssl = data.Backendssl.ValueString()
 	}
-	if !data.Backupvserver.IsNull() {
+	if !data.Backupvserver.IsNull() && !data.Backupvserver.IsUnknown() {
 		crvserver.Backupvserver = data.Backupvserver.ValueString()
 	}
-	if !data.Cachetype.IsNull() {
+	if !data.Cachetype.IsNull() && !data.Cachetype.IsUnknown() {
 		crvserver.Cachetype = data.Cachetype.ValueString()
 	}
-	if !data.Cachevserver.IsNull() {
+	if !data.Cachevserver.IsNull() && !data.Cachevserver.IsUnknown() {
 		crvserver.Cachevserver = data.Cachevserver.ValueString()
 	}
-	if !data.Clttimeout.IsNull() {
+	if !data.Clttimeout.IsNull() && !data.Clttimeout.IsUnknown() {
 		crvserver.Clttimeout = utils.IntPtr(int(data.Clttimeout.ValueInt64()))
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		crvserver.Comment = data.Comment.ValueString()
 	}
-	if !data.Destinationvserver.IsNull() {
+	if !data.Destinationvserver.IsNull() && !data.Destinationvserver.IsUnknown() {
 		crvserver.Destinationvserver = data.Destinationvserver.ValueString()
 	}
-	if !data.Disableprimaryondown.IsNull() {
+	if !data.Disableprimaryondown.IsNull() && !data.Disableprimaryondown.IsUnknown() {
 		crvserver.Disableprimaryondown = data.Disableprimaryondown.ValueString()
 	}
-	if !data.Disallowserviceaccess.IsNull() {
+	if !data.Disallowserviceaccess.IsNull() && !data.Disallowserviceaccess.IsUnknown() {
 		crvserver.Disallowserviceaccess = data.Disallowserviceaccess.ValueString()
 	}
-	if !data.Dnsvservername.IsNull() {
+	if !data.Dnsvservername.IsNull() && !data.Dnsvservername.IsUnknown() {
 		crvserver.Dnsvservername = data.Dnsvservername.ValueString()
 	}
-	if !data.Domain.IsNull() {
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		crvserver.Domain = data.Domain.ValueString()
 	}
-	if !data.Downstateflush.IsNull() {
+	if !data.Downstateflush.IsNull() && !data.Downstateflush.IsUnknown() {
 		crvserver.Downstateflush = data.Downstateflush.ValueString()
 	}
-	if !data.Format.IsNull() {
+	if !data.Format.IsNull() && !data.Format.IsUnknown() {
 		crvserver.Format = data.Format.ValueString()
 	}
-	if !data.Ghost.IsNull() {
+	if !data.Ghost.IsNull() && !data.Ghost.IsUnknown() {
 		crvserver.Ghost = data.Ghost.ValueString()
 	}
-	if !data.Httpprofilename.IsNull() {
+	if !data.Httpprofilename.IsNull() && !data.Httpprofilename.IsUnknown() {
 		crvserver.Httpprofilename = data.Httpprofilename.ValueString()
 	}
-	if !data.Icmpvsrresponse.IsNull() {
+	if !data.Icmpvsrresponse.IsNull() && !data.Icmpvsrresponse.IsUnknown() {
 		crvserver.Icmpvsrresponse = data.Icmpvsrresponse.ValueString()
 	}
-	if !data.Ipset.IsNull() {
+	if !data.Ipset.IsNull() && !data.Ipset.IsUnknown() {
 		crvserver.Ipset = data.Ipset.ValueString()
 	}
-	if !data.Ipv46.IsNull() {
+	if !data.Ipv46.IsNull() && !data.Ipv46.IsUnknown() {
 		crvserver.Ipv46 = data.Ipv46.ValueString()
 	}
-	if !data.L2conn.IsNull() {
+	if !data.L2conn.IsNull() && !data.L2conn.IsUnknown() {
 		crvserver.L2conn = data.L2conn.ValueString()
 	}
-	if !data.Listenpolicy.IsNull() {
+	if !data.Listenpolicy.IsNull() && !data.Listenpolicy.IsUnknown() {
 		crvserver.Listenpolicy = data.Listenpolicy.ValueString()
 	}
-	if !data.Listenpriority.IsNull() {
+	if !data.Listenpriority.IsNull() && !data.Listenpriority.IsUnknown() {
 		crvserver.Listenpriority = utils.IntPtr(int(data.Listenpriority.ValueInt64()))
 	}
-	if !data.Map.IsNull() {
+	if !data.Map.IsNull() && !data.Map.IsUnknown() {
 		crvserver.Map = data.Map.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		crvserver.Name = data.Name.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		crvserver.Netprofile = data.Netprofile.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		crvserver.Newname = data.Newname.ValueString()
-	}
-	if !data.Onpolicymatch.IsNull() {
+	// newname is rename-only (NITRO ?action=rename); it is never part of the add payload.
+	if !data.Onpolicymatch.IsNull() && !data.Onpolicymatch.IsUnknown() {
 		crvserver.Onpolicymatch = data.Onpolicymatch.ValueString()
 	}
-	if !data.Originusip.IsNull() {
+	if !data.Originusip.IsNull() && !data.Originusip.IsUnknown() {
 		crvserver.Originusip = data.Originusip.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		crvserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Precedence.IsNull() {
+	if !data.Precedence.IsNull() && !data.Precedence.IsUnknown() {
 		crvserver.Precedence = data.Precedence.ValueString()
 	}
-	if !data.Probeport.IsNull() {
+	if !data.Probeport.IsNull() && !data.Probeport.IsUnknown() {
 		crvserver.Probeport = utils.IntPtr(int(data.Probeport.ValueInt64()))
 	}
-	if !data.Probeprotocol.IsNull() {
+	if !data.Probeprotocol.IsNull() && !data.Probeprotocol.IsUnknown() {
 		crvserver.Probeprotocol = data.Probeprotocol.ValueString()
 	}
-	if !data.Probesuccessresponsecode.IsNull() {
+	if !data.Probesuccessresponsecode.IsNull() && !data.Probesuccessresponsecode.IsUnknown() {
 		crvserver.Probesuccessresponsecode = data.Probesuccessresponsecode.ValueString()
 	}
-	if !data.Range.IsNull() {
+	if !data.Range.IsNull() && !data.Range.IsUnknown() {
 		crvserver.Range = utils.IntPtr(int(data.Range.ValueInt64()))
 	}
-	if !data.Redirect.IsNull() {
+	if !data.Redirect.IsNull() && !data.Redirect.IsUnknown() {
 		crvserver.Redirect = data.Redirect.ValueString()
 	}
-	if !data.Redirecturl.IsNull() {
+	if !data.Redirecturl.IsNull() && !data.Redirecturl.IsUnknown() {
 		crvserver.Redirecturl = data.Redirecturl.ValueString()
 	}
-	if !data.Reuse.IsNull() {
+	if !data.Reuse.IsNull() && !data.Reuse.IsUnknown() {
 		crvserver.Reuse = data.Reuse.ValueString()
 	}
-	if !data.Rhistate.IsNull() {
+	if !data.Rhistate.IsNull() && !data.Rhistate.IsUnknown() {
 		crvserver.Rhistate = data.Rhistate.ValueString()
 	}
-	if !data.Servicetype.IsNull() {
+	if !data.Servicetype.IsNull() && !data.Servicetype.IsUnknown() {
 		crvserver.Servicetype = data.Servicetype.ValueString()
 	}
-	if !data.Sopersistencetimeout.IsNull() {
+	if !data.Sopersistencetimeout.IsNull() && !data.Sopersistencetimeout.IsUnknown() {
 		crvserver.Sopersistencetimeout = utils.IntPtr(int(data.Sopersistencetimeout.ValueInt64()))
 	}
-	if !data.Sothreshold.IsNull() {
+	if !data.Sothreshold.IsNull() && !data.Sothreshold.IsUnknown() {
 		crvserver.Sothreshold = utils.IntPtr(int(data.Sothreshold.ValueInt64()))
 	}
-	if !data.Srcipexpr.IsNull() {
+	if !data.Srcipexpr.IsNull() && !data.Srcipexpr.IsUnknown() {
 		crvserver.Srcipexpr = data.Srcipexpr.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		crvserver.State = data.State.ValueString()
 	}
-	if !data.Tcpprobeport.IsNull() {
+	if !data.Tcpprobeport.IsNull() && !data.Tcpprobeport.IsUnknown() {
 		crvserver.Tcpprobeport = utils.IntPtr(int(data.Tcpprobeport.ValueInt64()))
 	}
-	if !data.Tcpprofilename.IsNull() {
+	if !data.Tcpprofilename.IsNull() && !data.Tcpprofilename.IsUnknown() {
 		crvserver.Tcpprofilename = data.Tcpprofilename.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		crvserver.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Useoriginipportforcache.IsNull() {
+	if !data.Useoriginipportforcache.IsNull() && !data.Useoriginipportforcache.IsUnknown() {
 		crvserver.Useoriginipportforcache = data.Useoriginipportforcache.ValueString()
 	}
-	if !data.Useportrange.IsNull() {
+	if !data.Useportrange.IsNull() && !data.Useportrange.IsUnknown() {
 		crvserver.Useportrange = data.Useportrange.ValueString()
 	}
-	if !data.Via.IsNull() {
+	if !data.Via.IsNull() && !data.Via.IsUnknown() {
 		crvserver.Via = data.Via.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		crvserver.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 
 	return crvserver
@@ -531,279 +505,293 @@ func crvserverGetThePayloadFromtheConfig(ctx context.Context, data *CrvserverRes
 func crvserverSetAttrFromGet(ctx context.Context, data *CrvserverResourceModel, getResponseData map[string]interface{}) *CrvserverResourceModel {
 	tflog.Debug(ctx, "In crvserverSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// For attributes not returned by GET, only reset to null when the value was
+	// unknown (i.e. Computed and not user-configured). A configured value that
+	// NITRO omits from GET (e.g. a numeric/bool default) is preserved to avoid
+	// "inconsistent result after apply".
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Appflowlog.IsUnknown() {
 		data.Appflowlog = types.StringNull()
 	}
 	if val, ok := getResponseData["arp"]; ok && val != nil {
 		data.Arp = types.StringValue(val.(string))
-	} else {
+	} else if data.Arp.IsUnknown() {
 		data.Arp = types.StringNull()
 	}
 	if val, ok := getResponseData["backendssl"]; ok && val != nil {
 		data.Backendssl = types.StringValue(val.(string))
-	} else {
+	} else if data.Backendssl.IsUnknown() {
 		data.Backendssl = types.StringNull()
 	}
 	if val, ok := getResponseData["backupvserver"]; ok && val != nil {
 		data.Backupvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Backupvserver.IsUnknown() {
 		data.Backupvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["cachetype"]; ok && val != nil {
 		data.Cachetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Cachetype.IsUnknown() {
 		data.Cachetype = types.StringNull()
 	}
 	if val, ok := getResponseData["cachevserver"]; ok && val != nil {
 		data.Cachevserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Cachevserver.IsUnknown() {
 		data.Cachevserver = types.StringNull()
 	}
 	if val, ok := getResponseData["clttimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Clttimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Clttimeout.IsUnknown() {
 		data.Clttimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["destinationvserver"]; ok && val != nil {
 		data.Destinationvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Destinationvserver.IsUnknown() {
 		data.Destinationvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["disableprimaryondown"]; ok && val != nil {
 		data.Disableprimaryondown = types.StringValue(val.(string))
-	} else {
+	} else if data.Disableprimaryondown.IsUnknown() {
 		data.Disableprimaryondown = types.StringNull()
 	}
 	if val, ok := getResponseData["disallowserviceaccess"]; ok && val != nil {
 		data.Disallowserviceaccess = types.StringValue(val.(string))
-	} else {
+	} else if data.Disallowserviceaccess.IsUnknown() {
 		data.Disallowserviceaccess = types.StringNull()
 	}
 	if val, ok := getResponseData["dnsvservername"]; ok && val != nil {
 		data.Dnsvservername = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnsvservername.IsUnknown() {
 		data.Dnsvservername = types.StringNull()
 	}
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
+	} else if data.Domain.IsUnknown() {
 		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
 		data.Downstateflush = types.StringValue(val.(string))
-	} else {
+	} else if data.Downstateflush.IsUnknown() {
 		data.Downstateflush = types.StringNull()
 	}
 	if val, ok := getResponseData["format"]; ok && val != nil {
 		data.Format = types.StringValue(val.(string))
-	} else {
+	} else if data.Format.IsUnknown() {
 		data.Format = types.StringNull()
 	}
 	if val, ok := getResponseData["ghost"]; ok && val != nil {
 		data.Ghost = types.StringValue(val.(string))
-	} else {
+	} else if data.Ghost.IsUnknown() {
 		data.Ghost = types.StringNull()
 	}
 	if val, ok := getResponseData["httpprofilename"]; ok && val != nil {
 		data.Httpprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpprofilename.IsUnknown() {
 		data.Httpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["icmpvsrresponse"]; ok && val != nil {
 		data.Icmpvsrresponse = types.StringValue(val.(string))
-	} else {
+	} else if data.Icmpvsrresponse.IsUnknown() {
 		data.Icmpvsrresponse = types.StringNull()
 	}
 	if val, ok := getResponseData["ipset"]; ok && val != nil {
 		data.Ipset = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipset.IsUnknown() {
 		data.Ipset = types.StringNull()
 	}
 	if val, ok := getResponseData["ipv46"]; ok && val != nil {
 		data.Ipv46 = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv46.IsUnknown() {
 		data.Ipv46 = types.StringNull()
 	}
 	if val, ok := getResponseData["l2conn"]; ok && val != nil {
 		data.L2conn = types.StringValue(val.(string))
-	} else {
+	} else if data.L2conn.IsUnknown() {
 		data.L2conn = types.StringNull()
 	}
 	if val, ok := getResponseData["listenpolicy"]; ok && val != nil {
 		data.Listenpolicy = types.StringValue(val.(string))
-	} else {
+	} else if data.Listenpolicy.IsUnknown() {
 		data.Listenpolicy = types.StringNull()
 	}
 	if val, ok := getResponseData["listenpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Listenpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Listenpriority.IsUnknown() {
 		data.Listenpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["map"]; ok && val != nil {
 		data.Map = types.StringValue(val.(string))
-	} else {
+	} else if data.Map.IsUnknown() {
 		data.Map = types.StringNull()
 	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
+	// name is the primary key / ID. Only adopt the GET value on import (when the
+	// model has no name yet); otherwise preserve the configured value so a rename
+	// (via newname) does not clobber the user's config and trigger a spurious diff.
+	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["netprofile"]; ok && val != nil {
 		data.Netprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Netprofile.IsUnknown() {
 		data.Netprofile = types.StringNull()
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	// newname is rename-only and never returned by GET; preserve the plan/state value.
 	if val, ok := getResponseData["onpolicymatch"]; ok && val != nil {
 		data.Onpolicymatch = types.StringValue(val.(string))
-	} else {
+	} else if data.Onpolicymatch.IsUnknown() {
 		data.Onpolicymatch = types.StringNull()
 	}
 	if val, ok := getResponseData["originusip"]; ok && val != nil {
 		data.Originusip = types.StringValue(val.(string))
-	} else {
+	} else if data.Originusip.IsUnknown() {
 		data.Originusip = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["precedence"]; ok && val != nil {
 		data.Precedence = types.StringValue(val.(string))
-	} else {
+	} else if data.Precedence.IsUnknown() {
 		data.Precedence = types.StringNull()
 	}
 	if val, ok := getResponseData["probeport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Probeport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Probeport.IsUnknown() {
 		data.Probeport = types.Int64Null()
 	}
 	if val, ok := getResponseData["probeprotocol"]; ok && val != nil {
 		data.Probeprotocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Probeprotocol.IsUnknown() {
 		data.Probeprotocol = types.StringNull()
 	}
 	if val, ok := getResponseData["probesuccessresponsecode"]; ok && val != nil {
 		data.Probesuccessresponsecode = types.StringValue(val.(string))
-	} else {
+	} else if data.Probesuccessresponsecode.IsUnknown() {
 		data.Probesuccessresponsecode = types.StringNull()
 	}
 	if val, ok := getResponseData["range"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Range = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Range.IsUnknown() {
 		data.Range = types.Int64Null()
 	}
 	if val, ok := getResponseData["redirect"]; ok && val != nil {
 		data.Redirect = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirect.IsUnknown() {
 		data.Redirect = types.StringNull()
 	}
 	if val, ok := getResponseData["redirecturl"]; ok && val != nil {
 		data.Redirecturl = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirecturl.IsUnknown() {
 		data.Redirecturl = types.StringNull()
 	}
 	if val, ok := getResponseData["reuse"]; ok && val != nil {
 		data.Reuse = types.StringValue(val.(string))
-	} else {
+	} else if data.Reuse.IsUnknown() {
 		data.Reuse = types.StringNull()
 	}
 	if val, ok := getResponseData["rhistate"]; ok && val != nil {
 		data.Rhistate = types.StringValue(val.(string))
-	} else {
+	} else if data.Rhistate.IsUnknown() {
 		data.Rhistate = types.StringNull()
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicetype.IsUnknown() {
 		data.Servicetype = types.StringNull()
 	}
 	if val, ok := getResponseData["sopersistencetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sopersistencetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sopersistencetimeout.IsUnknown() {
 		data.Sopersistencetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["sothreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sothreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sothreshold.IsUnknown() {
 		data.Sothreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["srcipexpr"]; ok && val != nil {
 		data.Srcipexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcipexpr.IsUnknown() {
 		data.Srcipexpr = types.StringNull()
 	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
+	// state is applied through the enable/disable actions, and NITRO GET may report
+	// an operational value (e.g. "UP"/"OUT OF SERVICE") rather than the configured
+	// ENABLED/DISABLED. Only resolve it from GET when the value was unknown
+	// (Computed, not user-configured); otherwise preserve the configured value to
+	// avoid "inconsistent result after apply".
+	if data.State.IsUnknown() {
+		if val, ok := getResponseData["state"]; ok && val != nil {
+			data.State = types.StringValue(val.(string))
+		} else {
+			data.State = types.StringNull()
+		}
 	}
 	if val, ok := getResponseData["tcpprobeport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcpprobeport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcpprobeport.IsUnknown() {
 		data.Tcpprobeport = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcpprofilename"]; ok && val != nil {
 		data.Tcpprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Tcpprofilename.IsUnknown() {
 		data.Tcpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["useoriginipportforcache"]; ok && val != nil {
 		data.Useoriginipportforcache = types.StringValue(val.(string))
-	} else {
+	} else if data.Useoriginipportforcache.IsUnknown() {
 		data.Useoriginipportforcache = types.StringNull()
 	}
 	if val, ok := getResponseData["useportrange"]; ok && val != nil {
 		data.Useportrange = types.StringValue(val.(string))
-	} else {
+	} else if data.Useportrange.IsUnknown() {
 		data.Useportrange = types.StringNull()
 	}
 	if val, ok := getResponseData["via"]; ok && val != nil {
 		data.Via = types.StringValue(val.(string))
-	} else {
+	} else if data.Via.IsUnknown() {
 		data.Via = types.StringNull()
 	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else if data.Wasmmodule.IsUnknown() {
+		data.Wasmmodule = types.StringNull()
+	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// NOTE: data.Id is intentionally NOT set here. The resource sets it in Create
+	// (and on rename in Update); the datasource sets it in its Read.
 
 	return data
 }

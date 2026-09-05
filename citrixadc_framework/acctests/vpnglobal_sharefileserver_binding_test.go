@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_sharefileserver_binding_basic = `
@@ -50,6 +52,52 @@ func TestAccVpnglobal_sharefileserver_binding_basic(t *testing.T) {
 				Config: testAccVpnglobal_sharefileserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_sharefileserver_bindingNotExist("citrixadc_vpnglobal_sharefileserver_binding.tf_bind", "3.4.5.2:8080"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_sharefileserver_binding_upgrade_basic = `
+	resource "citrixadc_vpnglobal_sharefileserver_binding" "tf_bind" {
+		sharefile = "3.4.5.2:8080"
+	}
+`
+
+// TestAccVpnglobal_sharefileserver_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (2.2.0) is upgraded cleanly by the current
+// framework provider. Step 1 creates the binding with the SDK v2 provider (legacy
+// id). Step 2 refreshes/plans/applies the same config through the framework
+// provider, exercising the Read path. This is a single-key ("sharefile") binding,
+// so the legacy id and the framework's re-derived canonical id are identical
+// ("3.4.5.2:8080").
+func TestAccVpnglobal_sharefileserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_sharefileserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_sharefileserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_sharefileserver_bindingExist("citrixadc_vpnglobal_sharefileserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_sharefileserver_binding.tf_bind", "id", "3.4.5.2:8080"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_sharefileserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_sharefileserver_bindingExist("citrixadc_vpnglobal_sharefileserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_sharefileserver_binding.tf_bind", "id", "3.4.5.2:8080"),
 				),
 			},
 		},
@@ -199,3 +247,44 @@ const testAccVpnglobal_sharefileserver_bindingDataSource_basic = `
 		sharefile = citrixadc_vpnglobal_sharefileserver_binding.tf_bind.sharefile
 	}
 `
+
+func TestAccVpnglobal_sharefileserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_sharefileserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_sharefileserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_sharefileserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_sharefileserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_sharefileserver_binding.Type(), "", []string{"sharefile:" + url.QueryEscape("3.4.5.2:8080")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_sharefileserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_sharefileserver_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_sharefileserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_sharefileserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_sharefileserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_sharefileserver_binding_basic},
+			{Config: testAccVpnglobal_sharefileserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}

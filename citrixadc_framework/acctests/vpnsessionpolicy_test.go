@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnsessionpolicy_add = `
@@ -182,6 +183,77 @@ func testAccCheckVpnsessionpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnsessionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnsessionpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnsessionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnsessionpolicy.Type(), "tf_vpnsessionpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnsessionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnsessionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnsessionpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnsessionpolicy_add},
+			{
+				Config:                  testAccVpnsessionpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVpnsessionpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpnsessionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionpolicyExist("citrixadc_vpnsessionpolicy.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnsessionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionpolicyExist("citrixadc_vpnsessionpolicy.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnsessionpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -193,6 +265,9 @@ func TestAccVpnsessionpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "name", "tf_vpnsessionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "rule", "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "action", "newsession"),
+					// Runtime-binding proof + read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnsessionpolicy.foo", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnsessionpolicy.foo", "hits"),
 				),
 			},
 		},

@@ -140,6 +140,10 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Debug(ctx, fmt.Sprintf("backupparentlist has changed for gslbsite"))
 		hasChange = true
 	}
+	if !data.Krpcnodesrcip.Equal(state.Krpcnodesrcip) {
+		tflog.Debug(ctx, fmt.Sprintf("krpcnodesrcip has changed for gslbsite"))
+		hasChange = true
+	}
 	if !data.Metricexchange.Equal(state.Metricexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("metricexchange has changed for gslbsite"))
 		if config.Metricexchange.IsNull() { // removed from config -> unset it

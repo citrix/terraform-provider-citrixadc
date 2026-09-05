@@ -34,6 +34,7 @@ resource "citrixadc_server" "tf_server" {
 * `delay` - (Optional) Time, in seconds, after which all the services configured on the server are disabled.
 * `graceful` - (Optional) Shut down gracefully, without accepting any new connections, and disabling each service when all of its connections are closed. Possible values: [ YES, NO ]
 * `internal` - (Optional) Display names of the servers that have been created for internal use.
+* `newname` - (Optional) New name for the server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 
 
 ## Attribute Reference

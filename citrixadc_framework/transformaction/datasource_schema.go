@@ -1,8 +1,39 @@
 package transformaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// TransformactionDataSourceModel is the data-source-specific model, decoupled
+// from TransformactionResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (continuematching, ...). Every non-key attribute is Computed.
+type TransformactionDataSourceModel struct {
+	Id               types.String `tfsdk:"id"`
+	Comment          types.String `tfsdk:"comment"`
+	Cookiedomainfrom types.String `tfsdk:"cookiedomainfrom"`
+	Cookiedomaininto types.String `tfsdk:"cookiedomaininto"`
+	Name             types.String `tfsdk:"name"` // Required lookup key
+	Priority         types.Int64  `tfsdk:"priority"`
+	Profilename      types.String `tfsdk:"profilename"`
+	Requrlfrom       types.String `tfsdk:"requrlfrom"`
+	Requrlinto       types.String `tfsdk:"requrlinto"`
+	Resurlfrom       types.String `tfsdk:"resurlfrom"`
+	Resurlinto       types.String `tfsdk:"resurlinto"`
+	State            types.String `tfsdk:"state"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/transformaction.json). Never settable; populated from GET.
+	Continuematching types.String `tfsdk:"continuematching"`
+}
 
 func TransformactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -64,6 +95,41 @@ func TransformactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enable or disable this action.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"continuematching": schema.StringAttribute{
+				Computed:    true,
+				Description: "Continue transforming using the next rule in the list. Possible values = ON, OFF",
+			},
 		},
 	}
+}
+
+// transformactionDataSourceSetAttrFromGet projects a NITRO transformaction GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that projection.
+func transformactionDataSourceSetAttrFromGet(ctx context.Context, data *TransformactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In transformactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Cookiedomainfrom = utils.MapGetString(g, "cookiedomainfrom")
+	data.Cookiedomaininto = utils.MapGetString(g, "cookiedomaininto")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Profilename = utils.MapGetString(g, "profilename")
+	data.Requrlfrom = utils.MapGetString(g, "requrlfrom")
+	data.Requrlinto = utils.MapGetString(g, "requrlinto")
+	data.Resurlfrom = utils.MapGetString(g, "resurlfrom")
+	data.Resurlinto = utils.MapGetString(g, "resurlinto")
+	data.State = utils.MapGetString(g, "state")
+
+	// Read-only attributes.
+	data.Continuematching = utils.MapGetString(g, "continuematching")
 }

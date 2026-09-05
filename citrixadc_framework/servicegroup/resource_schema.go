@@ -2,7 +2,6 @@ package servicegroup
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 
@@ -20,62 +19,76 @@ import (
 )
 
 // ServicegroupResourceModel describes the resource data model.
+//
+// Attribute names/types mirror the legacy SDK v2 resource
+// (citrixadc/resource_citrixadc_servicegroup.go) for backward compatibility,
+// including the convenience blocks lbvservers/lbmonitor/servicegroupmembers/
+// servicegroupmembers_by_servername that manage the associated bindings.
 type ServicegroupResourceModel struct {
-	Id                  types.String `tfsdk:"id"`
-	Appflowlog          types.String `tfsdk:"appflowlog"`
-	Autodelayedtrofs    types.String `tfsdk:"autodelayedtrofs"`
-	Autodisabledelay    types.Int64  `tfsdk:"autodisabledelay"`
-	Autodisablegraceful types.String `tfsdk:"autodisablegraceful"`
-	Autoscale           types.String `tfsdk:"autoscale"`
-	Bootstrap           types.String `tfsdk:"bootstrap"`
-	Cacheable           types.String `tfsdk:"cacheable"`
-	Cachetype           types.String `tfsdk:"cachetype"`
-	Cip                 types.String `tfsdk:"cip"`
-	Cipheader           types.String `tfsdk:"cipheader"`
-	Cka                 types.String `tfsdk:"cka"`
-	Clttimeout          types.Int64  `tfsdk:"clttimeout"`
-	Cmp                 types.String `tfsdk:"cmp"`
-	Comment             types.String `tfsdk:"comment"`
-	Customserverid      types.String `tfsdk:"customserverid"`
-	Dbsttl              types.Int64  `tfsdk:"dbsttl"`
-	Delay               types.Int64  `tfsdk:"delay"`
-	Downstateflush      types.String `tfsdk:"downstateflush"`
-	DupWeight           types.Int64  `tfsdk:"dup_weight"`
-	Graceful            types.String `tfsdk:"graceful"`
-	Hashid              types.Int64  `tfsdk:"hashid"`
-	Healthmonitor       types.String `tfsdk:"healthmonitor"`
-	Httpprofilename     types.String `tfsdk:"httpprofilename"`
-	Includemembers      types.Bool   `tfsdk:"includemembers"`
-	Maxbandwidth        types.Int64  `tfsdk:"maxbandwidth"`
-	Maxclient           types.Int64  `tfsdk:"maxclient"`
-	Maxreq              types.Int64  `tfsdk:"maxreq"`
-	Memberport          types.Int64  `tfsdk:"memberport"`
-	Monconnectionclose  types.String `tfsdk:"monconnectionclose"`
-	MonitorNameSvc      types.String `tfsdk:"monitor_name_svc"`
-	Monthreshold        types.Int64  `tfsdk:"monthreshold"`
-	Nameserver          types.String `tfsdk:"nameserver"`
-	Netprofile          types.String `tfsdk:"netprofile"`
-	Newname             types.String `tfsdk:"newname"`
-	Order               types.Int64  `tfsdk:"order"`
-	Pathmonitor         types.String `tfsdk:"pathmonitor"`
-	Pathmonitorindv     types.String `tfsdk:"pathmonitorindv"`
-	Port                types.Int64  `tfsdk:"port"`
-	Quicprofilename     types.String `tfsdk:"quicprofilename"`
-	Rtspsessionidremap  types.String `tfsdk:"rtspsessionidremap"`
-	Serverid            types.Int64  `tfsdk:"serverid"`
-	Servername          types.String `tfsdk:"servername"`
-	Servicegroupname    types.String `tfsdk:"servicegroupname"`
-	Servicetype         types.String `tfsdk:"servicetype"`
-	Sp                  types.String `tfsdk:"sp"`
-	State               types.String `tfsdk:"state"`
-	Svrtimeout          types.Int64  `tfsdk:"svrtimeout"`
-	Tcpb                types.String `tfsdk:"tcpb"`
-	Tcpprofilename      types.String `tfsdk:"tcpprofilename"`
-	Td                  types.Int64  `tfsdk:"td"`
-	Topicname           types.String `tfsdk:"topicname"`
-	Useproxyport        types.String `tfsdk:"useproxyport"`
-	Usip                types.String `tfsdk:"usip"`
-	Weight              types.Int64  `tfsdk:"weight"`
+	Id                   types.String `tfsdk:"id"`
+	Aigwprofilename      types.String `tfsdk:"aigwprofilename"`
+	Appflowlog           types.String `tfsdk:"appflowlog"`
+	Autodelayedtrofs     types.String `tfsdk:"autodelayedtrofs"`
+	Autodisabledelay     types.Int64  `tfsdk:"autodisabledelay"`
+	Autodisablegraceful  types.String `tfsdk:"autodisablegraceful"`
+	Autoscale            types.String `tfsdk:"autoscale"`
+	Bootstrap            types.String `tfsdk:"bootstrap"`
+	Cacheable            types.String `tfsdk:"cacheable"`
+	Cachetype            types.String `tfsdk:"cachetype"`
+	Cip                  types.String `tfsdk:"cip"`
+	Cipheader            types.String `tfsdk:"cipheader"`
+	Cka                  types.String `tfsdk:"cka"`
+	Clttimeout           types.Int64  `tfsdk:"clttimeout"`
+	Cmp                  types.String `tfsdk:"cmp"`
+	Comment              types.String `tfsdk:"comment"`
+	Customserverid       types.String `tfsdk:"customserverid"`
+	Dbsttl               types.Int64  `tfsdk:"dbsttl"`
+	Delay                types.Int64  `tfsdk:"delay"`
+	Downstateflush       types.String `tfsdk:"downstateflush"`
+	Dupweight            types.Int64  `tfsdk:"dupweight"`
+	Graceful             types.String `tfsdk:"graceful"`
+	Hashid               types.Int64  `tfsdk:"hashid"`
+	Healthmonitor        types.String `tfsdk:"healthmonitor"`
+	Httpprofilename      types.String `tfsdk:"httpprofilename"`
+	Includemembers       types.Bool   `tfsdk:"includemembers"`
+	Maxbandwidth         types.Int64  `tfsdk:"maxbandwidth"`
+	Maxclient            types.Int64  `tfsdk:"maxclient"`
+	Maxreq               types.Int64  `tfsdk:"maxreq"`
+	Mcpprofilename       types.String `tfsdk:"mcpprofilename"`
+	Memberport           types.Int64  `tfsdk:"memberport"`
+	Monconnectionclose   types.String `tfsdk:"monconnectionclose"`
+	Monitornamesvc       types.String `tfsdk:"monitornamesvc"`
+	Monthreshold         types.Int64  `tfsdk:"monthreshold"`
+	Nameserver           types.String `tfsdk:"nameserver"`
+	Netprofile           types.String `tfsdk:"netprofile"`
+	Pathmonitor          types.String `tfsdk:"pathmonitor"`
+	Pathmonitorindv      types.String `tfsdk:"pathmonitorindv"`
+	Port                 types.Int64  `tfsdk:"port"`
+	Quicprofilename      types.String `tfsdk:"quicprofilename"`
+	Riseapbrstatsmsgcode types.Int64  `tfsdk:"riseapbrstatsmsgcode"`
+	Rtspsessionidremap   types.String `tfsdk:"rtspsessionidremap"`
+	Serverid             types.Int64  `tfsdk:"serverid"`
+	Servername           types.String `tfsdk:"servername"`
+	Servicegroupname     types.String `tfsdk:"servicegroupname"`
+	Servicetype          types.String `tfsdk:"servicetype"`
+	Sp                   types.String `tfsdk:"sp"`
+	State                types.String `tfsdk:"state"`
+	Svrtimeout           types.Int64  `tfsdk:"svrtimeout"`
+	Tcpb                 types.String `tfsdk:"tcpb"`
+	Tcpprofilename       types.String `tfsdk:"tcpprofilename"`
+	Td                   types.Int64  `tfsdk:"td"`
+	Topicname            types.String `tfsdk:"topicname"`
+	Useproxyport         types.String `tfsdk:"useproxyport"`
+	Usip                 types.String `tfsdk:"usip"`
+	Wasmmodule           types.String `tfsdk:"wasmmodule"`
+	Weight               types.Int64  `tfsdk:"weight"`
+
+	// Convenience blocks (SDK v2 backward compatibility). These are not NITRO
+	// servicegroup attributes; they manage the associated bindings.
+	Lbvservers                      types.Set    `tfsdk:"lbvservers"`
+	Lbmonitor                       types.String `tfsdk:"lbmonitor"`
+	Servicegroupmembers             types.Set    `tfsdk:"servicegroupmembers"`
+	ServicegroupmembersByServername types.Set    `tfsdk:"servicegroupmembers_by_servername"`
 }
 
 func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -84,10 +97,16 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
-				Description: "The ID of the servicegroup resource.",
+				Description: "The ID of the servicegroup resource (the servicegroupname).",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.",
 			},
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information for the specified service group.",
 			},
@@ -99,36 +118,46 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"autodisabledelay": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "The time allowed (in seconds) for a graceful shutdown. During this period, new connections or requests will continue to be sent to this service for clients who already have a persistent session on the system. Connections or requests from fresh or new clients who do not yet have a persistence sessions on the system will not be sent to the service. Instead, they will be load balanced among other available services. After the delay time expires, no new requests or connections will be sent to the service.",
+				Description: "The time allowed (in seconds) for a graceful shutdown.",
 			},
 			"autodisablegraceful": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Indicates graceful shutdown of the service. System will wait for all outstanding connections to this service to be closed before disabling the service.",
+				Description: "Indicates graceful shutdown of the service.",
 			},
 			"autoscale": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
-				Description: "Auto scale option for a servicegroup",
-			},
-			"bootstrap": schema.StringAttribute{
+				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Description: "Auto scale option for a servicegroup",
+			},
+			"bootstrap": schema.StringAttribute{
+				// SDK v2: Optional+Computed+ForceNew.
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Flag to check if kafka broker servicegroup is of type bootstrap or not.",
 			},
 			"cacheable": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Use the transparent cache redirection virtual server to forward the request to the cache server.\nNote: Do not set this parameter if you set the Cache Type.",
+				Default:     stringdefault.StaticString("NO"),
+				Description: "Use the transparent cache redirection virtual server to forward the request to the cache server.",
 			},
 			"cachetype": schema.StringAttribute{
+				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Cache type supported by the cache server.",
 			},
@@ -140,7 +169,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"cipheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Name of the HTTP header whose value must be set to the IP address of the client. Used with the Client IP parameter. If client IP insertion is enabled, and the client IP header is not specified, the value of Client IP Header parameter or the value set by the set ns config command is used as client's IP header name.",
+				Description: "Name of the HTTP header whose value must be set to the IP address of the client.",
 			},
 			"cka": schema.StringAttribute{
 				Optional:    true,
@@ -164,49 +193,49 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"customserverid": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("None"),
+				Computed:    true,
 				Description: "The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.",
 			},
 			"dbsttl": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors",
+				Description: "Specify the TTL for DNS record for domain based service.",
 			},
 			"delay": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
-				Description: "Time, in seconds, allocated for a shutdown of the services in the service group. During this period, new requests are sent to the service only for clients who already have persistent sessions on the appliance. Requests from new clients are load balanced among other available services. After the delay time expires, no requests are sent to the service, and the service is marked as unavailable (OUT OF SERVICE).",
+				// SDK v2: Optional+Computed (NOT ForceNew). Used as a disable-action
+				// parameter, not sent in the add/set payload.
+				Optional:    true,
+				Computed:    true,
+				Description: "Time, in seconds, allocated for a shutdown of the services in the service group.",
 			},
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
-				Description: "Flush all active transactions associated with all the services in the service group whose state transitions from UP to DOWN. Do not enable this option for applications that must complete their transactions.",
+				Description: "Flush all active transactions associated with all the services in the service group whose state transitions from UP to DOWN.",
 			},
-			"dup_weight": schema.Int64Attribute{
+			"dupweight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "weight of the monitor that is bound to servicegroup.",
 			},
 			"graceful": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// SDK v2: Optional+Computed (NOT ForceNew). Used as a disable-action
+				// parameter, not sent in the add/set payload.
+				Optional:    true,
+				Computed:    true,
 				Description: "Wait for all existing connections to the service to terminate before shutting down the service.",
 			},
 			"hashid": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
+				Description: "The hash identifier for the service.",
 			},
 			"healthmonitor": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
-				Description: "Monitor the health of this service.  Available settings function as follows:\nYES - Send probes to check the health of the service.\nNO - Do not send probes to check the health of the service. With the NO option, the appliance shows the service as UP at all times.",
+				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
+				Description: "Monitor the health of this service.",
 			},
 			"httpprofilename": schema.StringAttribute{
 				Optional:    true,
@@ -214,12 +243,14 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the HTTP profile that contains HTTP configuration settings for the service group.",
 			},
 			"includemembers": schema.BoolAttribute{
+				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: "Display the members of the listed service groups in addition to their settings. Can be specified when no service group name is provided in the command. In that case, the details displayed for each service group are identical to the details displayed when a service group name is provided, except that bound monitors are not displayed.",
+				Description: "Display the members of the listed service groups in addition to their settings.",
 			},
 			"maxbandwidth": schema.Int64Attribute{
 				Optional:    true,
@@ -234,22 +265,30 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"maxreq": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Maximum number of requests that can be sent on a persistent connection to the service group.\nNote: Connection requests beyond this value are rejected.",
+				Description: "Maximum number of requests that can be sent on a persistent connection to the service group.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of MCP profile which will be attached to the servicegroup.",
 			},
 			"memberport": schema.Int64Attribute{
+				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "member port",
 			},
 			"monconnectionclose": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("NONE"),
 				Description: "Close monitoring connections by sending the service a connection termination message with the specified bit set.",
 			},
-			"monitor_name_svc": schema.StringAttribute{
+			"monitornamesvc": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the monitor bound to the service group. Used to assign a weight to the monitor.",
@@ -257,30 +296,17 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"monthreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Minimum sum of weights of the monitors that are bound to this service. Used to determine whether to mark a service as UP or DOWN.",
+				Description: "Minimum sum of weights of the monitors that are bound to this service.",
 			},
 			"nameserver": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver",
+				Description: "Specify the nameserver to which the query for bound domain needs to be sent.",
 			},
 			"netprofile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Network profile for the service group.",
-			},
-			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Description: "New name for the service group.",
-			},
-			"order": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Order number to be assigned to the servicegroup member",
 			},
 			"pathmonitor": schema.StringAttribute{
 				Optional:    true,
@@ -302,6 +328,17 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "Name of QUIC profile which will be attached to the service group.",
 			},
+			"riseapbrstatsmsgcode": schema.Int64Attribute{
+				// SDK v2: Optional+Computed+ForceNew. Read-only from the ADC (no NITRO
+				// struct field), so it is never sent in the add/set payload.
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+				Description: "The code indicating the rise apbr status.",
+			},
 			"rtspsessionidremap": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -310,7 +347,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"serverid": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "The  identifier for the service. This is used when the persistency type is set to Custom Server ID.",
+				Description: "The identifier for the service. This is used when the persistency type is set to Custom Server ID.",
 			},
 			"servername": schema.StringAttribute{
 				Optional:    true,
@@ -318,27 +355,33 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the server to which to bind the service group.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
-				Description: "Name of the service group. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the name is created.",
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Name of the service group. SDK v2 ForceNew.",
 			},
 			"servicetype": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Protocol used to exchange data with the service.",
+				Description: "Protocol used to exchange data with the service. SDK v2 ForceNew.",
 			},
 			"sp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable surge protection for the service group.",
 			},
 			"state": schema.StringAttribute{
+				// SDK v2: Optional+Computed (NOT ForceNew). Toggled in-place via the
+				// enable/disable NITRO actions (see Update).
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Initial state of the service group.",
 			},
 			"svrtimeout": schema.Int64Attribute{
@@ -357,523 +400,609 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the TCP profile that contains TCP configuration settings for the service group.",
 			},
 			"td": schema.Int64Attribute{
+				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
+				Description: "Integer value that uniquely identifies the traffic domain.",
 			},
 			"topicname": schema.StringAttribute{
+				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the Kafka topic.",
 			},
 			"useproxyport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Use the proxy port as the source port when initiating connections with the server. With the NO setting, the client-side connection port is used as the source port for the server-side connection.\nNote: This parameter is available only when the Use Source IP (USIP) parameter is set to YES.",
+				Description: "Use the proxy port as the source port when initiating connections with the server.",
 			},
 			"usip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Use client's IP address as the source IP address when initiating connection to the server. With the NO setting, which is the default, a mapped IP (MIP) address or subnet IP (SNIP) address is used as the source IP address to initiate server side connections.",
+				Description: "Use client's IP address as the source IP address when initiating connection to the server.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to bind to this service.",
 			},
 			"weight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
+				Description: "Weight to assign to the servers in the service group.",
+			},
+
+			// Convenience blocks (SDK v2 backward compatibility).
+			"lbvservers": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "Set of lb vserver names to bind this service group to.",
+			},
+			"lbmonitor": schema.StringAttribute{
+				Optional:    true,
+				Description: "Name of the lb monitor to bind to this service group.",
+			},
+			"servicegroupmembers": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "Set of service group members in the form ip:port:weight.",
+			},
+			"servicegroupmembers_by_servername": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "Set of service group members in the form servername:port:weight.",
 			},
 		},
 	}
 }
 
-func servicegroupGetThePayloadFromtheConfig(ctx context.Context, data *ServicegroupResourceModel) basic.Servicegroup {
-	tflog.Debug(ctx, "In servicegroupGetThePayloadFromtheConfig Function")
+// servicegroupGetThePayloadFromthePlan builds the ADD (create) payload. It carries
+// the full create-time attribute set including create-only (ForceNew) attrs and
+// state. It EXCLUDES: riseapbrstatsmsgcode (no NITRO struct field, read-only) and
+// the disable-action-only delay/graceful attrs (SDK v2 excludes them from the add
+// payload; they are used only by the disable action).
+func servicegroupGetThePayloadFromthePlan(ctx context.Context, data *ServicegroupResourceModel) basic.Servicegroup {
+	tflog.Debug(ctx, "In servicegroupGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	servicegroup := basic.Servicegroup{}
-	if !data.Appflowlog.IsNull() {
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		servicegroup.Aigwprofilename = data.Aigwprofilename.ValueString()
+	}
+	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
 		servicegroup.Appflowlog = data.Appflowlog.ValueString()
 	}
-	if !data.Autodelayedtrofs.IsNull() {
+	if !data.Autodelayedtrofs.IsNull() && !data.Autodelayedtrofs.IsUnknown() {
 		servicegroup.Autodelayedtrofs = data.Autodelayedtrofs.ValueString()
 	}
-	if !data.Autodisabledelay.IsNull() {
+	if !data.Autodisabledelay.IsNull() && !data.Autodisabledelay.IsUnknown() {
 		servicegroup.Autodisabledelay = utils.IntPtr(int(data.Autodisabledelay.ValueInt64()))
 	}
-	if !data.Autodisablegraceful.IsNull() {
+	if !data.Autodisablegraceful.IsNull() && !data.Autodisablegraceful.IsUnknown() {
 		servicegroup.Autodisablegraceful = data.Autodisablegraceful.ValueString()
 	}
-	if !data.Autoscale.IsNull() {
+	if !data.Autoscale.IsNull() && !data.Autoscale.IsUnknown() {
 		servicegroup.Autoscale = data.Autoscale.ValueString()
 	}
-	if !data.Bootstrap.IsNull() {
+	if !data.Bootstrap.IsNull() && !data.Bootstrap.IsUnknown() {
 		servicegroup.Bootstrap = data.Bootstrap.ValueString()
 	}
-	if !data.Cacheable.IsNull() {
+	if !data.Cacheable.IsNull() && !data.Cacheable.IsUnknown() {
 		servicegroup.Cacheable = data.Cacheable.ValueString()
 	}
-	if !data.Cachetype.IsNull() {
+	if !data.Cachetype.IsNull() && !data.Cachetype.IsUnknown() {
 		servicegroup.Cachetype = data.Cachetype.ValueString()
 	}
-	if !data.Cip.IsNull() {
+	if !data.Cip.IsNull() && !data.Cip.IsUnknown() {
 		servicegroup.Cip = data.Cip.ValueString()
 	}
-	if !data.Cipheader.IsNull() {
+	if !data.Cipheader.IsNull() && !data.Cipheader.IsUnknown() {
 		servicegroup.Cipheader = data.Cipheader.ValueString()
 	}
-	if !data.Cka.IsNull() {
+	if !data.Cka.IsNull() && !data.Cka.IsUnknown() {
 		servicegroup.Cka = data.Cka.ValueString()
 	}
-	if !data.Clttimeout.IsNull() {
+	if !data.Clttimeout.IsNull() && !data.Clttimeout.IsUnknown() {
 		servicegroup.Clttimeout = utils.IntPtr(int(data.Clttimeout.ValueInt64()))
 	}
-	if !data.Cmp.IsNull() {
+	if !data.Cmp.IsNull() && !data.Cmp.IsUnknown() {
 		servicegroup.Cmp = data.Cmp.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		servicegroup.Comment = data.Comment.ValueString()
 	}
-	if !data.Customserverid.IsNull() {
+	if !data.Customserverid.IsNull() && !data.Customserverid.IsUnknown() {
 		servicegroup.Customserverid = data.Customserverid.ValueString()
 	}
-	if !data.Dbsttl.IsNull() {
+	if !data.Dbsttl.IsNull() && !data.Dbsttl.IsUnknown() {
 		servicegroup.Dbsttl = utils.IntPtr(int(data.Dbsttl.ValueInt64()))
 	}
-	if !data.Delay.IsNull() {
-		servicegroup.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))
-	}
-	if !data.Downstateflush.IsNull() {
+	// delay is a disable-action-only parameter - excluded from the add payload.
+	if !data.Downstateflush.IsNull() && !data.Downstateflush.IsUnknown() {
 		servicegroup.Downstateflush = data.Downstateflush.ValueString()
 	}
-	if !data.DupWeight.IsNull() {
-		servicegroup.Dupweight = utils.IntPtr(int(data.DupWeight.ValueInt64()))
+	if !data.Dupweight.IsNull() && !data.Dupweight.IsUnknown() {
+		servicegroup.Dupweight = utils.IntPtr(int(data.Dupweight.ValueInt64()))
 	}
-	if !data.Graceful.IsNull() {
-		servicegroup.Graceful = data.Graceful.ValueString()
-	}
-	if !data.Hashid.IsNull() {
+	// graceful is a disable-action-only parameter - excluded from the add payload.
+	if !data.Hashid.IsNull() && !data.Hashid.IsUnknown() {
 		servicegroup.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
 	}
-	if !data.Healthmonitor.IsNull() {
+	if !data.Healthmonitor.IsNull() && !data.Healthmonitor.IsUnknown() {
 		servicegroup.Healthmonitor = data.Healthmonitor.ValueString()
 	}
-	if !data.Httpprofilename.IsNull() {
+	if !data.Httpprofilename.IsNull() && !data.Httpprofilename.IsUnknown() {
 		servicegroup.Httpprofilename = data.Httpprofilename.ValueString()
 	}
-	if !data.Includemembers.IsNull() {
+	if !data.Includemembers.IsNull() && !data.Includemembers.IsUnknown() {
 		servicegroup.Includemembers = data.Includemembers.ValueBool()
 	}
-	if !data.Maxbandwidth.IsNull() {
+	if !data.Maxbandwidth.IsNull() && !data.Maxbandwidth.IsUnknown() {
 		servicegroup.Maxbandwidth = utils.IntPtr(int(data.Maxbandwidth.ValueInt64()))
 	}
-	if !data.Maxclient.IsNull() {
+	if !data.Maxclient.IsNull() && !data.Maxclient.IsUnknown() {
 		servicegroup.Maxclient = utils.IntPtr(int(data.Maxclient.ValueInt64()))
 	}
-	if !data.Maxreq.IsNull() {
+	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
 		servicegroup.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
 	}
-	if !data.Memberport.IsNull() {
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		servicegroup.Mcpprofilename = data.Mcpprofilename.ValueString()
+	}
+	if !data.Memberport.IsNull() && !data.Memberport.IsUnknown() {
 		servicegroup.Memberport = utils.IntPtr(int(data.Memberport.ValueInt64()))
 	}
-	if !data.Monconnectionclose.IsNull() {
+	if !data.Monconnectionclose.IsNull() && !data.Monconnectionclose.IsUnknown() {
 		servicegroup.Monconnectionclose = data.Monconnectionclose.ValueString()
 	}
-	if !data.MonitorNameSvc.IsNull() {
-		servicegroup.Monitornamesvc = data.MonitorNameSvc.ValueString()
+	if !data.Monitornamesvc.IsNull() && !data.Monitornamesvc.IsUnknown() {
+		servicegroup.Monitornamesvc = data.Monitornamesvc.ValueString()
 	}
-	if !data.Monthreshold.IsNull() {
+	if !data.Monthreshold.IsNull() && !data.Monthreshold.IsUnknown() {
 		servicegroup.Monthreshold = utils.IntPtr(int(data.Monthreshold.ValueInt64()))
 	}
-	if !data.Nameserver.IsNull() {
+	if !data.Nameserver.IsNull() && !data.Nameserver.IsUnknown() {
 		servicegroup.Nameserver = data.Nameserver.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		servicegroup.Netprofile = data.Netprofile.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		servicegroup.Newname = data.Newname.ValueString()
-	}
-	if !data.Order.IsNull() {
-		servicegroup.Order = utils.IntPtr(int(data.Order.ValueInt64()))
-	}
-	if !data.Pathmonitor.IsNull() {
+	if !data.Pathmonitor.IsNull() && !data.Pathmonitor.IsUnknown() {
 		servicegroup.Pathmonitor = data.Pathmonitor.ValueString()
 	}
-	if !data.Pathmonitorindv.IsNull() {
+	if !data.Pathmonitorindv.IsNull() && !data.Pathmonitorindv.IsUnknown() {
 		servicegroup.Pathmonitorindv = data.Pathmonitorindv.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		servicegroup.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Quicprofilename.IsNull() {
+	if !data.Quicprofilename.IsNull() && !data.Quicprofilename.IsUnknown() {
 		servicegroup.Quicprofilename = data.Quicprofilename.ValueString()
 	}
-	if !data.Rtspsessionidremap.IsNull() {
+	// riseapbrstatsmsgcode has no NITRO struct field (read-only) - excluded.
+	if !data.Rtspsessionidremap.IsNull() && !data.Rtspsessionidremap.IsUnknown() {
 		servicegroup.Rtspsessionidremap = data.Rtspsessionidremap.ValueString()
 	}
-	if !data.Serverid.IsNull() {
+	if !data.Serverid.IsNull() && !data.Serverid.IsUnknown() {
 		servicegroup.Serverid = utils.IntPtr(int(data.Serverid.ValueInt64()))
 	}
-	if !data.Servername.IsNull() {
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
 		servicegroup.Servername = data.Servername.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		servicegroup.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.Servicetype.IsNull() {
+	if !data.Servicetype.IsNull() && !data.Servicetype.IsUnknown() {
 		servicegroup.Servicetype = data.Servicetype.ValueString()
 	}
-	if !data.Sp.IsNull() {
+	if !data.Sp.IsNull() && !data.Sp.IsUnknown() {
 		servicegroup.Sp = data.Sp.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		servicegroup.State = data.State.ValueString()
 	}
-	if !data.Svrtimeout.IsNull() {
+	if !data.Svrtimeout.IsNull() && !data.Svrtimeout.IsUnknown() {
 		servicegroup.Svrtimeout = utils.IntPtr(int(data.Svrtimeout.ValueInt64()))
 	}
-	if !data.Tcpb.IsNull() {
+	if !data.Tcpb.IsNull() && !data.Tcpb.IsUnknown() {
 		servicegroup.Tcpb = data.Tcpb.ValueString()
 	}
-	if !data.Tcpprofilename.IsNull() {
+	if !data.Tcpprofilename.IsNull() && !data.Tcpprofilename.IsUnknown() {
 		servicegroup.Tcpprofilename = data.Tcpprofilename.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		servicegroup.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Topicname.IsNull() {
+	if !data.Topicname.IsNull() && !data.Topicname.IsUnknown() {
 		servicegroup.Topicname = data.Topicname.ValueString()
 	}
-	if !data.Useproxyport.IsNull() {
+	if !data.Useproxyport.IsNull() && !data.Useproxyport.IsUnknown() {
 		servicegroup.Useproxyport = data.Useproxyport.ValueString()
 	}
-	if !data.Usip.IsNull() {
+	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
 		servicegroup.Usip = data.Usip.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		servicegroup.Wasmmodule = data.Wasmmodule.ValueString()
+	}
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		servicegroup.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 
 	return servicegroup
 }
 
+// servicegroupGetTheUpdatePayloadFromthePlan builds the UPDATE (set) payload. It
+// carries only the non-ForceNew, updateable attributes. It EXCLUDES the ForceNew
+// attrs (autoscale, bootstrap, cachetype, topicname, includemembers, memberport,
+// td, servicetype - they trigger recreation and never reach Update), state (toggled
+// via the enable/disable actions), the disable-action-only delay/graceful, and
+// riseapbrstatsmsgcode (no NITRO struct field).
+func servicegroupGetTheUpdatePayloadFromthePlan(ctx context.Context, data *ServicegroupResourceModel) basic.Servicegroup {
+	tflog.Debug(ctx, "In servicegroupGetTheUpdatePayloadFromthePlan Function")
+
+	servicegroup := basic.Servicegroup{}
+	// servicegroupname is the name key.
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
+		servicegroup.Servicegroupname = data.Servicegroupname.ValueString()
+	}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		servicegroup.Aigwprofilename = data.Aigwprofilename.ValueString()
+	}
+	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
+		servicegroup.Appflowlog = data.Appflowlog.ValueString()
+	}
+	if !data.Autodelayedtrofs.IsNull() && !data.Autodelayedtrofs.IsUnknown() {
+		servicegroup.Autodelayedtrofs = data.Autodelayedtrofs.ValueString()
+	}
+	if !data.Autodisabledelay.IsNull() && !data.Autodisabledelay.IsUnknown() {
+		servicegroup.Autodisabledelay = utils.IntPtr(int(data.Autodisabledelay.ValueInt64()))
+	}
+	if !data.Autodisablegraceful.IsNull() && !data.Autodisablegraceful.IsUnknown() {
+		servicegroup.Autodisablegraceful = data.Autodisablegraceful.ValueString()
+	}
+	if !data.Cacheable.IsNull() && !data.Cacheable.IsUnknown() {
+		servicegroup.Cacheable = data.Cacheable.ValueString()
+	}
+	if !data.Cip.IsNull() && !data.Cip.IsUnknown() {
+		servicegroup.Cip = data.Cip.ValueString()
+	}
+	if !data.Cipheader.IsNull() && !data.Cipheader.IsUnknown() {
+		servicegroup.Cipheader = data.Cipheader.ValueString()
+	}
+	if !data.Cka.IsNull() && !data.Cka.IsUnknown() {
+		servicegroup.Cka = data.Cka.ValueString()
+	}
+	if !data.Clttimeout.IsNull() && !data.Clttimeout.IsUnknown() {
+		servicegroup.Clttimeout = utils.IntPtr(int(data.Clttimeout.ValueInt64()))
+	}
+	if !data.Cmp.IsNull() && !data.Cmp.IsUnknown() {
+		servicegroup.Cmp = data.Cmp.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		servicegroup.Comment = data.Comment.ValueString()
+	}
+	if !data.Customserverid.IsNull() && !data.Customserverid.IsUnknown() {
+		servicegroup.Customserverid = data.Customserverid.ValueString()
+	}
+	if !data.Dbsttl.IsNull() && !data.Dbsttl.IsUnknown() {
+		servicegroup.Dbsttl = utils.IntPtr(int(data.Dbsttl.ValueInt64()))
+	}
+	if !data.Downstateflush.IsNull() && !data.Downstateflush.IsUnknown() {
+		servicegroup.Downstateflush = data.Downstateflush.ValueString()
+	}
+	if !data.Dupweight.IsNull() && !data.Dupweight.IsUnknown() {
+		servicegroup.Dupweight = utils.IntPtr(int(data.Dupweight.ValueInt64()))
+	}
+	if !data.Hashid.IsNull() && !data.Hashid.IsUnknown() {
+		servicegroup.Hashid = utils.IntPtr(int(data.Hashid.ValueInt64()))
+	}
+	if !data.Healthmonitor.IsNull() && !data.Healthmonitor.IsUnknown() {
+		servicegroup.Healthmonitor = data.Healthmonitor.ValueString()
+	}
+	if !data.Httpprofilename.IsNull() && !data.Httpprofilename.IsUnknown() {
+		servicegroup.Httpprofilename = data.Httpprofilename.ValueString()
+	}
+	if !data.Maxbandwidth.IsNull() && !data.Maxbandwidth.IsUnknown() {
+		servicegroup.Maxbandwidth = utils.IntPtr(int(data.Maxbandwidth.ValueInt64()))
+	}
+	if !data.Maxclient.IsNull() && !data.Maxclient.IsUnknown() {
+		servicegroup.Maxclient = utils.IntPtr(int(data.Maxclient.ValueInt64()))
+	}
+	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
+		servicegroup.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
+	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		servicegroup.Mcpprofilename = data.Mcpprofilename.ValueString()
+	}
+	if !data.Monconnectionclose.IsNull() && !data.Monconnectionclose.IsUnknown() {
+		servicegroup.Monconnectionclose = data.Monconnectionclose.ValueString()
+	}
+	if !data.Monitornamesvc.IsNull() && !data.Monitornamesvc.IsUnknown() {
+		servicegroup.Monitornamesvc = data.Monitornamesvc.ValueString()
+	}
+	if !data.Monthreshold.IsNull() && !data.Monthreshold.IsUnknown() {
+		servicegroup.Monthreshold = utils.IntPtr(int(data.Monthreshold.ValueInt64()))
+	}
+	if !data.Nameserver.IsNull() && !data.Nameserver.IsUnknown() {
+		servicegroup.Nameserver = data.Nameserver.ValueString()
+	}
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
+		servicegroup.Netprofile = data.Netprofile.ValueString()
+	}
+	if !data.Pathmonitor.IsNull() && !data.Pathmonitor.IsUnknown() {
+		servicegroup.Pathmonitor = data.Pathmonitor.ValueString()
+	}
+	if !data.Pathmonitorindv.IsNull() && !data.Pathmonitorindv.IsUnknown() {
+		servicegroup.Pathmonitorindv = data.Pathmonitorindv.ValueString()
+	}
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		servicegroup.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+	}
+	if !data.Quicprofilename.IsNull() && !data.Quicprofilename.IsUnknown() {
+		servicegroup.Quicprofilename = data.Quicprofilename.ValueString()
+	}
+	if !data.Rtspsessionidremap.IsNull() && !data.Rtspsessionidremap.IsUnknown() {
+		servicegroup.Rtspsessionidremap = data.Rtspsessionidremap.ValueString()
+	}
+	if !data.Serverid.IsNull() && !data.Serverid.IsUnknown() {
+		servicegroup.Serverid = utils.IntPtr(int(data.Serverid.ValueInt64()))
+	}
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
+		servicegroup.Servername = data.Servername.ValueString()
+	}
+	if !data.Sp.IsNull() && !data.Sp.IsUnknown() {
+		servicegroup.Sp = data.Sp.ValueString()
+	}
+	if !data.Svrtimeout.IsNull() && !data.Svrtimeout.IsUnknown() {
+		servicegroup.Svrtimeout = utils.IntPtr(int(data.Svrtimeout.ValueInt64()))
+	}
+	if !data.Tcpb.IsNull() && !data.Tcpb.IsUnknown() {
+		servicegroup.Tcpb = data.Tcpb.ValueString()
+	}
+	if !data.Tcpprofilename.IsNull() && !data.Tcpprofilename.IsUnknown() {
+		servicegroup.Tcpprofilename = data.Tcpprofilename.ValueString()
+	}
+	if !data.Useproxyport.IsNull() && !data.Useproxyport.IsUnknown() {
+		servicegroup.Useproxyport = data.Useproxyport.ValueString()
+	}
+	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
+		servicegroup.Usip = data.Usip.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		servicegroup.Wasmmodule = data.Wasmmodule.ValueString()
+	}
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
+		servicegroup.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
+	}
+
+	return servicegroup
+}
+
+// servicegroupSetAttrFromGet updates the resource model from a NITRO GET response.
+//
+// Each else-branch is guarded with IsUnknown() (the omit-on-default fix): a value
+// is only nulled when it is currently unknown (an unconfigured Computed attr on
+// create), never when it holds a known/configured value that NITRO happens to omit
+// from GET. This avoids both "inconsistent result after apply: unknown value" and
+// clobbering a configured value that the ADC returns as a default. The convenience
+// blocks (lbvservers/lbmonitor/servicegroupmembers*) are handled separately in the
+// read helper.
 func servicegroupSetAttrFromGet(ctx context.Context, data *ServicegroupResourceModel, getResponseData map[string]interface{}) *ServicegroupResourceModel {
 	tflog.Debug(ctx, "In servicegroupSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
-		data.Appflowlog = types.StringValue(val.(string))
-	} else {
-		data.Appflowlog = types.StringNull()
-	}
-	if val, ok := getResponseData["autodelayedtrofs"]; ok && val != nil {
-		data.Autodelayedtrofs = types.StringValue(val.(string))
-	} else {
-		data.Autodelayedtrofs = types.StringNull()
-	}
-	if val, ok := getResponseData["autodisabledelay"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Autodisabledelay = types.Int64Value(intVal)
+	setStr := func(key string, cur *types.String) {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			*cur = types.StringValue(val.(string))
+		} else if cur.IsUnknown() {
+			*cur = types.StringNull()
 		}
-	} else {
-		data.Autodisabledelay = types.Int64Null()
 	}
-	if val, ok := getResponseData["autodisablegraceful"]; ok && val != nil {
-		data.Autodisablegraceful = types.StringValue(val.(string))
-	} else {
-		data.Autodisablegraceful = types.StringNull()
-	}
-	if val, ok := getResponseData["autoscale"]; ok && val != nil {
-		data.Autoscale = types.StringValue(val.(string))
-	} else {
-		data.Autoscale = types.StringNull()
-	}
-	if val, ok := getResponseData["bootstrap"]; ok && val != nil {
-		data.Bootstrap = types.StringValue(val.(string))
-	} else {
-		data.Bootstrap = types.StringNull()
-	}
-	if val, ok := getResponseData["cacheable"]; ok && val != nil {
-		data.Cacheable = types.StringValue(val.(string))
-	} else {
-		data.Cacheable = types.StringNull()
-	}
-	if val, ok := getResponseData["cachetype"]; ok && val != nil {
-		data.Cachetype = types.StringValue(val.(string))
-	} else {
-		data.Cachetype = types.StringNull()
-	}
-	if val, ok := getResponseData["cip"]; ok && val != nil {
-		data.Cip = types.StringValue(val.(string))
-	} else {
-		data.Cip = types.StringNull()
-	}
-	if val, ok := getResponseData["cipheader"]; ok && val != nil {
-		data.Cipheader = types.StringValue(val.(string))
-	} else {
-		data.Cipheader = types.StringNull()
-	}
-	if val, ok := getResponseData["cka"]; ok && val != nil {
-		data.Cka = types.StringValue(val.(string))
-	} else {
-		data.Cka = types.StringNull()
-	}
-	if val, ok := getResponseData["clttimeout"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Clttimeout = types.Int64Value(intVal)
+	setInt := func(key string, cur *types.Int64) {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				*cur = types.Int64Value(intVal)
+			}
+		} else if cur.IsUnknown() {
+			*cur = types.Int64Null()
 		}
-	} else {
-		data.Clttimeout = types.Int64Null()
 	}
-	if val, ok := getResponseData["cmp"]; ok && val != nil {
-		data.Cmp = types.StringValue(val.(string))
-	} else {
-		data.Cmp = types.StringNull()
+
+	setStr("aigwprofilename", &data.Aigwprofilename)
+	setStr("appflowlog", &data.Appflowlog)
+	setStr("autodelayedtrofs", &data.Autodelayedtrofs)
+	setInt("autodisabledelay", &data.Autodisabledelay)
+	setStr("autodisablegraceful", &data.Autodisablegraceful)
+	setStr("autoscale", &data.Autoscale)
+	setStr("bootstrap", &data.Bootstrap)
+	setStr("cacheable", &data.Cacheable)
+	setStr("cachetype", &data.Cachetype)
+	setStr("cip", &data.Cip)
+	setStr("cipheader", &data.Cipheader)
+	setStr("cka", &data.Cka)
+	setInt("clttimeout", &data.Clttimeout)
+	setStr("cmp", &data.Cmp)
+	setStr("comment", &data.Comment)
+	setStr("customserverid", &data.Customserverid)
+	setInt("dbsttl", &data.Dbsttl)
+	// delay & graceful are disable-action-only inputs. SDK v2's read never reads
+	// them back, and NITRO GET always returns the ADC defaults (delay=0,
+	// graceful="NO") regardless of what was configured (they are not persisted in
+	// the servicegroup config object). Adopt the GET value ONLY when the model
+	// value is unknown (unconfigured Computed attr on create); otherwise preserve
+	// the user's configured value to avoid "inconsistent result after apply".
+	if data.Delay.IsUnknown() {
+		setInt("delay", &data.Delay)
 	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
-	} else {
-		data.Comment = types.StringNull()
+	setStr("downstateflush", &data.Downstateflush)
+	setInt("dup_weight", &data.Dupweight)
+	if data.Graceful.IsUnknown() {
+		setStr("graceful", &data.Graceful)
 	}
-	if val, ok := getResponseData["customserverid"]; ok && val != nil {
-		data.Customserverid = types.StringValue(val.(string))
-	} else {
-		data.Customserverid = types.StringNull()
-	}
-	if val, ok := getResponseData["dbsttl"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Dbsttl = types.Int64Value(intVal)
-		}
-	} else {
-		data.Dbsttl = types.Int64Null()
-	}
-	if val, ok := getResponseData["delay"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Delay = types.Int64Value(intVal)
-		}
-	} else {
-		data.Delay = types.Int64Null()
-	}
-	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
-		data.Downstateflush = types.StringValue(val.(string))
-	} else {
-		data.Downstateflush = types.StringNull()
-	}
-	if val, ok := getResponseData["dup_weight"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.DupWeight = types.Int64Value(intVal)
-		}
-	} else {
-		data.DupWeight = types.Int64Null()
-	}
-	if val, ok := getResponseData["graceful"]; ok && val != nil {
-		data.Graceful = types.StringValue(val.(string))
-	} else {
-		data.Graceful = types.StringNull()
-	}
-	if val, ok := getResponseData["hashid"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Hashid = types.Int64Value(intVal)
-		}
-	} else {
-		data.Hashid = types.Int64Null()
-	}
-	if val, ok := getResponseData["healthmonitor"]; ok && val != nil {
-		data.Healthmonitor = types.StringValue(val.(string))
-	} else {
-		data.Healthmonitor = types.StringNull()
-	}
-	if val, ok := getResponseData["httpprofilename"]; ok && val != nil {
-		data.Httpprofilename = types.StringValue(val.(string))
-	} else {
-		data.Httpprofilename = types.StringNull()
-	}
+	setInt("hashid", &data.Hashid)
+	setStr("healthmonitor", &data.Healthmonitor)
+	setStr("httpprofilename", &data.Httpprofilename)
 	if val, ok := getResponseData["includemembers"]; ok && val != nil {
-		data.Includemembers = types.BoolValue(val.(bool))
+		if b, ok := val.(bool); ok {
+			data.Includemembers = types.BoolValue(b)
+		}
+	} else if data.Includemembers.IsUnknown() {
+		data.Includemembers = types.BoolNull()
+	}
+	setInt("maxbandwidth", &data.Maxbandwidth)
+	setInt("maxclient", &data.Maxclient)
+	setInt("maxreq", &data.Maxreq)
+	setStr("mcpprofilename", &data.Mcpprofilename)
+	setInt("memberport", &data.Memberport)
+	setStr("monconnectionclose", &data.Monconnectionclose)
+	setStr("monitor_name_svc", &data.Monitornamesvc)
+	setInt("monthreshold", &data.Monthreshold)
+	setStr("nameserver", &data.Nameserver)
+	setStr("netprofile", &data.Netprofile)
+	setStr("pathmonitor", &data.Pathmonitor)
+	setStr("pathmonitorindv", &data.Pathmonitorindv)
+	setInt("port", &data.Port)
+	setStr("quicprofilename", &data.Quicprofilename)
+	setInt("riseapbrstatsmsgcode", &data.Riseapbrstatsmsgcode)
+	setStr("rtspsessionidremap", &data.Rtspsessionidremap)
+	setInt("serverid", &data.Serverid)
+	setStr("servername", &data.Servername)
+	setStr("servicegroupname", &data.Servicegroupname)
+	setStr("servicetype", &data.Servicetype)
+	// sp: NITRO may report "ON (but effectively OFF)"; SDK v2 normalizes to "ON".
+	if val, ok := getResponseData["sp"]; ok && val != nil {
+		if val.(string) == "ON (but effectively OFF)" {
+			data.Sp = types.StringValue("ON")
+		} else {
+			data.Sp = types.StringValue(val.(string))
+		}
+	} else if data.Sp.IsUnknown() {
+		data.Sp = types.StringNull()
+	}
+	setStr("state", &data.State)
+	setInt("svrtimeout", &data.Svrtimeout)
+	setStr("tcpb", &data.Tcpb)
+	setStr("tcpprofilename", &data.Tcpprofilename)
+	setInt("td", &data.Td)
+	setStr("topicname", &data.Topicname)
+	setStr("useproxyport", &data.Useproxyport)
+	setStr("usip", &data.Usip)
+	setStr("wasmmodule", &data.Wasmmodule)
+	setInt("weight", &data.Weight)
+
+	return data
+}
+
+// servicegroupSetAttrFromGetForDatasource copies every attribute from the NITRO GET
+// response (no config guards) and sets the datasource ID. It is the datasource-only
+// counterpart of servicegroupSetAttrFromGet (Pattern 7).
+func servicegroupSetAttrFromGetForDatasource(ctx context.Context, data *ServicegroupResourceModel, getResponseData map[string]interface{}) *ServicegroupResourceModel {
+	tflog.Debug(ctx, "In servicegroupSetAttrFromGetForDatasource Function")
+
+	setStr := func(key string, cur *types.String) {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			*cur = types.StringValue(val.(string))
+		} else {
+			*cur = types.StringNull()
+		}
+	}
+	setInt := func(key string, cur *types.Int64) {
+		if val, ok := getResponseData[key]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				*cur = types.Int64Value(intVal)
+			} else {
+				*cur = types.Int64Null()
+			}
+		} else {
+			*cur = types.Int64Null()
+		}
+	}
+
+	setStr("aigwprofilename", &data.Aigwprofilename)
+	setStr("appflowlog", &data.Appflowlog)
+	setStr("autodelayedtrofs", &data.Autodelayedtrofs)
+	setInt("autodisabledelay", &data.Autodisabledelay)
+	setStr("autodisablegraceful", &data.Autodisablegraceful)
+	setStr("autoscale", &data.Autoscale)
+	setStr("bootstrap", &data.Bootstrap)
+	setStr("cacheable", &data.Cacheable)
+	setStr("cachetype", &data.Cachetype)
+	setStr("cip", &data.Cip)
+	setStr("cipheader", &data.Cipheader)
+	setStr("cka", &data.Cka)
+	setInt("clttimeout", &data.Clttimeout)
+	setStr("cmp", &data.Cmp)
+	setStr("comment", &data.Comment)
+	setStr("customserverid", &data.Customserverid)
+	setInt("dbsttl", &data.Dbsttl)
+	setInt("delay", &data.Delay)
+	setStr("downstateflush", &data.Downstateflush)
+	setInt("dup_weight", &data.Dupweight)
+	setStr("graceful", &data.Graceful)
+	setInt("hashid", &data.Hashid)
+	setStr("healthmonitor", &data.Healthmonitor)
+	setStr("httpprofilename", &data.Httpprofilename)
+	if val, ok := getResponseData["includemembers"]; ok && val != nil {
+		if b, ok := val.(bool); ok {
+			data.Includemembers = types.BoolValue(b)
+		} else {
+			data.Includemembers = types.BoolNull()
+		}
 	} else {
 		data.Includemembers = types.BoolNull()
 	}
-	if val, ok := getResponseData["maxbandwidth"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Maxbandwidth = types.Int64Value(intVal)
-		}
-	} else {
-		data.Maxbandwidth = types.Int64Null()
-	}
-	if val, ok := getResponseData["maxclient"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Maxclient = types.Int64Value(intVal)
-		}
-	} else {
-		data.Maxclient = types.Int64Null()
-	}
-	if val, ok := getResponseData["maxreq"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Maxreq = types.Int64Value(intVal)
-		}
-	} else {
-		data.Maxreq = types.Int64Null()
-	}
-	if val, ok := getResponseData["memberport"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Memberport = types.Int64Value(intVal)
-		}
-	} else {
-		data.Memberport = types.Int64Null()
-	}
-	if val, ok := getResponseData["monconnectionclose"]; ok && val != nil {
-		data.Monconnectionclose = types.StringValue(val.(string))
-	} else {
-		data.Monconnectionclose = types.StringNull()
-	}
-	if val, ok := getResponseData["monitor_name_svc"]; ok && val != nil {
-		data.MonitorNameSvc = types.StringValue(val.(string))
-	} else {
-		data.MonitorNameSvc = types.StringNull()
-	}
-	if val, ok := getResponseData["monthreshold"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Monthreshold = types.Int64Value(intVal)
-		}
-	} else {
-		data.Monthreshold = types.Int64Null()
-	}
-	if val, ok := getResponseData["nameserver"]; ok && val != nil {
-		data.Nameserver = types.StringValue(val.(string))
-	} else {
-		data.Nameserver = types.StringNull()
-	}
-	if val, ok := getResponseData["netprofile"]; ok && val != nil {
-		data.Netprofile = types.StringValue(val.(string))
-	} else {
-		data.Netprofile = types.StringNull()
-	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
-	if val, ok := getResponseData["order"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Order = types.Int64Value(intVal)
-		}
-	} else {
-		data.Order = types.Int64Null()
-	}
-	if val, ok := getResponseData["pathmonitor"]; ok && val != nil {
-		data.Pathmonitor = types.StringValue(val.(string))
-	} else {
-		data.Pathmonitor = types.StringNull()
-	}
-	if val, ok := getResponseData["pathmonitorindv"]; ok && val != nil {
-		data.Pathmonitorindv = types.StringValue(val.(string))
-	} else {
-		data.Pathmonitorindv = types.StringNull()
-	}
-	if val, ok := getResponseData["port"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Port = types.Int64Value(intVal)
-		}
-	} else {
-		data.Port = types.Int64Null()
-	}
-	if val, ok := getResponseData["quicprofilename"]; ok && val != nil {
-		data.Quicprofilename = types.StringValue(val.(string))
-	} else {
-		data.Quicprofilename = types.StringNull()
-	}
-	if val, ok := getResponseData["rtspsessionidremap"]; ok && val != nil {
-		data.Rtspsessionidremap = types.StringValue(val.(string))
-	} else {
-		data.Rtspsessionidremap = types.StringNull()
-	}
-	if val, ok := getResponseData["serverid"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Serverid = types.Int64Value(intVal)
-		}
-	} else {
-		data.Serverid = types.Int64Null()
-	}
-	if val, ok := getResponseData["servername"]; ok && val != nil {
-		data.Servername = types.StringValue(val.(string))
-	} else {
-		data.Servername = types.StringNull()
-	}
-	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
-		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
-		data.Servicegroupname = types.StringNull()
-	}
-	if val, ok := getResponseData["servicetype"]; ok && val != nil {
-		data.Servicetype = types.StringValue(val.(string))
-	} else {
-		data.Servicetype = types.StringNull()
-	}
+	setInt("maxbandwidth", &data.Maxbandwidth)
+	setInt("maxclient", &data.Maxclient)
+	setInt("maxreq", &data.Maxreq)
+	setStr("mcpprofilename", &data.Mcpprofilename)
+	setInt("memberport", &data.Memberport)
+	setStr("monconnectionclose", &data.Monconnectionclose)
+	setStr("monitor_name_svc", &data.Monitornamesvc)
+	setInt("monthreshold", &data.Monthreshold)
+	setStr("nameserver", &data.Nameserver)
+	setStr("netprofile", &data.Netprofile)
+	setStr("pathmonitor", &data.Pathmonitor)
+	setStr("pathmonitorindv", &data.Pathmonitorindv)
+	setInt("port", &data.Port)
+	setStr("quicprofilename", &data.Quicprofilename)
+	setInt("riseapbrstatsmsgcode", &data.Riseapbrstatsmsgcode)
+	setStr("rtspsessionidremap", &data.Rtspsessionidremap)
+	setInt("serverid", &data.Serverid)
+	setStr("servername", &data.Servername)
+	setStr("servicegroupname", &data.Servicegroupname)
+	setStr("servicetype", &data.Servicetype)
 	if val, ok := getResponseData["sp"]; ok && val != nil {
-		data.Sp = types.StringValue(val.(string))
+		if val.(string) == "ON (but effectively OFF)" {
+			data.Sp = types.StringValue("ON")
+		} else {
+			data.Sp = types.StringValue(val.(string))
+		}
 	} else {
 		data.Sp = types.StringNull()
 	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
-	}
-	if val, ok := getResponseData["svrtimeout"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Svrtimeout = types.Int64Value(intVal)
-		}
-	} else {
-		data.Svrtimeout = types.Int64Null()
-	}
-	if val, ok := getResponseData["tcpb"]; ok && val != nil {
-		data.Tcpb = types.StringValue(val.(string))
-	} else {
-		data.Tcpb = types.StringNull()
-	}
-	if val, ok := getResponseData["tcpprofilename"]; ok && val != nil {
-		data.Tcpprofilename = types.StringValue(val.(string))
-	} else {
-		data.Tcpprofilename = types.StringNull()
-	}
-	if val, ok := getResponseData["td"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Td = types.Int64Value(intVal)
-		}
-	} else {
-		data.Td = types.Int64Null()
-	}
-	if val, ok := getResponseData["topicname"]; ok && val != nil {
-		data.Topicname = types.StringValue(val.(string))
-	} else {
-		data.Topicname = types.StringNull()
-	}
-	if val, ok := getResponseData["useproxyport"]; ok && val != nil {
-		data.Useproxyport = types.StringValue(val.(string))
-	} else {
-		data.Useproxyport = types.StringNull()
-	}
-	if val, ok := getResponseData["usip"]; ok && val != nil {
-		data.Usip = types.StringValue(val.(string))
-	} else {
-		data.Usip = types.StringNull()
-	}
-	if val, ok := getResponseData["weight"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Weight = types.Int64Value(intVal)
-		}
-	} else {
-		data.Weight = types.Int64Null()
-	}
+	setStr("state", &data.State)
+	setInt("svrtimeout", &data.Svrtimeout)
+	setStr("tcpb", &data.Tcpb)
+	setStr("tcpprofilename", &data.Tcpprofilename)
+	setInt("td", &data.Td)
+	setStr("topicname", &data.Topicname)
+	setStr("useproxyport", &data.Useproxyport)
+	setStr("usip", &data.Usip)
+	setStr("wasmmodule", &data.Wasmmodule)
+	setInt("weight", &data.Weight)
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s", data.Servicegroupname.ValueString()))
+	// Convenience blocks are not populated for the datasource.
+	data.Lbmonitor = types.StringNull()
+
+	// Set ID for the datasource (named resource - plain servicegroupname value).
+	data.Id = types.StringValue(data.Servicegroupname.ValueString())
 
 	return data
 }

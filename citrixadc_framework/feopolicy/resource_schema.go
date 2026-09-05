@@ -2,11 +2,14 @@ package feopolicy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/feo"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -32,7 +35,10 @@ func (r *FeopolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The front end optimization action that has to be performed when the rule matches.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the front end optimization policy.",
 			},
 			"rule": schema.StringAttribute{
@@ -43,18 +49,18 @@ func (r *FeopolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func feopolicyGetThePayloadFromtheConfig(ctx context.Context, data *FeopolicyResourceModel) feo.Feopolicy {
-	tflog.Debug(ctx, "In feopolicyGetThePayloadFromtheConfig Function")
+func feopolicyGetThePayloadFromthePlan(ctx context.Context, data *FeopolicyResourceModel) feo.Feopolicy {
+	tflog.Debug(ctx, "In feopolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	feopolicy := feo.Feopolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		feopolicy.Action = data.Action.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		feopolicy.Name = data.Name.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		feopolicy.Rule = data.Rule.ValueString()
 	}
 
@@ -82,8 +88,8 @@ func feopolicySetAttrFromGet(ctx context.Context, data *FeopolicyResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

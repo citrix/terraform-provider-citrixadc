@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslechconfig is a standard add/delete named resource (no update; every
@@ -192,6 +192,34 @@ func TestAccSslechconfigDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echpublicname", "public.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echconfigid", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslechconfig_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslechconfig.tf_sslechconfig"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslechconfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslechconfig_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslechconfigExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslechconfig.Type(), "tf_sslechconfig"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslechconfig_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslechconfigExist(resAddr, nil)),
 			},
 		},
 	})

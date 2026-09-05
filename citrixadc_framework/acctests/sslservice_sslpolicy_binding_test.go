@@ -22,8 +22,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslservice_sslpolicy_binding binds an SSL policy (policyname) to an SSL service
@@ -379,10 +379,40 @@ func TestAccSslserviceSslpolicyBindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSslserviceSslpolicyBindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "servicename", "tf_sslsvc_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "policyname", "tf_sslsvc_policy_pol"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslserviceSslpolicyBinding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_sslservice_sslpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceSslpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslserviceSslpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceSslpolicyBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslservice_sslpolicy_binding.Type(), "tf_sslsvc_policy", map[string]string{"policyname": "tf_sslsvc_policy_pol", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslserviceSslpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceSslpolicyBindingExist(resAddr, nil)),
 			},
 		},
 	})

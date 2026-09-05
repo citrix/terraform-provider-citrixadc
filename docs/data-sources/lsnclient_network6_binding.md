@@ -6,7 +6,7 @@ subcategory: "LSN"
 
 The lsnclient_network6_binding data source allows you to retrieve information about LSN client IPv6 network bindings.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lsnclient_network6_binding" "tf_lsnclient_network6_binding" {
@@ -32,5 +32,7 @@ output "network6" {
 
 In addition to the arguments, the following attributes are available:
 
-* `td` - ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. If you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.
 * `id` - The id of the lsnclient_network6_binding. It is a system-generated identifier.
+* `network` - IPv4 address(es) of the LSN subscriber(s) or subscriber network(s) on whose traffic you want the Citrix ADC to perform Large Scale NAT.
+* `netmask` - Subnet mask for the IPv4 address specified in the Network parameter.
+* `td` - ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. If you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.

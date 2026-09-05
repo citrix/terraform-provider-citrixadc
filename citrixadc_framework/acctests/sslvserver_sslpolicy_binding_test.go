@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSslvserver_sslpolicy_binding_lbvserver(t *testing.T) {
@@ -69,6 +72,49 @@ func TestAccSslvserver_sslpolicy_binding_csvserver(t *testing.T) {
 	})
 }
 
+func TestAccSslvserver_sslpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: vservername,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"vservername", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1},
+			{Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -88,10 +134,12 @@ func testAccCheckSslvserver_sslpolicy_bindingExist(n string, id *string) resourc
 			*id = rs.Primary.ID
 		}
 
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		vservername := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vservername", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		vservername := idMap["vservername"]
+		policyname := idMap["policyname"]
 
 		// Use the shared utility function to get a configured client
 		client, err := testAccGetFrameworkClient()
@@ -144,9 +192,11 @@ func testAccCheckSslvserver_sslpolicy_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		vservername := idSlice[0]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"vservername", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		vservername := idMap["vservername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslvserver_sslpolicy_binding",
@@ -264,6 +314,72 @@ resource "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_cs" {
 }
 `
 
+const testAccsslvserver_sslpolicy_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lbvserver"
+  ipv46       = "192.168.34.21"
+  port        = "443"
+  servicetype = "SSL"
+  sslprofile = "ns_default_ssl_profile_frontend"
+}
+
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_sslpolicy"
+  rule   = "true"
+  action = "NOOP"
+}
+
+resource "citrixadc_sslvserver_sslpolicy_binding" "tf_binding_lb" {
+    vservername = citrixadc_lbvserver.tf_lbvserver.name
+    policyname = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority = 333
+    type = "REQUEST"
+}
+`
+
+// TestAccSslvserver_sslpolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccSslvserver_sslpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccsslvserver_sslpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "id", "tf_lbvserver,tf_sslpolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccsslvserver_sslpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslpolicy_bindingExist("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "id", "policyname:tf_sslpolicy,priority:333,type:REQUEST,vservername:tf_lbvserver"),
+				),
+			},
+		},
+	})
+}
+
 const testAccSslvserver_sslpolicy_bindingDataSource_basic = `
 resource "citrixadc_lbvserver" "tf_lbvserver" {
   name        = "tf_lbvserver"
@@ -306,7 +422,37 @@ func TestAccSslvserver_sslpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "policyname", "tf_sslpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "priority", "333"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "type", "REQUEST"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslvserver_sslpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslpolicy_binding.Type(), "tf_lbvserver", map[string]string{"policyname": "tf_sslpolicy", "priority": "333", "type": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

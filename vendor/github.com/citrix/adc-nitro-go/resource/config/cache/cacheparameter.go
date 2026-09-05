@@ -39,7 +39,7 @@ type Cacheparameter struct {
 	/**
 	* Maximum number of POST body bytes to consider when evaluating parameters for a content group for which you have configured hit parameters and invalidation parameters.
 	*/
-	Maxpostlen *int `json:"maxpostlen"` // Zero is a valid value
+	Maxpostlen *int `json:"maxpostlen,omitempty"`
 	/**
 	* Maximum number of outstanding prefetches in the Integrated Cache.
 	*/

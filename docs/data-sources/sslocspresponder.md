@@ -52,11 +52,10 @@ In addition to the arguments, the following attributes are available:
 * `usenonce` - Enable the OCSP nonce extension, which is designed to prevent replay attacks.
 * `id` - The id of the sslocspresponder. It has the same value as the `name` attribute.
 
+### Read-only sslocspresponder metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslocspresponder` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
-A sslocspresponder can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_sslocspresponder.tf_sslocspresponder tf_sslocspresponder
-```
+* `ocspaiarefcount` - No of CA certs referencing this AIA responder.
+* `ocspipaddrstr` - DNS resolved IP address.
+* `port` - Port number on which OCSP Server listens. Range 1 - 65535. `*` in CLI is represented as 65535 in NITRO API.

@@ -2,6 +2,7 @@ package nd6
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -41,7 +42,9 @@ func (r *Nd6Resource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Interface through which the adjacent network device is available, specified in slot/port notation (for example, 1/3). Use spaces to separate multiple entries.",
 			},
@@ -63,7 +66,9 @@ func (r *Nd6Resource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique number that identifies the cluster node.",
 			},
@@ -71,7 +76,9 @@ func (r *Nd6Resource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -79,7 +86,9 @@ func (r *Nd6Resource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the VLAN on which the adjacent network device exists.",
 			},
@@ -87,7 +96,9 @@ func (r *Nd6Resource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IP address of the VXLAN tunnel endpoint (VTEP) through which the IPv6 address of this ND6 entry is reachable.",
 			},
@@ -95,7 +106,9 @@ func (r *Nd6Resource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "ID of the VXLAN on which the IPv6 address of this ND6 entry is reachable.",
 			},
@@ -140,58 +153,74 @@ func nd6GetThePayloadFromtheConfig(ctx context.Context, data *Nd6ResourceModel) 
 func nd6SetAttrFromGet(ctx context.Context, data *Nd6ResourceModel, getResponseData map[string]interface{}) *Nd6ResourceModel {
 	tflog.Debug(ctx, "In nd6SetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NITRO omits several nd6 fields from GET when they hold their default /
+	// omit-on-default value. Only null a field when the current model value is
+	// Unknown (i.e. a Computed attribute that was never configured); never
+	// clobber a known configured/state value the appliance simply did not echo
+	// back, which would trigger "inconsistent result after apply".
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
-	} else {
+	} else if data.Ifnum.IsUnknown() {
 		data.Ifnum = types.StringNull()
 	}
 	if val, ok := getResponseData["mac"]; ok && val != nil {
 		data.Mac = types.StringValue(val.(string))
-	} else {
+	} else if data.Mac.IsUnknown() {
 		data.Mac = types.StringNull()
 	}
 	if val, ok := getResponseData["neighbor"]; ok && val != nil {
 		data.Neighbor = types.StringValue(val.(string))
-	} else {
+	} else if data.Neighbor.IsUnknown() {
 		data.Neighbor = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlan.IsUnknown() {
 		data.Vlan = types.Int64Null()
 	}
 	if val, ok := getResponseData["vtep"]; ok && val != nil {
 		data.Vtep = types.StringValue(val.(string))
-	} else {
+	} else if data.Vtep.IsUnknown() {
 		data.Vtep = types.StringNull()
 	}
 	if val, ok := getResponseData["vxlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlan.IsUnknown() {
 		data.Vxlan = types.Int64Null()
 	}
 
-	// Set ID for the resource - just use neighbor as the primary key
-	data.Id = data.Neighbor
+	// Set the composite ID. nd6's identity on the appliance is (neighbor, td,
+	// nodeid) -- readNd6FromApi matches the enumerated array on all three -- so the
+	// ID must encode them all. A single-value ID (neighbor only) cannot round-trip
+	// a non-default td/nodeid on import. td/nodeid default to 0 when omitted.
+	tdVal := int64(0)
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		tdVal = data.Td.ValueInt64()
+	}
+	nodeidVal := int64(0)
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
+		nodeidVal = data.Nodeid.ValueInt64()
+	}
+	data.Id = types.StringValue(fmt.Sprintf("%s,%d,%d", data.Neighbor.ValueString(), tdVal, nodeidVal))
 
 	return data
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SslocspresponderResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating sslocspresponder resource")
 
-	// sslocspresponder := sslocspresponderGetThePayloadFromtheConfig(ctx, &data)
+	sslocspresponder := sslocspresponderGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslocspresponder.Type(), &sslocspresponder)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslocspresponder, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslocspresponder-config")
+	// Named resource - use AddResource
+	sslocspresponderName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Sslocspresponder.Type(), sslocspresponderName, &sslocspresponder)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslocspresponder, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslocspresponder resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readSslocspresponderFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslocspresponderFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslocspresponder not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,143 @@ func (r *SslocspresponderResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading sslocspresponder resource")
 
-	r.readSslocspresponderFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslocspresponderFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslocspresponderResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslocspresponderResourceModel
+	var data, config, state SslocspresponderResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslocspresponder resource")
 
-	// Create API request body from the model
-	// sslocspresponder := sslocspresponderGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes.
+	// name, respondercert, signingcert are RequiresReplace and never reach Update.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Batchingdelay.Equal(state.Batchingdelay) {
+		tflog.Debug(ctx, "batchingdelay has changed for sslocspresponder")
+		hasChange = true
+	}
+	if !data.Batchingdepth.Equal(state.Batchingdepth) {
+		tflog.Debug(ctx, "batchingdepth has changed for sslocspresponder")
+		hasChange = true
+	}
+	if !data.Cache.Equal(state.Cache) {
+		tflog.Debug(ctx, "cache has changed for sslocspresponder")
+		if config.Cache.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cache")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cachetimeout.Equal(state.Cachetimeout) {
+		tflog.Debug(ctx, "cachetimeout has changed for sslocspresponder")
+		if config.Cachetimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cachetimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Httpmethod.Equal(state.Httpmethod) {
+		tflog.Debug(ctx, "httpmethod has changed for sslocspresponder")
+		if config.Httpmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpmethod")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Insertclientcert.Equal(state.Insertclientcert) {
+		tflog.Debug(ctx, "insertclientcert has changed for sslocspresponder")
+		hasChange = true
+	}
+	if !data.Ocspurlresolvetimeout.Equal(state.Ocspurlresolvetimeout) {
+		tflog.Debug(ctx, "ocspurlresolvetimeout has changed for sslocspresponder")
+		hasChange = true
+	}
+	if !data.Producedattimeskew.Equal(state.Producedattimeskew) {
+		tflog.Debug(ctx, "producedattimeskew has changed for sslocspresponder")
+		if config.Producedattimeskew.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "producedattimeskew")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Resptimeout.Equal(state.Resptimeout) {
+		tflog.Debug(ctx, "resptimeout has changed for sslocspresponder")
+		hasChange = true
+	}
+	if !data.Trustresponder.Equal(state.Trustresponder) {
+		tflog.Debug(ctx, "trustresponder has changed for sslocspresponder")
+		if config.Trustresponder.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trustresponder")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Url.Equal(state.Url) {
+		tflog.Debug(ctx, "url has changed for sslocspresponder")
+		hasChange = true
+	}
+	if !data.Usenonce.Equal(state.Usenonce) {
+		tflog.Debug(ctx, "usenonce has changed for sslocspresponder")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslocspresponder.Type(), &sslocspresponder)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslocspresponder, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		sslocspresponder := sslocspresponderGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		sslocspresponderName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Sslocspresponder.Type(), sslocspresponderName, &sslocspresponder)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslocspresponder, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated sslocspresponder resource")
+		tflog.Trace(ctx, "Updated sslocspresponder resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for sslocspresponder resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslocspresponder.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslocspresponder attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readSslocspresponderFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslocspresponderFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslocspresponder not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +249,33 @@ func (r *SslocspresponderResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting sslocspresponder resource")
 
-	// For sslocspresponder, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslocspresponder resource from state")
+	// Named resource - delete using DeleteResource
+	sslocspresponderName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Sslocspresponder.Type(), sslocspresponderName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslocspresponder, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslocspresponder resource")
 }
 
 // Helper function to read sslocspresponder data from API
-func (r *SslocspresponderResource) readSslocspresponderFromApi(ctx context.Context, data *SslocspresponderResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslocspresponder.Type(), "")
+func (r *SslocspresponderResource) readSslocspresponderFromApi(ctx context.Context, data *SslocspresponderResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (the name)
+	sslocspresponderName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Sslocspresponder.Type(), sslocspresponderName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslocspresponder, got error: %s", err))
-		return
+		return false
 	}
 
 	sslocspresponderSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

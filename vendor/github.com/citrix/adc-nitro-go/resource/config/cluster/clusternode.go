@@ -23,7 +23,7 @@ type Clusternode struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid *int `json:"nodeid"` // Zero is a valid value
+	Nodeid *int `json:"nodeid,omitempty"`
 	/**
 	* Citrix ADC IP (NSIP) address of the appliance to add to the cluster. Must be an IPv4 address.
 	*/

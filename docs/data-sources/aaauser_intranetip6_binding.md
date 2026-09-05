@@ -11,7 +11,7 @@ The aaauser_intranetip6_binding data source allows you to retrieve information a
 ```terraform
 data "citrixadc_aaauser_intranetip6_binding" "example" {
   username    = "user1"
-  intranetip6 = "2003:db8:100::fb/128"
+  intranetip6 = "2003:db8:100::fb"
 }
 
 output "username" {
@@ -37,5 +37,5 @@ output "gotopriorityexpression" {
 In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE. Specify one of the following values: NEXT - Evaluate the policy with the next higher priority number. END - End policy evaluation. USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT. An expression that evaluates to a number.
-* `id` - The id of the aaauser_intranetip6_binding. It is a system-generated identifier.
+* `id` - The id of the aaauser_intranetip6_binding. It is the concatenation of the `username` and `intranetip6` attributes separated by a comma.
 * `numaddr` - Numbers of ipv6 address bound starting with intranetip6.

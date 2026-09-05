@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_intranetip_binding_basic = `
@@ -34,6 +36,51 @@ const testAccVpnglobal_intranetip_binding_basic = `
 const testAccVpnglobal_intranetip_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 `
+
+const testAccVpnglobal_intranetip_binding_upgrade_basic = `
+	resource "citrixadc_vpnglobal_intranetip_binding" "tf_bind" {
+		intranetip = "2.3.4.5"
+		netmask    = "255.255.255.0"
+	}
+`
+
+func TestAccVpnglobal_intranetip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_intranetip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_intranetip_bindingExist("citrixadc_vpnglobal_intranetip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_intranetip_binding.tf_bind", "id", "2.3.4.5"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_intranetip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_intranetip_bindingExist("citrixadc_vpnglobal_intranetip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_intranetip_binding.tf_bind", "id", "intranetip:2.3.4.5,netmask:255.255.255.0"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccVpnglobal_intranetip_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -82,7 +129,14 @@ func testAccCheckVpnglobal_intranetip_bindingExist(n string, id *string) resourc
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		intranetip := rs.Primary.ID
+		// ID-parse helper line (sanctioned migration exception): the migrated resource
+		// uses the new key:value ID format, so parse it instead of treating the raw ID
+		// as the intranetip value. ParseIdString also accepts the legacy comma format.
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"intranetip"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", rs.Primary.ID, err)
+		}
+		intranetip := idMap["intranetip"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnglobal_intranetip_binding",
@@ -198,6 +252,47 @@ func TestAccVpnglobal_intranetip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_intranetip_binding.tf_bind", "netmask", "255.255.255.0"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_intranetip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_intranetip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_intranetip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnglobal_intranetip_binding.Type(), "", map[string]string{"intranetip": "2.3.4.5", "netmask": "255.255.255.0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_intranetip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_intranetip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_intranetip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_intranetip_binding_basic},
+			{Config: testAccVpnglobal_intranetip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

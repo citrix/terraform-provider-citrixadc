@@ -65,6 +65,7 @@ type AuthenticationldapactionResourceModel struct {
 	Nestedgroupextraction       types.String `tfsdk:"nestedgroupextraction"`
 	Otpsecret                   types.String `tfsdk:"otpsecret"`
 	Passwdchange                types.String `tfsdk:"passwdchange"`
+	Passwordlessmgmtaccess      types.String `tfsdk:"passwordlessmgmtaccess"`
 	Pushservice                 types.String `tfsdk:"pushservice"`
 	Referraldnslookup           types.String `tfsdk:"referraldnslookup"`
 	Requireuser                 types.String `tfsdk:"requireuser"`
@@ -319,6 +320,11 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Allow password change requests.",
 			},
+			"passwordlessmgmtaccess": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This feature configures NetScaler management access to use LDAP exclusively for retrieving user group information. It ensures that LDAP is not used for authenticating user logins (i.e., verifying passwords) for NetScaler management access.",
+			},
 			"pushservice": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -525,6 +531,9 @@ func authenticationldapactionGetThePayloadFromthePlan(ctx context.Context, data 
 	}
 	if !data.Passwdchange.IsNull() {
 		authenticationldapaction.Passwdchange = data.Passwdchange.ValueString()
+	}
+	if !data.Passwordlessmgmtaccess.IsNull() && !data.Passwordlessmgmtaccess.IsUnknown() {
+		authenticationldapaction.Passwordlessmgmtaccess = data.Passwordlessmgmtaccess.ValueString()
 	}
 	if !data.Pushservice.IsNull() {
 		authenticationldapaction.Pushservice = data.Pushservice.ValueString()
@@ -799,6 +808,11 @@ func authenticationldapactionSetAttrFromGet(ctx context.Context, data *Authentic
 		data.Passwdchange = types.StringValue(val.(string))
 	} else {
 		data.Passwdchange = types.StringNull()
+	}
+	if val, ok := getResponseData["passwordlessmgmtaccess"]; ok && val != nil {
+		data.Passwordlessmgmtaccess = types.StringValue(val.(string))
+	} else {
+		data.Passwordlessmgmtaccess = types.StringNull()
 	}
 	if val, ok := getResponseData["pushservice"]; ok && val != nil {
 		data.Pushservice = types.StringValue(val.(string))

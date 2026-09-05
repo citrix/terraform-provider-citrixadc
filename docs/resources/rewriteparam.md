@@ -22,3 +22,11 @@ resource "citrixadc_rewriteparam" "tf_rewriteparam" {
 * `undefaction` - (Optional) Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an error condition in evaluating the expression. Available settings function as follows: * NOREWRITE - Do not modify the message. * RESET - Reset the connection and notify the user's browser, so that the user can resend the request. * DROP - Drop the message without sending a response to the user.
 * `timeout` - (Optional) 
 
+
+## Import
+
+A rewriteparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_rewriteparam.tf_rewriteparam rewriteparam-config
+```

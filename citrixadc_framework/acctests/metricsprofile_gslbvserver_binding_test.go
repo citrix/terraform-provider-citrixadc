@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -312,6 +312,34 @@ func TestAccMetricsprofile_gslbvserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile_gslbvserver_binding.tf_metricsprofile_gslbvserver_binding_ds_read", "entitytype", "gslbvserver"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_metricsprofile_gslbvserver_binding.tf_metricsprofile_gslbvserver_binding_ds_read", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMetricsprofile_gslbvserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_gslbvserver_binding.tf_metricsprofile_gslbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_gslbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_gslbvserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_gslbvserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Metricsprofile_gslbvserver_binding.Type(), "tf_metricsprofile_gslbbind", map[string]string{"entityname": "tf_gslbvserver_metricsbind", "entitytype": "gslbvserver"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_gslbvserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_gslbvserver_bindingExist(resAddr, nil)),
 			},
 		},
 	})

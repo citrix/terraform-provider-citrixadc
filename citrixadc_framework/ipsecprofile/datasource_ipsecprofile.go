@@ -35,7 +35,7 @@ func (d *IpsecprofileDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *IpsecprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data IpsecprofileResourceModel
+	var data IpsecprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *IpsecprofileDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	ipsecprofileSetAttrFromGet(ctx, &data, getResponseData)
+	ipsecprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -26,8 +26,9 @@ func (r *NsconsoleloginpromptResource) Schema(ctx context.Context, req resource.
 				Description: "The ID of the nsconsoleloginprompt resource.",
 			},
 			"promptstring": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				// SDK v2 backward-compat: promptstring was Required (not Computed) in the
+				// legacy resource. Keep Required to preserve the existing user contract.
+				Required:    true,
 				Description: "Console login prompt string",
 			},
 		},
@@ -39,7 +40,7 @@ func nsconsoleloginpromptGetThePayloadFromtheConfig(ctx context.Context, data *N
 
 	// Create API request body from the model
 	nsconsoleloginprompt := ns.Nsconsoleloginprompt{}
-	if !data.Promptstring.IsNull() {
+	if !data.Promptstring.IsNull() && !data.Promptstring.IsUnknown() {
 		nsconsoleloginprompt.Promptstring = data.Promptstring.ValueString()
 	}
 
@@ -49,10 +50,13 @@ func nsconsoleloginpromptGetThePayloadFromtheConfig(ctx context.Context, data *N
 func nsconsoleloginpromptSetAttrFromGet(ctx context.Context, data *NsconsoleloginpromptResourceModel, getResponseData map[string]interface{}) *NsconsoleloginpromptResourceModel {
 	tflog.Debug(ctx, "In nsconsoleloginpromptSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Omit-on-default guard: NITRO may omit promptstring from GET when it is at its
+	// default/empty value. Do NOT clobber a known configured value in that case;
+	// only null it when it is unknown (never realistic for this Required attr).
 	if val, ok := getResponseData["promptstring"]; ok && val != nil {
 		data.Promptstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Promptstring.IsUnknown() {
 		data.Promptstring = types.StringNull()
 	}
 

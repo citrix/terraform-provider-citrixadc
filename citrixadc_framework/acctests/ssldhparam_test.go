@@ -18,12 +18,12 @@ package citrixadc
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 const testAccSsldhparam_create = `
 	resource "citrixadc_ssldhparam" "foo" {
-		dhfile = "/nsconfig/ssl/new"
+		dhfile = "/nsconfig/ssl/tfimp1"
 		bits   = "512"
 		gen    = "2"
 	}
@@ -37,6 +37,25 @@ func TestAccSsldhparam_create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSsldhparam_create,
+			},
+		},
+	})
+}
+
+func TestAccSsldhparam_import(t *testing.T) {
+	const resAddr = "citrixadc_ssldhparam.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSsldhparam_create},
+			{
+				Config:                  testAccSsldhparam_create,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bits", "dhfile", "gen"},
 			},
 		},
 	})

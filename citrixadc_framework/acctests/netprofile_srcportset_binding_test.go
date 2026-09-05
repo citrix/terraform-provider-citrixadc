@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetprofile_srcportset_binding_basic = `
@@ -95,10 +98,12 @@ func testAccCheckNetprofile_srcportset_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		srcportrange := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "srcportrange"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		srcportrange := idMap["srcportrange"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netprofile_srcportset_binding",
@@ -140,10 +145,12 @@ func testAccCheckNetprofile_srcportset_bindingNotExist(n string, id string) reso
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		srcportrange := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "srcportrange"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		srcportrange := idMap["srcportrange"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netprofile_srcportset_binding",
@@ -229,6 +236,136 @@ func TestAccNetprofile_srcportset_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile_srcportset_binding.tf_binding", "name", "tf_netprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile_srcportset_binding.tf_binding", "srcportrange", "2000"),
 				),
+			},
+		},
+	})
+}
+
+// testAccNetprofile_srcportset_binding_upgrade_basic reuses the _basic config
+// values and is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema (uses only SDK v2 attribute names).
+const testAccNetprofile_srcportset_binding_upgrade_basic = `
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_netprofile_srcportset_binding" "tf_binding" {
+		name         = citrixadc_netprofile.tf_netprofile.name
+		srcportrange = "2000"
+	}
+`
+
+// TestAccNetprofile_srcportset_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id) is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (legacy id "name,srcportrange"); step 2 refreshes/plans
+// the same config through the current Framework provider, whose Read parses the
+// legacy id and recomputes it to the new "name:<v>,srcportrange:<v>" format
+// (SetAttrFromGet).
+func TestAccNetprofile_srcportset_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetprofile_srcportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNetprofile_srcportset_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_srcportset_bindingExist("citrixadc_netprofile_srcportset_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_srcportset_binding.tf_binding", "id", "tf_netprofile,2000"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetprofile_srcportset_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_srcportset_bindingExist("citrixadc_netprofile_srcportset_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_srcportset_binding.tf_binding", "id", "name:tf_netprofile,srcportrange:2000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetprofile_srcportset_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_srcportset_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,srcportrange) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "srcportrange"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_srcportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetprofile_srcportset_binding_basic},
+			{Config: testAccNetprofile_srcportset_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNetprofile_srcportset_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNetprofile_srcportset_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_srcportset_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_srcportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_srcportset_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_srcportset_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netprofile_srcportset_binding.Type(), "tf_netprofile", map[string]string{"srcportrange": "2000"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetprofile_srcportset_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_srcportset_bindingExist(resAddr, nil)),
 			},
 		},
 	})

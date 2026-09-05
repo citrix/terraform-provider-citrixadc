@@ -6,7 +6,7 @@ subcategory: "SSL"
 
 The sslpolicylabel_sslpolicy_binding data source allows you to retrieve information about a binding between an SSL policy label and an SSL policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslpolicylabel_sslpolicy_binding" "demo_sslpolicylabel_sslpolicy_binding" {
@@ -33,8 +33,8 @@ output "labeltype" {
 In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `id` - The id of the sslpolicylabel_sslpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the sslpolicylabel_sslpolicy_binding. It is the concatenation of the `labelname` and `policyname` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
 * `invoke` - Invoke policies bound to a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.
-* `invoke_labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
+* `invokelabelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation. Possible values: [ vserver, service, policylabel ]

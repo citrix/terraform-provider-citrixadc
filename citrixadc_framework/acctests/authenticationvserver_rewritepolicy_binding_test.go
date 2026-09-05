@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_rewritepolicy_binding_basic = `
@@ -143,10 +146,14 @@ func testAccCheckAuthenticationvserver_rewritepolicy_bindingExist(n string, id *
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		// ID-parse helper (sanctioned migration edit): handle both the new
+		// key:value ID format and the legacy "name,policy" form via ParseIdString.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_rewritepolicy_binding",
@@ -261,6 +268,154 @@ func TestAccAuthenticationvserverRewritepolicyBindingDataSource_basic(t *testing
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "policy", "tf_rewrite_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "priority", "90"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind", "bindpoint", "RESPONSE"),
+				),
+			},
+		},
+	})
+}
+
+// Config for the SDK v2 -> Framework state-upgrade test. It reuses the same values as
+// testAccAuthenticationvserver_rewritepolicy_binding_basic and keeps the resource label
+// (tf_bind) identical so the Exist/Destroy helpers and resource address match. It must be
+// valid under BOTH the last SDK v2 release (2.2.0) schema and the current Framework schema.
+const testAccAuthenticationvserver_rewritepolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+		name   = "tf_rewrite_policy"
+		action = "DROP"
+		rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	}
+	resource "citrixadc_authenticationvserver_rewritepolicy_binding" "tf_bind" {
+		name                   = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy                 = citrixadc_rewritepolicy.tf_rewrite_policy.name
+		priority               = 90
+		bindpoint              = "RESPONSE"
+		gotopriorityexpression = "END"
+		groupextraction        = false
+	}
+`
+
+// TestAccAuthenticationvserver_rewritepolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly upgraded when
+// the same config is subsequently managed by the current Framework provider. Step 1 creates
+// the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_authenticationvserver,tf_rewrite_policy"). Step 2 refreshes/plans/applies the same
+// config through the Framework provider, exercising ParseIdString on the legacy id; because
+// the Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form.
+func TestAccAuthenticationvserver_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_rewritepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,tf_rewrite_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationvserver_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_rewritepolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:tf_rewrite_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_rewritepolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"groupextraction"}},
+			{Config: testAccAuthenticationvserver_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"groupextraction"}},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_rewritepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_rewritepolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_rewritepolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_rewritepolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Authenticationvserver_rewritepolicy_binding.Type(), "tf_authenticationvserver", []string{"policy:tf_rewrite_policy", "bindpoint:RESPONSE", "groupextraction:false"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_rewritepolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_rewritepolicy_bindingExist(resAddr, nil),
 				),
 			},
 		},

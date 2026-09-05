@@ -20,8 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationoauthidpprofile_add = `
@@ -176,6 +177,7 @@ func TestAccAuthenticationoauthidpprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationoauthidpprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "name", "tf_idpprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "clientid", "cliId_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "redirecturl", "http://www.example.com/datasource/"),
@@ -262,9 +264,14 @@ func TestAccAuthenticationoauthidpprofile_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAuthenticationoauthidpprofile_add,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -425,4 +432,32 @@ func testAccCheckAuthenticationoauthidpprofileADCValue(name, attr, want string) 
 		}
 		return nil
 	}
+}
+
+func TestAccAuthenticationoauthidpprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationoauthidpprofile.tf_idpprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidpprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("authenticationoauthidpprofile", "tf_idpprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationoauthidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidpprofileExist(resAddr, nil)),
+			},
+		},
+	})
 }

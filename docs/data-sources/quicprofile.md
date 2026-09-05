@@ -47,3 +47,11 @@ In addition to the arguments, the following attributes are available:
 * `newtokenvalidityperiod` - Validity period, in seconds, of address validation tokens issued through QUIC NEW_TOKEN frames sent by the Citrix ADC.
 * `retrytokenvalidityperiod` - Validity period, in seconds, of address validation tokens issued through QUIC Retry packets sent by the Citrix ADC.
 * `statelessaddressvalidation` - Whether the Citrix ADC performs stateless address validation for QUIC clients.
+
+### Read-only quicprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_quicprofile` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `refcnt` - Number of entities using this profile.
+* `builtin` - Flag to determine if the QUIC profile is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

@@ -42,7 +42,7 @@ func (d *VpnvserverIcapolicyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Case 4: Array filter with parent ID. Lookup keys are name (parent) + policy.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -89,11 +89,11 @@ func (d *VpnvserverIcapolicyBindingDataSource) Read(ctx context.Context, req dat
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_icapolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_icapolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_icapolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_icapolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

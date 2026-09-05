@@ -12,10 +12,9 @@ The gslbservice_lbmonitor_binding resource is used to create gslbservice_lbmonit
 ```hcl
 resource "citrixadc_gslbservice_lbmonitor_binding" "tf_gslbservice_lbmonitor_binding" {
   monitor_name = citrixadc_lbmonitor.tfmonitor1.monitorname
-  monstate    = "DISABLED"
-  servicename = citrixadc_gslbservice.tf_gslbservice.servicename
-  weight      = "20"
-
+  monstate     = "DISABLED"
+  servicename  = citrixadc_gslbservice.tf_gslbservice.servicename
+  weight       = 20
 }
 
 resource "citrixadc_gslbservice" "tf_gslbservice" {

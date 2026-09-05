@@ -2,6 +2,7 @@ package cmppolicylabel
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cmp"
 
@@ -38,10 +39,9 @@ func (r *CmppolicylabelResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"newname": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// newname is the rename trigger (NITRO ?action=rename). Changing it
+				// must NOT force replacement - it drives an in-place rename via Update.
+				// Not Computed: it is a pure user input, never echoed back by GET.
 				Description: "New name for the compression policy label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\n\n                        The following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cmp policylabel\" or 'my cmp policylabel').",
 			},
 			"type": schema.StringAttribute{
@@ -55,18 +55,17 @@ func (r *CmppolicylabelResource) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func cmppolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *CmppolicylabelResourceModel) cmp.Cmppolicylabel {
-	tflog.Debug(ctx, "In cmppolicylabelGetThePayloadFromtheConfig Function")
+func cmppolicylabelGetThePayloadFromthePlan(ctx context.Context, data *CmppolicylabelResourceModel) cmp.Cmppolicylabel {
+	tflog.Debug(ctx, "In cmppolicylabelGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	cmppolicylabel := cmp.Cmppolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		cmppolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		cmppolicylabel.Newname = data.Newname.ValueString()
-	}
-	if !data.Type.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of
+	// the add payload, so it is deliberately excluded from the create POST body.
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		cmppolicylabel.Type = data.Type.ValueString()
 	}
 
@@ -76,7 +75,31 @@ func cmppolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *Cmppoli
 func cmppolicylabelSetAttrFromGet(ctx context.Context, data *CmppolicylabelResourceModel, getResponseData map[string]interface{}) *CmppolicylabelResourceModel {
 	tflog.Debug(ctx, "In cmppolicylabelSetAttrFromGet Function")
 
-	// Convert API response to model
+	// labelname is the user-facing key. Once a rename has happened (via newname),
+	// the live object name (tracked by data.Id) diverges from the configured
+	// labelname, and GET returns the live (new) name. Overwriting labelname from
+	// GET would clobber the user's configured value and trigger a spurious
+	// RequiresReplace diff. So only adopt the GET value when we don't already have
+	// one (e.g. on import, where state carries only the ID); otherwise preserve.
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+	if val, ok := getResponseData["type"]; ok && val != nil {
+		data.Type = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// cmppolicylabelSetAttrFromGetForDatasource faithfully copies every field from the
+// GET response. The datasource has no prior plan/state to preserve, so it must
+// populate the model directly from the API response and set the ID itself.
+func cmppolicylabelSetAttrFromGetForDatasource(ctx context.Context, data *CmppolicylabelResourceModel, getResponseData map[string]interface{}) *CmppolicylabelResourceModel {
+	tflog.Debug(ctx, "In cmppolicylabelSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
 	} else {
@@ -93,9 +116,8 @@ func cmppolicylabelSetAttrFromGet(ctx context.Context, data *CmppolicylabelResou
 		data.Type = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Labelname.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	return data
 }

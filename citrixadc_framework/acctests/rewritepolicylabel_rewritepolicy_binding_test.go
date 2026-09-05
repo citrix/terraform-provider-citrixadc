@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRewritepolicylabel_rewritepolicy_binding_basic = `
@@ -59,6 +62,49 @@ const testAccRewritepolicylabel_rewritepolicy_binding_basic_step2 = `
 		rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
 	}
 `
+
+func TestAccRewritepolicylabel_rewritepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: labelname,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"labelname", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicylabel_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewritepolicylabel_rewritepolicy_binding_basic},
+			{Config: testAccRewritepolicylabel_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccRewritepolicylabel_rewritepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
 
 func TestAccRewritepolicylabel_rewritepolicy_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -109,10 +155,13 @@ func testAccCheckRewritepolicylabel_rewritepolicy_bindingExist(n string, id *str
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		// ID-parse: support both the new key:value ID format and the legacy comma format.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "rewritepolicylabel_rewritepolicy_binding",
@@ -151,13 +200,13 @@ func testAccCheckRewritepolicylabel_rewritepolicy_bindingNotExist(n string, id s
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		// ID-parse: support both the new key:value ID format and the legacy comma format.
+		idMap, _, err := utils.ParseIdString(id, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		name := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "rewritepolicylabel_rewritepolicy_binding",
@@ -254,6 +303,108 @@ func TestAccRewritepolicylabel_rewritepolicy_bindingDataSource_basic(t *testing.
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "priority", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "gotopriorityexpression", "END"),
 				),
+			},
+		},
+	})
+}
+
+// testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic mirrors the _basic config
+// but is written so it is valid under BOTH the last SDK v2 release (2.2.0) schema and the
+// current Framework schema, so the same HCL can be applied by each provider across the two
+// steps of the state-upgrade test.
+const testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic = `
+
+resource "citrixadc_rewritepolicylabel_rewritepolicy_binding" "tf_rewritepolicylabel_rewritepolicy_binding" {
+	labelname = citrixadc_rewritepolicylabel.tf_rewritepolicylabel.labelname
+	policyname = citrixadc_rewritepolicy.tf_rewrite_policy.name
+	gotopriorityexpression = "END"
+	priority = 5
+}
+
+resource "citrixadc_rewritepolicylabel" "tf_rewritepolicylabel" {
+	labelname = "tf_rewritepolicylabel"
+	transform = "http_req"
+}
+
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+	name = "tf_rewrite_policy"
+	action = "DROP"
+	rule = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+}
+`
+
+// TestAccRewritepolicylabel_rewritepolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 provider release (legacy comma-separated ID) is read and
+// upgraded cleanly by the current Framework provider.
+//
+// Step 1 creates the binding with citrix/citrixadc 2.2.0, which writes the legacy ID
+// "<labelname>,<policyname>".
+// Step 2 re-applies the SAME config through the current (Framework) provider. Its Read
+// parses the legacy ID (via ParseIdString), then SetAttrFromGet re-derives the canonical
+// new-format ID "labelname:<v>,policyname:<v>,priority:<v>".
+func TestAccRewritepolicylabel_rewritepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		// Providers are specified per-step (ExternalProviders in step 1, framework factories
+		// in step 2), so they must NOT also be set at the TestCase level.
+		CheckDestroy: testAccCheckRewritepolicylabel_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (writes the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicylabel_rewritepolicy_bindingExist("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "id", "tf_rewritepolicylabel,tf_rewrite_policy"),
+				),
+			},
+			// Step 2: same config through the current Framework provider; Read upgrades the ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicylabel_rewritepolicy_bindingExist("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding", "id", "labelname:tf_rewritepolicylabel,policyname:tf_rewrite_policy,priority:5"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccRewritepolicylabel_rewritepolicy_binding_selfHealing verifies the provider
+// re-creates the binding when it is deleted out-of-band between apply steps (drift
+// recovery). The delete labelname/policyname/priority args match the resource's Delete.
+func TestAccRewritepolicylabel_rewritepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicylabel_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabel_rewritepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Rewritepolicylabel_rewritepolicy_binding.Type(), "tf_rewritepolicylabel", map[string]string{"policyname": "tf_rewrite_policy", "priority": "5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabel_rewritepolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

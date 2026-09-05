@@ -35,7 +35,7 @@ func (d *SslvserverSslcertkeyBindingDataSource) Schema(ctx context.Context, req 
 }
 
 func (d *SslvserverSslcertkeyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslvserverSslcertkeyBindingResourceModel
+	var data SslvserverSslcertkeyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -56,7 +56,7 @@ func (d *SslvserverSslcertkeyBindingDataSource) Read(ctx context.Context, req da
 	findParams := service.FindParams{
 		ResourceType:             service.Sslvserver_sslcertkey_binding.Type(),
 		ResourceName:             vservername_Name,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 461,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
@@ -141,7 +141,7 @@ func (d *SslvserverSslcertkeyBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	sslvserver_sslcertkey_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslvserver_sslcertkey_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

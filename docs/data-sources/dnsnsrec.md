@@ -43,3 +43,9 @@ In addition to the arguments above, the following attributes are exported:
 * `ttl` - Time to Live (TTL), in seconds, for the record. The TTL is the time for which the record must be cached by DNS proxies.
 * `ecssubnet` - Subnet for which the cached name server record applies.
 * `nodeid` - Unique number that identifies the cluster node.
+
+### Read-only dnsnsrec metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsnsrec` resource). Any attribute the appliance does not return is `null`.
+
+* `authtype` - Record type. Possible values: [ ALL, ADNS, PROXY ].

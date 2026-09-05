@@ -32,3 +32,9 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the nskeymanagerproxy. It is the `serverip` value when set; otherwise it falls back to the `servername` value.
 * `port` - Key Manager proxy server port.
 * `nodeid` - Unique number that identifies the cluster node.
+
+### Read-only nskeymanagerproxy metadata
+
+This attribute is returned by the appliance on a GET (it is not configurable on the `citrixadc_nskeymanagerproxy` resource). It is Computed/GET-only, and is `null` when the appliance does not return it.
+
+* `status` - Status of Key Manager proxy server connectivity.

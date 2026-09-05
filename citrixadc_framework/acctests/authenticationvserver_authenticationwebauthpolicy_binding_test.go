@@ -18,8 +18,11 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -164,10 +167,12 @@ func testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingExist(
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_authenticationwebauthpolicy_binding",
@@ -209,10 +214,12 @@ func testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingNotExi
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policy"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "authenticationvserver_authenticationwebauthpolicy_binding",
@@ -277,9 +284,166 @@ func TestAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_ba
 			{
 				Config: testAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "policy", "tf_webauthpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "priority", "80"),
+				),
+			},
+		},
+	})
+}
+
+// testAccAuthenticationvserver_authenticationwebauthpolicy_binding_upgrade_basic reuses the
+// _basic config (binding + all prerequisite resources). It is valid under BOTH the SDK v2
+// 2.2.0 schema and the current Framework schema because the migration restored the SDK v2
+// attribute names. The terraform resource label (tf_bind) is kept identical to _basic so the
+// Exist/Destroy helpers and resource addresses match.
+const testAccAuthenticationvserver_authenticationwebauthpolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
+		name                       = "tf_webauthaction"
+		serverip                   = "1.2.3.4"
+		serverport                 = 8080
+		fullreqexpr                = "TRUE"
+		scheme                     = "http"
+		successrule                = "http.RES.STATUS.EQ(200)"
+		defaultauthenticationgroup = "new_group"
+	}
+	resource "citrixadc_authenticationwebauthpolicy" "tf_webauthpolicy" {
+		name   = "tf_webauthpolicy"
+		rule   = "NS_TRUE"
+		action = citrixadc_authenticationwebauthaction.tf_webauthaction.name
+	}
+	resource "citrixadc_authenticationvserver_authenticationwebauthpolicy_binding" "tf_bind" {
+		name      = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		policy    = citrixadc_authenticationwebauthpolicy.tf_webauthpolicy.name
+		priority  = 80
+		bindpoint = "AAA_RESPONSE"
+	}
+`
+
+// TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_sdkv2StateUpgrade verifies
+// that state written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework provider.
+// Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy id
+// "tf_authenticationvserver,tf_webauthpolicy"). Step 2 refreshes/plans/applies the same config
+// through the Framework provider, exercising ParseIdString on the legacy id; because the
+// Framework recomputes the id on Read (SetAttrFromGet), the id upgrades to the new
+// "key:value" form "name:tf_authenticationvserver,policy:tf_webauthpolicy".
+func TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_authenticationvserver,tf_webauthpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:tf_webauthpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic},
+			{Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+			{Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"bindpoint"}},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationwebauthpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationwebauthpolicy_binding.Type(), "tf_authenticationvserver", map[string]string{"policy": "tf_webauthpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_authenticationwebauthpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationwebauthpolicy_bindingExist(resAddr, nil),
 				),
 			},
 		},

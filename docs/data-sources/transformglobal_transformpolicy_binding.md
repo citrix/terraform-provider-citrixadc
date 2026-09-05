@@ -49,4 +49,11 @@ In addition to the arguments, the following attributes are available:
   * resvserver - Send the response to the specified response virtual server.
   * policylabel - Invoke the specified policy label.
 * `priority` - Specifies the priority of the policy.
-* `id` - The id of the transformglobal_transformpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the transformglobal_transformpolicy_binding. It is the concatenation of the `policyname` and `type` attributes separated by a comma.
+
+### Read-only transformglobal_transformpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_transformglobal_transformpolicy_binding` resource). They are Computed and are `null` when the appliance does not return them.
+
+* `flowtype` - flowtype of the bound transform policy.
+* `numpol` - The number of policies bound to the bindpoint.

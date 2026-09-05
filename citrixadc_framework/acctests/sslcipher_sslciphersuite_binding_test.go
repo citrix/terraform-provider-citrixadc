@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslcipher_sslciphersuite_binding_basic = `
@@ -96,10 +99,12 @@ func testAccCheckSslcipher_sslciphersuite_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		ciphergroupname := idSlice[0]
-		ciphername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"ciphergroupname", "ciphername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		ciphergroupname := idMap["ciphergroupname"]
+		ciphername := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslcipher_sslciphersuite_binding",
@@ -233,6 +238,141 @@ func TestAccSslcipher_sslciphersuite_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslcipher_sslciphersuite_binding.tf_bind", "ciphername", "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcipher_sslciphersuite_binding.tf_bind", "cipherpriority", "1"),
 				),
+			},
+		},
+	})
+}
+
+// Config reused across both steps of the state-upgrade test. It must be valid
+// under BOTH the SDK v2 2.2.0 schema and the current Framework schema, so it
+// uses the SDK v2 attribute names (restored during migration) and the same
+// resource label ("tf_bind") as the _basic config.
+const testAccSslcipher_sslciphersuite_binding_upgrade_basic = `
+
+	resource "citrixadc_sslcipher" "tfsslcipher" {
+		ciphergroupname = "tfsslcipher"
+	}
+
+	resource "citrixadc_sslcipher_sslciphersuite_binding" "tf_bind" {
+		ciphergroupname = citrixadc_sslcipher.tfsslcipher.ciphergroupname
+		ciphername      = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
+		cipherpriority  = 1
+	}
+
+`
+
+// TestAccSslcipher_sslciphersuite_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "tfsslcipher,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"). Step 2
+// refreshes/plans/applies the same config through the Framework provider,
+// exercising ParseIdString on the legacy id; because the Framework recomputes
+// the id on Read (SetAttrFromGet), the id upgrades to the new "key:value" form.
+func TestAccSslcipher_sslciphersuite_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_sslcipher_sslciphersuite_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslcipher_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSslcipher_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipher_sslciphersuite_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tfsslcipher,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslcipher_sslciphersuite_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipher_sslciphersuite_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "ciphergroupname:tfsslcipher,ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslcipher_sslciphersuite_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher_sslciphersuite_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: ciphergroupname,ciphername) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"ciphergroupname", "ciphername"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipher_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcipher_sslciphersuite_binding_basic},
+			{Config: testAccSslcipher_sslciphersuite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslcipher_sslciphersuite_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccSslcipher_sslciphersuite_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher_sslciphersuite_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipher_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipher_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), "tfsslcipher", []string{"ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcipher_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipher_sslciphersuite_bindingExist(resAddr, nil)),
 			},
 		},
 	})

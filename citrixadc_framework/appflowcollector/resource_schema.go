@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -36,11 +36,15 @@ func (r *AppflowcollectorResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the appflowcollector resource.",
 			},
 			"ipaddress": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "IPv4 address of the collector.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at\n(@), equals (=), and hyphen (-) characters.\n Only four collectors can be configured.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow collector\" or 'my appflow collector').",
 			},
 			"netprofile": schema.StringAttribute{
@@ -52,49 +56,72 @@ func (r *AppflowcollectorResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attrs
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must\ncontain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at(@), equals (=), and hyphen (-) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow coll\" or 'my appflow coll').",
 			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(4739),
 				Description: "Port on which the collector listens.",
 			},
 			"transport": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attrs
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("ipfix"),
 				Description: "Type of collector: either logstream or ipfix or rest.",
 			},
 		},
 	}
 }
 
-func appflowcollectorGetThePayloadFromtheConfig(ctx context.Context, data *AppflowcollectorResourceModel) appflow.Appflowcollector {
-	tflog.Debug(ctx, "In appflowcollectorGetThePayloadFromtheConfig Function")
+func appflowcollectorGetThePayloadFromthePlan(ctx context.Context, data *AppflowcollectorResourceModel) appflow.Appflowcollector {
+	tflog.Debug(ctx, "In appflowcollectorGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appflowcollector := appflow.Appflowcollector{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		appflowcollector.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appflowcollector.Name = data.Name.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		appflowcollector.Netprofile = data.Netprofile.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		appflowcollector.Newname = data.Newname.ValueString()
-	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		appflowcollector.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Transport.IsNull() {
+	if !data.Transport.IsNull() && !data.Transport.IsUnknown() {
 		appflowcollector.Transport = data.Transport.ValueString()
+	}
+
+	return appflowcollector
+}
+
+func appflowcollectorGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AppflowcollectorResourceModel) appflow.Appflowcollector {
+	tflog.Debug(ctx, "In appflowcollectorGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	appflowcollector := appflow.Appflowcollector{}
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
+		appflowcollector.Ipaddress = data.Ipaddress.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		appflowcollector.Name = data.Name.ValueString()
+	}
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
+		appflowcollector.Netprofile = data.Netprofile.ValueString()
+	}
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		appflowcollector.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
 
 	return appflowcollector
@@ -119,6 +146,7 @@ func appflowcollectorSetAttrFromGet(ctx context.Context, data *AppflowcollectorR
 	} else {
 		data.Netprofile = types.StringNull()
 	}
+	// newname is not returned by NITRO API (rename-only) - resolve to null
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
 	} else {
@@ -138,7 +166,7 @@ func appflowcollectorSetAttrFromGet(ctx context.Context, data *AppflowcollectorR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

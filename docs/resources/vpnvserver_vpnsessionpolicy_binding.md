@@ -27,9 +27,9 @@ resource "citrixadc_vpnsessionpolicy" "tf_vpnsessionpolicy" {
 }
 
 resource "citrixadc_vpnvserver_vpnsessionpolicy_binding" "tf_bind" {
-  name      = citrixadc_vpnvserver.tf_vpnvserver.name
-  policy    = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
-  priority  = 20
+  name     = citrixadc_vpnvserver.tf_vpnvserver.name
+  policy   = citrixadc_vpnsessionpolicy.tf_vpnsessionpolicy.name
+  priority = 20
 }
 ```
 

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_intranetip6_binding_basic = `
@@ -48,6 +51,58 @@ const testAccVpnvserver_intranetip6_binding_basic_step2 = `
 		port        = 443
 	}
 `
+
+const testAccVpnvserver_intranetip6_binding_upgrade_basic = `
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vserverexample"
+		servicetype = "SSL"
+		ipv46       = "3.3.3.3"
+		port        = 443
+	}
+	resource "citrixadc_vpnvserver_intranetip6_binding" "tf_bind" {
+		name        = citrixadc_vpnvserver.tf_vpnvserver.name
+		intranetip6 = "2.3.4.5"
+		numaddr     = "45"
+	}
+`
+
+func TestAccVpnvserver_intranetip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy positional id "name,intranetip6".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnvserver_intranetip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_intranetip6_bindingExist("citrixadc_vpnvserver_intranetip6_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_intranetip6_binding.tf_bind", "id", "tf_vserverexample,2.3.4.5"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the legacy-id state through the current
+				// framework provider. Read recomputes the id into the new
+				// key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_intranetip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_intranetip6_bindingExist("citrixadc_vpnvserver_intranetip6_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_intranetip6_binding.tf_bind", "id", "intranetip6:2.3.4.5,name:tf_vserverexample,numaddr:45"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccVpnvserver_intranetip6_binding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -98,10 +153,14 @@ func testAccCheckVpnvserver_intranetip6_bindingExist(n string, id *string) resou
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		intranetip6 := idSlice[1]
+		// ParseIdString handles both the new key:value ID format and the legacy
+		// SDK v2 positional "name,intranetip6" format.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "intranetip6"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		intranetip6 := idMap["intranetip6"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_intranetip6_binding",
@@ -241,3 +300,74 @@ data "citrixadc_vpnvserver_intranetip6_binding" "tf_binding" {
 	depends_on  = [citrixadc_vpnvserver_intranetip6_binding.tf_binding]
 }
 `
+
+func TestAccVpnvserver_intranetip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_intranetip6_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,intranetip6) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "intranetip6"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_intranetip6_binding_basic},
+			{Config: testAccVpnvserver_intranetip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccVpnvserver_intranetip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnvserver_intranetip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_intranetip6_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_intranetip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_intranetip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnvserver_intranetip6_binding.Type(), "tf_vserverexample", []string{"intranetip6:2.3.4.5", "numaddr:45"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_intranetip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_intranetip6_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

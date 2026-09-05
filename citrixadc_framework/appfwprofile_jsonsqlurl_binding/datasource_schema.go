@@ -16,13 +16,11 @@ func AppfwprofileJsonsqlurlBindingDataSourceSchema() schema.Schema {
 				Description: "Send SNMP alert?",
 			},
 			"as_value_expr_json_sql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The JSON SQL key value expression.",
 			},
 			"as_value_type_json_sql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Type of the relaxed JSON SQL key value",
 			},
 			"comment": schema.StringAttribute{
@@ -50,8 +48,7 @@ func AppfwprofileJsonsqlurlBindingDataSourceSchema() schema.Schema {
 				Description: "A regular expression that designates a URL on the Json SQL URL list for which SQL violations are relaxed.\nEnclose URLs in double quotes to ensure preservation of any embedded spaces or non-alphanumeric characters.",
 			},
 			"keyname_json_sql": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "An expression that designates a keyname on the JSON SQL URL for which SQL injection violations are relaxed.",
 			},
 			"name": schema.StringAttribute{
@@ -62,6 +59,11 @@ func AppfwprofileJsonsqlurlBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "A \"id\" that identifies the rule.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,

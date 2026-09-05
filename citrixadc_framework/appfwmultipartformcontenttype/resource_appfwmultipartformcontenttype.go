@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppfwmultipartformcontenttypeResource) Create(ctx context.Context, req 
 	}
 
 	tflog.Debug(ctx, "Creating appfwmultipartformcontenttype resource")
-
-	// appfwmultipartformcontenttype := appfwmultipartformcontenttypeGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwmultipartformcontenttype := appfwmultipartformcontenttypeGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwmultipartformcontenttype.Type(), &appfwmultipartformcontenttype)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwmultipartformcontenttype, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwmultipartformcontenttype-config")
+	// Named resource - use AddResource
+	multipartformcontenttypevalue_value := data.Multipartformcontenttypevalue.ValueString()
+	_, err := r.client.AddResource(service.Appfwmultipartformcontenttype.Type(), multipartformcontenttypevalue_value, &appfwmultipartformcontenttype)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwmultipartformcontenttype, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwmultipartformcontenttype resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Multipartformcontenttypevalue.ValueString()))
+
 	// Read the updated state back
-	r.readAppfwmultipartformcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwmultipartformcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwmultipartformcontenttype not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppfwmultipartformcontenttypeResource) Read(ctx context.Context, req re
 
 	tflog.Debug(ctx, "Reading appfwmultipartformcontenttype resource")
 
-	r.readAppfwmultipartformcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwmultipartformcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwmultipartformcontenttypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwmultipartformcontenttypeResourceModel
+	var data, state AppfwmultipartformcontenttypeResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,20 @@ func (r *AppfwmultipartformcontenttypeResource) Update(ctx context.Context, req 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwmultipartformcontenttype resource")
-
-	// Create API request body from the model
-	// appfwmultipartformcontenttype := appfwmultipartformcontenttypeGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwmultipartformcontenttype.Type(), &appfwmultipartformcontenttype)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwmultipartformcontenttype, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated appfwmultipartformcontenttype resource")
+	// appfwmultipartformcontenttype has no NITRO update operation and every attribute forces
+	// replacement (ForceNew), so this path performs no API mutation and only refreshes state.
 
 	// Read the updated state back
-	r.readAppfwmultipartformcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwmultipartformcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwmultipartformcontenttype not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +151,36 @@ func (r *AppfwmultipartformcontenttypeResource) Delete(ctx context.Context, req 
 	}
 
 	tflog.Debug(ctx, "Deleting appfwmultipartformcontenttype resource")
+	// Named resource - delete using DeleteResource
+	multipartformcontenttypevalue_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Appfwmultipartformcontenttype.Type(), multipartformcontenttypevalue_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwmultipartformcontenttype, got error: %s", err))
+		return
+	}
 
-	// For appfwmultipartformcontenttype, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwmultipartformcontenttype resource from state")
+	tflog.Trace(ctx, "Deleted appfwmultipartformcontenttype resource")
 }
 
 // Helper function to read appfwmultipartformcontenttype data from API
-func (r *AppfwmultipartformcontenttypeResource) readAppfwmultipartformcontenttypeFromApi(ctx context.Context, data *AppfwmultipartformcontenttypeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwmultipartformcontenttype.Type(), "")
+func (r *AppfwmultipartformcontenttypeResource) readAppfwmultipartformcontenttypeFromApi(ctx context.Context, data *AppfwmultipartformcontenttypeResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	multipartformcontenttypevalue_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Appfwmultipartformcontenttype.Type(), multipartformcontenttypevalue_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwmultipartformcontenttype, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwmultipartformcontenttypeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

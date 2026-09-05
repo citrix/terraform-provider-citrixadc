@@ -90,6 +90,10 @@ type Servicegroupservicegroupentitymonbindingsbinding struct {
 	* Order number to be assigned to the servicegroup member
 	*/
 	Order *int `json:"order,omitempty"`
+	/**
+	* Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.
+	*/
+	Aigwprofilename string `json:"aigwprofilename,omitempty"`
 
 
 }

@@ -330,6 +330,10 @@ type Csvserver struct {
 	*/
 	Redirectfromport *int `json:"redirectfromport,omitempty"`
 	/**
+	* Name of the MCP profile to attach to this cs vserver. Enables MCP protocol processing.
+	*/
+	Mcpprofilename string `json:"mcpprofilename,omitempty"`
+	/**
 	* This option is used to enable/disable DNS over HTTPS (DoH) processing.
 	*/
 	Dnsoverhttps string `json:"dnsoverhttps,omitempty"`
@@ -341,6 +345,14 @@ type Csvserver struct {
 	* The API profile where one or more API specs are bounded to.
 	*/
 	Apiprofile string `json:"apiprofile,omitempty"`
+	/**
+	* Name of the WASM module to assign to this virtual server.
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
+	/**
+	* Name of the AIGW frontend profile. For the content switching vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add cs vserver, it cannot be unset
+	*/
+	Aigwprofilename string `json:"aigwprofilename,omitempty"`
 	/**
 	* Domain name for which to change the time to live (TTL) and/or backup service IP address.
 	*/

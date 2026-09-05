@@ -34,7 +34,11 @@ func (r *CmpactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the cmpaction resource.",
 			},
 			"addvaryheader": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default value for addvaryheader is GLOBAL. A schema Default is
+				// required so removing the attribute from config produces a plan diff
+				// that drives Update -> unset (revert to the NITRO default).
 				Default:     stringdefault.StaticString("GLOBAL"),
 				Description: "Control insertion of the Vary header in HTTP responses compressed by Citrix ADC. Intermediate caches store different versions of the response for different values of the headers present in the Vary response header.",
 			},
@@ -44,21 +48,34 @@ func (r *CmpactionResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"deltatype": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: keep the prior-state value when the plan is Unknown so a
+					// v2->Framework upgrade/refresh does not force a spurious replace;
+					// deltatype is create-only (NITRO add, not update) so still ForceNew
+					// when the user actually changes a configured value.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("PERURL"),
 				Description: "The type of delta action (if delta type compression action is defined).",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cmp action\" or 'my cmp action').",
 			},
 			"newname": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: keep the prior-state value when the plan is Unknown so a
+					// v2->Framework upgrade/refresh does not force a spurious replace;
+					// newname is a rename-only parameter (not in the add/update payload)
+					// so it stays ForceNew when a configured value actually changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at\n(@), equals (=), and hyphen (-) characters.\nChoose a name that can be correlated with the function that the action performs.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cmp action\" or 'my cmp action').",
 			},
@@ -71,29 +88,51 @@ func (r *CmpactionResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func cmpactionGetThePayloadFromtheConfig(ctx context.Context, data *CmpactionResourceModel) cmp.Cmpaction {
-	tflog.Debug(ctx, "In cmpactionGetThePayloadFromtheConfig Function")
+func cmpactionGetThePayloadFromthePlan(ctx context.Context, data *CmpactionResourceModel) cmp.Cmpaction {
+	tflog.Debug(ctx, "In cmpactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	cmpaction := cmp.Cmpaction{}
-	if !data.Addvaryheader.IsNull() {
+	if !data.Addvaryheader.IsNull() && !data.Addvaryheader.IsUnknown() {
 		cmpaction.Addvaryheader = data.Addvaryheader.ValueString()
 	}
-	if !data.Cmptype.IsNull() {
+	if !data.Cmptype.IsNull() && !data.Cmptype.IsUnknown() {
 		cmpaction.Cmptype = data.Cmptype.ValueString()
 	}
-	if !data.Deltatype.IsNull() {
+	if !data.Deltatype.IsNull() && !data.Deltatype.IsUnknown() {
 		cmpaction.Deltatype = data.Deltatype.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		cmpaction.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		cmpaction.Newname = data.Newname.ValueString()
-	}
-	if !data.Varyheadervalue.IsNull() {
+	// newname is a rename-only parameter (NITRO ?action=rename) - excluded from the add payload
+	if !data.Varyheadervalue.IsNull() && !data.Varyheadervalue.IsUnknown() {
 		cmpaction.Varyheadervalue = data.Varyheadervalue.ValueString()
 	}
+
+	return cmpaction
+}
+
+func cmpactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *CmpactionResourceModel) cmp.Cmpaction {
+	tflog.Debug(ctx, "In cmpactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// name is always carried because the update is a PUT to /config/cmpaction (unnamed).
+	cmpaction := cmp.Cmpaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		cmpaction.Name = data.Name.ValueString()
+	}
+	if !data.Addvaryheader.IsNull() && !data.Addvaryheader.IsUnknown() {
+		cmpaction.Addvaryheader = data.Addvaryheader.ValueString()
+	}
+	if !data.Cmptype.IsNull() && !data.Cmptype.IsUnknown() {
+		cmpaction.Cmptype = data.Cmptype.ValueString()
+	}
+	if !data.Varyheadervalue.IsNull() && !data.Varyheadervalue.IsUnknown() {
+		cmpaction.Varyheadervalue = data.Varyheadervalue.ValueString()
+	}
+	// deltatype is not NITRO-updatable (RequiresReplace) - excluded from the update payload
+	// newname is a rename-only parameter - excluded from the update payload
 
 	return cmpaction
 }
@@ -122,9 +161,12 @@ func cmpactionSetAttrFromGet(ctx context.Context, data *CmpactionResourceModel, 
 	} else {
 		data.Name = types.StringNull()
 	}
+	// newname is a rename-only parameter and is never returned by the NITRO GET.
+	// Preserve a configured value; only resolve an unknown (Computed) value to null
+	// so a configured newname does not trigger "inconsistent result after apply".
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
-	} else {
+	} else if data.Newname.IsUnknown() {
 		data.Newname = types.StringNull()
 	}
 	if val, ok := getResponseData["varyheadervalue"]; ok && val != nil {
@@ -134,7 +176,7 @@ func cmpactionSetAttrFromGet(ctx context.Context, data *CmpactionResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

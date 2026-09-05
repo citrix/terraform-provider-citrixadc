@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFilterglobal_filterpolicy_binding_basic_step1 = `
@@ -87,6 +88,88 @@ func TestAccFilterglobal_filterpolicy_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterglobal_filterpolicy_bindingNotExist("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", "tf_filterpolicy"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFilterglobal_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the binding with the last SDK v2 release (v2.2.0),
+				// which writes state using the legacy single-key ID format (just the policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterglobal_filterpolicy_bindingExist("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", nil),
+					resource.TestCheckResourceAttr("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", "id", "tf_filterpolicy"),
+				),
+			},
+			{
+				// Step 2: Refresh/apply the legacy-ID state through the current
+				// (Framework) provider. Read parses the legacy ID via ParseIdString
+				// and recomputes the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterglobal_filterpolicy_bindingExist("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", nil),
+					resource.TestCheckResourceAttr("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", "id", "policyname:tf_filterpolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFilterglobal_filterpolicy_binding_import(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccFilterglobal_filterpolicy_binding_basic_step1},
+			{Config: testAccFilterglobal_filterpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccFilterglobal_filterpolicy_binding_selfHealing(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFilterglobal_filterpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Filterglobal_filterpolicy_binding.Type(), "", map[string]string{"policyname": "tf_filterpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFilterglobal_filterpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

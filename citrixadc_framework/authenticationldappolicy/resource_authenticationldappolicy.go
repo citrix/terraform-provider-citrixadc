@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AuthenticationldappolicyResource) Create(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Creating authenticationldappolicy resource")
-
-	// authenticationldappolicy := authenticationldappolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	authenticationldappolicy := authenticationldappolicyGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationldappolicy.Type(), &authenticationldappolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationldappolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationldappolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationldappolicy.Type(), name_value, &authenticationldappolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationldappolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationldappolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAuthenticationldappolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationldappolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationldappolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AuthenticationldappolicyResource) Read(ctx context.Context, req resourc
 
 	tflog.Debug(ctx, "Reading authenticationldappolicy resource")
 
-	r.readAuthenticationldappolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationldappolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationldappolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationldappolicyResourceModel
+	var data, state AuthenticationldappolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,46 @@ func (r *AuthenticationldappolicyResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationldappolicy resource")
 
-	// Create API request body from the model
-	// authenticationldappolicy := authenticationldappolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Reqaction.Equal(state.Reqaction) {
+		tflog.Debug(ctx, "reqaction has changed for authenticationldappolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for authenticationldappolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationldappolicy.Type(), &authenticationldappolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationldappolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationldappolicy := authenticationldappolicyGetThePayloadFromtheConfig(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Authenticationldappolicy.Type(), name_value, &authenticationldappolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationldappolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationldappolicy resource")
+		tflog.Trace(ctx, "Updated authenticationldappolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationldappolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAuthenticationldappolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationldappolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationldappolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +177,36 @@ func (r *AuthenticationldappolicyResource) Delete(ctx context.Context, req resou
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationldappolicy resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Authenticationldappolicy.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationldappolicy, got error: %s", err))
+		return
+	}
 
-	// For authenticationldappolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationldappolicy resource from state")
+	tflog.Trace(ctx, "Deleted authenticationldappolicy resource")
 }
 
 // Helper function to read authenticationldappolicy data from API
-func (r *AuthenticationldappolicyResource) readAuthenticationldappolicyFromApi(ctx context.Context, data *AuthenticationldappolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationldappolicy.Type(), "")
+func (r *AuthenticationldappolicyResource) readAuthenticationldappolicyFromApi(ctx context.Context, data *AuthenticationldappolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	authenticationldappolicy_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationldappolicy.Type(), authenticationldappolicy_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationldappolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationldappolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

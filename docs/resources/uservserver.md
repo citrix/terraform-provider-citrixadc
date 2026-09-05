@@ -30,6 +30,7 @@ resource "citrixadc_uservserver" "tf_uservserver" {
 * `Params` - (Optional) Any comments associated with the protocol.
 * `comment` - (Optional) Any comments that you might want to associate with the virtual server.
 * `state` - (Optional) Initial state of the user vserver. Possible values: [ ENABLED, DISABLED ]
+* `params` - (Optional) Any comments associated with the protocol.
 
 
 ## Attribute Reference

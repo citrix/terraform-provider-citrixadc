@@ -56,7 +56,9 @@ func (r *NssimpleaclResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Port number to match against the destination port number of an incoming IPv4 packet.\n\nDestPort is mandatory while setting Protocol. Omitting the port number and protocol creates an all-ports  and all protocols simple ACL rule, which matches any port and any protocol. In that case, you cannot create another simple ACL rule specifying a specific port and the same source IPv4 address.",
 			},
@@ -64,7 +66,9 @@ func (r *NssimpleaclResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},
@@ -72,7 +76,9 @@ func (r *NssimpleaclResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Protocol to match against the protocol of an incoming IPv4 packet. You must set this parameter if you have set the Destination Port parameter.",
 			},
@@ -87,7 +93,9 @@ func (r *NssimpleaclResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -95,7 +103,9 @@ func (r *NssimpleaclResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Number of seconds, in multiples of four, after which the simple ACL rule expires. If you do not want the simple ACL rule to expire, do not specify a TTL value.",
 			},
@@ -106,30 +116,34 @@ func (r *NssimpleaclResource) Schema(ctx context.Context, req resource.SchemaReq
 func nssimpleaclGetThePayloadFromtheConfig(ctx context.Context, data *NssimpleaclResourceModel) ns.Nssimpleacl {
 	tflog.Debug(ctx, "In nssimpleaclGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// Only send values the user actually configured: for attributes read from the
+	// plan, unconfigured Optional+Computed attrs are Unknown (not Null), so guard on
+	// both to avoid pushing spurious zero-values to the ADC (matches the SDK v2
+	// GetRawConfig-gated behavior).
 	nssimpleacl := ns.Nssimpleacl{}
-	if !data.Aclaction.IsNull() {
+	if !data.Aclaction.IsNull() && !data.Aclaction.IsUnknown() {
 		nssimpleacl.Aclaction = data.Aclaction.ValueString()
 	}
-	if !data.Aclname.IsNull() {
+	if !data.Aclname.IsNull() && !data.Aclname.IsUnknown() {
 		nssimpleacl.Aclname = data.Aclname.ValueString()
 	}
-	if !data.Destport.IsNull() {
+	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		nssimpleacl.Destport = utils.IntPtr(int(data.Destport.ValueInt64()))
 	}
-	if !data.Estsessions.IsNull() {
+	if !data.Estsessions.IsNull() && !data.Estsessions.IsUnknown() {
 		nssimpleacl.Estsessions = data.Estsessions.ValueBool()
 	}
-	if !data.Protocol.IsNull() {
+	if !data.Protocol.IsNull() && !data.Protocol.IsUnknown() {
 		nssimpleacl.Protocol = data.Protocol.ValueString()
 	}
-	if !data.Srcip.IsNull() {
+	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		nssimpleacl.Srcip = data.Srcip.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		nssimpleacl.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		nssimpleacl.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 
@@ -139,52 +153,71 @@ func nssimpleaclGetThePayloadFromtheConfig(ctx context.Context, data *Nssimpleac
 func nssimpleaclSetAttrFromGet(ctx context.Context, data *NssimpleaclResourceModel, getResponseData map[string]interface{}) *NssimpleaclResourceModel {
 	tflog.Debug(ctx, "In nssimpleaclSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	//
+	// Hybrid setter: when NITRO returns the field, adopt it (enables drift
+	// detection, matching SDK v2's d.Set). When NITRO OMITS the field (common for
+	// zero/false values with json omitempty), do NOT clobber a value the user
+	// configured — only null it when the current value is Unknown (omit-on-default
+	// trap guard). This serves both the resource (preserves configured values) and
+	// the datasource (its non-key fields arrive Null, so absent GET fields stay
+	// Null while present ones are copied).
 	if val, ok := getResponseData["aclaction"]; ok && val != nil {
 		data.Aclaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Aclaction.IsUnknown() {
 		data.Aclaction = types.StringNull()
 	}
 	if val, ok := getResponseData["aclname"]; ok && val != nil {
 		data.Aclname = types.StringValue(val.(string))
-	} else {
+	} else if data.Aclname.IsUnknown() {
 		data.Aclname = types.StringNull()
 	}
 	if val, ok := getResponseData["destport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Destport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Destport.IsUnknown() {
 		data.Destport = types.Int64Null()
 	}
 	if val, ok := getResponseData["estsessions"]; ok && val != nil {
 		data.Estsessions = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Estsessions.IsUnknown() {
 		data.Estsessions = types.BoolNull()
 	}
 	if val, ok := getResponseData["protocol"]; ok && val != nil {
 		data.Protocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Protocol.IsUnknown() {
 		data.Protocol = types.StringNull()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
-	if val, ok := getResponseData["ttl"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Ttl = types.Int64Value(intVal)
+
+	// ttl: the ADC returns a DECREMENTING time-to-live (e.g. a configured 600 comes
+	// back as 599 on the next read), so a configured value must be preserved to
+	// avoid perpetual diffs / "inconsistent result after apply". This mirrors the
+	// SDK v2 resource, which deliberately re-set ttl from the user config, not the
+	// API. Only resolve ttl from the GET response when the current value is
+	// Unknown/Null (unconfigured Computed, or a datasource read).
+	if data.Ttl.IsUnknown() || data.Ttl.IsNull() {
+		if val, ok := getResponseData["ttl"]; ok && val != nil {
+			if intVal, err := utils.ConvertToInt64(val); err == nil {
+				data.Ttl = types.Int64Value(intVal)
+			} else {
+				data.Ttl = types.Int64Null()
+			}
+		} else {
+			data.Ttl = types.Int64Null()
 		}
-	} else {
-		data.Ttl = types.Int64Null()
 	}
 
 	// Set ID for the resource

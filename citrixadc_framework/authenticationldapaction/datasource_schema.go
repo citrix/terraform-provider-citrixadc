@@ -1,8 +1,87 @@
 package authenticationldapaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationldapactionDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationldapactionResourceModel. A data source is a pure
+// read surface, so it can expose the FULL GET projection: the read/write
+// attributes (as Computed outputs) AND the read-only attributes the resource
+// deliberately omits (ldapcontimeout, success, failure). The Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type AuthenticationldapactionDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Alternateemailattr         types.String `tfsdk:"alternateemailattr"`
+	Attribute1                 types.String `tfsdk:"attribute1"`
+	Attribute10                types.String `tfsdk:"attribute10"`
+	Attribute11                types.String `tfsdk:"attribute11"`
+	Attribute12                types.String `tfsdk:"attribute12"`
+	Attribute13                types.String `tfsdk:"attribute13"`
+	Attribute14                types.String `tfsdk:"attribute14"`
+	Attribute15                types.String `tfsdk:"attribute15"`
+	Attribute16                types.String `tfsdk:"attribute16"`
+	Attribute2                 types.String `tfsdk:"attribute2"`
+	Attribute3                 types.String `tfsdk:"attribute3"`
+	Attribute4                 types.String `tfsdk:"attribute4"`
+	Attribute5                 types.String `tfsdk:"attribute5"`
+	Attribute6                 types.String `tfsdk:"attribute6"`
+	Attribute7                 types.String `tfsdk:"attribute7"`
+	Attribute8                 types.String `tfsdk:"attribute8"`
+	Attribute9                 types.String `tfsdk:"attribute9"`
+	Attributes                 types.String `tfsdk:"attributes"`
+	Authentication             types.String `tfsdk:"authentication"`
+	Authtimeout                types.Int64  `tfsdk:"authtimeout"`
+	Cloudattributes            types.String `tfsdk:"cloudattributes"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Email                      types.String `tfsdk:"email"`
+	Followreferrals            types.String `tfsdk:"followreferrals"`
+	Groupattrname              types.String `tfsdk:"groupattrname"`
+	Groupnameidentifier        types.String `tfsdk:"groupnameidentifier"`
+	Groupsearchattribute       types.String `tfsdk:"groupsearchattribute"`
+	Groupsearchfilter          types.String `tfsdk:"groupsearchfilter"`
+	Groupsearchsubattribute    types.String `tfsdk:"groupsearchsubattribute"`
+	Kbattribute                types.String `tfsdk:"kbattribute"`
+	Ldapbase                   types.String `tfsdk:"ldapbase"`
+	Ldapbinddn                 types.String `tfsdk:"ldapbinddn"`
+	Ldapbinddnpassword         types.String `tfsdk:"ldapbinddnpassword"`
+	Ldaphostname               types.String `tfsdk:"ldaphostname"`
+	Ldaploginname              types.String `tfsdk:"ldaploginname"`
+	Maxldapreferrals           types.Int64  `tfsdk:"maxldapreferrals"`
+	Maxnestinglevel            types.Int64  `tfsdk:"maxnestinglevel"`
+	Mssrvrecordlocation        types.String `tfsdk:"mssrvrecordlocation"`
+	Name                       types.String `tfsdk:"name"`
+	Nestedgroupextraction      types.String `tfsdk:"nestedgroupextraction"`
+	Otpsecret                  types.String `tfsdk:"otpsecret"`
+	Passwdchange               types.String `tfsdk:"passwdchange"`
+	Passwordlessmgmtaccess     types.String `tfsdk:"passwordlessmgmtaccess"`
+	Pushservice                types.String `tfsdk:"pushservice"`
+	Referraldnslookup          types.String `tfsdk:"referraldnslookup"`
+	Requireuser                types.String `tfsdk:"requireuser"`
+	Searchfilter               types.String `tfsdk:"searchfilter"`
+	Sectype                    types.String `tfsdk:"sectype"`
+	Serverip                   types.String `tfsdk:"serverip"`
+	Servername                 types.String `tfsdk:"servername"`
+	Serverport                 types.Int64  `tfsdk:"serverport"`
+	Sshpublickey               types.String `tfsdk:"sshpublickey"`
+	Ssonameattribute           types.String `tfsdk:"ssonameattribute"`
+	Subattributename           types.String `tfsdk:"subattributename"`
+	Svrtype                    types.String `tfsdk:"svrtype"`
+	Validateservercert         types.String `tfsdk:"validateservercert"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationldapaction.json). Never settable.
+	Ldapcontimeout types.Int64 `tfsdk:"ldapcontimeout"`
+	Success        types.Int64 `tfsdk:"success"`
+	Failure        types.Int64 `tfsdk:"failure"`
+}
 
 func AuthenticationldapactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -171,18 +250,10 @@ func AuthenticationldapactionDataSourceSchema() schema.Schema {
 				Description: "Full distinguished name (DN) that is used to bind to the LDAP server.\nDefault: cn=Manager,dc=netscaler,dc=com",
 			},
 			"ldapbinddnpassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password used to bind to the LDAP server.",
-			},
-			"ldapbinddnpassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password used to bind to the LDAP server.",
-			},
-			"ldapbinddnpassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a ldapbinddnpassword_wo update.",
 			},
 			"ldaphostname": schema.StringAttribute{
 				Optional:    true,
@@ -227,6 +298,11 @@ func AuthenticationldapactionDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Allow password change requests.",
+			},
+			"passwordlessmgmtaccess": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This feature configures NetScaler management access to use LDAP exclusively for retrieving user group information. It ensures that LDAP is not used for authenticating user logins (i.e., verifying passwords) for NetScaler management access.",
 			},
 			"pushservice": schema.StringAttribute{
 				Optional:    true,
@@ -293,6 +369,97 @@ func AuthenticationldapactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "When to validate LDAP server certs",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"ldapcontimeout": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of seconds the Citrix ADC waits for the LDAP connection (TCP connection and SSL/TLS handshake) to be established with the LDAP server.",
+			},
+			"success": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of successful authentications through this LDAP action.",
+			},
+			"failure": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of failed authentications through this LDAP action.",
+			},
 		},
 	}
+}
+
+// authenticationldapactionDataSourceSetAttrFromGet projects a NITRO
+// authenticationldapaction GET response onto the data-source model. Attributes
+// are simply filled from the GET (or left Null when the GET omits them) via the
+// shared utils.MapGet* helpers.
+func authenticationldapactionDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationldapactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationldapactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Alternateemailattr = utils.MapGetString(g, "alternateemailattr")
+	data.Attribute1 = utils.MapGetString(g, "attribute1")
+	data.Attribute10 = utils.MapGetString(g, "attribute10")
+	data.Attribute11 = utils.MapGetString(g, "attribute11")
+	data.Attribute12 = utils.MapGetString(g, "attribute12")
+	data.Attribute13 = utils.MapGetString(g, "attribute13")
+	data.Attribute14 = utils.MapGetString(g, "attribute14")
+	data.Attribute15 = utils.MapGetString(g, "attribute15")
+	data.Attribute16 = utils.MapGetString(g, "attribute16")
+	data.Attribute2 = utils.MapGetString(g, "attribute2")
+	data.Attribute3 = utils.MapGetString(g, "attribute3")
+	data.Attribute4 = utils.MapGetString(g, "attribute4")
+	data.Attribute5 = utils.MapGetString(g, "attribute5")
+	data.Attribute6 = utils.MapGetString(g, "attribute6")
+	data.Attribute7 = utils.MapGetString(g, "attribute7")
+	data.Attribute8 = utils.MapGetString(g, "attribute8")
+	data.Attribute9 = utils.MapGetString(g, "attribute9")
+	data.Attributes = utils.MapGetString(g, "attributes")
+	data.Authentication = utils.MapGetString(g, "authentication")
+	data.Authtimeout = utils.MapGetInt64(g, "authtimeout")
+	data.Cloudattributes = utils.MapGetString(g, "cloudattributes")
+	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
+	data.Email = utils.MapGetString(g, "email")
+	data.Followreferrals = utils.MapGetString(g, "followreferrals")
+	data.Groupattrname = utils.MapGetString(g, "groupattrname")
+	data.Groupnameidentifier = utils.MapGetString(g, "groupnameidentifier")
+	data.Groupsearchattribute = utils.MapGetString(g, "groupsearchattribute")
+	data.Groupsearchfilter = utils.MapGetString(g, "groupsearchfilter")
+	data.Groupsearchsubattribute = utils.MapGetString(g, "groupsearchsubattribute")
+	data.Kbattribute = utils.MapGetString(g, "kbattribute")
+	data.Ldapbase = utils.MapGetString(g, "ldapbase")
+	data.Ldapbinddn = utils.MapGetString(g, "ldapbinddn")
+	data.Ldaphostname = utils.MapGetString(g, "ldaphostname")
+	data.Ldaploginname = utils.MapGetString(g, "ldaploginname")
+	data.Maxldapreferrals = utils.MapGetInt64(g, "maxldapreferrals")
+	data.Maxnestinglevel = utils.MapGetInt64(g, "maxnestinglevel")
+	data.Mssrvrecordlocation = utils.MapGetString(g, "mssrvrecordlocation")
+	data.Nestedgroupextraction = utils.MapGetString(g, "nestedgroupextraction")
+	data.Otpsecret = utils.MapGetString(g, "otpsecret")
+	data.Passwdchange = utils.MapGetString(g, "passwdchange")
+	data.Passwordlessmgmtaccess = utils.MapGetString(g, "passwordlessmgmtaccess")
+	data.Pushservice = utils.MapGetString(g, "pushservice")
+	data.Referraldnslookup = utils.MapGetString(g, "referraldnslookup")
+	data.Requireuser = utils.MapGetString(g, "requireuser")
+	data.Searchfilter = utils.MapGetString(g, "searchfilter")
+	data.Sectype = utils.MapGetString(g, "sectype")
+	data.Serverip = utils.MapGetString(g, "serverip")
+	data.Servername = utils.MapGetString(g, "servername")
+	data.Serverport = utils.MapGetInt64(g, "serverport")
+	data.Sshpublickey = utils.MapGetString(g, "sshpublickey")
+	data.Ssonameattribute = utils.MapGetString(g, "ssonameattribute")
+	data.Subattributename = utils.MapGetString(g, "subattributename")
+	data.Svrtype = utils.MapGetString(g, "svrtype")
+	data.Validateservercert = utils.MapGetString(g, "validateservercert")
+
+	// ldapbinddnpassword is a secret input the GET never returns -> Null.
+	data.Ldapbinddnpassword = types.StringNull()
+
+	// Read-only metadata.
+	data.Ldapcontimeout = utils.MapGetInt64(g, "ldapcontimeout")
+	data.Success = utils.MapGetInt64(g, "success")
+	data.Failure = utils.MapGetInt64(g, "failure")
 }

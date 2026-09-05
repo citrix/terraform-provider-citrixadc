@@ -36,6 +36,13 @@ type Cloudngsparameter struct {
 	* Enables DTLS1.2 for client connections on CGS
 	*/
 	Allowdtls12 string `json:"allowdtls12,omitempty"`
+	/**
+	* Configure WAF protection for CGS deployment. The available options are:
+		* EDGE - Edge APIs are WAF protected.
+		* DEFAULT - NetScaler decides which endpoints have WAF protection enabled for CGS deployment.
+		* DISABLED - WAF protection is disabled.
+	*/
+	Wafprotection string `json:"wafprotection,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -37,11 +37,13 @@ In addition to the arguments, the following attributes are available:
 * `type` - Type of transformation. Always URL for URL Transformation profiles.
 * `id` - The id of the transformprofile. It has the same value as the `name` attribute.
 
+### Read-only transformprofile metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_transformprofile` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
 
-A transformprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_transformprofile.tf_trans_profile tf_trans_profile
-```
+* `regexforfindingurlinjavascript` - Patclass having regexes to find the URLs in JavaScript.
+* `regexforfindingurlincss` - Patclass having regexes to find the URLs in CSS.
+* `regexforfindingurlinxcomponent` - Patclass having regexes to find the URLs in X-Component.
+* `regexforfindingurlinxml` - Patclass having regexes to find the URLs in XML.
+* `additionalreqheaderslist` - Patclass having a list of additional request header names that should transformed.
+* `additionalrespheaderslist` - Patclass having a list of additional response header names that should transformed.

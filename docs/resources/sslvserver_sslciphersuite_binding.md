@@ -11,16 +11,16 @@ The sslvserver_sslciphersuite_binding resource is used to add an ssl cipher suit
 ## Example usage
 
 ```hcl
-resource "citrixadc_sslvserver_sslciphersuite_binding" "tf_sslvserver_sslciphersuite_binding" {
-	ciphername = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
-	vservername = citrixadc_lbvserver.tf_sslvserver.name
+resource "citrixadc_lbvserver" "tf_sslvserver" {
+  name        = "tf_sslvserver"
+  servicetype = "SSL"
+  ipv46       = "5.5.5.5"
+  port        = 443
 }
 
-resource "citrixadc_lbvserver" "tf_sslvserver" {
-	name = "tf_sslvserver"
-	servicetype = "SSL"
-	ipv46 = "5.5.5.5"
-	port = 80
+resource "citrixadc_sslvserver_sslciphersuite_binding" "tf_binding" {
+  vservername = citrixadc_lbvserver.tf_sslvserver.name
+  ciphername  = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
 }
 ```
 
@@ -44,5 +44,5 @@ In addition to the arguments, the following attributes are available:
 A sslvserver_sslciphersuite_binding can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding tf_sslvserver,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256
+terraform import citrixadc_sslvserver_sslciphersuite_binding.tf_binding tf_sslvserver,TLS1.2-ECDHE-RSA-AES128-GCM-SHA256
 ```

@@ -30,3 +30,9 @@ In addition to the arguments, the following attributes are available:
 
 * `ifnum` - The constituent interfaces in the interface pair.
 * `id` - The id of the interfacepair. It has the same value as the `interface_id` attribute.
+
+### Read-only interfacepair metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_interfacepair` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `ifaces` - Names of all member interfaces of this Interface Pair.

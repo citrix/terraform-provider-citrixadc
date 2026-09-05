@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -37,6 +36,7 @@ type AuthenticationvserverResourceModel struct {
 	Servicetype          types.String `tfsdk:"servicetype"`
 	State                types.String `tfsdk:"state"`
 	Td                   types.Int64  `tfsdk:"td"`
+	Wasmmodule           types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -48,13 +48,21 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				Description: "The ID of the authenticationvserver resource.",
 			},
 			"appflowlog": schema.StringAttribute{
+				// Optional+Computed with an explicit Default so that removing it from
+				// config produces a plan diff and Update can unset it (revert to the
+				// NITRO default "ENABLED"). Without a Default it would be sticky.
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Log AppFlow flow information.",
 			},
 			"authentication": schema.StringAttribute{
+				// Optional+Computed with an explicit Default so that removing it from
+				// config produces a plan diff and Update can unset it (revert to the
+				// NITRO default "ON"). Without a Default it would be sticky.
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Require users to be authenticated before sending traffic through this virtual server.",
 			},
 			"authenticationdomain": schema.StringAttribute{
@@ -88,31 +96,40 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				Description: "Maximum Number of login Attempts",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the new authentication virtual server.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the authentication virtual server is added by using the rename authentication vserver command.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication policy\" or 'my authentication policy').",
-			},
-			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Name for the new authentication virtual server.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the authentication virtual server is added by using the rename authentication vserver command.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication policy\" or 'my authentication policy').",
+			},
+			"newname": schema.StringAttribute{
+				// newname is a rename-only input. It is never echoed back by GET, so it
+				// must NOT be Computed (which would cause perpetual known-after-apply churn),
+				// and it must NOT be RequiresReplace (a name change is an in-place NITRO
+				// rename action, handled in Update, not a destroy/recreate).
+				Optional:    true,
 				Description: "New name of the authentication virtual server.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, 'my authentication policy' or \"my authentication policy\").",
 			},
 			"port": schema.Int64Attribute{
+				// Create-only per NITRO (absent from the "set" payload).
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "TCP port on which the virtual server accepts connections.",
 			},
 			"range": schema.Int64Attribute{
+				// Create-only per NITRO (absent from the "set" payload).
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(1),
 				Description: "If you are creating a series of virtual servers with a range of IP addresses assigned to them, the length of the range.\nThe new range of authentication virtual servers will have IP addresses consecutively numbered, starting with the primary address specified with the IP Address parameter.",
 			},
 			"samesite": schema.StringAttribute{
@@ -121,85 +138,142 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				Description: "SameSite attribute value for Cookies generated in AAATM context. This attribute value will be appended only for the cookies which are specified in the builtin patset ns_cookies_samesite",
 			},
 			"servicetype": schema.StringAttribute{
-				Required: true,
+				// Create-only per NITRO (absent from the "set" payload).
+				// Optional+Computed to match the SDK v2 contract (not Required); no Default.
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("SSL"),
 				Description: "Protocol type of the authentication virtual server. Always SSL.",
 			},
 			"state": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ENABLED"),
+				// state IS updateable (via the enable/disable actions handled in Update),
+				// so it must NOT be RequiresReplace. Matches the SDK v2 contract.
+				Optional:    true,
+				Computed:    true,
 				Description: "Initial state of the new virtual server.",
 			},
 			"td": schema.Int64Attribute{
+				// Create-only per NITRO (absent from the "set" payload).
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
 			},
 		},
 	}
 }
 
-func authenticationvserverGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationvserverResourceModel) authentication.Authenticationvserver {
-	tflog.Debug(ctx, "In authenticationvserverGetThePayloadFromtheConfig Function")
+func authenticationvserverGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationvserverResourceModel) authentication.Authenticationvserver {
+	tflog.Debug(ctx, "In authenticationvserverGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model (add payload)
 	authenticationvserver := authentication.Authenticationvserver{}
-	if !data.Appflowlog.IsNull() {
+	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
 		authenticationvserver.Appflowlog = data.Appflowlog.ValueString()
 	}
-	if !data.Authentication.IsNull() {
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
 		authenticationvserver.Authentication = data.Authentication.ValueString()
 	}
-	if !data.Authenticationdomain.IsNull() {
+	if !data.Authenticationdomain.IsNull() && !data.Authenticationdomain.IsUnknown() {
 		authenticationvserver.Authenticationdomain = data.Authenticationdomain.ValueString()
 	}
-	if !data.Certkeynames.IsNull() {
+	if !data.Certkeynames.IsNull() && !data.Certkeynames.IsUnknown() {
 		authenticationvserver.Certkeynames = data.Certkeynames.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		authenticationvserver.Comment = data.Comment.ValueString()
 	}
-	if !data.Failedlogintimeout.IsNull() {
+	if !data.Failedlogintimeout.IsNull() && !data.Failedlogintimeout.IsUnknown() {
 		authenticationvserver.Failedlogintimeout = utils.IntPtr(int(data.Failedlogintimeout.ValueInt64()))
 	}
-	if !data.Ipv46.IsNull() {
+	if !data.Ipv46.IsNull() && !data.Ipv46.IsUnknown() {
 		authenticationvserver.Ipv46 = data.Ipv46.ValueString()
 	}
-	if !data.Maxloginattempts.IsNull() {
+	if !data.Maxloginattempts.IsNull() && !data.Maxloginattempts.IsUnknown() {
 		authenticationvserver.Maxloginattempts = utils.IntPtr(int(data.Maxloginattempts.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationvserver.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		authenticationvserver.Newname = data.Newname.ValueString()
-	}
-	if !data.Port.IsNull() {
+	// newname is rename-only and must not be part of the add payload.
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		authenticationvserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Range.IsNull() {
+	if !data.Range.IsNull() && !data.Range.IsUnknown() {
 		authenticationvserver.Range = utils.IntPtr(int(data.Range.ValueInt64()))
 	}
-	if !data.Samesite.IsNull() {
+	if !data.Samesite.IsNull() && !data.Samesite.IsUnknown() {
 		authenticationvserver.Samesite = data.Samesite.ValueString()
 	}
-	if !data.Servicetype.IsNull() {
+	if !data.Servicetype.IsNull() && !data.Servicetype.IsUnknown() {
 		authenticationvserver.Servicetype = data.Servicetype.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		authenticationvserver.State = data.State.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		authenticationvserver.Td = utils.IntPtr(int(data.Td.ValueInt64()))
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		authenticationvserver.Wasmmodule = data.Wasmmodule.ValueString()
+	}
+
+	return authenticationvserver
+}
+
+func authenticationvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationvserverResourceModel) authentication.Authenticationvserver {
+	tflog.Debug(ctx, "In authenticationvserverGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body for the NITRO "set" (update) operation. Per the NITRO doc,
+	// only these fields are accepted by "set"; servicetype/port/range/td are create-only
+	// (RequiresReplace) and state is driven via enable/disable actions, so all of those
+	// are excluded here. newname is excluded (rename is a separate action).
+	authenticationvserver := authentication.Authenticationvserver{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationvserver.Name = data.Name.ValueString()
+	}
+	if !data.Ipv46.IsNull() && !data.Ipv46.IsUnknown() {
+		authenticationvserver.Ipv46 = data.Ipv46.ValueString()
+	}
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
+		authenticationvserver.Authentication = data.Authentication.ValueString()
+	}
+	if !data.Authenticationdomain.IsNull() && !data.Authenticationdomain.IsUnknown() {
+		authenticationvserver.Authenticationdomain = data.Authenticationdomain.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		authenticationvserver.Comment = data.Comment.ValueString()
+	}
+	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
+		authenticationvserver.Appflowlog = data.Appflowlog.ValueString()
+	}
+	if !data.Maxloginattempts.IsNull() && !data.Maxloginattempts.IsUnknown() {
+		authenticationvserver.Maxloginattempts = utils.IntPtr(int(data.Maxloginattempts.ValueInt64()))
+	}
+	if !data.Failedlogintimeout.IsNull() && !data.Failedlogintimeout.IsUnknown() {
+		authenticationvserver.Failedlogintimeout = utils.IntPtr(int(data.Failedlogintimeout.ValueInt64()))
+	}
+	if !data.Certkeynames.IsNull() && !data.Certkeynames.IsUnknown() {
+		authenticationvserver.Certkeynames = data.Certkeynames.ValueString()
+	}
+	if !data.Samesite.IsNull() && !data.Samesite.IsUnknown() {
+		authenticationvserver.Samesite = data.Samesite.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		authenticationvserver.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 
 	return authenticationvserver
@@ -238,7 +312,10 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Failedlogintimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Failedlogintimeout.IsUnknown() {
+		// Only null an unresolved (unconfigured Computed) value. Preserve a configured
+		// value (e.g. an explicit 0) that NITRO omits from GET to avoid
+		// "inconsistent result after apply".
 		data.Failedlogintimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipv46"]; ok && val != nil {
@@ -250,31 +327,31 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxloginattempts = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxloginattempts.IsUnknown() {
 		data.Maxloginattempts = types.Int64Null()
 	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
+	// name is the resource key. Preserve the configured value (after a rename the GET
+	// response carries the NEW name while the config still holds the OLD name — adopting
+	// the GET value would trigger a spurious RequiresReplace). Only adopt the GET value
+	// when the model has no name yet (import path, where only the ID is populated).
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	// newname is rename-only and never returned by GET; leave it untouched.
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["range"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Range = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Range.IsUnknown() {
 		data.Range = types.Int64Null()
 	}
 	if val, ok := getResponseData["samesite"]; ok && val != nil {
@@ -287,7 +364,13 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 	} else {
 		data.Servicetype = types.StringNull()
 	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
+	// state: NITRO GET reports the operational state, not the admin (ENABLED/DISABLED)
+	// state. Preserve the configured/planned admin state (mirrors the SDK v2 resource,
+	// which never reads state back). Only adopt a GET value when the model has no state
+	// yet (e.g. datasource read or import), so a Computed unconfigured value still resolves.
+	if !data.State.IsNull() && !data.State.IsUnknown() {
+		// preserve configured/planned value
+	} else if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
 	} else {
 		data.State = types.StringNull()
@@ -296,13 +379,14 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
-
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else {
+		data.Wasmmodule = types.StringNull()
+	}
 
 	return data
 }

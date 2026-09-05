@@ -53,6 +53,10 @@ type Lbvserverservicebinding struct {
 	*/
 	Cookieipport string `json:"cookieipport,omitempty"`
 	/**
+	* Use this parameter to specify the cookie name for COOKIE peristence type. It specifies the name of cookie with a maximum of 32 characters. If not specified, cookie name is internally generated.
+	*/
+	Cookiename string `json:"cookiename,omitempty"`
+	/**
 	* Vserver Id
 	*/
 	Vserverid string `json:"vserverid,omitempty"`

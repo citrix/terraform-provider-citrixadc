@@ -1,8 +1,54 @@
 package dnsparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// DnsparameterDataSourceModel is the data-source-specific model, decoupled from
+// DnsparameterResourceModel. A data source is a pure read surface, so it exposes
+// the full GET projection: the read/write attributes (as Computed outputs) AND
+// the read-only attributes the resource deliberately omits (builtin, feature,
+// nxdomainthresholdcrossed). Every non-key attribute is Computed.
+type DnsparameterDataSourceModel struct {
+	Id                           types.String `tfsdk:"id"`
+	Autosavekeyops               types.String `tfsdk:"autosavekeyops"`
+	Cacheecszeroprefix           types.String `tfsdk:"cacheecszeroprefix"`
+	Cachehitbypass               types.String `tfsdk:"cachehitbypass"`
+	Cachenoexpire                types.String `tfsdk:"cachenoexpire"`
+	Cacherecords                 types.String `tfsdk:"cacherecords"`
+	Dns64timeout                 types.Int64  `tfsdk:"dns64timeout"`
+	Dnsrootreferral              types.String `tfsdk:"dnsrootreferral"`
+	Dnssec                       types.String `tfsdk:"dnssec"`
+	Ecsmaxsubnets                types.Int64  `tfsdk:"ecsmaxsubnets"`
+	Maxcachesize                 types.Int64  `tfsdk:"maxcachesize"`
+	Maxnegativecachesize         types.Int64  `tfsdk:"maxnegativecachesize"`
+	Maxnegcachettl               types.Int64  `tfsdk:"maxnegcachettl"`
+	Maxpipeline                  types.Int64  `tfsdk:"maxpipeline"`
+	Maxttl                       types.Int64  `tfsdk:"maxttl"`
+	Maxudppacketsize             types.Int64  `tfsdk:"maxudppacketsize"`
+	Minttl                       types.Int64  `tfsdk:"minttl"`
+	Namelookuppriority           types.String `tfsdk:"namelookuppriority"`
+	Nxdomainratelimitthreshold   types.Int64  `tfsdk:"nxdomainratelimitthreshold"`
+	Recursion                    types.String `tfsdk:"recursion"`
+	Resolutionorder              types.String `tfsdk:"resolutionorder"`
+	Resolvermaxactiveresolutions types.Int64  `tfsdk:"resolvermaxactiveresolutions"`
+	Resolvermaxtcpconnections    types.Int64  `tfsdk:"resolvermaxtcpconnections"`
+	Resolvermaxtcptimeout        types.Int64  `tfsdk:"resolvermaxtcptimeout"`
+	Retries                      types.Int64  `tfsdk:"retries"`
+	Splitpktqueryprocessing      types.String `tfsdk:"splitpktqueryprocessing"`
+	Zonetransfer                 types.String `tfsdk:"zonetransfer"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/dnsparameter.json). Never settable; populated from GET.
+	Builtin                  types.List   `tfsdk:"builtin"`
+	Feature                  types.String `tfsdk:"feature"`
+	Nxdomainthresholdcrossed types.Int64  `tfsdk:"nxdomainthresholdcrossed"`
+}
 
 func DnsparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -140,6 +186,65 @@ func DnsparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Flag to enable/disable DNS zones configuration transfer to remote GSLB site nodes",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if dns param is built-in or not. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
+			"nxdomainthresholdcrossed": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of times requests has been dropped as number of DNS queries leading to NXDOMAIN response has crossed the threshold.",
+			},
 		},
 	}
+}
+
+// dnsparameterDataSourceSetAttrFromGet projects a NITRO dnsparameter GET response
+// onto the data-source model. Attributes are filled from the GET (or left Null
+// when the GET omits them) via the shared utils.MapGet* helpers.
+func dnsparameterDataSourceSetAttrFromGet(ctx context.Context, data *DnsparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In dnsparameterDataSourceSetAttrFromGet Function")
+
+	// Read/write attributes as read-back outputs.
+	data.Autosavekeyops = utils.MapGetString(g, "autosavekeyops")
+	data.Cacheecszeroprefix = utils.MapGetString(g, "cacheecszeroprefix")
+	data.Cachehitbypass = utils.MapGetString(g, "cachehitbypass")
+	data.Cachenoexpire = utils.MapGetString(g, "cachenoexpire")
+	data.Cacherecords = utils.MapGetString(g, "cacherecords")
+	data.Dns64timeout = utils.MapGetInt64(g, "dns64timeout")
+	data.Dnsrootreferral = utils.MapGetString(g, "dnsrootreferral")
+	data.Dnssec = utils.MapGetString(g, "dnssec")
+	data.Ecsmaxsubnets = utils.MapGetInt64(g, "ecsmaxsubnets")
+	data.Maxcachesize = utils.MapGetInt64(g, "maxcachesize")
+	data.Maxnegativecachesize = utils.MapGetInt64(g, "maxnegativecachesize")
+	data.Maxnegcachettl = utils.MapGetInt64(g, "maxnegcachettl")
+	data.Maxpipeline = utils.MapGetInt64(g, "maxpipeline")
+	data.Maxttl = utils.MapGetInt64(g, "maxttl")
+	data.Maxudppacketsize = utils.MapGetInt64(g, "maxudppacketsize")
+	data.Minttl = utils.MapGetInt64(g, "minttl")
+	data.Namelookuppriority = utils.MapGetString(g, "namelookuppriority")
+	data.Nxdomainratelimitthreshold = utils.MapGetInt64(g, "nxdomainratelimitthreshold")
+	data.Recursion = utils.MapGetString(g, "recursion")
+	data.Resolutionorder = utils.MapGetString(g, "resolutionorder")
+	data.Resolvermaxactiveresolutions = utils.MapGetInt64(g, "resolvermaxactiveresolutions")
+	data.Resolvermaxtcpconnections = utils.MapGetInt64(g, "resolvermaxtcpconnections")
+	data.Resolvermaxtcptimeout = utils.MapGetInt64(g, "resolvermaxtcptimeout")
+	data.Retries = utils.MapGetInt64(g, "retries")
+	data.Splitpktqueryprocessing = utils.MapGetString(g, "splitpktqueryprocessing")
+	data.Zonetransfer = utils.MapGetString(g, "zonetransfer")
+
+	// Read-only attributes.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
+	data.Nxdomainthresholdcrossed = utils.MapGetInt64(g, "nxdomainthresholdcrossed")
+
+	// Singleton resource - static ID.
+	data.Id = types.StringValue("dnsparameter-config")
 }

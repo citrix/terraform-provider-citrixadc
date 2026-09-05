@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // rnat_retainsourceportset_binding is an immutable bind/unbind resource (no update
@@ -288,6 +288,34 @@ func TestAccRnat_retainsourceportset_bindingDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_rnat_retainsourceportset_binding.tf_rnat_retainsourceportset_binding", "name", "my_rnat_rsps"),
 					resource.TestCheckResourceAttr("data.citrixadc_rnat_retainsourceportset_binding.tf_rnat_retainsourceportset_binding", "retainsourceportrange", "1024-2048"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRnat_retainsourceportset_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rnat_retainsourceportset_binding.tf_rnat_retainsourceportset_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat_retainsourceportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat_retainsourceportset_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat_retainsourceportset_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Rnat_retainsourceportset_binding.Type(), "my_rnat_rsps", map[string]string{"retainsourceportrange": "1024-2048"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRnat_retainsourceportset_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat_retainsourceportset_bindingExist(resAddr, nil)),
 			},
 		},
 	})

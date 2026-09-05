@@ -21,8 +21,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccHanode_routemonitor_binding_basic = `
@@ -77,6 +79,22 @@ func TestAccHanode_routemonitor_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccHanode_routemonitor_binding_import(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const resAddr = "citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccHanode_routemonitor_binding_basic},
+			{Config: testAccHanode_routemonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckHanode_routemonitor_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -104,10 +122,12 @@ func testAccCheckHanode_routemonitor_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		id := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"hanode_id", "routemonitor"}, nil)
+		if err != nil {
+			return err
+		}
+		id := idMap["hanode_id"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "hanode_routemonitor_binding",
@@ -149,10 +169,12 @@ func testAccCheckHanode_routemonitor_bindingNotExist(n string, id string) resour
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		id := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"hanode_id", "routemonitor"}, nil)
+		if err != nil {
+			return err
+		}
+		id := idMap["hanode_id"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "hanode_routemonitor_binding",
@@ -223,7 +245,105 @@ func TestAccHanode_routemonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "hanode_id", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "routemonitor", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "netmask", "255.255.255.192"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// routemonitorstate is a state field always populated for a live monitor.
+					resource.TestCheckResourceAttrSet("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "routemonitorstate"),
 				),
+			},
+		},
+	})
+}
+
+// testAccHanode_routemonitor_binding_upgrade_basic reuses the _basic config values.
+// It is valid under BOTH the SDK v2 2.2.0 schema and the current Framework schema
+// because the migration restored the SDK v2 attribute names.
+const testAccHanode_routemonitor_binding_upgrade_basic = `
+
+	resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding" {
+		hanode_id = 0
+		routemonitor = "10.222.74.128"
+		netmask = "255.255.255.192"
+	}
+`
+
+// TestAccHanode_routemonitor_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (2.2.0) with the legacy comma-joined id ("0,10.222.74.128") upgrades
+// cleanly through the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0. Step 2 refreshes/plans/applies the SAME config through the current
+// Framework provider, exercising ParseIdString on the legacy id; because the Framework
+// recomputes the id on Read (SetAttrFromGet), the id upgrades to the new key:value form
+// "hanode_id:0,routemonitor:10.222.74.128".
+func TestAccHanode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	resourceAddr := "citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckHanode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccHanode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanode_routemonitor_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "0,10.222.74.128"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the SAME config through the current Framework
+				// provider. Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccHanode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanode_routemonitor_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "hanode_id:0,routemonitor:10.222.74.128"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccHanode_routemonitor_binding_selfHealing verifies drift recovery: after the
+// binding is created, it is deleted out-of-band on the ADC; the next apply of the same
+// config must detect the missing binding and recreate it.
+func TestAccHanode_routemonitor_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const resAddr = "citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanode_routemonitor_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Hanode_routemonitor_binding.Type(), "0", []string{"routemonitor:" + utils.UrlEncode("10.222.74.128"), "netmask:" + utils.UrlEncode("255.255.255.192")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccHanode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanode_routemonitor_bindingExist(resAddr, nil)),
 			},
 		},
 	})

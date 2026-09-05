@@ -124,6 +124,10 @@ type Auditnslogaction struct {
 	*/
 	Protocolviolations string `json:"protocolviolations,omitempty"`
 	/**
+	* Log denylist violations
+	*/
+	Denylistviolations string `json:"denylistviolations,omitempty"`
+	/**
 	* Immediately send a DNS query to resolve the server's domain name.
 	*/
 	Domainresolvenow bool `json:"domainresolvenow,omitempty"`

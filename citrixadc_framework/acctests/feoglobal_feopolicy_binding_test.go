@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFeoglobal_feopolicy_binding_basic = `
@@ -223,7 +224,112 @@ func TestAccFeoglobal_feopolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "policyname", "tf_feopolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+const testAccFeoglobal_feopolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_feopolicy" "tf_feopolicy" {
+		name   = "tf_feopolicy"
+		action = "BASIC"
+		rule   = "true"
+	}
+
+	resource "citrixadc_feoglobal_feopolicy_binding" "tf_feoglobal_feopolicy_binding" {
+		policyname = citrixadc_feopolicy.tf_feopolicy.name
+		type       = "REQ_DEFAULT"
+		priority   = 100
+	}
+`
+
+func TestAccFeoglobal_feopolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFeoglobal_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccFeoglobal_feopolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeoglobal_feopolicy_bindingExist("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "id", "tf_feopolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the canonical new format.
+				// This is a single-key (policyname) binding, so the new format is the
+				// plain value and the id stays "tf_feopolicy".
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFeoglobal_feopolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeoglobal_feopolicy_bindingExist("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "id", "tf_feopolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFeoglobal_feopolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeoglobal_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoglobal_feopolicy_binding_basic,
+			},
+			{
+				Config:                  testAccFeoglobal_feopolicy_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccFeoglobal_feopolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeoglobal_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoglobal_feopolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoglobal_feopolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Feoglobal_feopolicy_binding.Type(), "", []string{"policyname:tf_feopolicy", "priority:100", "type:REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFeoglobal_feopolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoglobal_feopolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

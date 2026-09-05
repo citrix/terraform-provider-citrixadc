@@ -39,6 +39,7 @@ resource "citrixadc_nsassignment" "tf_nsassignment" {
 * `clear` - (Optional) Clear the variable value. Deallocates a text value, and for a map, the text key.
 * `comment` - (Optional) Comment. Can be used to preserve information about this rewrite action.
 * `newname` - (Optional) New name for the assignment. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my assignment" or my assignment). Minimum length =  1
+* `add` - (Optional) Right hand side of the assignment. The expression is evaluated and added to the left hand variable.
 
 
 ## Attribute Reference

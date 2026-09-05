@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCsaction_create = `
@@ -141,6 +142,53 @@ func TestAccCsaction_create_update_name(t *testing.T) {
 	})
 }
 
+func TestAccCsaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csaction.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsaction_create,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Csaction.Type(), "tf_test_csaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsaction_create,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCsaction_import(t *testing.T) {
+	const resAddr = "citrixadc_csaction.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsaction_create},
+			{
+				Config:                  testAccCsaction_create,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCsactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -205,6 +253,122 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCsaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCsaction_create,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsactionExist("citrixadc_csaction.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsaction_create,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsactionExist("citrixadc_csaction.foo", nil)),
+			},
+		},
+	})
+}
+
+const testAccCsaction_unset_step1 = `
+
+resource "citrixadc_csaction" "tf_unset" {
+  name            = "tf_test_csaction_unset"
+  targetlbvserver = citrixadc_lbvserver.tf_unset_lb.name
+  comment         = "csaction unset test comment"
+}
+
+resource "citrixadc_lbvserver" "tf_unset_lb" {
+  name        = "unset_image_lb"
+  ipv46       = "10.0.2.8"
+  port        = "80"
+  servicetype = "HTTP"
+}
+
+`
+
+const testAccCsaction_unset_step2 = `
+
+resource "citrixadc_csaction" "tf_unset" {
+  name            = "tf_test_csaction_unset"
+  targetlbvserver = citrixadc_lbvserver.tf_unset_lb.name
+  # comment removed from config -> the provider must unset it (revert to the
+  # NITRO default: empty).
+}
+
+resource "citrixadc_lbvserver" "tf_unset_lb" {
+  name        = "unset_image_lb"
+  ipv46       = "10.0.2.8"
+  port        = "80"
+  servicetype = "HTTP"
+}
+
+`
+
+func TestAccCsaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccCsaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsactionExist("citrixadc_csaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csaction.tf_unset", "comment", "csaction unset test comment"),
+				),
+			},
+			{
+				// Removing comment must unset it: state (read back from the
+				// appliance) reverts to the NITRO default (empty), and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCsaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsactionExist("citrixadc_csaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csaction.tf_unset", "comment", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCsactionADCValue("tf_test_csaction_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCsactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An absent/nil attribute is treated as the empty string.
+func testAccCheckCsactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Csaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("csaction %s not found on appliance", name)
+		}
+		got := ""
+		if raw, ok := data[attr]; ok && raw != nil {
+			got = fmt.Sprintf("%v", raw)
+		}
+		if got != want {
+			return fmt.Errorf("csaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccCsactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -217,6 +381,8 @@ func TestAccCsactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "name", "tf_csaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "targetlbvserver", "ds_image_lb"),
 					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "comment", "DataSource test for csaction"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csaction.tf_csaction_ds", "id"),
 				),
 			},
 		},

@@ -21,9 +21,9 @@ resource "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonit
 
 ## Argument Reference
 
-* `routemonitor` - (Required) The IP address (IPv4 or IPv6). *NOTICE* This ip should be the same as the network address (gateway) in compliance with the netmask you provided. 
-* `netmask` - (Requied) The netmask.
-* `nodeid` - (Required) A number that uniquely identifies the cluster node. . Minimum value =  0 Maximum value =  31
+* `routemonitor` - (Required) The IP address (IPv4 or IPv6). This IP should be the same as the network address (gateway) in compliance with the netmask you provided.
+* `netmask` - (Required) The netmask.
+* `nodeid` - (Required) A number that uniquely identifies the cluster node. Minimum value = 0 Maximum value = 31
 
 
 ## Attribute Reference

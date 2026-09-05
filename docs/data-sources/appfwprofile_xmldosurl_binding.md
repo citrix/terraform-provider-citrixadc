@@ -32,11 +32,12 @@ output "xmlmaxfilesize" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_xmldosurl_binding. It is a system-generated identifier.
+* `id` - The id of the appfwprofile_xmldosurl_binding. It is the concatenation of `name` and `xmldosurl` attributes separated by comma.
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.
 * `xmlblockdtd` - State if XML DTD is ON or OFF. Protects against recursive Document Type Declaration (DTD) entity expansion attacks. Also, SOAP messages cannot have DTDs in messages.
 * `xmlblockexternalentities` - State if XML Block External Entities Check is ON or OFF. Protects against XML External Entity (XXE) attacks that force applications to parse untrusted external entities (sources) in XML documents.

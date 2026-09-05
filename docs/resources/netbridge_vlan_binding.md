@@ -11,7 +11,7 @@ The netbridge_vlan_binding resource is used to bind vlan to netbridge resource.
 
 ```hcl
 resource "citrixadc_netbridge" "tf_netbridge" {
-  name         = "tf_netbridge"
+  name = "tf_netbridge"
 }
 resource "citrixadc_vlan" "tf_vlan" {
   vlanid    = 20
@@ -27,14 +27,14 @@ resource "citrixadc_netbridge_vlan_binding" "tf_binding" {
 ## Argument Reference
 
 * `name` - (Required) The name of the network bridge.
-* `vlan` - (Required) The VLAN that is extended by this network bridge. Minimum value =  1 Maximum value =  4094
+* `vlan` - (Required) The VLAN that is extended by this network bridge.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the netbridge_vlan_binding. It is the concatenation of `name` and `vlan` attributes separated by comma.
+* `id` - The id of the netbridge_vlan_binding. It is the concatenation of `name` and `vlan` attributes separated by a comma.
 
 
 ## Import

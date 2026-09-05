@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRoute_add = `
@@ -169,6 +171,25 @@ func testAccCheckRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccRoute_import(t *testing.T) {
+	const resAddr = "citrixadc_route.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRoute_add},
+			{
+				Config:                  testAccRoute_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_default_route", "original_default_gateway"},
+			},
+		},
+	})
+}
+
 const testAccRouteDataSource_basic = `
 	resource "citrixadc_nsip" "nsip" {
 		ipaddress = "100.0.1.100"
@@ -192,6 +213,137 @@ const testAccRouteDataSource_basic = `
 	}
 `
 
+func TestAccRoute_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccRoute_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRouteExist("citrixadc_route.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRoute_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRouteExist("citrixadc_route.foo", nil)),
+			},
+		},
+	})
+}
+
+// Route unset test. Step 1 sets the unset-eligible attributes (cost1, distance,
+// weight, msr) to valid non-default values; step 2 removes them from config so
+// the provider issues a NITRO unset that reverts each to its documented default
+// (cost1=0, distance=1, weight=1, msr=DISABLED).
+const testAccRoute_unset_step1 = `
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "100.0.1.100"
+		netmask   = "255.255.255.0"
+	}
+
+	resource "citrixadc_route" "tf_unset" {
+		depends_on = [citrixadc_nsip.nsip]
+		network    = "100.0.100.0"
+		netmask    = "255.255.255.0"
+		gateway    = "100.0.1.1"
+		cost1      = 10
+		distance   = 5
+		weight     = 5
+		msr        = "ENABLED"
+	}
+`
+
+const testAccRoute_unset_step2 = `
+	resource "citrixadc_nsip" "nsip" {
+		ipaddress = "100.0.1.100"
+		netmask   = "255.255.255.0"
+	}
+
+	resource "citrixadc_route" "tf_unset" {
+		depends_on = [citrixadc_nsip.nsip]
+		network    = "100.0.100.0"
+		netmask    = "255.255.255.0"
+		gateway    = "100.0.1.1"
+		# All unset-eligible attributes removed from config -> provider must unset
+		# them (revert to NITRO defaults).
+	}
+`
+
+func TestAccRoute_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccRoute_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteExist("citrixadc_route.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "cost1", "10"),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "distance", "5"),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "weight", "5"),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "msr", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccRoute_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteExist("citrixadc_route.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "cost1", "0"),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "distance", "1"),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "weight", "1"),
+					resource.TestCheckResourceAttr("citrixadc_route.tf_unset", "msr", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRouteADCValue("100.0.100.0", "255.255.255.0", "100.0.1.1", "distance", "1"),
+					testAccCheckRouteADCValue("100.0.100.0", "255.255.255.0", "100.0.1.1", "msr", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRouteADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckRouteADCValue(routeNetwork, netmask, gateway, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		argsMap := make(map[string]string)
+		argsMap["network"] = url.QueryEscape(routeNetwork)
+		argsMap["netmask"] = url.QueryEscape(netmask)
+		argsMap["gateway"] = url.QueryEscape(gateway)
+		findParams := service.FindParams{
+			ResourceType: service.Route.Type(),
+			ArgsMap:      argsMap,
+		}
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		if len(dataArray) == 0 {
+			return fmt.Errorf("route %s/%s/%s not found on appliance", routeNetwork, netmask, gateway)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", dataArray[0][attr]))
+		if got != want {
+			return fmt.Errorf("route %s: appliance attr %q = %q, want %q (unset did not revert it)", routeNetwork, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccRouteDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -205,6 +357,8 @@ func TestAccRouteDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "netmask", "255.255.255.0"),
 					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "gateway", "100.0.1.1"),
 					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "advertise", "ENABLED"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_route.tf_route", "id"),
 				),
 			},
 		},

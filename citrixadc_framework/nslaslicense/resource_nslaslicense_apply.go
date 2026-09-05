@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -39,6 +40,7 @@ type NslaslicenseApplyResourceModel struct {
 	Filelocation   types.String `tfsdk:"filelocation"`
 	Filename       types.String `tfsdk:"filename"`
 	Fixedbandwidth types.Bool   `tfsdk:"fixedbandwidth"`
+	Nodeid         types.Int64  `tfsdk:"nodeid"`
 }
 
 func (r *NslaslicenseApplyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -82,6 +84,11 @@ func (r *NslaslicenseApplyResource) Schema(ctx context.Context, req resource.Sch
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "apply fixed bandwidth license on ADC",
+			},
+			"nodeid": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Unique number that identifies the cluster node.",
 			},
 		},
 	}
@@ -169,6 +176,9 @@ func nslaslicense_applyGetThePayloadFromthePlan(ctx context.Context, data *Nslas
 	}
 	if !data.Fixedbandwidth.IsNull() && !data.Fixedbandwidth.IsUnknown() {
 		nslaslicense.Fixedbandwidth = data.Fixedbandwidth.ValueBool()
+	}
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
+		nslaslicense.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
 
 	return nslaslicense

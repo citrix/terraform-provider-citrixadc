@@ -24,8 +24,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccServicegroup_servicegroupmember_binding_ipv4_step1 = `
@@ -154,7 +156,6 @@ resource "citrixadc_server" "tf_server" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_server_no_port(t *testing.T) {
-	t.Skip("TODO: Read error")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -274,7 +275,6 @@ resource "citrixadc_servicegroup" "tf_servicegroup" {
 `
 
 func TestAccServicegroup_servicegroupmember_binding_mixed_bindings(t *testing.T) {
-	t.Skip("TODO:")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -326,14 +326,17 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 3)
-		servicegroupname := idSlice[0]
-
-		servername := idSlice[1]
-
+		// ID-parse helper line rewritten for the new key:value ID format
+		// (utils.ParseIdString handles both new and legacy comma formats).
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
+		servername := idMap["servername"]
 		port := 0
-		if len(idSlice) == 3 {
-			if port, err = strconv.Atoi(idSlice[2]); err != nil {
+		if portStr, ok := idMap["port"]; ok && portStr != "" {
+			if port, err = strconv.Atoi(portStr); err != nil {
 				return err
 			}
 		}
@@ -354,7 +357,10 @@ func testAccCheckServicegroup_servicegroupmember_bindingExist(n string, id *stri
 		foundIndex := -1
 		for i, v := range dataArr {
 			if port != 0 {
-				portEqual := int(v["port"].(float64)) == port
+				portEqual := false
+				if pv, ok := v["port"].(float64); ok {
+					portEqual = int(pv) == port
+				}
 				servernameEqual := v["servername"] == servername
 				if servernameEqual && portEqual {
 					foundIndex = i
@@ -414,7 +420,10 @@ func testAccCheckServicegroup_servicegroupmember_binding_not_exists(bindingId st
 		foundIndex := -1
 		for i, v := range dataArr {
 			if port != 0 {
-				portEqual := int(v["port"].(float64)) == port
+				portEqual := false
+				if pv, ok := v["port"].(float64); ok {
+					portEqual = int(pv) == port
+				}
 				servernameEqual := v["servername"] == servername
 				if servernameEqual && portEqual {
 					foundIndex = i
@@ -498,12 +507,111 @@ func TestAccServicegroup_servicegroupmember_bindingDataSource(t *testing.T) {
 			{
 				Config: testAccServicegroup_servicegroupmember_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "servicegroupname", "tf_servicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "ip", "10.78.22.33"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "port", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "servername", "10.78.22.33"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "order", "100"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "svrstate"),
 				),
+			},
+		},
+	})
+}
+
+// testAccServicegroup_servicegroupmember_binding_upgrade_basic mirrors the
+// _ipv4_step1 config (servicegroup + a member bound by ip+port with order). It is
+// valid under BOTH the SDK v2 2.2.0 schema and the current framework schema, so it
+// can be applied with the old provider in step 1 and re-planned with the new
+// provider in step 2 of the state-upgrade test below.
+const testAccServicegroup_servicegroupmember_binding_upgrade_basic = `
+
+resource "citrixadc_servicegroup" "tf_servicegroup" {
+  servicegroupname = "tf_servicegroup"
+  servicetype      = "HTTP"
+}
+
+resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
+    servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname
+    ip = "10.78.22.33"
+    port = 80
+    order = 100
+}
+`
+
+// TestAccServicegroup_servicegroupmember_binding_sdkv2StateUpgrade verifies that a
+// resource created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "servicegroupname,servername,port" — is refreshed and re-applied
+// correctly by the CURRENT framework provider. Step 2 exercises ParseIdString on
+// the legacy id during the framework Read.
+//
+// The resource-side SetAttrFromGet does NOT recompute data.Id, so the legacy id is
+// retained after the upgrade. Step 2 asserts only the Exist helper (the binding
+// surviving the provider switch and being resolvable by the framework provider is
+// the core signal); asserting a specific id form is avoided to prevent false
+// negatives on this ForceNew-heavy binding.
+func TestAccServicegroup_servicegroupmember_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccServicegroup_servicegroupmember_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "id", "tf_servicegroup,10.78.22.33,80"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccServicegroup_servicegroupmember_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServicegroup_servicegroupmember_bindingExist("citrixadc_servicegroup_servicegroupmember_binding.tf_binding", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccServicegroup_servicegroupmember_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup_servicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroup_servicegroupmember_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Servicegroup_servicegroupmember_binding.Type(), "tf_servicegroup", []string{"servername:10.78.22.33", "port:80"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroup_servicegroupmember_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBotsignature_basic = `
@@ -115,6 +117,82 @@ func testAccCheckBotsignatureDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccBotsignature_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botsignature.tf_botsignature"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotsignatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Botsignature.Type(), "tf_botsignature"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotsignature_import(t *testing.T) {
+	const resAddr = "citrixadc_botsignature.tf_botsignature"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotsignatureDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotsignature_basic},
+			{
+				Config:                  testAccBotsignature_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
+func TestAccBotsignature_sdkv2StateUpgrade(t *testing.T) {
+	// No upgrade baseline possible: the released citrix/citrixadc 2.2.0 provider
+	// rejects this botsignature config at step 1 ("Invalid function argument" on
+	// the signature-file import), so SDK-v2 state is never established. The current
+	// provider is unaffected.
+	t.Skip("no 2.2.0 baseline: released 2.2.0 provider errors on botsignature step 1 (invalid function argument)")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotsignatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist("citrixadc_botsignature.tf_botsignature", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist("citrixadc_botsignature.tf_botsignature", nil)),
+			},
+		},
+	})
 }
 
 const testAccBotsignatureDataSource_basic = `

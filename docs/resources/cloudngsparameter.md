@@ -25,6 +25,7 @@ resource "citrixadc_cloudngsparameter" "tf_cloudngsparameter" {
 * `allowedudtversion` - (Optional) Enables the required UDT version for EDT connections in the CGS deployment. Defaults to `"V4"`. Possible values: [ V4, V5, V6, V7 ]
 * `csvserverticketingdecouple` - (Optional) Enables decoupling the content-switching virtual server (CSVSERVER) state from the ticketing service state in the CGS deployment. Defaults to `"NO"`. Possible values: [ YES, NO ]
 * `allowdtls12` - (Optional) Enables DTLS 1.2 for client connections on CGS. Defaults to `"NO"`. Possible values: [ YES, NO ]
+* `wafprotection` - (Optional) Configure WAF protection for CGS deployment. The available options are:
 
 
 ## Attribute Reference

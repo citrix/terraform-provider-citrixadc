@@ -93,7 +93,7 @@ func (d *AppfwprofileXmlvalidationurlBindingDataSource) Read(ctx context.Context
 		return
 	}
 
-	appfwprofile_xmlvalidationurl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_xmlvalidationurl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

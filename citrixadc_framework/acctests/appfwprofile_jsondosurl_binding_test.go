@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_jsondosurl_binding_basic = `
@@ -127,10 +130,12 @@ func testAccCheckAppfwprofile_jsondosurl_bindingExist(n string, id *string) reso
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		jsondosurl := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "jsondosurl"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		jsondosurl := idMap["jsondosurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsondosurl_binding",
@@ -169,13 +174,12 @@ func testAccCheckAppfwprofile_jsondosurl_bindingNotExist(n string, id string) re
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "jsondosurl"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		jsondosurl := idSlice[1]
+		name := idMap["name"]
+		jsondosurl := idMap["jsondosurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsondosurl_binding",
@@ -291,6 +295,145 @@ func TestAccAppfwprofile_jsondosurl_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "jsonmaxstringlength", "1000"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "comment", "Testing"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppfwprofile_jsondosurl_binding_upgrade_basic mirrors the _basic config
+// (same resource labels and values) and must be valid under BOTH the last SDK v2
+// release (2.2.0) schema and the current framework schema.
+const testAccAppfwprofile_jsondosurl_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_jsondosurl_binding" "tf_binding1" {
+		name                        = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsondosurl                  = ".*"
+		state                       = "ENABLED"
+		alertonly                   = "ON"
+		isautodeployed              = "AUTODEPLOYED"
+		jsonmaxarraylengthcheck     = "ON"
+		jsonmaxdocumentlengthcheck  = "ON"
+		jsonmaxcontainerdepth       = 5
+		jsonmaxobjectkeylengthcheck = "OFF"
+		jsonmaxarraylength          = 100000
+		jsonmaxdocumentlength       = 200000
+		jsonmaxobjectkeycountcheck  = "ON"
+		jsonmaxobjectkeylength      = 128
+		jsonmaxobjectkeycount       = 1000
+		jsonmaxstringlengthcheck    = "ON"
+		jsonmaxcontainerdepthcheck  = "ON"
+		jsonmaxstringlength         = 1000
+		comment                     = "Testing"
+	}
+`
+
+func TestAccAppfwprofile_jsondosurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_jsondosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_jsondosurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_jsondosurl_bindingExist("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "id", "tf_appfwprofile,.*"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_jsondosurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_jsondosurl_bindingExist("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsondosurl_binding.tf_binding1", "id", "jsondosurl:.%2A,name:tf_appfwprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_jsondosurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsondosurl_binding.tf_binding1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,jsondosurl) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "jsondosurl"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_jsondosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_jsondosurl_binding_basic},
+			{Config: testAccAppfwprofile_jsondosurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+			{Config: testAccAppfwprofile_jsondosurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_jsondosurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsondosurl_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_jsondosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsondosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsondosurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_jsondosurl_binding.Type(), "tf_appfwprofile", []string{fmt.Sprintf("jsondosurl:%s", utils.UrlEncode(".*"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_jsondosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsondosurl_bindingExist(resAddr, nil)),
 			},
 		},
 	})

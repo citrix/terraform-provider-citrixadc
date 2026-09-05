@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnssoarec_basic_step1 = `
@@ -91,6 +93,8 @@ func TestAccDnssoarecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnssoarecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "domain", "test.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "originserver", "10.2.3.5"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "contact", "other"),
@@ -100,6 +104,170 @@ func TestAccDnssoarecDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccDnssoarec_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnssoarec.tf_dnssoarec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssoarecDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnssoarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssoarecExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnssoarec.Type(), "test.com"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnssoarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssoarecExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnssoarec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnssoarec.tf_dnssoarec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssoarecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnssoarec_basic_step1},
+			{
+				Config:                  testAccDnssoarec_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnssoarec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnssoarecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnssoarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_dnssoarec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnssoarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_dnssoarec", nil)),
+			},
+		},
+	})
+}
+
+// dnssoarec unset test: the NITRO-unsettable attributes (per the dnssoarec
+// spec's unset payload) are serial, refresh, retry, expire, minimum and ttl,
+// each with a documented server default. Step 1 sets them to non-default values;
+// step 2 removes them so the provider unsets them and the appliance reverts to
+// the documented NITRO defaults.
+const testAccDnssoarec_unset_step1 = `
+resource "citrixadc_dnssoarec" "tf_unset" {
+	domain       = "unset.test.com"
+	originserver = "10.2.3.5"
+	contact      = "admin.unset.test.com"
+	serial       = 200
+	refresh      = 4000
+	retry        = 5
+	expire       = 1800
+	minimum      = 10
+	ttl          = 7200
+}
+`
+
+const testAccDnssoarec_unset_step2 = `
+resource "citrixadc_dnssoarec" "tf_unset" {
+	domain       = "unset.test.com"
+	originserver = "10.2.3.5"
+	contact      = "admin.unset.test.com"
+	# unset-eligible attributes removed -> provider unsets them (NITRO defaults).
+}
+`
+
+func TestAccDnssoarec_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssoarecDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccDnssoarec_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "serial", "200"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "refresh", "4000"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "retry", "5"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "expire", "1800"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "minimum", "10"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "ttl", "7200"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults and the
+				// implicit post-apply plan must be empty.
+				Config: testAccDnssoarec_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "serial", "100"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "refresh", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "retry", "3"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "expire", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "minimum", "5"),
+					resource.TestCheckResourceAttr("citrixadc_dnssoarec.tf_unset", "ttl", "3600"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDnssoarecADCValue("unset.test.com", "serial", "100"),
+					testAccCheckDnssoarecADCValue("unset.test.com", "expire", "3600"),
+					testAccCheckDnssoarecADCValue("unset.test.com", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnssoarecADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckDnssoarecADCValue(domain, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnssoarec.Type(), domain)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dnssoarec %s not found on appliance", domain)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("dnssoarec %s: appliance attr %q = %q, want %q (unset did not revert it)", domain, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckDnssoarecExist(n string, id *string) resource.TestCheckFunc {

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
@@ -56,6 +59,56 @@ func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslprofile_sslcipher_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_sslcipher_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,ciphername) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "ciphername"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling gate on this resource family).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslprofile_sslcipher_binding_basic_step1},
+			{Config: testAccSslprofile_sslcipher_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslprofile_sslcipher_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckSslprofile_sslcipher_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -81,10 +134,12 @@ func testAccCheckSslprofile_sslcipher_bindingExist(n string, id *string) resourc
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-
-		profileName := idSlice[0]
-		cipherName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "ciphername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		profileName := idMap["name"]
+		cipherName := idMap["ciphername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_sslcipher_binding",
@@ -134,9 +189,11 @@ func testAccCheckSslprofile_sslcipher_bindingDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		idSlice := strings.Split(rs.Primary.ID, ",")
-
-		profileName := idSlice[0]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "ciphername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		profileName := idMap["name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "sslprofile_sslcipher_binding",
@@ -170,7 +227,10 @@ const testAccSslprofile_sslcipher_binding_basic_step1 = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -193,7 +253,10 @@ const testAccSslprofile_sslcipher_binding_basic_step2 = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -216,7 +279,10 @@ const testAccSslprofile_sslcipher_binding_basic_step3 = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -231,7 +297,10 @@ const testAccSslprofile_sslcipher_bindingDataSource_basic = `
 resource "citrixadc_sslprofile" "tf_sslprofile" {
   name = "tf_sslprofile"
 
-  ecccurvebindings = []
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
 
 }
 
@@ -256,9 +325,111 @@ func TestAccSslprofile_sslcipher_bindingDataSource_basic(t *testing.T) {
 				Config: testAccSslprofile_sslcipher_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "name", "tf_sslprofile"),
-					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "cipheraliasname", "HIGH"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "ciphername", "HIGH"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_sslcipher_binding.tf_binding", "cipherpriority", "10"),
 				),
+			},
+		},
+	})
+}
+
+const testAccSslprofile_sslcipher_binding_upgrade_basic = `
+
+resource "citrixadc_sslprofile" "tf_sslprofile" {
+  name = "tf_sslprofile"
+
+  # defaultProfile-enabled ADCs auto-bind 6 default ECC curves; nodefaultecccurvebindings
+  # drops them so the profile actually matches the empty ecccurvebindings set.
+  ecccurvebindings          = []
+  nodefaultecccurvebindings = true
+
+}
+
+resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
+    name = citrixadc_sslprofile.tf_sslprofile.name
+    ciphername = "HIGH"
+    cipherpriority = 10
+}
+`
+
+// TestAccSslprofile_sslcipher_binding_sdkv2StateUpgrade verifies that a binding
+// created by the LAST SDK v2 release (2.2.0) — which writes the legacy
+// comma-joined id "name,ciphername" — is refreshed and re-applied correctly by
+// the CURRENT framework provider. Step 2 exercises ParseIdString on the legacy id
+// during the framework Read.
+//
+// The resource-side SetAttrFromGet RECOMPUTES data.Id to the new canonical
+// key:value format on Read (see resource_schema.go sslprofile_sslcipher_bindingComputeId),
+// so after the step-2 refresh the id becomes "name:tf_sslprofile,ciphername:HIGH".
+func TestAccSslprofile_sslcipher_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling _basic gate on this resource family).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
+		CheckDestroy: testAccCheckSslprofile_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release from the registry. This
+			// writes state carrying the LEGACY comma-joined id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSslprofile_sslcipher_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcipher_binding.tf_binding", "id", "tf_sslprofile,HIGH"),
+				),
+			},
+			// Step 2: same config through the CURRENT framework provider. Terraform
+			// refreshes the legacy-id state through the framework Read (exercising
+			// ParseIdString on the legacy id) then plans/applies. The framework Read
+			// recomputes the id to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslprofile_sslcipher_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_sslcipher_bindingExist("citrixadc_sslprofile_sslcipher_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcipher_binding.tf_binding", "id", "name:tf_sslprofile,ciphername:HIGH"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslprofile_sslcipher_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_sslcipher_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sslcipher_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_sslcipher_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslprofile_sslcipher_binding.Type(), "tf_sslprofile", map[string]string{"ciphername": "HIGH"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslprofile_sslcipher_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_sslcipher_bindingExist(resAddr, nil)),
 			},
 		},
 	})

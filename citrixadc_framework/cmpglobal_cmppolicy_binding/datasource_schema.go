@@ -1,8 +1,35 @@
 package cmpglobal_cmppolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// CmpglobalCmppolicyBindingDataSourceModel is the data-source-specific model,
+// decoupled from CmpglobalCmppolicyBindingResourceModel so the data source can
+// expose read-only (GET-only) attributes the resource omits.
+type CmpglobalCmppolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Globalbindtype         types.String `tfsdk:"globalbindtype"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Type                   types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attributes from the NITRO read-only set
+	// (zion73x_readonly/cmpglobal_cmppolicy_binding.json). Never settable;
+	// populated from GET and null when the appliance omits them.
+	Numpol types.Int64 `tfsdk:"numpol"`
+}
 
 func CmpglobalCmppolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -48,6 +75,45 @@ func CmpglobalCmppolicyBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Bind point to which the policy is bound.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"numpol": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of policies bound to the bindpoint.",
+			},
 		},
 	}
+}
+
+// cmpglobal_cmppolicy_bindingDataSourceSetAttrFromGet projects a NITRO
+// cmpglobal_cmppolicy_binding GET response onto the data-source model. The
+// shared utils.MapGet* helpers fill each attribute from the GET (or leave it
+// Null when the GET omits it).
+func cmpglobal_cmppolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *CmpglobalCmppolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In cmpglobal_cmppolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Globalbindtype = utils.MapGetString(g, "globalbindtype")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labelname = utils.MapGetString(g, "labelname")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Priority = utils.MapGetInt64(g, "priority")
+
+	// Lookup keys: prefer the GET value, but preserve the configured value when
+	// the appliance omits it from the binding response.
+	if v := utils.MapGetString(g, "policyname"); !v.IsNull() {
+		data.Policyname = v
+	}
+	if v := utils.MapGetString(g, "type"); !v.IsNull() {
+		data.Type = v
+	}
+
+	// Read-only (GET-only) attributes.
+	data.Numpol = utils.MapGetInt64(g, "numpol")
+
+	// Composite key -> id (key:UrlEncode(value) pairs).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

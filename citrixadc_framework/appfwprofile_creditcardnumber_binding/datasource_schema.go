@@ -42,6 +42,11 @@ func AppfwprofileCreditcardnumberBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "A \"id\" that identifies the rule.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding",
+			},
 			"state": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaagroup_intranetip_binding_basic = `
@@ -30,7 +33,6 @@ const testAccAaagroup_intranetip_binding_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_aaagroup_intranetip_binding" "tf_aaagroup_intranetip_binding" {
 		groupname  = citrixadc_aaagroup.tf_aaagroup.groupname
@@ -45,7 +47,6 @@ const testAccAaagroup_intranetip_binding_basic_step2 = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 `
 
@@ -54,7 +55,6 @@ const testAccAaagroupIntranetipBindingDataSource_basic = `
 	resource "citrixadc_aaagroup" "tf_aaagroup" {
 		groupname = "my_group"
 		weight    = 100
-		loggedin  = false
 	}
 	resource "citrixadc_aaagroup_intranetip_binding" "tf_aaagroup_intranetip_binding" {
 		groupname  = citrixadc_aaagroup.tf_aaagroup.groupname
@@ -91,6 +91,49 @@ func TestAccAaagroup_intranetip_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaagroup_intranetip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: groupname,intranetip) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"groupname", "intranetip"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_intranetip_binding_basic},
+			{Config: testAccAaagroup_intranetip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAaagroup_intranetip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func TestAccAaagroupIntranetipBindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -103,6 +146,56 @@ func TestAccAaagroupIntranetipBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "intranetip", "10.222.73.160"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "netmask", "255.255.255.192"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAaagroup_intranetip_binding_upgrade_basic = `
+	resource "citrixadc_aaagroup" "tf_aaagroup" {
+		groupname = "my_group"
+		weight    = 100
+	}
+	resource "citrixadc_aaagroup_intranetip_binding" "tf_aaagroup_intranetip_binding" {
+		groupname  = citrixadc_aaagroup.tf_aaagroup.groupname
+		intranetip = "10.222.73.160"
+		netmask    = "255.255.255.192"
+	}
+`
+
+func TestAccAaagroup_intranetip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroup_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAaagroup_intranetip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_intranetip_bindingExist("citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "id", "my_group,10.222.73.160"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaagroup_intranetip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaagroup_intranetip_bindingExist("citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding", "id", "groupname:my_group,intranetip:10.222.73.160"),
 				),
 			},
 		},
@@ -136,10 +229,12 @@ func testAccCheckAaagroup_intranetip_bindingExist(n string, id *string) resource
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		intranetip := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "intranetip"}, nil)
+		if err != nil {
+			return err
+		}
+		groupname := idMap["groupname"]
+		intranetip := idMap["intranetip"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaagroup_intranetip_binding",
@@ -178,13 +273,12 @@ func testAccCheckAaagroup_intranetip_bindingNotExist(n string, id string) resour
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"groupname", "intranetip"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		groupname := idSlice[0]
-		intranetip := idSlice[1]
+		groupname := idMap["groupname"]
+		intranetip := idMap["intranetip"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaagroup_intranetip_binding",
@@ -239,4 +333,32 @@ func testAccCheckAaagroup_intranetip_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAaagroup_intranetip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_intranetip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaagroup_intranetip_binding.Type(), "my_group", map[string]string{"intranetip": "10.222.73.160", "netmask": "255.255.255.192"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaagroup_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_intranetip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
 }

@@ -38,4 +38,4 @@ In addition to the argument, the following attributes are exported:
 * `tokenendpoint` - URL endpoint on relying party to which the OAuth token is to be sent.
 * `vaultname` - Name of the Azure vault account as configured in azure portal.
 
-~> **Note** The `clientsecret`, `clientsecret_wo`, and `clientsecret_wo_version` attributes are sensitive/write-only and are not returned by the NITRO API, so they are not exposed by this data source.
+~> **Note** The `clientsecret` attribute is sensitive and is not returned by the NITRO API, so it is not populated by this data source.

@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -177,7 +175,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"addcookieflags": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Add the specified flags to cookies. Available settings function as follows:\n* None - Do not add flags to cookies.\n* HTTP Only - Add the HTTP Only flag to cookies, which prevents scripts from accessing cookies.\n* Secure - Add Secure flag to cookies.\n* All - Add both HTTPOnly and Secure flags to cookies.",
 			},
 			"apispec": schema.StringAttribute{
@@ -186,11 +184,8 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the API Specification.",
 			},
 			"archivename": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Source for tar archive.",
 			},
 			"as_prof_bypass_list_enable": schema.StringAttribute{
@@ -204,16 +199,14 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Enable deny list for the profile.",
 			},
 			"augment": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Augment Relaxation Rules during import",
 			},
 			"blockkeywordaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Block Keyword action. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -blockKeywordAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -blockKeywordAction none\".",
 			},
 			"bufferoverflowaction": schema.ListAttribute{
@@ -224,32 +217,32 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"bufferoverflowmaxcookielength": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4096),
+				Computed:    true,
 				Description: "Maximum length, in characters, for cookies sent to your protected web sites. Requests with longer cookies are blocked.",
 			},
 			"bufferoverflowmaxheaderlength": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4096),
+				Computed:    true,
 				Description: "Maximum length, in characters, for HTTP headers in requests sent to your protected web sites. Requests with longer headers are blocked.",
 			},
 			"bufferoverflowmaxquerylength": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Maximum length, in bytes, for query string sent to your protected web sites. Requests with longer query strings are blocked.",
 			},
 			"bufferoverflowmaxtotalheaderlength": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Maximum length, in bytes, for the total HTTP header length in requests sent to your protected web sites. The minimum value of this and maxHeaderLen in httpProfile will be used. Requests with longer length are blocked.",
 			},
 			"bufferoverflowmaxurllength": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1024),
+				Computed:    true,
 				Description: "Maximum length, in characters, for URLs on your protected web sites. Requests with longer URLs are blocked.",
 			},
 			"canonicalizehtmlresponse": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Perform HTML entity encoding for any special characters in responses sent by your protected web sites.",
 			},
 			"ceflogging": schema.StringAttribute{
@@ -260,6 +253,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"checkrequestheaders": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Check request headers as well as web forms for injected SQL and cross-site scripts.",
 			},
 			"clientipexpression": schema.StringAttribute{
@@ -270,6 +264,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"cmdinjectionaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Command injection action. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -cmdInjectionAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -cmdInjectionAction none\".",
 			},
 			"cmdinjectiongrammar": schema.StringAttribute{
@@ -279,7 +274,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"cmdinjectiontype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("CMDSplCharANDKeyword"),
+				Computed:    true,
 				Description: "Available CMD injection types.\n-CMDSplChar              : Checks for CMD Special Chars\n-CMDKeyword              : Checks for CMD Keywords\n-CMDSplCharANDKeyword    : Checks for both and blocks if both are found\n-CMDSplCharORKeyword     : Checks for both and blocks if anyone is found,\n-None                    : Disables checking using both CMD Special Char and Keyword",
 			},
 			"comment": schema.StringAttribute{
@@ -296,26 +291,28 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"cookieconsistencyaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "One or more Cookie Consistency actions. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Learn - Use the learning engine to generate a list of exceptions to this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -cookieConsistencyAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -cookieConsistencyAction none\".",
 			},
 			"cookieencryption": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Type of cookie encryption. Available settings function as follows:\n* None - Do not encrypt cookies.\n* Decrypt Only - Decrypt encrypted cookies, but do not encrypt cookies.\n* Encrypt Session Only - Encrypt session cookies, but not permanent cookies.\n* Encrypt All - Encrypt all cookies.",
 			},
 			"cookiehijackingaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "One or more actions to prevent cookie hijacking. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\nNOTE: Cookie Hijacking feature is not supported for TLSv1.3\n\nCLI users: To enable one or more actions, type \"set appfw profile -cookieHijackingAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -cookieHijackingAction none\".",
 			},
 			"cookieproxying": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Cookie proxy setting. Available settings function as follows:\n* None - Do not proxy cookies.\n* Session Only - Proxy session cookies by using the Citrix ADC session ID, but do not proxy permanent cookies.",
 			},
 			"cookiesamesiteattribute": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("LAX"),
+				Computed:    true,
 				Description: "Cookie Samesite attribute added to support adding cookie SameSite attribute for all set-cookies including appfw session cookies. Default value will be \"SameSite=Lax\".",
 			},
 			"cookietransforms": schema.StringAttribute{
@@ -326,11 +323,13 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"creditcard": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Credit card types that the application firewall should protect.",
 			},
 			"creditcardaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "One or more Credit Card actions. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -creditCardAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -creditCardAction none\".",
 			},
 			"creditcardmaxallowed": schema.Int64Attribute{
@@ -362,6 +361,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"csrftagaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "One or more Cross-Site Request Forgery (CSRF) Tagging actions. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Learn - Use the learning engine to generate a list of exceptions to this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -CSRFTagAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -CSRFTagAction none\".",
 			},
 			"customsettings": schema.StringAttribute{
@@ -376,12 +376,12 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"defaultfieldformatmaxlength": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Maximum length, in characters, for data entered into a field that is assigned the default field type.",
 			},
 			"defaultfieldformatmaxoccurrences": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Maxiumum allowed occurrences of the form field name in a request.",
 			},
 			"defaultfieldformatminlength": schema.Int64Attribute{
@@ -395,11 +395,8 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Designate a default field type to be applied to web form fields that do not have a field type explicitly assigned to them.",
 			},
 			"defaults": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Default configuration to apply to the profile. Basic defaults are intended for standard content that requires little further configuration, such as static web site content. Advanced defaults are intended for specialized content that requires significant specialized configuration, such as heavily scripted or dynamic content.\n\nCLI users: When adding an application firewall profile, you can set either the defaults or the type, but not both. To set both options, create the profile by using the add appfw profile command, and then use the set appfw profile command to configure the other option.",
 			},
 			"denyurlaction": schema.ListAttribute{
@@ -410,7 +407,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"dosecurecreditcardlogging": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Setting this option logs credit card numbers in the response when the match is found.",
 			},
 			"dynamiclearning": schema.ListAttribute{
@@ -421,7 +418,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"enableformtagging": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Enable tagging of web form fields for use by the Form Field Consistency and CSRF Form Tagging checks.",
 			},
 			"errorurl": schema.StringAttribute{
@@ -436,7 +433,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"exemptclosureurlsfromsecuritychecks": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Exempt URLs that pass the Start URL closure check from SQL injection, cross-site script, field format and field consistency security checks at locations other than headers.",
 			},
 			"fakeaccountdetection": schema.StringAttribute{
@@ -447,6 +444,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"fieldconsistencyaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "One or more Form Field Consistency actions. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Learn - Use the learning engine to generate a list of exceptions to this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -fieldConsistencyaction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -fieldConsistencyAction none\".",
 			},
 			"fieldformataction": schema.ListAttribute{
@@ -462,12 +460,12 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"fieldscanlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2048),
+				Computed:    true,
 				Description: "Field scan limit value for HTML",
 			},
 			"fileuploadmaxnum": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(65535),
+				Computed:    true,
 				Description: "Maximum allowed number of file uploads per form-submission request. The maximum setting (65535) allows an unlimited number of uploads.",
 			},
 			"fileuploadtypesaction": schema.ListAttribute{
@@ -494,7 +492,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"htmlerrorstatuscode": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(200),
+				Computed:    true,
 				Description: "Response status code associated with HTML error page. Non-empty HTML error object must be imported to the application firewall profile for the status code.",
 			},
 			"htmlerrorstatusmessage": schema.StringAttribute{
@@ -503,11 +501,8 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Response status message associated with HTML error page",
 			},
 			"importprofilename": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Name of the profile which will be created/updated to associate the relaxation rules",
 			},
 			"infercontenttypexmlpayloadaction": schema.ListAttribute{
@@ -535,12 +530,13 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"invalidpercenthandling": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("secure_mode"),
+				Computed:    true,
 				Description: "Configure the method that the application firewall uses to handle percent-encoded names and values. Available settings function as follows:\n* asp_mode - Microsoft ASP format.\n* secure_mode - Secure format.",
 			},
 			"jsonblockkeywordaction": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "JSON Block Keyword action. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -JSONBlockKeywordAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -JSONBlockKeywordAction none\".",
 			},
 			"jsoncmdinjectionaction": schema.ListAttribute{
@@ -556,7 +552,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"jsoncmdinjectiontype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("CMDSplCharANDKeyword"),
+				Computed:    true,
 				Description: "Available CMD injection types.\n-CMDSplChar              : Checks for CMD Special Chars\n-CMDKeyword              : Checks for CMD Keywords\n-CMDSplCharANDKeyword    : Checks for both and blocks if both are found\n-CMDSplCharORKeyword     : Checks for both and blocks if anyone is found,\n-None                    : Disables checking using both SQL Special Char and Keyword",
 			},
 			"jsondosaction": schema.ListAttribute{
@@ -572,7 +568,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"jsonerrorstatuscode": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(200),
+				Computed:    true,
 				Description: "Response status code associated with JSON error page. Non-empty JSON error object must be imported to the application firewall profile for the status code.",
 			},
 			"jsonerrorstatusmessage": schema.StringAttribute{
@@ -587,7 +583,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"jsonfieldscanlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2048),
+				Computed:    true,
 				Description: "Field scan limit value for JSON",
 			},
 			"jsonmessagescan": schema.StringAttribute{
@@ -597,7 +593,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"jsonmessagescanlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1000000),
+				Computed:    true,
 				Description: "Message scan limit value for JSON",
 			},
 			"jsonsqlinjectionaction": schema.ListAttribute{
@@ -613,7 +609,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"jsonsqlinjectiontype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SQLSplCharANDKeyword"),
+				Computed:    true,
 				Description: "Available SQL injection types.\n-SQLSplChar              : Checks for SQL Special Chars\n-SQLKeyword              : Checks for SQL Keywords\n-SQLSplCharANDKeyword    : Checks for both and blocks if both are found\n-SQLSplCharORKeyword     : Checks for both and blocks if anyone is found,\n-None                    : Disables checking using both SQL Special Char and Keyword",
 			},
 			"jsonxssaction": schema.ListAttribute{
@@ -628,11 +624,8 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Log every profile match, regardless of security checks results.",
 			},
 			"matchurlstring": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Match this action url in archived Relaxation Rules to replace.",
 			},
 			"messagescan": schema.StringAttribute{
@@ -642,12 +635,13 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"messagescanlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1000000),
+				Computed:    true,
 				Description: "Message scan limit value for HTML",
 			},
 			"messagescanlimitcontenttypes": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enable Message Scan Limit for following content types.",
 			},
 			"multipleheaderaction": schema.ListAttribute{
@@ -657,30 +651,30 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "One or more multiple header actions. Available settings function as follows:\n* Block - Block connections that have multiple headers.\n* Log - Log connections that have multiple headers.\n* KeepLast - Keep only last header when multiple headers are present.\n\nRequest headers inspected:\n* Accept-Encoding\n* Content-Encoding\n* Content-Range\n* Content-Type\n* Host\n* Range\n* Referer\n\nCLI users: To enable one or more actions, type \"set appfw profile -multipleHeaderAction\" followed by the actions to be enabled.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the profile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.), pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters. Cannot be changed after the profile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"optimizepartialreqs": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Optimize handle of HTTP partial requests i.e. those with range headers.\nAvailable settings are as follows:\n* ON  - Partial requests by the client result in partial requests to the backend server in most cases.\n* OFF - Partial requests by the client are changed to full requests to the backend server",
 			},
 			"overwrite": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Purge existing Relaxation Rules and replace during import",
 			},
 			"percentdecoderecursively": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Configure whether the application firewall should use percentage recursive decoding",
 			},
 			"postbodylimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(20000000),
+				Computed:    true,
 				Description: "Maximum allowed HTTP post body size, in bytes. Maximum supported value is 10GB. Citrix recommends enabling streaming option for large values of post body limit (>20MB).",
 			},
 			"postbodylimitaction": schema.ListAttribute{
@@ -691,7 +685,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"postbodylimitsignature": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2048),
+				Computed:    true,
 				Description: "Maximum allowed HTTP post body size for signature inspection for location HTTP_POST_BODY in the signatures, in bytes. Note that the changes in value could impact CPU and latency profile.",
 			},
 			"protofileobject": schema.StringAttribute{
@@ -705,19 +699,13 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Enable validation of Referer headers.\nReferer validation ensures that a web form that a user sends to your web site originally came from your web site, not an outside attacker.\nAlthough this parameter is part of the Start URL check, referer validation protects against cross-site request forgery (CSRF) attacks, not Start URL attacks.",
 			},
 			"relaxationrules": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Import all appfw relaxation rules",
 			},
 			"replaceurlstring": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Replace matched url string with this action url string while restoring Relaxation Rules",
 			},
 			"requestcontenttype": schema.StringAttribute{
@@ -744,6 +732,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"semicolonfieldseparator": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Allow ';' as a form field separator in URL queries and POST form bodies.",
 			},
 			"sessioncookiename": schema.StringAttribute{
@@ -754,6 +743,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"sessionlessfieldconsistency": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Perform sessionless Field Consistency Checks.",
 			},
 			"sessionlessurlclosure": schema.StringAttribute{
@@ -784,7 +774,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"sqlinjectiononlycheckfieldswithsqlchars": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Check only form fields that contain SQL special strings (characters) for injected SQL code.\nMost SQL servers require a special string to activate an SQL request, so SQL code without a special string is harmless to most SQL servers.",
 			},
 			"sqlinjectionparsecomments": schema.StringAttribute{
@@ -794,7 +784,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"sqlinjectionruletype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ALLOW"),
+				Computed:    true,
 				Description: "Specifies SQL Injection rule type: ALLOW/DENY. If ALLOW rule type is configured then allow list rules are used, if DENY rule type is configured then deny rules are used.",
 			},
 			"sqlinjectiontransformspecialchars": schema.StringAttribute{
@@ -804,7 +794,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"sqlinjectiontype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SQLSplCharANDKeyword"),
+				Computed:    true,
 				Description: "Available SQL injection types.\n-SQLSplChar              : Checks for SQL Special Chars\n-SQLKeyword		 : Checks for SQL Keywords\n-SQLSplCharANDKeyword    : Checks for both and blocks if both are found\n-SQLSplCharORKeyword     : Checks for both and blocks if anyone is found\n-None                    : Disables checking using both SQL Special Char and Keyword",
 			},
 			"starturlaction": schema.ListAttribute{
@@ -821,6 +811,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"streaming": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Setting this option converts content-length form submission requests (requests with content-type \"application/x-www-form-urlencoded\" or \"multipart/form-data\") to chunked requests when atleast one of the following protections : Signatures, SQL injection protection, XSS protection, form field consistency protection, starturl closure, CSRF tagging, JSON SQL, JSON XSS, JSON DOS is enabled. Please make sure that the backend server accepts chunked requests before enabling this option. Citrix recommends enabling this option for large request sizes(>20MB).",
 			},
 			"stripcomments": schema.StringAttribute{
@@ -830,22 +821,24 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"striphtmlcomments": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Strip HTML comments before forwarding a web page sent by a protected web site in response to a user request.",
 			},
 			"stripxmlcomments": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Strip XML comments before forwarding a web page sent by a protected web site in response to a user request.",
 			},
 			"trace": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Toggle  the state of trace",
 			},
 			"type": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Application firewall profile type, which controls which security checks and settings are applied to content that is filtered with the profile. Available settings function as follows:\n* HTML - HTML-based web sites.\n* XML -  XML-based web sites and services.\n* JSON - JSON-based web sites and services.\n* HTML XML (Web 2.0) - Sites that contain both HTML and XML content, such as ATOM feeds, blogs, and RSS feeds.\n* HTML JSON  - Sites that contain both HTML and JSON content.\n* XML JSON   - Sites that contain both XML and JSON content.\n* HTML XML JSON   - Sites that contain HTML, XML and JSON content.",
 			},
 			"urldecoderequestcookies": schema.StringAttribute{
@@ -860,7 +853,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"verboseloglevel": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("pattern"),
+				Computed:    true,
 				Description: "Detailed Logging Verbose Log Level.",
 			},
 			"xmlattachmentaction": schema.ListAttribute{
@@ -882,7 +875,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"xmlerrorstatuscode": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(200),
+				Computed:    true,
 				Description: "Response status code associated with XML error page. Non-empty XML error object must be imported to the application firewall profile for the status code.",
 			},
 			"xmlerrorstatusmessage": schema.StringAttribute{
@@ -915,17 +908,17 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"xmlsqlinjectiononlycheckfieldswithsqlchars": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Check only form fields that contain SQL special characters, which most SQL servers require before accepting an SQL command, for injected SQL.",
 			},
 			"xmlsqlinjectionparsecomments": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("checkall"),
+				Computed:    true,
 				Description: "Parse comments in XML Data and exempt those sections of the request that are from the XML SQL Injection check. You must configure the type of comments that the application firewall is to detect and exempt from this security check. Available settings function as follows:\n* Check all - Check all content.\n* ANSI - Exempt content that is part of an ANSI (Mozilla-style) comment.\n* Nested - Exempt content that is part of a nested (Microsoft-style) comment.\n* ANSI Nested - Exempt content that is part of any type of comment.",
 			},
 			"xmlsqlinjectiontype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SQLSplCharANDKeyword"),
+				Computed:    true,
 				Description: "Available SQL injection types.\n-SQLSplChar              : Checks for SQL Special Chars\n-SQLKeyword              : Checks for SQL Keywords\n-SQLSplCharANDKeyword    : Checks for both and blocks if both are found\n-SQLSplCharORKeyword     : Checks for both and blocks if anyone is found",
 			},
 			"xmlvalidationaction": schema.ListAttribute{
@@ -955,323 +948,1181 @@ func appfwprofileGetThePayloadFromtheConfig(ctx context.Context, data *Appfwprof
 
 	// Create API request body from the model
 	appfwprofile := appfw.Appfwprofile{}
-	if !data.Addcookieflags.IsNull() {
+	if !data.Addcookieflags.IsNull() && !data.Addcookieflags.IsUnknown() {
 		appfwprofile.Addcookieflags = data.Addcookieflags.ValueString()
 	}
-	if !data.Apispec.IsNull() {
+	if !data.Apispec.IsNull() && !data.Apispec.IsUnknown() {
 		appfwprofile.Apispec = data.Apispec.ValueString()
 	}
-	if !data.Archivename.IsNull() {
+	if !data.Archivename.IsNull() && !data.Archivename.IsUnknown() {
 		appfwprofile.Archivename = data.Archivename.ValueString()
 	}
-	if !data.AsProfBypassListEnable.IsNull() {
+	if !data.AsProfBypassListEnable.IsNull() && !data.AsProfBypassListEnable.IsUnknown() {
 		appfwprofile.Asprofbypasslistenable = data.AsProfBypassListEnable.ValueString()
 	}
-	if !data.AsProfDenyListEnable.IsNull() {
+	if !data.AsProfDenyListEnable.IsNull() && !data.AsProfDenyListEnable.IsUnknown() {
 		appfwprofile.Asprofdenylistenable = data.AsProfDenyListEnable.ValueString()
 	}
-	if !data.Augment.IsNull() {
+	if !data.Augment.IsNull() && !data.Augment.IsUnknown() {
 		appfwprofile.Augment = data.Augment.ValueBool()
 	}
-	if !data.Bufferoverflowmaxcookielength.IsNull() {
+	if !data.Blockkeywordaction.IsNull() && !data.Blockkeywordaction.IsUnknown() {
+		var blockkeywordactionList []string
+		data.Blockkeywordaction.ElementsAs(ctx, &blockkeywordactionList, false)
+		appfwprofile.Blockkeywordaction = blockkeywordactionList
+	}
+	if !data.Bufferoverflowaction.IsNull() && !data.Bufferoverflowaction.IsUnknown() {
+		var bufferoverflowactionList []string
+		data.Bufferoverflowaction.ElementsAs(ctx, &bufferoverflowactionList, false)
+		appfwprofile.Bufferoverflowaction = bufferoverflowactionList
+	}
+	if !data.Bufferoverflowmaxcookielength.IsNull() && !data.Bufferoverflowmaxcookielength.IsUnknown() {
 		appfwprofile.Bufferoverflowmaxcookielength = utils.IntPtr(int(data.Bufferoverflowmaxcookielength.ValueInt64()))
 	}
-	if !data.Bufferoverflowmaxheaderlength.IsNull() {
+	if !data.Bufferoverflowmaxheaderlength.IsNull() && !data.Bufferoverflowmaxheaderlength.IsUnknown() {
 		appfwprofile.Bufferoverflowmaxheaderlength = utils.IntPtr(int(data.Bufferoverflowmaxheaderlength.ValueInt64()))
 	}
-	if !data.Bufferoverflowmaxquerylength.IsNull() {
+	if !data.Bufferoverflowmaxquerylength.IsNull() && !data.Bufferoverflowmaxquerylength.IsUnknown() {
 		appfwprofile.Bufferoverflowmaxquerylength = utils.IntPtr(int(data.Bufferoverflowmaxquerylength.ValueInt64()))
 	}
-	if !data.Bufferoverflowmaxtotalheaderlength.IsNull() {
+	if !data.Bufferoverflowmaxtotalheaderlength.IsNull() && !data.Bufferoverflowmaxtotalheaderlength.IsUnknown() {
 		appfwprofile.Bufferoverflowmaxtotalheaderlength = utils.IntPtr(int(data.Bufferoverflowmaxtotalheaderlength.ValueInt64()))
 	}
-	if !data.Bufferoverflowmaxurllength.IsNull() {
+	if !data.Bufferoverflowmaxurllength.IsNull() && !data.Bufferoverflowmaxurllength.IsUnknown() {
 		appfwprofile.Bufferoverflowmaxurllength = utils.IntPtr(int(data.Bufferoverflowmaxurllength.ValueInt64()))
 	}
-	if !data.Canonicalizehtmlresponse.IsNull() {
+	if !data.Canonicalizehtmlresponse.IsNull() && !data.Canonicalizehtmlresponse.IsUnknown() {
 		appfwprofile.Canonicalizehtmlresponse = data.Canonicalizehtmlresponse.ValueString()
 	}
-	if !data.Ceflogging.IsNull() {
+	if !data.Ceflogging.IsNull() && !data.Ceflogging.IsUnknown() {
 		appfwprofile.Ceflogging = data.Ceflogging.ValueString()
 	}
-	if !data.Checkrequestheaders.IsNull() {
+	if !data.Checkrequestheaders.IsNull() && !data.Checkrequestheaders.IsUnknown() {
 		appfwprofile.Checkrequestheaders = data.Checkrequestheaders.ValueString()
 	}
-	if !data.Clientipexpression.IsNull() {
+	if !data.Clientipexpression.IsNull() && !data.Clientipexpression.IsUnknown() {
 		appfwprofile.Clientipexpression = data.Clientipexpression.ValueString()
 	}
-	if !data.Cmdinjectiongrammar.IsNull() {
+	if !data.Cmdinjectionaction.IsNull() && !data.Cmdinjectionaction.IsUnknown() {
+		var cmdinjectionactionList []string
+		data.Cmdinjectionaction.ElementsAs(ctx, &cmdinjectionactionList, false)
+		appfwprofile.Cmdinjectionaction = cmdinjectionactionList
+	}
+	if !data.Cmdinjectiongrammar.IsNull() && !data.Cmdinjectiongrammar.IsUnknown() {
 		appfwprofile.Cmdinjectiongrammar = data.Cmdinjectiongrammar.ValueString()
 	}
-	if !data.Cmdinjectiontype.IsNull() {
+	if !data.Cmdinjectiontype.IsNull() && !data.Cmdinjectiontype.IsUnknown() {
 		appfwprofile.Cmdinjectiontype = data.Cmdinjectiontype.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwprofile.Comment = data.Comment.ValueString()
 	}
-	if !data.Cookieencryption.IsNull() {
+	if !data.Contenttypeaction.IsNull() && !data.Contenttypeaction.IsUnknown() {
+		var contenttypeactionList []string
+		data.Contenttypeaction.ElementsAs(ctx, &contenttypeactionList, false)
+		appfwprofile.Contenttypeaction = contenttypeactionList
+	}
+	if !data.Cookieconsistencyaction.IsNull() && !data.Cookieconsistencyaction.IsUnknown() {
+		var cookieconsistencyactionList []string
+		data.Cookieconsistencyaction.ElementsAs(ctx, &cookieconsistencyactionList, false)
+		appfwprofile.Cookieconsistencyaction = cookieconsistencyactionList
+	}
+	if !data.Cookieencryption.IsNull() && !data.Cookieencryption.IsUnknown() {
 		appfwprofile.Cookieencryption = data.Cookieencryption.ValueString()
 	}
-	if !data.Cookieproxying.IsNull() {
+	if !data.Cookiehijackingaction.IsNull() && !data.Cookiehijackingaction.IsUnknown() {
+		var cookiehijackingactionList []string
+		data.Cookiehijackingaction.ElementsAs(ctx, &cookiehijackingactionList, false)
+		appfwprofile.Cookiehijackingaction = cookiehijackingactionList
+	}
+	if !data.Cookieproxying.IsNull() && !data.Cookieproxying.IsUnknown() {
 		appfwprofile.Cookieproxying = data.Cookieproxying.ValueString()
 	}
-	if !data.Cookiesamesiteattribute.IsNull() {
+	if !data.Cookiesamesiteattribute.IsNull() && !data.Cookiesamesiteattribute.IsUnknown() {
 		appfwprofile.Cookiesamesiteattribute = data.Cookiesamesiteattribute.ValueString()
 	}
-	if !data.Cookietransforms.IsNull() {
+	if !data.Cookietransforms.IsNull() && !data.Cookietransforms.IsUnknown() {
 		appfwprofile.Cookietransforms = data.Cookietransforms.ValueString()
 	}
-	if !data.Creditcardmaxallowed.IsNull() {
+	if !data.Creditcard.IsNull() && !data.Creditcard.IsUnknown() {
+		var creditcardList []string
+		data.Creditcard.ElementsAs(ctx, &creditcardList, false)
+		appfwprofile.Creditcard = creditcardList
+	}
+	if !data.Creditcardaction.IsNull() && !data.Creditcardaction.IsUnknown() {
+		var creditcardactionList []string
+		data.Creditcardaction.ElementsAs(ctx, &creditcardactionList, false)
+		appfwprofile.Creditcardaction = creditcardactionList
+	}
+	if !data.Creditcardmaxallowed.IsNull() && !data.Creditcardmaxallowed.IsUnknown() {
 		appfwprofile.Creditcardmaxallowed = utils.IntPtr(int(data.Creditcardmaxallowed.ValueInt64()))
 	}
-	if !data.Creditcardxout.IsNull() {
+	if !data.Creditcardxout.IsNull() && !data.Creditcardxout.IsUnknown() {
 		appfwprofile.Creditcardxout = data.Creditcardxout.ValueString()
 	}
-	if !data.Crosssitescriptingcheckcompleteurls.IsNull() {
+	if !data.Crosssitescriptingaction.IsNull() && !data.Crosssitescriptingaction.IsUnknown() {
+		var crosssitescriptingactionList []string
+		data.Crosssitescriptingaction.ElementsAs(ctx, &crosssitescriptingactionList, false)
+		appfwprofile.Crosssitescriptingaction = crosssitescriptingactionList
+	}
+	if !data.Crosssitescriptingcheckcompleteurls.IsNull() && !data.Crosssitescriptingcheckcompleteurls.IsUnknown() {
 		appfwprofile.Crosssitescriptingcheckcompleteurls = data.Crosssitescriptingcheckcompleteurls.ValueString()
 	}
-	if !data.Crosssitescriptingtransformunsafehtml.IsNull() {
+	if !data.Crosssitescriptingtransformunsafehtml.IsNull() && !data.Crosssitescriptingtransformunsafehtml.IsUnknown() {
 		appfwprofile.Crosssitescriptingtransformunsafehtml = data.Crosssitescriptingtransformunsafehtml.ValueString()
 	}
-	if !data.Customsettings.IsNull() {
+	if !data.Csrftagaction.IsNull() && !data.Csrftagaction.IsUnknown() {
+		var csrftagactionList []string
+		data.Csrftagaction.ElementsAs(ctx, &csrftagactionList, false)
+		appfwprofile.Csrftagaction = csrftagactionList
+	}
+	if !data.Customsettings.IsNull() && !data.Customsettings.IsUnknown() {
 		appfwprofile.Customsettings = data.Customsettings.ValueString()
 	}
-	if !data.Defaultcharset.IsNull() {
+	if !data.Defaultcharset.IsNull() && !data.Defaultcharset.IsUnknown() {
 		appfwprofile.Defaultcharset = data.Defaultcharset.ValueString()
 	}
-	if !data.Defaultfieldformatmaxlength.IsNull() {
+	if !data.Defaultfieldformatmaxlength.IsNull() && !data.Defaultfieldformatmaxlength.IsUnknown() {
 		appfwprofile.Defaultfieldformatmaxlength = utils.IntPtr(int(data.Defaultfieldformatmaxlength.ValueInt64()))
 	}
-	if !data.Defaultfieldformatmaxoccurrences.IsNull() {
+	if !data.Defaultfieldformatmaxoccurrences.IsNull() && !data.Defaultfieldformatmaxoccurrences.IsUnknown() {
 		appfwprofile.Defaultfieldformatmaxoccurrences = utils.IntPtr(int(data.Defaultfieldformatmaxoccurrences.ValueInt64()))
 	}
-	if !data.Defaultfieldformatminlength.IsNull() {
+	if !data.Defaultfieldformatminlength.IsNull() && !data.Defaultfieldformatminlength.IsUnknown() {
 		appfwprofile.Defaultfieldformatminlength = utils.IntPtr(int(data.Defaultfieldformatminlength.ValueInt64()))
 	}
-	if !data.Defaultfieldformattype.IsNull() {
+	if !data.Defaultfieldformattype.IsNull() && !data.Defaultfieldformattype.IsUnknown() {
 		appfwprofile.Defaultfieldformattype = data.Defaultfieldformattype.ValueString()
 	}
-	if !data.Defaults.IsNull() {
+	if !data.Defaults.IsNull() && !data.Defaults.IsUnknown() {
 		appfwprofile.Defaults = data.Defaults.ValueString()
 	}
-	if !data.Dosecurecreditcardlogging.IsNull() {
+	if !data.Denyurlaction.IsNull() && !data.Denyurlaction.IsUnknown() {
+		var denyurlactionList []string
+		data.Denyurlaction.ElementsAs(ctx, &denyurlactionList, false)
+		appfwprofile.Denyurlaction = denyurlactionList
+	}
+	if !data.Dosecurecreditcardlogging.IsNull() && !data.Dosecurecreditcardlogging.IsUnknown() {
 		appfwprofile.Dosecurecreditcardlogging = data.Dosecurecreditcardlogging.ValueString()
 	}
-	if !data.Enableformtagging.IsNull() {
+	if !data.Dynamiclearning.IsNull() && !data.Dynamiclearning.IsUnknown() {
+		var dynamiclearningList []string
+		data.Dynamiclearning.ElementsAs(ctx, &dynamiclearningList, false)
+		appfwprofile.Dynamiclearning = dynamiclearningList
+	}
+	if !data.Enableformtagging.IsNull() && !data.Enableformtagging.IsUnknown() {
 		appfwprofile.Enableformtagging = data.Enableformtagging.ValueString()
 	}
-	if !data.Errorurl.IsNull() {
+	if !data.Errorurl.IsNull() && !data.Errorurl.IsUnknown() {
 		appfwprofile.Errorurl = data.Errorurl.ValueString()
 	}
-	if !data.Excludefileuploadfromchecks.IsNull() {
+	if !data.Excludefileuploadfromchecks.IsNull() && !data.Excludefileuploadfromchecks.IsUnknown() {
 		appfwprofile.Excludefileuploadfromchecks = data.Excludefileuploadfromchecks.ValueString()
 	}
-	if !data.Exemptclosureurlsfromsecuritychecks.IsNull() {
+	if !data.Exemptclosureurlsfromsecuritychecks.IsNull() && !data.Exemptclosureurlsfromsecuritychecks.IsUnknown() {
 		appfwprofile.Exemptclosureurlsfromsecuritychecks = data.Exemptclosureurlsfromsecuritychecks.ValueString()
 	}
-	if !data.Fakeaccountdetection.IsNull() {
+	if !data.Fakeaccountdetection.IsNull() && !data.Fakeaccountdetection.IsUnknown() {
 		appfwprofile.Fakeaccountdetection = data.Fakeaccountdetection.ValueString()
 	}
-	if !data.Fieldscan.IsNull() {
+	if !data.Fieldconsistencyaction.IsNull() && !data.Fieldconsistencyaction.IsUnknown() {
+		var fieldconsistencyactionList []string
+		data.Fieldconsistencyaction.ElementsAs(ctx, &fieldconsistencyactionList, false)
+		appfwprofile.Fieldconsistencyaction = fieldconsistencyactionList
+	}
+	if !data.Fieldformataction.IsNull() && !data.Fieldformataction.IsUnknown() {
+		var fieldformatactionList []string
+		data.Fieldformataction.ElementsAs(ctx, &fieldformatactionList, false)
+		appfwprofile.Fieldformataction = fieldformatactionList
+	}
+	if !data.Fieldscan.IsNull() && !data.Fieldscan.IsUnknown() {
 		appfwprofile.Fieldscan = data.Fieldscan.ValueString()
 	}
-	if !data.Fieldscanlimit.IsNull() {
+	if !data.Fieldscanlimit.IsNull() && !data.Fieldscanlimit.IsUnknown() {
 		appfwprofile.Fieldscanlimit = utils.IntPtr(int(data.Fieldscanlimit.ValueInt64()))
 	}
-	if !data.Fileuploadmaxnum.IsNull() {
+	if !data.Fileuploadmaxnum.IsNull() && !data.Fileuploadmaxnum.IsUnknown() {
 		appfwprofile.Fileuploadmaxnum = utils.IntPtr(int(data.Fileuploadmaxnum.ValueInt64()))
 	}
-	if !data.Geolocationlogging.IsNull() {
+	if !data.Fileuploadtypesaction.IsNull() && !data.Fileuploadtypesaction.IsUnknown() {
+		var fileuploadtypesactionList []string
+		data.Fileuploadtypesaction.ElementsAs(ctx, &fileuploadtypesactionList, false)
+		appfwprofile.Fileuploadtypesaction = fileuploadtypesactionList
+	}
+	if !data.Geolocationlogging.IsNull() && !data.Geolocationlogging.IsUnknown() {
 		appfwprofile.Geolocationlogging = data.Geolocationlogging.ValueString()
 	}
-	if !data.Htmlerrorobject.IsNull() {
+	if !data.Grpcaction.IsNull() && !data.Grpcaction.IsUnknown() {
+		var grpcactionList []string
+		data.Grpcaction.ElementsAs(ctx, &grpcactionList, false)
+		appfwprofile.Grpcaction = grpcactionList
+	}
+	if !data.Htmlerrorobject.IsNull() && !data.Htmlerrorobject.IsUnknown() {
 		appfwprofile.Htmlerrorobject = data.Htmlerrorobject.ValueString()
 	}
-	if !data.Htmlerrorstatuscode.IsNull() {
+	if !data.Htmlerrorstatuscode.IsNull() && !data.Htmlerrorstatuscode.IsUnknown() {
 		appfwprofile.Htmlerrorstatuscode = utils.IntPtr(int(data.Htmlerrorstatuscode.ValueInt64()))
 	}
-	if !data.Htmlerrorstatusmessage.IsNull() {
+	if !data.Htmlerrorstatusmessage.IsNull() && !data.Htmlerrorstatusmessage.IsUnknown() {
 		appfwprofile.Htmlerrorstatusmessage = data.Htmlerrorstatusmessage.ValueString()
 	}
-	if !data.Importprofilename.IsNull() {
+	if !data.Importprofilename.IsNull() && !data.Importprofilename.IsUnknown() {
 		appfwprofile.Importprofilename = data.Importprofilename.ValueString()
 	}
-	if !data.Insertcookiesamesiteattribute.IsNull() {
+	if !data.Infercontenttypexmlpayloadaction.IsNull() && !data.Infercontenttypexmlpayloadaction.IsUnknown() {
+		var infercontenttypexmlpayloadactionList []string
+		data.Infercontenttypexmlpayloadaction.ElementsAs(ctx, &infercontenttypexmlpayloadactionList, false)
+		appfwprofile.Infercontenttypexmlpayloadaction = infercontenttypexmlpayloadactionList
+	}
+	if !data.Insertcookiesamesiteattribute.IsNull() && !data.Insertcookiesamesiteattribute.IsUnknown() {
 		appfwprofile.Insertcookiesamesiteattribute = data.Insertcookiesamesiteattribute.ValueString()
 	}
-	if !data.Invalidpercenthandling.IsNull() {
+	if !data.Inspectcontenttypes.IsNull() && !data.Inspectcontenttypes.IsUnknown() {
+		var inspectcontenttypesList []string
+		data.Inspectcontenttypes.ElementsAs(ctx, &inspectcontenttypesList, false)
+		appfwprofile.Inspectcontenttypes = inspectcontenttypesList
+	}
+	if !data.Inspectquerycontenttypes.IsNull() && !data.Inspectquerycontenttypes.IsUnknown() {
+		var inspectquerycontenttypesList []string
+		data.Inspectquerycontenttypes.ElementsAs(ctx, &inspectquerycontenttypesList, false)
+		appfwprofile.Inspectquerycontenttypes = inspectquerycontenttypesList
+	}
+	if !data.Invalidpercenthandling.IsNull() && !data.Invalidpercenthandling.IsUnknown() {
 		appfwprofile.Invalidpercenthandling = data.Invalidpercenthandling.ValueString()
 	}
-	if !data.Jsoncmdinjectiongrammar.IsNull() {
+	if !data.Jsonblockkeywordaction.IsNull() && !data.Jsonblockkeywordaction.IsUnknown() {
+		var jsonblockkeywordactionList []string
+		data.Jsonblockkeywordaction.ElementsAs(ctx, &jsonblockkeywordactionList, false)
+		appfwprofile.Jsonblockkeywordaction = jsonblockkeywordactionList
+	}
+	if !data.Jsoncmdinjectionaction.IsNull() && !data.Jsoncmdinjectionaction.IsUnknown() {
+		var jsoncmdinjectionactionList []string
+		data.Jsoncmdinjectionaction.ElementsAs(ctx, &jsoncmdinjectionactionList, false)
+		appfwprofile.Jsoncmdinjectionaction = jsoncmdinjectionactionList
+	}
+	if !data.Jsoncmdinjectiongrammar.IsNull() && !data.Jsoncmdinjectiongrammar.IsUnknown() {
 		appfwprofile.Jsoncmdinjectiongrammar = data.Jsoncmdinjectiongrammar.ValueString()
 	}
-	if !data.Jsoncmdinjectiontype.IsNull() {
+	if !data.Jsoncmdinjectiontype.IsNull() && !data.Jsoncmdinjectiontype.IsUnknown() {
 		appfwprofile.Jsoncmdinjectiontype = data.Jsoncmdinjectiontype.ValueString()
 	}
-	if !data.Jsonerrorobject.IsNull() {
+	if !data.Jsondosaction.IsNull() && !data.Jsondosaction.IsUnknown() {
+		var jsondosactionList []string
+		data.Jsondosaction.ElementsAs(ctx, &jsondosactionList, false)
+		appfwprofile.Jsondosaction = jsondosactionList
+	}
+	if !data.Jsonerrorobject.IsNull() && !data.Jsonerrorobject.IsUnknown() {
 		appfwprofile.Jsonerrorobject = data.Jsonerrorobject.ValueString()
 	}
-	if !data.Jsonerrorstatuscode.IsNull() {
+	if !data.Jsonerrorstatuscode.IsNull() && !data.Jsonerrorstatuscode.IsUnknown() {
 		appfwprofile.Jsonerrorstatuscode = utils.IntPtr(int(data.Jsonerrorstatuscode.ValueInt64()))
 	}
-	if !data.Jsonerrorstatusmessage.IsNull() {
+	if !data.Jsonerrorstatusmessage.IsNull() && !data.Jsonerrorstatusmessage.IsUnknown() {
 		appfwprofile.Jsonerrorstatusmessage = data.Jsonerrorstatusmessage.ValueString()
 	}
-	if !data.Jsonfieldscan.IsNull() {
+	if !data.Jsonfieldscan.IsNull() && !data.Jsonfieldscan.IsUnknown() {
 		appfwprofile.Jsonfieldscan = data.Jsonfieldscan.ValueString()
 	}
-	if !data.Jsonfieldscanlimit.IsNull() {
+	if !data.Jsonfieldscanlimit.IsNull() && !data.Jsonfieldscanlimit.IsUnknown() {
 		appfwprofile.Jsonfieldscanlimit = utils.IntPtr(int(data.Jsonfieldscanlimit.ValueInt64()))
 	}
-	if !data.Jsonmessagescan.IsNull() {
+	if !data.Jsonmessagescan.IsNull() && !data.Jsonmessagescan.IsUnknown() {
 		appfwprofile.Jsonmessagescan = data.Jsonmessagescan.ValueString()
 	}
-	if !data.Jsonmessagescanlimit.IsNull() {
+	if !data.Jsonmessagescanlimit.IsNull() && !data.Jsonmessagescanlimit.IsUnknown() {
 		appfwprofile.Jsonmessagescanlimit = utils.IntPtr(int(data.Jsonmessagescanlimit.ValueInt64()))
 	}
-	if !data.Jsonsqlinjectiongrammar.IsNull() {
+	if !data.Jsonsqlinjectionaction.IsNull() && !data.Jsonsqlinjectionaction.IsUnknown() {
+		var jsonsqlinjectionactionList []string
+		data.Jsonsqlinjectionaction.ElementsAs(ctx, &jsonsqlinjectionactionList, false)
+		appfwprofile.Jsonsqlinjectionaction = jsonsqlinjectionactionList
+	}
+	if !data.Jsonsqlinjectiongrammar.IsNull() && !data.Jsonsqlinjectiongrammar.IsUnknown() {
 		appfwprofile.Jsonsqlinjectiongrammar = data.Jsonsqlinjectiongrammar.ValueString()
 	}
-	if !data.Jsonsqlinjectiontype.IsNull() {
+	if !data.Jsonsqlinjectiontype.IsNull() && !data.Jsonsqlinjectiontype.IsUnknown() {
 		appfwprofile.Jsonsqlinjectiontype = data.Jsonsqlinjectiontype.ValueString()
 	}
-	if !data.Logeverypolicyhit.IsNull() {
+	if !data.Jsonxssaction.IsNull() && !data.Jsonxssaction.IsUnknown() {
+		var jsonxssactionList []string
+		data.Jsonxssaction.ElementsAs(ctx, &jsonxssactionList, false)
+		appfwprofile.Jsonxssaction = jsonxssactionList
+	}
+	if !data.Logeverypolicyhit.IsNull() && !data.Logeverypolicyhit.IsUnknown() {
 		appfwprofile.Logeverypolicyhit = data.Logeverypolicyhit.ValueString()
 	}
-	if !data.Matchurlstring.IsNull() {
+	if !data.Matchurlstring.IsNull() && !data.Matchurlstring.IsUnknown() {
 		appfwprofile.Matchurlstring = data.Matchurlstring.ValueString()
 	}
-	if !data.Messagescan.IsNull() {
+	if !data.Messagescan.IsNull() && !data.Messagescan.IsUnknown() {
 		appfwprofile.Messagescan = data.Messagescan.ValueString()
 	}
-	if !data.Messagescanlimit.IsNull() {
+	if !data.Messagescanlimit.IsNull() && !data.Messagescanlimit.IsUnknown() {
 		appfwprofile.Messagescanlimit = utils.IntPtr(int(data.Messagescanlimit.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Messagescanlimitcontenttypes.IsNull() && !data.Messagescanlimitcontenttypes.IsUnknown() {
+		var messagescanlimitcontenttypesList []string
+		data.Messagescanlimitcontenttypes.ElementsAs(ctx, &messagescanlimitcontenttypesList, false)
+		appfwprofile.Messagescanlimitcontenttypes = messagescanlimitcontenttypesList
+	}
+	if !data.Multipleheaderaction.IsNull() && !data.Multipleheaderaction.IsUnknown() {
+		var multipleheaderactionList []string
+		data.Multipleheaderaction.ElementsAs(ctx, &multipleheaderactionList, false)
+		appfwprofile.Multipleheaderaction = multipleheaderactionList
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwprofile.Name = data.Name.ValueString()
 	}
-	if !data.Optimizepartialreqs.IsNull() {
+	if !data.Optimizepartialreqs.IsNull() && !data.Optimizepartialreqs.IsUnknown() {
 		appfwprofile.Optimizepartialreqs = data.Optimizepartialreqs.ValueString()
 	}
-	if !data.Overwrite.IsNull() {
+	if !data.Overwrite.IsNull() && !data.Overwrite.IsUnknown() {
 		appfwprofile.Overwrite = data.Overwrite.ValueBool()
 	}
-	if !data.Percentdecoderecursively.IsNull() {
+	if !data.Percentdecoderecursively.IsNull() && !data.Percentdecoderecursively.IsUnknown() {
 		appfwprofile.Percentdecoderecursively = data.Percentdecoderecursively.ValueString()
 	}
-	if !data.Postbodylimit.IsNull() {
+	if !data.Postbodylimit.IsNull() && !data.Postbodylimit.IsUnknown() {
 		appfwprofile.Postbodylimit = utils.IntPtr(int(data.Postbodylimit.ValueInt64()))
 	}
-	if !data.Postbodylimitsignature.IsNull() {
+	if !data.Postbodylimitaction.IsNull() && !data.Postbodylimitaction.IsUnknown() {
+		var postbodylimitactionList []string
+		data.Postbodylimitaction.ElementsAs(ctx, &postbodylimitactionList, false)
+		appfwprofile.Postbodylimitaction = postbodylimitactionList
+	}
+	if !data.Postbodylimitsignature.IsNull() && !data.Postbodylimitsignature.IsUnknown() {
 		appfwprofile.Postbodylimitsignature = utils.IntPtr(int(data.Postbodylimitsignature.ValueInt64()))
 	}
-	if !data.Protofileobject.IsNull() {
+	if !data.Protofileobject.IsNull() && !data.Protofileobject.IsUnknown() {
 		appfwprofile.Protofileobject = data.Protofileobject.ValueString()
 	}
-	if !data.Refererheadercheck.IsNull() {
+	if !data.Refererheadercheck.IsNull() && !data.Refererheadercheck.IsUnknown() {
 		appfwprofile.Refererheadercheck = data.Refererheadercheck.ValueString()
 	}
-	if !data.Relaxationrules.IsNull() {
+	if !data.Relaxationrules.IsNull() && !data.Relaxationrules.IsUnknown() {
 		appfwprofile.Relaxationrules = data.Relaxationrules.ValueBool()
 	}
-	if !data.Replaceurlstring.IsNull() {
+	if !data.Replaceurlstring.IsNull() && !data.Replaceurlstring.IsUnknown() {
 		appfwprofile.Replaceurlstring = data.Replaceurlstring.ValueString()
 	}
-	if !data.Requestcontenttype.IsNull() {
+	if !data.Requestcontenttype.IsNull() && !data.Requestcontenttype.IsUnknown() {
 		appfwprofile.Requestcontenttype = data.Requestcontenttype.ValueString()
 	}
-	if !data.Responsecontenttype.IsNull() {
+	if !data.Responsecontenttype.IsNull() && !data.Responsecontenttype.IsUnknown() {
 		appfwprofile.Responsecontenttype = data.Responsecontenttype.ValueString()
 	}
-	if !data.Rfcprofile.IsNull() {
+	if !data.Restaction.IsNull() && !data.Restaction.IsUnknown() {
+		var restactionList []string
+		data.Restaction.ElementsAs(ctx, &restactionList, false)
+		appfwprofile.Restaction = restactionList
+	}
+	if !data.Rfcprofile.IsNull() && !data.Rfcprofile.IsUnknown() {
 		appfwprofile.Rfcprofile = data.Rfcprofile.ValueString()
 	}
-	if !data.Semicolonfieldseparator.IsNull() {
+	if !data.Semicolonfieldseparator.IsNull() && !data.Semicolonfieldseparator.IsUnknown() {
 		appfwprofile.Semicolonfieldseparator = data.Semicolonfieldseparator.ValueString()
 	}
-	if !data.Sessioncookiename.IsNull() {
+	if !data.Sessioncookiename.IsNull() && !data.Sessioncookiename.IsUnknown() {
 		appfwprofile.Sessioncookiename = data.Sessioncookiename.ValueString()
 	}
-	if !data.Sessionlessfieldconsistency.IsNull() {
+	if !data.Sessionlessfieldconsistency.IsNull() && !data.Sessionlessfieldconsistency.IsUnknown() {
 		appfwprofile.Sessionlessfieldconsistency = data.Sessionlessfieldconsistency.ValueString()
 	}
-	if !data.Sessionlessurlclosure.IsNull() {
+	if !data.Sessionlessurlclosure.IsNull() && !data.Sessionlessurlclosure.IsUnknown() {
 		appfwprofile.Sessionlessurlclosure = data.Sessionlessurlclosure.ValueString()
 	}
-	if !data.Signatures.IsNull() {
+	if !data.Signatures.IsNull() && !data.Signatures.IsUnknown() {
 		appfwprofile.Signatures = data.Signatures.ValueString()
 	}
-	if !data.Sqlinjectionchecksqlwildchars.IsNull() {
+	if !data.Sqlinjectionaction.IsNull() && !data.Sqlinjectionaction.IsUnknown() {
+		var sqlinjectionactionList []string
+		data.Sqlinjectionaction.ElementsAs(ctx, &sqlinjectionactionList, false)
+		appfwprofile.Sqlinjectionaction = sqlinjectionactionList
+	}
+	if !data.Sqlinjectionchecksqlwildchars.IsNull() && !data.Sqlinjectionchecksqlwildchars.IsUnknown() {
 		appfwprofile.Sqlinjectionchecksqlwildchars = data.Sqlinjectionchecksqlwildchars.ValueString()
 	}
-	if !data.Sqlinjectiongrammar.IsNull() {
+	if !data.Sqlinjectiongrammar.IsNull() && !data.Sqlinjectiongrammar.IsUnknown() {
 		appfwprofile.Sqlinjectiongrammar = data.Sqlinjectiongrammar.ValueString()
 	}
-	if !data.Sqlinjectiononlycheckfieldswithsqlchars.IsNull() {
+	if !data.Sqlinjectiononlycheckfieldswithsqlchars.IsNull() && !data.Sqlinjectiononlycheckfieldswithsqlchars.IsUnknown() {
 		appfwprofile.Sqlinjectiononlycheckfieldswithsqlchars = data.Sqlinjectiononlycheckfieldswithsqlchars.ValueString()
 	}
-	if !data.Sqlinjectionparsecomments.IsNull() {
+	if !data.Sqlinjectionparsecomments.IsNull() && !data.Sqlinjectionparsecomments.IsUnknown() {
 		appfwprofile.Sqlinjectionparsecomments = data.Sqlinjectionparsecomments.ValueString()
 	}
-	if !data.Sqlinjectionruletype.IsNull() {
+	if !data.Sqlinjectionruletype.IsNull() && !data.Sqlinjectionruletype.IsUnknown() {
 		appfwprofile.Sqlinjectionruletype = data.Sqlinjectionruletype.ValueString()
 	}
-	if !data.Sqlinjectiontransformspecialchars.IsNull() {
+	if !data.Sqlinjectiontransformspecialchars.IsNull() && !data.Sqlinjectiontransformspecialchars.IsUnknown() {
 		appfwprofile.Sqlinjectiontransformspecialchars = data.Sqlinjectiontransformspecialchars.ValueString()
 	}
-	if !data.Sqlinjectiontype.IsNull() {
+	if !data.Sqlinjectiontype.IsNull() && !data.Sqlinjectiontype.IsUnknown() {
 		appfwprofile.Sqlinjectiontype = data.Sqlinjectiontype.ValueString()
 	}
-	if !data.Starturlclosure.IsNull() {
+	if !data.Starturlaction.IsNull() && !data.Starturlaction.IsUnknown() {
+		var starturlactionList []string
+		data.Starturlaction.ElementsAs(ctx, &starturlactionList, false)
+		appfwprofile.Starturlaction = starturlactionList
+	}
+	if !data.Starturlclosure.IsNull() && !data.Starturlclosure.IsUnknown() {
 		appfwprofile.Starturlclosure = data.Starturlclosure.ValueString()
 	}
-	if !data.Streaming.IsNull() {
+	if !data.Streaming.IsNull() && !data.Streaming.IsUnknown() {
 		appfwprofile.Streaming = data.Streaming.ValueString()
 	}
-	if !data.Stripcomments.IsNull() {
+	if !data.Stripcomments.IsNull() && !data.Stripcomments.IsUnknown() {
 		appfwprofile.Stripcomments = data.Stripcomments.ValueString()
 	}
-	if !data.Striphtmlcomments.IsNull() {
+	if !data.Striphtmlcomments.IsNull() && !data.Striphtmlcomments.IsUnknown() {
 		appfwprofile.Striphtmlcomments = data.Striphtmlcomments.ValueString()
 	}
-	if !data.Stripxmlcomments.IsNull() {
+	if !data.Stripxmlcomments.IsNull() && !data.Stripxmlcomments.IsUnknown() {
 		appfwprofile.Stripxmlcomments = data.Stripxmlcomments.ValueString()
 	}
-	if !data.Trace.IsNull() {
+	if !data.Trace.IsNull() && !data.Trace.IsUnknown() {
 		appfwprofile.Trace = data.Trace.ValueString()
 	}
-	if !data.Urldecoderequestcookies.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		var typeList []string
+		data.Type.ElementsAs(ctx, &typeList, false)
+		appfwprofile.Type = typeList
+	}
+	if !data.Urldecoderequestcookies.IsNull() && !data.Urldecoderequestcookies.IsUnknown() {
 		appfwprofile.Urldecoderequestcookies = data.Urldecoderequestcookies.ValueString()
 	}
-	if !data.Usehtmlerrorobject.IsNull() {
+	if !data.Usehtmlerrorobject.IsNull() && !data.Usehtmlerrorobject.IsUnknown() {
 		appfwprofile.Usehtmlerrorobject = data.Usehtmlerrorobject.ValueString()
 	}
-	if !data.Verboseloglevel.IsNull() {
+	if !data.Verboseloglevel.IsNull() && !data.Verboseloglevel.IsUnknown() {
 		appfwprofile.Verboseloglevel = data.Verboseloglevel.ValueString()
 	}
-	if !data.Xmlerrorobject.IsNull() {
+	if !data.Xmlattachmentaction.IsNull() && !data.Xmlattachmentaction.IsUnknown() {
+		var xmlattachmentactionList []string
+		data.Xmlattachmentaction.ElementsAs(ctx, &xmlattachmentactionList, false)
+		appfwprofile.Xmlattachmentaction = xmlattachmentactionList
+	}
+	if !data.Xmldosaction.IsNull() && !data.Xmldosaction.IsUnknown() {
+		var xmldosactionList []string
+		data.Xmldosaction.ElementsAs(ctx, &xmldosactionList, false)
+		appfwprofile.Xmldosaction = xmldosactionList
+	}
+	if !data.Xmlerrorobject.IsNull() && !data.Xmlerrorobject.IsUnknown() {
 		appfwprofile.Xmlerrorobject = data.Xmlerrorobject.ValueString()
 	}
-	if !data.Xmlerrorstatuscode.IsNull() {
+	if !data.Xmlerrorstatuscode.IsNull() && !data.Xmlerrorstatuscode.IsUnknown() {
 		appfwprofile.Xmlerrorstatuscode = utils.IntPtr(int(data.Xmlerrorstatuscode.ValueInt64()))
 	}
-	if !data.Xmlerrorstatusmessage.IsNull() {
+	if !data.Xmlerrorstatusmessage.IsNull() && !data.Xmlerrorstatusmessage.IsUnknown() {
 		appfwprofile.Xmlerrorstatusmessage = data.Xmlerrorstatusmessage.ValueString()
 	}
-	if !data.Xmlsqlinjectionchecksqlwildchars.IsNull() {
+	if !data.Xmlformataction.IsNull() && !data.Xmlformataction.IsUnknown() {
+		var xmlformatactionList []string
+		data.Xmlformataction.ElementsAs(ctx, &xmlformatactionList, false)
+		appfwprofile.Xmlformataction = xmlformatactionList
+	}
+	if !data.Xmlsoapfaultaction.IsNull() && !data.Xmlsoapfaultaction.IsUnknown() {
+		var xmlsoapfaultactionList []string
+		data.Xmlsoapfaultaction.ElementsAs(ctx, &xmlsoapfaultactionList, false)
+		appfwprofile.Xmlsoapfaultaction = xmlsoapfaultactionList
+	}
+	if !data.Xmlsqlinjectionaction.IsNull() && !data.Xmlsqlinjectionaction.IsUnknown() {
+		var xmlsqlinjectionactionList []string
+		data.Xmlsqlinjectionaction.ElementsAs(ctx, &xmlsqlinjectionactionList, false)
+		appfwprofile.Xmlsqlinjectionaction = xmlsqlinjectionactionList
+	}
+	if !data.Xmlsqlinjectionchecksqlwildchars.IsNull() && !data.Xmlsqlinjectionchecksqlwildchars.IsUnknown() {
 		appfwprofile.Xmlsqlinjectionchecksqlwildchars = data.Xmlsqlinjectionchecksqlwildchars.ValueString()
 	}
-	if !data.Xmlsqlinjectiononlycheckfieldswithsqlchars.IsNull() {
+	if !data.Xmlsqlinjectiononlycheckfieldswithsqlchars.IsNull() && !data.Xmlsqlinjectiononlycheckfieldswithsqlchars.IsUnknown() {
 		appfwprofile.Xmlsqlinjectiononlycheckfieldswithsqlchars = data.Xmlsqlinjectiononlycheckfieldswithsqlchars.ValueString()
 	}
-	if !data.Xmlsqlinjectionparsecomments.IsNull() {
+	if !data.Xmlsqlinjectionparsecomments.IsNull() && !data.Xmlsqlinjectionparsecomments.IsUnknown() {
 		appfwprofile.Xmlsqlinjectionparsecomments = data.Xmlsqlinjectionparsecomments.ValueString()
 	}
-	if !data.Xmlsqlinjectiontype.IsNull() {
+	if !data.Xmlsqlinjectiontype.IsNull() && !data.Xmlsqlinjectiontype.IsUnknown() {
 		appfwprofile.Xmlsqlinjectiontype = data.Xmlsqlinjectiontype.ValueString()
+	}
+	if !data.Xmlvalidationaction.IsNull() && !data.Xmlvalidationaction.IsUnknown() {
+		var xmlvalidationactionList []string
+		data.Xmlvalidationaction.ElementsAs(ctx, &xmlvalidationactionList, false)
+		appfwprofile.Xmlvalidationaction = xmlvalidationactionList
+	}
+	if !data.Xmlwsiaction.IsNull() && !data.Xmlwsiaction.IsUnknown() {
+		var xmlwsiactionList []string
+		data.Xmlwsiaction.ElementsAs(ctx, &xmlwsiactionList, false)
+		appfwprofile.Xmlwsiaction = xmlwsiactionList
+	}
+	if !data.Xmlxssaction.IsNull() && !data.Xmlxssaction.IsUnknown() {
+		var xmlxssactionList []string
+		data.Xmlxssaction.ElementsAs(ctx, &xmlxssactionList, false)
+		appfwprofile.Xmlxssaction = xmlxssactionList
 	}
 
 	return appfwprofile
+}
+
+func appfwprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AppfwprofileResourceModel, state *AppfwprofileResourceModel) (appfw.Appfwprofile, bool) {
+	tflog.Debug(ctx, "In appfwprofileGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body restricted to NITRO-updatable fields that actually changed
+	appfwprofile := appfw.Appfwprofile{}
+	hasChange := false
+	// Name is the primary key and is always required in the payload
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		appfwprofile.Name = data.Name.ValueString()
+	}
+	if !data.Addcookieflags.Equal(state.Addcookieflags) {
+		appfwprofile.Addcookieflags = data.Addcookieflags.ValueString()
+		hasChange = true
+	}
+	if !data.Apispec.Equal(state.Apispec) {
+		appfwprofile.Apispec = data.Apispec.ValueString()
+		hasChange = true
+	}
+	if !data.Archivename.Equal(state.Archivename) {
+		appfwprofile.Archivename = data.Archivename.ValueString()
+		hasChange = true
+	}
+	if !data.AsProfBypassListEnable.Equal(state.AsProfBypassListEnable) {
+		appfwprofile.Asprofbypasslistenable = data.AsProfBypassListEnable.ValueString()
+		hasChange = true
+	}
+	if !data.AsProfDenyListEnable.Equal(state.AsProfDenyListEnable) {
+		appfwprofile.Asprofdenylistenable = data.AsProfDenyListEnable.ValueString()
+		hasChange = true
+	}
+	if !data.Augment.Equal(state.Augment) {
+		appfwprofile.Augment = data.Augment.ValueBool()
+		hasChange = true
+	}
+	if !data.Blockkeywordaction.Equal(state.Blockkeywordaction) {
+		var blockkeywordactionList []string
+		data.Blockkeywordaction.ElementsAs(ctx, &blockkeywordactionList, false)
+		appfwprofile.Blockkeywordaction = blockkeywordactionList
+		hasChange = true
+	}
+	if !data.Bufferoverflowaction.Equal(state.Bufferoverflowaction) {
+		var bufferoverflowactionList []string
+		data.Bufferoverflowaction.ElementsAs(ctx, &bufferoverflowactionList, false)
+		appfwprofile.Bufferoverflowaction = bufferoverflowactionList
+		hasChange = true
+	}
+	if !data.Bufferoverflowmaxcookielength.Equal(state.Bufferoverflowmaxcookielength) {
+		appfwprofile.Bufferoverflowmaxcookielength = utils.IntPtr(int(data.Bufferoverflowmaxcookielength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Bufferoverflowmaxheaderlength.Equal(state.Bufferoverflowmaxheaderlength) {
+		appfwprofile.Bufferoverflowmaxheaderlength = utils.IntPtr(int(data.Bufferoverflowmaxheaderlength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Bufferoverflowmaxquerylength.Equal(state.Bufferoverflowmaxquerylength) {
+		appfwprofile.Bufferoverflowmaxquerylength = utils.IntPtr(int(data.Bufferoverflowmaxquerylength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Bufferoverflowmaxtotalheaderlength.Equal(state.Bufferoverflowmaxtotalheaderlength) {
+		appfwprofile.Bufferoverflowmaxtotalheaderlength = utils.IntPtr(int(data.Bufferoverflowmaxtotalheaderlength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Bufferoverflowmaxurllength.Equal(state.Bufferoverflowmaxurllength) {
+		appfwprofile.Bufferoverflowmaxurllength = utils.IntPtr(int(data.Bufferoverflowmaxurllength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Canonicalizehtmlresponse.Equal(state.Canonicalizehtmlresponse) {
+		appfwprofile.Canonicalizehtmlresponse = data.Canonicalizehtmlresponse.ValueString()
+		hasChange = true
+	}
+	if !data.Ceflogging.Equal(state.Ceflogging) {
+		appfwprofile.Ceflogging = data.Ceflogging.ValueString()
+		hasChange = true
+	}
+	if !data.Checkrequestheaders.Equal(state.Checkrequestheaders) {
+		appfwprofile.Checkrequestheaders = data.Checkrequestheaders.ValueString()
+		hasChange = true
+	}
+	if !data.Clientipexpression.Equal(state.Clientipexpression) {
+		appfwprofile.Clientipexpression = data.Clientipexpression.ValueString()
+		hasChange = true
+	}
+	if !data.Cmdinjectionaction.Equal(state.Cmdinjectionaction) {
+		var cmdinjectionactionList []string
+		data.Cmdinjectionaction.ElementsAs(ctx, &cmdinjectionactionList, false)
+		appfwprofile.Cmdinjectionaction = cmdinjectionactionList
+		hasChange = true
+	}
+	if !data.Cmdinjectiongrammar.Equal(state.Cmdinjectiongrammar) {
+		appfwprofile.Cmdinjectiongrammar = data.Cmdinjectiongrammar.ValueString()
+		hasChange = true
+	}
+	if !data.Cmdinjectiontype.Equal(state.Cmdinjectiontype) {
+		appfwprofile.Cmdinjectiontype = data.Cmdinjectiontype.ValueString()
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		appfwprofile.Comment = data.Comment.ValueString()
+		hasChange = true
+	}
+	if !data.Contenttypeaction.Equal(state.Contenttypeaction) {
+		var contenttypeactionList []string
+		data.Contenttypeaction.ElementsAs(ctx, &contenttypeactionList, false)
+		appfwprofile.Contenttypeaction = contenttypeactionList
+		hasChange = true
+	}
+	if !data.Cookieconsistencyaction.Equal(state.Cookieconsistencyaction) {
+		var cookieconsistencyactionList []string
+		data.Cookieconsistencyaction.ElementsAs(ctx, &cookieconsistencyactionList, false)
+		appfwprofile.Cookieconsistencyaction = cookieconsistencyactionList
+		hasChange = true
+	}
+	if !data.Cookieencryption.Equal(state.Cookieencryption) {
+		appfwprofile.Cookieencryption = data.Cookieencryption.ValueString()
+		hasChange = true
+	}
+	if !data.Cookiehijackingaction.Equal(state.Cookiehijackingaction) {
+		var cookiehijackingactionList []string
+		data.Cookiehijackingaction.ElementsAs(ctx, &cookiehijackingactionList, false)
+		appfwprofile.Cookiehijackingaction = cookiehijackingactionList
+		hasChange = true
+	}
+	if !data.Cookieproxying.Equal(state.Cookieproxying) {
+		appfwprofile.Cookieproxying = data.Cookieproxying.ValueString()
+		hasChange = true
+	}
+	if !data.Cookiesamesiteattribute.Equal(state.Cookiesamesiteattribute) {
+		appfwprofile.Cookiesamesiteattribute = data.Cookiesamesiteattribute.ValueString()
+		hasChange = true
+	}
+	if !data.Cookietransforms.Equal(state.Cookietransforms) {
+		appfwprofile.Cookietransforms = data.Cookietransforms.ValueString()
+		hasChange = true
+	}
+	if !data.Creditcard.Equal(state.Creditcard) {
+		var creditcardList []string
+		data.Creditcard.ElementsAs(ctx, &creditcardList, false)
+		appfwprofile.Creditcard = creditcardList
+		hasChange = true
+	}
+	if !data.Creditcardaction.Equal(state.Creditcardaction) {
+		var creditcardactionList []string
+		data.Creditcardaction.ElementsAs(ctx, &creditcardactionList, false)
+		appfwprofile.Creditcardaction = creditcardactionList
+		hasChange = true
+	}
+	if !data.Creditcardmaxallowed.Equal(state.Creditcardmaxallowed) {
+		appfwprofile.Creditcardmaxallowed = utils.IntPtr(int(data.Creditcardmaxallowed.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Creditcardxout.Equal(state.Creditcardxout) {
+		appfwprofile.Creditcardxout = data.Creditcardxout.ValueString()
+		hasChange = true
+	}
+	if !data.Crosssitescriptingaction.Equal(state.Crosssitescriptingaction) {
+		var crosssitescriptingactionList []string
+		data.Crosssitescriptingaction.ElementsAs(ctx, &crosssitescriptingactionList, false)
+		appfwprofile.Crosssitescriptingaction = crosssitescriptingactionList
+		hasChange = true
+	}
+	if !data.Crosssitescriptingcheckcompleteurls.Equal(state.Crosssitescriptingcheckcompleteurls) {
+		appfwprofile.Crosssitescriptingcheckcompleteurls = data.Crosssitescriptingcheckcompleteurls.ValueString()
+		hasChange = true
+	}
+	if !data.Crosssitescriptingtransformunsafehtml.Equal(state.Crosssitescriptingtransformunsafehtml) {
+		appfwprofile.Crosssitescriptingtransformunsafehtml = data.Crosssitescriptingtransformunsafehtml.ValueString()
+		hasChange = true
+	}
+	if !data.Csrftagaction.Equal(state.Csrftagaction) {
+		var csrftagactionList []string
+		data.Csrftagaction.ElementsAs(ctx, &csrftagactionList, false)
+		appfwprofile.Csrftagaction = csrftagactionList
+		hasChange = true
+	}
+	if !data.Customsettings.Equal(state.Customsettings) {
+		appfwprofile.Customsettings = data.Customsettings.ValueString()
+		hasChange = true
+	}
+	if !data.Defaultcharset.Equal(state.Defaultcharset) {
+		appfwprofile.Defaultcharset = data.Defaultcharset.ValueString()
+		hasChange = true
+	}
+	if !data.Defaultfieldformatmaxlength.Equal(state.Defaultfieldformatmaxlength) {
+		appfwprofile.Defaultfieldformatmaxlength = utils.IntPtr(int(data.Defaultfieldformatmaxlength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Defaultfieldformatmaxoccurrences.Equal(state.Defaultfieldformatmaxoccurrences) {
+		appfwprofile.Defaultfieldformatmaxoccurrences = utils.IntPtr(int(data.Defaultfieldformatmaxoccurrences.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Defaultfieldformatminlength.Equal(state.Defaultfieldformatminlength) {
+		appfwprofile.Defaultfieldformatminlength = utils.IntPtr(int(data.Defaultfieldformatminlength.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Defaultfieldformattype.Equal(state.Defaultfieldformattype) {
+		appfwprofile.Defaultfieldformattype = data.Defaultfieldformattype.ValueString()
+		hasChange = true
+	}
+	// defaults is create-only (present in the NITRO add payload but absent from the
+	// update/set payload). Sending it in a PUT triggers an invalid-argument error,
+	// so it is intentionally excluded from the update builder.
+	if !data.Denyurlaction.Equal(state.Denyurlaction) {
+		var denyurlactionList []string
+		data.Denyurlaction.ElementsAs(ctx, &denyurlactionList, false)
+		appfwprofile.Denyurlaction = denyurlactionList
+		hasChange = true
+	}
+	if !data.Dosecurecreditcardlogging.Equal(state.Dosecurecreditcardlogging) {
+		appfwprofile.Dosecurecreditcardlogging = data.Dosecurecreditcardlogging.ValueString()
+		hasChange = true
+	}
+	if !data.Dynamiclearning.Equal(state.Dynamiclearning) {
+		var dynamiclearningList []string
+		data.Dynamiclearning.ElementsAs(ctx, &dynamiclearningList, false)
+		appfwprofile.Dynamiclearning = dynamiclearningList
+		hasChange = true
+	}
+	if !data.Enableformtagging.Equal(state.Enableformtagging) {
+		appfwprofile.Enableformtagging = data.Enableformtagging.ValueString()
+		hasChange = true
+	}
+	if !data.Errorurl.Equal(state.Errorurl) {
+		appfwprofile.Errorurl = data.Errorurl.ValueString()
+		hasChange = true
+	}
+	if !data.Excludefileuploadfromchecks.Equal(state.Excludefileuploadfromchecks) {
+		appfwprofile.Excludefileuploadfromchecks = data.Excludefileuploadfromchecks.ValueString()
+		hasChange = true
+	}
+	if !data.Exemptclosureurlsfromsecuritychecks.Equal(state.Exemptclosureurlsfromsecuritychecks) {
+		appfwprofile.Exemptclosureurlsfromsecuritychecks = data.Exemptclosureurlsfromsecuritychecks.ValueString()
+		hasChange = true
+	}
+	if !data.Fakeaccountdetection.Equal(state.Fakeaccountdetection) {
+		appfwprofile.Fakeaccountdetection = data.Fakeaccountdetection.ValueString()
+		hasChange = true
+	}
+	if !data.Fieldconsistencyaction.Equal(state.Fieldconsistencyaction) {
+		var fieldconsistencyactionList []string
+		data.Fieldconsistencyaction.ElementsAs(ctx, &fieldconsistencyactionList, false)
+		appfwprofile.Fieldconsistencyaction = fieldconsistencyactionList
+		hasChange = true
+	}
+	if !data.Fieldformataction.Equal(state.Fieldformataction) {
+		var fieldformatactionList []string
+		data.Fieldformataction.ElementsAs(ctx, &fieldformatactionList, false)
+		appfwprofile.Fieldformataction = fieldformatactionList
+		hasChange = true
+	}
+	if !data.Fieldscan.Equal(state.Fieldscan) {
+		appfwprofile.Fieldscan = data.Fieldscan.ValueString()
+		hasChange = true
+	}
+	if !data.Fieldscanlimit.Equal(state.Fieldscanlimit) {
+		appfwprofile.Fieldscanlimit = utils.IntPtr(int(data.Fieldscanlimit.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Fileuploadmaxnum.Equal(state.Fileuploadmaxnum) {
+		appfwprofile.Fileuploadmaxnum = utils.IntPtr(int(data.Fileuploadmaxnum.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Fileuploadtypesaction.Equal(state.Fileuploadtypesaction) {
+		var fileuploadtypesactionList []string
+		data.Fileuploadtypesaction.ElementsAs(ctx, &fileuploadtypesactionList, false)
+		appfwprofile.Fileuploadtypesaction = fileuploadtypesactionList
+		hasChange = true
+	}
+	if !data.Geolocationlogging.Equal(state.Geolocationlogging) {
+		appfwprofile.Geolocationlogging = data.Geolocationlogging.ValueString()
+		hasChange = true
+	}
+	if !data.Grpcaction.Equal(state.Grpcaction) {
+		var grpcactionList []string
+		data.Grpcaction.ElementsAs(ctx, &grpcactionList, false)
+		appfwprofile.Grpcaction = grpcactionList
+		hasChange = true
+	}
+	if !data.Htmlerrorobject.Equal(state.Htmlerrorobject) {
+		appfwprofile.Htmlerrorobject = data.Htmlerrorobject.ValueString()
+		hasChange = true
+	}
+	if !data.Htmlerrorstatuscode.Equal(state.Htmlerrorstatuscode) {
+		appfwprofile.Htmlerrorstatuscode = utils.IntPtr(int(data.Htmlerrorstatuscode.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Htmlerrorstatusmessage.Equal(state.Htmlerrorstatusmessage) {
+		appfwprofile.Htmlerrorstatusmessage = data.Htmlerrorstatusmessage.ValueString()
+		hasChange = true
+	}
+	if !data.Importprofilename.Equal(state.Importprofilename) {
+		appfwprofile.Importprofilename = data.Importprofilename.ValueString()
+		hasChange = true
+	}
+	if !data.Infercontenttypexmlpayloadaction.Equal(state.Infercontenttypexmlpayloadaction) {
+		var infercontenttypexmlpayloadactionList []string
+		data.Infercontenttypexmlpayloadaction.ElementsAs(ctx, &infercontenttypexmlpayloadactionList, false)
+		appfwprofile.Infercontenttypexmlpayloadaction = infercontenttypexmlpayloadactionList
+		hasChange = true
+	}
+	if !data.Insertcookiesamesiteattribute.Equal(state.Insertcookiesamesiteattribute) {
+		appfwprofile.Insertcookiesamesiteattribute = data.Insertcookiesamesiteattribute.ValueString()
+		hasChange = true
+	}
+	if !data.Inspectcontenttypes.Equal(state.Inspectcontenttypes) {
+		var inspectcontenttypesList []string
+		data.Inspectcontenttypes.ElementsAs(ctx, &inspectcontenttypesList, false)
+		appfwprofile.Inspectcontenttypes = inspectcontenttypesList
+		hasChange = true
+	}
+	if !data.Inspectquerycontenttypes.Equal(state.Inspectquerycontenttypes) {
+		var inspectquerycontenttypesList []string
+		data.Inspectquerycontenttypes.ElementsAs(ctx, &inspectquerycontenttypesList, false)
+		appfwprofile.Inspectquerycontenttypes = inspectquerycontenttypesList
+		hasChange = true
+	}
+	if !data.Invalidpercenthandling.Equal(state.Invalidpercenthandling) {
+		appfwprofile.Invalidpercenthandling = data.Invalidpercenthandling.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonblockkeywordaction.Equal(state.Jsonblockkeywordaction) {
+		var jsonblockkeywordactionList []string
+		data.Jsonblockkeywordaction.ElementsAs(ctx, &jsonblockkeywordactionList, false)
+		appfwprofile.Jsonblockkeywordaction = jsonblockkeywordactionList
+		hasChange = true
+	}
+	if !data.Jsoncmdinjectionaction.Equal(state.Jsoncmdinjectionaction) {
+		var jsoncmdinjectionactionList []string
+		data.Jsoncmdinjectionaction.ElementsAs(ctx, &jsoncmdinjectionactionList, false)
+		appfwprofile.Jsoncmdinjectionaction = jsoncmdinjectionactionList
+		hasChange = true
+	}
+	if !data.Jsoncmdinjectiongrammar.Equal(state.Jsoncmdinjectiongrammar) {
+		appfwprofile.Jsoncmdinjectiongrammar = data.Jsoncmdinjectiongrammar.ValueString()
+		hasChange = true
+	}
+	if !data.Jsoncmdinjectiontype.Equal(state.Jsoncmdinjectiontype) {
+		appfwprofile.Jsoncmdinjectiontype = data.Jsoncmdinjectiontype.ValueString()
+		hasChange = true
+	}
+	if !data.Jsondosaction.Equal(state.Jsondosaction) {
+		var jsondosactionList []string
+		data.Jsondosaction.ElementsAs(ctx, &jsondosactionList, false)
+		appfwprofile.Jsondosaction = jsondosactionList
+		hasChange = true
+	}
+	if !data.Jsonerrorobject.Equal(state.Jsonerrorobject) {
+		appfwprofile.Jsonerrorobject = data.Jsonerrorobject.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonerrorstatuscode.Equal(state.Jsonerrorstatuscode) {
+		appfwprofile.Jsonerrorstatuscode = utils.IntPtr(int(data.Jsonerrorstatuscode.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Jsonerrorstatusmessage.Equal(state.Jsonerrorstatusmessage) {
+		appfwprofile.Jsonerrorstatusmessage = data.Jsonerrorstatusmessage.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonfieldscan.Equal(state.Jsonfieldscan) {
+		appfwprofile.Jsonfieldscan = data.Jsonfieldscan.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonfieldscanlimit.Equal(state.Jsonfieldscanlimit) {
+		appfwprofile.Jsonfieldscanlimit = utils.IntPtr(int(data.Jsonfieldscanlimit.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Jsonmessagescan.Equal(state.Jsonmessagescan) {
+		appfwprofile.Jsonmessagescan = data.Jsonmessagescan.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonmessagescanlimit.Equal(state.Jsonmessagescanlimit) {
+		appfwprofile.Jsonmessagescanlimit = utils.IntPtr(int(data.Jsonmessagescanlimit.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Jsonsqlinjectionaction.Equal(state.Jsonsqlinjectionaction) {
+		var jsonsqlinjectionactionList []string
+		data.Jsonsqlinjectionaction.ElementsAs(ctx, &jsonsqlinjectionactionList, false)
+		appfwprofile.Jsonsqlinjectionaction = jsonsqlinjectionactionList
+		hasChange = true
+	}
+	if !data.Jsonsqlinjectiongrammar.Equal(state.Jsonsqlinjectiongrammar) {
+		appfwprofile.Jsonsqlinjectiongrammar = data.Jsonsqlinjectiongrammar.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonsqlinjectiontype.Equal(state.Jsonsqlinjectiontype) {
+		appfwprofile.Jsonsqlinjectiontype = data.Jsonsqlinjectiontype.ValueString()
+		hasChange = true
+	}
+	if !data.Jsonxssaction.Equal(state.Jsonxssaction) {
+		var jsonxssactionList []string
+		data.Jsonxssaction.ElementsAs(ctx, &jsonxssactionList, false)
+		appfwprofile.Jsonxssaction = jsonxssactionList
+		hasChange = true
+	}
+	if !data.Logeverypolicyhit.Equal(state.Logeverypolicyhit) {
+		appfwprofile.Logeverypolicyhit = data.Logeverypolicyhit.ValueString()
+		hasChange = true
+	}
+	if !data.Matchurlstring.Equal(state.Matchurlstring) {
+		appfwprofile.Matchurlstring = data.Matchurlstring.ValueString()
+		hasChange = true
+	}
+	if !data.Messagescan.Equal(state.Messagescan) {
+		appfwprofile.Messagescan = data.Messagescan.ValueString()
+		hasChange = true
+	}
+	if !data.Messagescanlimit.Equal(state.Messagescanlimit) {
+		appfwprofile.Messagescanlimit = utils.IntPtr(int(data.Messagescanlimit.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Messagescanlimitcontenttypes.Equal(state.Messagescanlimitcontenttypes) {
+		var messagescanlimitcontenttypesList []string
+		data.Messagescanlimitcontenttypes.ElementsAs(ctx, &messagescanlimitcontenttypesList, false)
+		appfwprofile.Messagescanlimitcontenttypes = messagescanlimitcontenttypesList
+		hasChange = true
+	}
+	if !data.Multipleheaderaction.Equal(state.Multipleheaderaction) {
+		var multipleheaderactionList []string
+		data.Multipleheaderaction.ElementsAs(ctx, &multipleheaderactionList, false)
+		appfwprofile.Multipleheaderaction = multipleheaderactionList
+		hasChange = true
+	}
+	if !data.Optimizepartialreqs.Equal(state.Optimizepartialreqs) {
+		appfwprofile.Optimizepartialreqs = data.Optimizepartialreqs.ValueString()
+		hasChange = true
+	}
+	if !data.Overwrite.Equal(state.Overwrite) {
+		appfwprofile.Overwrite = data.Overwrite.ValueBool()
+		hasChange = true
+	}
+	if !data.Percentdecoderecursively.Equal(state.Percentdecoderecursively) {
+		appfwprofile.Percentdecoderecursively = data.Percentdecoderecursively.ValueString()
+		hasChange = true
+	}
+	if !data.Postbodylimit.Equal(state.Postbodylimit) {
+		appfwprofile.Postbodylimit = utils.IntPtr(int(data.Postbodylimit.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Postbodylimitaction.Equal(state.Postbodylimitaction) {
+		var postbodylimitactionList []string
+		data.Postbodylimitaction.ElementsAs(ctx, &postbodylimitactionList, false)
+		appfwprofile.Postbodylimitaction = postbodylimitactionList
+		hasChange = true
+	}
+	if !data.Postbodylimitsignature.Equal(state.Postbodylimitsignature) {
+		appfwprofile.Postbodylimitsignature = utils.IntPtr(int(data.Postbodylimitsignature.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Protofileobject.Equal(state.Protofileobject) {
+		appfwprofile.Protofileobject = data.Protofileobject.ValueString()
+		hasChange = true
+	}
+	if !data.Refererheadercheck.Equal(state.Refererheadercheck) {
+		appfwprofile.Refererheadercheck = data.Refererheadercheck.ValueString()
+		hasChange = true
+	}
+	if !data.Relaxationrules.Equal(state.Relaxationrules) {
+		appfwprofile.Relaxationrules = data.Relaxationrules.ValueBool()
+		hasChange = true
+	}
+	if !data.Replaceurlstring.Equal(state.Replaceurlstring) {
+		appfwprofile.Replaceurlstring = data.Replaceurlstring.ValueString()
+		hasChange = true
+	}
+	if !data.Requestcontenttype.Equal(state.Requestcontenttype) {
+		appfwprofile.Requestcontenttype = data.Requestcontenttype.ValueString()
+		hasChange = true
+	}
+	if !data.Responsecontenttype.Equal(state.Responsecontenttype) {
+		appfwprofile.Responsecontenttype = data.Responsecontenttype.ValueString()
+		hasChange = true
+	}
+	if !data.Restaction.Equal(state.Restaction) {
+		var restactionList []string
+		data.Restaction.ElementsAs(ctx, &restactionList, false)
+		appfwprofile.Restaction = restactionList
+		hasChange = true
+	}
+	if !data.Rfcprofile.Equal(state.Rfcprofile) {
+		appfwprofile.Rfcprofile = data.Rfcprofile.ValueString()
+		hasChange = true
+	}
+	if !data.Semicolonfieldseparator.Equal(state.Semicolonfieldseparator) {
+		appfwprofile.Semicolonfieldseparator = data.Semicolonfieldseparator.ValueString()
+		hasChange = true
+	}
+	if !data.Sessioncookiename.Equal(state.Sessioncookiename) {
+		appfwprofile.Sessioncookiename = data.Sessioncookiename.ValueString()
+		hasChange = true
+	}
+	if !data.Sessionlessfieldconsistency.Equal(state.Sessionlessfieldconsistency) {
+		appfwprofile.Sessionlessfieldconsistency = data.Sessionlessfieldconsistency.ValueString()
+		hasChange = true
+	}
+	if !data.Sessionlessurlclosure.Equal(state.Sessionlessurlclosure) {
+		appfwprofile.Sessionlessurlclosure = data.Sessionlessurlclosure.ValueString()
+		hasChange = true
+	}
+	if !data.Signatures.Equal(state.Signatures) {
+		appfwprofile.Signatures = data.Signatures.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectionaction.Equal(state.Sqlinjectionaction) {
+		var sqlinjectionactionList []string
+		data.Sqlinjectionaction.ElementsAs(ctx, &sqlinjectionactionList, false)
+		appfwprofile.Sqlinjectionaction = sqlinjectionactionList
+		hasChange = true
+	}
+	if !data.Sqlinjectionchecksqlwildchars.Equal(state.Sqlinjectionchecksqlwildchars) {
+		appfwprofile.Sqlinjectionchecksqlwildchars = data.Sqlinjectionchecksqlwildchars.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectiongrammar.Equal(state.Sqlinjectiongrammar) {
+		appfwprofile.Sqlinjectiongrammar = data.Sqlinjectiongrammar.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectiononlycheckfieldswithsqlchars.Equal(state.Sqlinjectiononlycheckfieldswithsqlchars) {
+		appfwprofile.Sqlinjectiononlycheckfieldswithsqlchars = data.Sqlinjectiononlycheckfieldswithsqlchars.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectionparsecomments.Equal(state.Sqlinjectionparsecomments) {
+		appfwprofile.Sqlinjectionparsecomments = data.Sqlinjectionparsecomments.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectionruletype.Equal(state.Sqlinjectionruletype) {
+		appfwprofile.Sqlinjectionruletype = data.Sqlinjectionruletype.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectiontransformspecialchars.Equal(state.Sqlinjectiontransformspecialchars) {
+		appfwprofile.Sqlinjectiontransformspecialchars = data.Sqlinjectiontransformspecialchars.ValueString()
+		hasChange = true
+	}
+	if !data.Sqlinjectiontype.Equal(state.Sqlinjectiontype) {
+		appfwprofile.Sqlinjectiontype = data.Sqlinjectiontype.ValueString()
+		hasChange = true
+	}
+	if !data.Starturlaction.Equal(state.Starturlaction) {
+		var starturlactionList []string
+		data.Starturlaction.ElementsAs(ctx, &starturlactionList, false)
+		appfwprofile.Starturlaction = starturlactionList
+		hasChange = true
+	}
+	if !data.Starturlclosure.Equal(state.Starturlclosure) {
+		appfwprofile.Starturlclosure = data.Starturlclosure.ValueString()
+		hasChange = true
+	}
+	if !data.Streaming.Equal(state.Streaming) {
+		appfwprofile.Streaming = data.Streaming.ValueString()
+		hasChange = true
+	}
+	if !data.Stripcomments.Equal(state.Stripcomments) {
+		appfwprofile.Stripcomments = data.Stripcomments.ValueString()
+		hasChange = true
+	}
+	if !data.Striphtmlcomments.Equal(state.Striphtmlcomments) {
+		appfwprofile.Striphtmlcomments = data.Striphtmlcomments.ValueString()
+		hasChange = true
+	}
+	if !data.Stripxmlcomments.Equal(state.Stripxmlcomments) {
+		appfwprofile.Stripxmlcomments = data.Stripxmlcomments.ValueString()
+		hasChange = true
+	}
+	if !data.Trace.Equal(state.Trace) {
+		appfwprofile.Trace = data.Trace.ValueString()
+		hasChange = true
+	}
+	if !data.Type.Equal(state.Type) {
+		var typeList []string
+		data.Type.ElementsAs(ctx, &typeList, false)
+		appfwprofile.Type = typeList
+		hasChange = true
+	}
+	if !data.Urldecoderequestcookies.Equal(state.Urldecoderequestcookies) {
+		appfwprofile.Urldecoderequestcookies = data.Urldecoderequestcookies.ValueString()
+		hasChange = true
+	}
+	if !data.Usehtmlerrorobject.Equal(state.Usehtmlerrorobject) {
+		appfwprofile.Usehtmlerrorobject = data.Usehtmlerrorobject.ValueString()
+		hasChange = true
+	}
+	if !data.Verboseloglevel.Equal(state.Verboseloglevel) {
+		appfwprofile.Verboseloglevel = data.Verboseloglevel.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlattachmentaction.Equal(state.Xmlattachmentaction) {
+		var xmlattachmentactionList []string
+		data.Xmlattachmentaction.ElementsAs(ctx, &xmlattachmentactionList, false)
+		appfwprofile.Xmlattachmentaction = xmlattachmentactionList
+		hasChange = true
+	}
+	if !data.Xmldosaction.Equal(state.Xmldosaction) {
+		var xmldosactionList []string
+		data.Xmldosaction.ElementsAs(ctx, &xmldosactionList, false)
+		appfwprofile.Xmldosaction = xmldosactionList
+		hasChange = true
+	}
+	if !data.Xmlerrorobject.Equal(state.Xmlerrorobject) {
+		appfwprofile.Xmlerrorobject = data.Xmlerrorobject.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlerrorstatuscode.Equal(state.Xmlerrorstatuscode) {
+		appfwprofile.Xmlerrorstatuscode = utils.IntPtr(int(data.Xmlerrorstatuscode.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Xmlerrorstatusmessage.Equal(state.Xmlerrorstatusmessage) {
+		appfwprofile.Xmlerrorstatusmessage = data.Xmlerrorstatusmessage.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlformataction.Equal(state.Xmlformataction) {
+		var xmlformatactionList []string
+		data.Xmlformataction.ElementsAs(ctx, &xmlformatactionList, false)
+		appfwprofile.Xmlformataction = xmlformatactionList
+		hasChange = true
+	}
+	if !data.Xmlsoapfaultaction.Equal(state.Xmlsoapfaultaction) {
+		var xmlsoapfaultactionList []string
+		data.Xmlsoapfaultaction.ElementsAs(ctx, &xmlsoapfaultactionList, false)
+		appfwprofile.Xmlsoapfaultaction = xmlsoapfaultactionList
+		hasChange = true
+	}
+	if !data.Xmlsqlinjectionaction.Equal(state.Xmlsqlinjectionaction) {
+		var xmlsqlinjectionactionList []string
+		data.Xmlsqlinjectionaction.ElementsAs(ctx, &xmlsqlinjectionactionList, false)
+		appfwprofile.Xmlsqlinjectionaction = xmlsqlinjectionactionList
+		hasChange = true
+	}
+	if !data.Xmlsqlinjectionchecksqlwildchars.Equal(state.Xmlsqlinjectionchecksqlwildchars) {
+		appfwprofile.Xmlsqlinjectionchecksqlwildchars = data.Xmlsqlinjectionchecksqlwildchars.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlsqlinjectiononlycheckfieldswithsqlchars.Equal(state.Xmlsqlinjectiononlycheckfieldswithsqlchars) {
+		appfwprofile.Xmlsqlinjectiononlycheckfieldswithsqlchars = data.Xmlsqlinjectiononlycheckfieldswithsqlchars.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlsqlinjectionparsecomments.Equal(state.Xmlsqlinjectionparsecomments) {
+		appfwprofile.Xmlsqlinjectionparsecomments = data.Xmlsqlinjectionparsecomments.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlsqlinjectiontype.Equal(state.Xmlsqlinjectiontype) {
+		appfwprofile.Xmlsqlinjectiontype = data.Xmlsqlinjectiontype.ValueString()
+		hasChange = true
+	}
+	if !data.Xmlvalidationaction.Equal(state.Xmlvalidationaction) {
+		var xmlvalidationactionList []string
+		data.Xmlvalidationaction.ElementsAs(ctx, &xmlvalidationactionList, false)
+		appfwprofile.Xmlvalidationaction = xmlvalidationactionList
+		hasChange = true
+	}
+	if !data.Xmlwsiaction.Equal(state.Xmlwsiaction) {
+		var xmlwsiactionList []string
+		data.Xmlwsiaction.ElementsAs(ctx, &xmlwsiactionList, false)
+		appfwprofile.Xmlwsiaction = xmlwsiactionList
+		hasChange = true
+	}
+	if !data.Xmlxssaction.Equal(state.Xmlxssaction) {
+		var xmlxssactionList []string
+		data.Xmlxssaction.ElementsAs(ctx, &xmlxssactionList, false)
+		appfwprofile.Xmlxssaction = xmlxssactionList
+		hasChange = true
+	}
+
+	return appfwprofile, hasChange
 }
 
 func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceModel, getResponseData map[string]interface{}) *AppfwprofileResourceModel {
@@ -1307,6 +2158,36 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Augment = types.BoolValue(val.(bool))
 	} else {
 		data.Augment = types.BoolNull()
+	}
+	if val, ok := getResponseData["blockkeywordaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Blockkeywordaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Blockkeywordaction = listValue
+		default:
+			data.Blockkeywordaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Blockkeywordaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["bufferoverflowaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Bufferoverflowaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Bufferoverflowaction = listValue
+		default:
+			data.Bufferoverflowaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Bufferoverflowaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["bufferoverflowmaxcookielength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -1363,6 +2244,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Clientipexpression = types.StringNull()
 	}
+	if val, ok := getResponseData["cmdinjectionaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Cmdinjectionaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Cmdinjectionaction = listValue
+		default:
+			data.Cmdinjectionaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Cmdinjectionaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["cmdinjectiongrammar"]; ok && val != nil {
 		data.Cmdinjectiongrammar = types.StringValue(val.(string))
 	} else {
@@ -1378,10 +2274,55 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Comment = types.StringNull()
 	}
+	if val, ok := getResponseData["contenttypeaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Contenttypeaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Contenttypeaction = listValue
+		default:
+			data.Contenttypeaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Contenttypeaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["cookieconsistencyaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Cookieconsistencyaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Cookieconsistencyaction = listValue
+		default:
+			data.Cookieconsistencyaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Cookieconsistencyaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["cookieencryption"]; ok && val != nil {
 		data.Cookieencryption = types.StringValue(val.(string))
 	} else {
 		data.Cookieencryption = types.StringNull()
+	}
+	if val, ok := getResponseData["cookiehijackingaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Cookiehijackingaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Cookiehijackingaction = listValue
+		default:
+			data.Cookiehijackingaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Cookiehijackingaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["cookieproxying"]; ok && val != nil {
 		data.Cookieproxying = types.StringValue(val.(string))
@@ -1398,6 +2339,36 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Cookietransforms = types.StringNull()
 	}
+	if val, ok := getResponseData["creditcard"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Creditcard = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Creditcard = listValue
+		default:
+			data.Creditcard = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Creditcard = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["creditcardaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Creditcardaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Creditcardaction = listValue
+		default:
+			data.Creditcardaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Creditcardaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["creditcardmaxallowed"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Creditcardmaxallowed = types.Int64Value(intVal)
@@ -1410,6 +2381,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Creditcardxout = types.StringNull()
 	}
+	if val, ok := getResponseData["crosssitescriptingaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Crosssitescriptingaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Crosssitescriptingaction = listValue
+		default:
+			data.Crosssitescriptingaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Crosssitescriptingaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["crosssitescriptingcheckcompleteurls"]; ok && val != nil {
 		data.Crosssitescriptingcheckcompleteurls = types.StringValue(val.(string))
 	} else {
@@ -1419,6 +2405,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Crosssitescriptingtransformunsafehtml = types.StringValue(val.(string))
 	} else {
 		data.Crosssitescriptingtransformunsafehtml = types.StringNull()
+	}
+	if val, ok := getResponseData["csrftagaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Csrftagaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Csrftagaction = listValue
+		default:
+			data.Csrftagaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Csrftagaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["customsettings"]; ok && val != nil {
 		data.Customsettings = types.StringValue(val.(string))
@@ -1461,10 +2462,40 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Defaults = types.StringNull()
 	}
+	if val, ok := getResponseData["denyurlaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Denyurlaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Denyurlaction = listValue
+		default:
+			data.Denyurlaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Denyurlaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["dosecurecreditcardlogging"]; ok && val != nil {
 		data.Dosecurecreditcardlogging = types.StringValue(val.(string))
 	} else {
 		data.Dosecurecreditcardlogging = types.StringNull()
+	}
+	if val, ok := getResponseData["dynamiclearning"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Dynamiclearning = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Dynamiclearning = listValue
+		default:
+			data.Dynamiclearning = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Dynamiclearning = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["enableformtagging"]; ok && val != nil {
 		data.Enableformtagging = types.StringValue(val.(string))
@@ -1491,6 +2522,36 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Fakeaccountdetection = types.StringNull()
 	}
+	if val, ok := getResponseData["fieldconsistencyaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Fieldconsistencyaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Fieldconsistencyaction = listValue
+		default:
+			data.Fieldconsistencyaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Fieldconsistencyaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["fieldformataction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Fieldformataction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Fieldformataction = listValue
+		default:
+			data.Fieldformataction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Fieldformataction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["fieldscan"]; ok && val != nil {
 		data.Fieldscan = types.StringValue(val.(string))
 	} else {
@@ -1510,10 +2571,40 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Fileuploadmaxnum = types.Int64Null()
 	}
+	if val, ok := getResponseData["fileuploadtypesaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Fileuploadtypesaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Fileuploadtypesaction = listValue
+		default:
+			data.Fileuploadtypesaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Fileuploadtypesaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["geolocationlogging"]; ok && val != nil {
 		data.Geolocationlogging = types.StringValue(val.(string))
 	} else {
 		data.Geolocationlogging = types.StringNull()
+	}
+	if val, ok := getResponseData["grpcaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Grpcaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Grpcaction = listValue
+		default:
+			data.Grpcaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Grpcaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["htmlerrorobject"]; ok && val != nil {
 		data.Htmlerrorobject = types.StringValue(val.(string))
@@ -1537,15 +2628,90 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Importprofilename = types.StringNull()
 	}
+	if val, ok := getResponseData["infercontenttypexmlpayloadaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Infercontenttypexmlpayloadaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Infercontenttypexmlpayloadaction = listValue
+		default:
+			data.Infercontenttypexmlpayloadaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Infercontenttypexmlpayloadaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["insertcookiesamesiteattribute"]; ok && val != nil {
 		data.Insertcookiesamesiteattribute = types.StringValue(val.(string))
 	} else {
 		data.Insertcookiesamesiteattribute = types.StringNull()
 	}
+	if val, ok := getResponseData["inspectcontenttypes"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Inspectcontenttypes = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Inspectcontenttypes = listValue
+		default:
+			data.Inspectcontenttypes = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Inspectcontenttypes = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["inspectquerycontenttypes"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Inspectquerycontenttypes = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Inspectquerycontenttypes = listValue
+		default:
+			data.Inspectquerycontenttypes = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Inspectquerycontenttypes = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["invalidpercenthandling"]; ok && val != nil {
 		data.Invalidpercenthandling = types.StringValue(val.(string))
 	} else {
 		data.Invalidpercenthandling = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonblockkeywordaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Jsonblockkeywordaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Jsonblockkeywordaction = listValue
+		default:
+			data.Jsonblockkeywordaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Jsonblockkeywordaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["jsoncmdinjectionaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Jsoncmdinjectionaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Jsoncmdinjectionaction = listValue
+		default:
+			data.Jsoncmdinjectionaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Jsoncmdinjectionaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["jsoncmdinjectiongrammar"]; ok && val != nil {
 		data.Jsoncmdinjectiongrammar = types.StringValue(val.(string))
@@ -1556,6 +2722,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Jsoncmdinjectiontype = types.StringValue(val.(string))
 	} else {
 		data.Jsoncmdinjectiontype = types.StringNull()
+	}
+	if val, ok := getResponseData["jsondosaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Jsondosaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Jsondosaction = listValue
+		default:
+			data.Jsondosaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Jsondosaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["jsonerrorobject"]; ok && val != nil {
 		data.Jsonerrorobject = types.StringValue(val.(string))
@@ -1598,6 +2779,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Jsonmessagescanlimit = types.Int64Null()
 	}
+	if val, ok := getResponseData["jsonsqlinjectionaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Jsonsqlinjectionaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Jsonsqlinjectionaction = listValue
+		default:
+			data.Jsonsqlinjectionaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Jsonsqlinjectionaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["jsonsqlinjectiongrammar"]; ok && val != nil {
 		data.Jsonsqlinjectiongrammar = types.StringValue(val.(string))
 	} else {
@@ -1607,6 +2803,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Jsonsqlinjectiontype = types.StringValue(val.(string))
 	} else {
 		data.Jsonsqlinjectiontype = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonxssaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Jsonxssaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Jsonxssaction = listValue
+		default:
+			data.Jsonxssaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Jsonxssaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["logeverypolicyhit"]; ok && val != nil {
 		data.Logeverypolicyhit = types.StringValue(val.(string))
@@ -1629,6 +2840,36 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		}
 	} else {
 		data.Messagescanlimit = types.Int64Null()
+	}
+	if val, ok := getResponseData["messagescanlimitcontenttypes"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Messagescanlimitcontenttypes = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Messagescanlimitcontenttypes = listValue
+		default:
+			data.Messagescanlimitcontenttypes = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Messagescanlimitcontenttypes = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["multipleheaderaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Multipleheaderaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Multipleheaderaction = listValue
+		default:
+			data.Multipleheaderaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Multipleheaderaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
@@ -1656,6 +2897,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		}
 	} else {
 		data.Postbodylimit = types.Int64Null()
+	}
+	if val, ok := getResponseData["postbodylimitaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Postbodylimitaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Postbodylimitaction = listValue
+		default:
+			data.Postbodylimitaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Postbodylimitaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["postbodylimitsignature"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -1694,6 +2950,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Responsecontenttype = types.StringNull()
 	}
+	if val, ok := getResponseData["restaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Restaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Restaction = listValue
+		default:
+			data.Restaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Restaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["rfcprofile"]; ok && val != nil {
 		data.Rfcprofile = types.StringValue(val.(string))
 	} else {
@@ -1723,6 +2994,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Signatures = types.StringValue(val.(string))
 	} else {
 		data.Signatures = types.StringNull()
+	}
+	if val, ok := getResponseData["sqlinjectionaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Sqlinjectionaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Sqlinjectionaction = listValue
+		default:
+			data.Sqlinjectionaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Sqlinjectionaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["sqlinjectionchecksqlwildchars"]; ok && val != nil {
 		data.Sqlinjectionchecksqlwildchars = types.StringValue(val.(string))
@@ -1759,6 +3045,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Sqlinjectiontype = types.StringNull()
 	}
+	if val, ok := getResponseData["starturlaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Starturlaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Starturlaction = listValue
+		default:
+			data.Starturlaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Starturlaction = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["starturlclosure"]; ok && val != nil {
 		data.Starturlclosure = types.StringValue(val.(string))
 	} else {
@@ -1789,6 +3090,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Trace = types.StringNull()
 	}
+	if val, ok := getResponseData["type"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Type = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Type = listValue
+		default:
+			data.Type = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Type = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["urldecoderequestcookies"]; ok && val != nil {
 		data.Urldecoderequestcookies = types.StringValue(val.(string))
 	} else {
@@ -1803,6 +3119,36 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Verboseloglevel = types.StringValue(val.(string))
 	} else {
 		data.Verboseloglevel = types.StringNull()
+	}
+	if val, ok := getResponseData["xmlattachmentaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlattachmentaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlattachmentaction = listValue
+		default:
+			data.Xmlattachmentaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlattachmentaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["xmldosaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmldosaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmldosaction = listValue
+		default:
+			data.Xmldosaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmldosaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["xmlerrorobject"]; ok && val != nil {
 		data.Xmlerrorobject = types.StringValue(val.(string))
@@ -1820,6 +3166,51 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		data.Xmlerrorstatusmessage = types.StringValue(val.(string))
 	} else {
 		data.Xmlerrorstatusmessage = types.StringNull()
+	}
+	if val, ok := getResponseData["xmlformataction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlformataction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlformataction = listValue
+		default:
+			data.Xmlformataction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlformataction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["xmlsoapfaultaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlsoapfaultaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlsoapfaultaction = listValue
+		default:
+			data.Xmlsoapfaultaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlsoapfaultaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["xmlsqlinjectionaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlsqlinjectionaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlsqlinjectionaction = listValue
+		default:
+			data.Xmlsqlinjectionaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlsqlinjectionaction = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["xmlsqlinjectionchecksqlwildchars"]; ok && val != nil {
 		data.Xmlsqlinjectionchecksqlwildchars = types.StringValue(val.(string))
@@ -1841,9 +3232,53 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	} else {
 		data.Xmlsqlinjectiontype = types.StringNull()
 	}
+	if val, ok := getResponseData["xmlvalidationaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlvalidationaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlvalidationaction = listValue
+		default:
+			data.Xmlvalidationaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlvalidationaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["xmlwsiaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlwsiaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlwsiaction = listValue
+		default:
+			data.Xmlwsiaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlwsiaction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["xmlxssaction"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Xmlxssaction = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Xmlxssaction = listValue
+		default:
+			data.Xmlxssaction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Xmlxssaction = types.ListNull(types.StringType)
+	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the resource (single unique attribute - the profile name)
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCrvserver_appfwpolicy_binding_basic = `
@@ -172,10 +175,12 @@ func testAccCheckCrvserver_appfwpolicy_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_appfwpolicy_binding",
@@ -214,13 +219,12 @@ func testAccCheckCrvserver_appfwpolicy_bindingNotExist(n string, id string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_appfwpolicy_binding",
@@ -277,6 +281,77 @@ func testAccCheckCrvserver_appfwpolicy_bindingDestroy(s *terraform.State) error 
 	return nil
 }
 
+func TestAccCrvserver_appfwpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_appfwpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_appfwpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_appfwpolicy_binding.Type(), "my_vserver", []string{"policyname:demo_appfwpolicy1", "priority:20"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_appfwpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_appfwpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_appfwpolicy_binding_basic},
+			{Config: testAccCrvserver_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCrvserver_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 const testAccCrvserver_appfwpolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_crvserver" "crvserver" {
@@ -314,6 +389,96 @@ func TestAcccrvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "policyname", "tf_appfwpolicy_ds"),
+				),
+			},
+		},
+	})
+}
+
+const testAccCrvserver_appfwpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+    name = "my_vserver"
+    servicetype = "HTTP"
+    arp = "OFF"
+}
+resource "citrixadc_appfwprofile" "demo_appfwprofile" {
+    name = "demo_appfwprofile"
+    bufferoverflowaction = ["none"]
+    contenttypeaction = ["none"]
+    cookieconsistencyaction = ["none"]
+    creditcard = ["none"]
+    creditcardaction = ["none"]
+    crosssitescriptingaction = ["none"]
+    csrftagaction = ["none"]
+    denyurlaction = ["none"]
+    dynamiclearning = ["none"]
+    fieldconsistencyaction = ["none"]
+    fieldformataction = ["none"]
+    fileuploadtypesaction = ["none"]
+    inspectcontenttypes = ["none"]
+    jsondosaction = ["none"]
+    jsonsqlinjectionaction = ["none"]
+    jsonxssaction = ["none"]
+    multipleheaderaction = ["none"]
+    sqlinjectionaction = ["none"]
+    starturlaction = ["none"]
+    type = ["HTML"]
+    xmlattachmentaction = ["none"]
+    xmldosaction = ["none"]
+    xmlformataction = ["none"]
+    xmlsoapfaultaction = ["none"]
+    xmlsqlinjectionaction = ["none"]
+    xmlvalidationaction = ["none"]
+    xmlwsiaction = ["none"]
+    xmlxssaction = ["none"]
+}
+
+resource "citrixadc_appfwpolicy" "demo_appfwpolicy1" {
+    name = "demo_appfwpolicy1"
+    profilename = citrixadc_appfwprofile.demo_appfwprofile.name
+    rule = "true"
+}
+
+resource "citrixadc_crvserver_appfwpolicy_binding" "crvserver_appfwpolicy_binding" {
+    name = citrixadc_crvserver.crvserver.name
+    policyname = citrixadc_appfwpolicy.demo_appfwpolicy1.name
+    priority = 20
+}
+`
+
+func TestAccCrvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCrvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appfwpolicy_bindingExist("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "id", "my_vserver,demo_appfwpolicy1"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_appfwpolicy_bindingExist("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_appfwpolicy_binding.crvserver_appfwpolicy_binding", "id", "name:my_vserver,policyname:demo_appfwpolicy1"),
 				),
 			},
 		},

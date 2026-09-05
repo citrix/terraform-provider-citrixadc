@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -118,8 +117,6 @@ func (r *SslecdsakeyResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"password_wo_version": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
-				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
 					// GH #1436: replace only when the version is actually set in config, so the
 					// auto-populated default never forces destroy+recreate on provider upgrade.

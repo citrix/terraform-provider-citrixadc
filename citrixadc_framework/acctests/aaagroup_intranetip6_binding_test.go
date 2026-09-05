@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // IPv6 note: intranetip6 contains literal ':' characters, so the composite ID is
@@ -310,4 +310,33 @@ func testAccCheckAaagroup_intranetip6_bindingDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAaagroup_intranetip6_binding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_aaagroup_intranetip6_binding.tf_aaagroup_intranetip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_intranetip6_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_intranetip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Aaagroup_intranetip6_binding.Type(), "my_group", []string{"intranetip6:" + utils.UrlEncode("2001:db8::1")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaagroup_intranetip6_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_intranetip6_bindingExist(resAddr, nil)),
+			},
+		},
+	})
 }

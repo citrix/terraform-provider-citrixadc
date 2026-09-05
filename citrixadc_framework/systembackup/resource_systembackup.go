@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -22,6 +23,13 @@ func NewSystembackupResource() resource.Resource {
 }
 
 // SystembackupResource defines the resource implementation.
+//
+// This mirrors the SDK v2 citrixadc_systembackup resource exactly: a named
+// resource keyed on filename. Create issues a NITRO `add` (POST
+// /config/systembackup), Read is a no-op (SDK v2 used schema.Noop — there is no
+// reliable GET-backed object for the base add), there is no Update endpoint
+// (all attributes are ForceNew/RequiresReplace), and Delete removes the backup
+// file by filename.
 type SystembackupResource struct {
 	client *service.NitroClient
 }
@@ -55,73 +63,59 @@ func (r *SystembackupResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating systembackup resource")
 
-	// systembackup := systembackupGetThePayloadFromtheConfig(ctx, &data)
+	// Mirror SDK v2 id scheme: PrefixedUniqueId(filename + "-").
+	systembackupName := sdkid.PrefixedUniqueId(data.Filename.ValueString() + "-")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systembackup.Type(), &systembackup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systembackup, got error: %s", err))
-	//	 return
-	// }
+	systembackup := systembackupGetThePayloadFromtheConfig(ctx, &data)
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("systembackup-config")
+	// Named resource - SDK v2 created via AddResource (POST /config/systembackup).
+	_, err := r.client.AddResource(service.Systembackup.Type(), systembackupName, &systembackup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systembackup, got error: %s", err))
+		return
+	}
+
+	// Mirror SDK v2 d.SetId(systembackupName).
+	data.Id = types.StringValue(systembackupName)
 
 	tflog.Trace(ctx, "Created systembackup resource")
 
-	// Read the updated state back
-	r.readSystembackupFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save data into Terraform state
+	// SDK v2 Read was schema.Noop, so Create does not read state back; persist the
+	// planned configuration as-is.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SystembackupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// SDK v2 Read was schema.Noop. There is no reliable GET-backed object for the
+	// base systembackup add, so Read is a pure preserve-state no-op.
 	var data SystembackupResourceModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Reading systembackup resource")
+	tflog.Debug(ctx, "Read is a no-op for systembackup (mirrors SDK v2 schema.Noop)")
 
-	r.readSystembackupFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SystembackupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SystembackupResourceModel
+	// SDK v2 defined no Update function; every schema attribute is ForceNew
+	// (RequiresReplace here), so Terraform never invokes Update for a real change.
+	var data, state SystembackupResourceModel
 
-	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Updating systembackup resource")
+	data.Id = state.Id
+	tflog.Debug(ctx, "Update is a no-op for systembackup; all attributes are RequiresReplace")
 
-	// Create API request body from the model
-	// systembackup := systembackupGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systembackup.Type(), &systembackup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systembackup, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated systembackup resource")
-
-	// Read the updated state back
-	r.readSystembackupFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -137,19 +131,12 @@ func (r *SystembackupResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting systembackup resource")
 
-	// For systembackup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted systembackup resource from state")
-}
-
-// Helper function to read systembackup data from API
-func (r *SystembackupResource) readSystembackupFromApi(ctx context.Context, data *SystembackupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Systembackup.Type(), "")
+	// Named resource - SDK v2 deleted the backup file by filename.
+	err := r.client.DeleteResource(service.Systembackup.Type(), data.Filename.ValueString())
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read systembackup, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete systembackup, got error: %s", err))
 		return
 	}
 
-	systembackupSetAttrFromGet(ctx, data, getResponseData)
-
+	tflog.Trace(ctx, "Deleted systembackup resource")
 }

@@ -4,7 +4,7 @@ subcategory: "Transform"
 
 # Resource: transformglobal_transformpolicy_binding
 
-Thetransformglobal_transformpolicy_binding resource is used to create Transform global transform policy binding.
+The transformglobal_transformpolicy_binding resource is used to bind a transform policy globally on the Citrix ADC.
 
 
 ## Example usage
@@ -15,7 +15,8 @@ resource "citrixadc_transformpolicy" "tf_trans_policy" {
   profilename = "tf_trans_profile"
   rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
 }
-resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
+
+resource "citrixadc_transformglobal_transformpolicy_binding" "tf_transformglobal_transformpolicy_binding" {
   policyname = citrixadc_transformpolicy.tf_trans_policy.name
   priority   = 2
   type       = "REQ_DEFAULT"
@@ -25,21 +26,21 @@ resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_tr
 
 ## Argument Reference
 
-* `policyname` - (Required) Name of the dns policy.
-* `priority` - (Required) Specifies the priority of the policy with which it is bound. Maximum allowed priority should be less than 65535
-* `globalbindtype` - (Optional) 0
-* `gotopriorityexpression` - (Optional) Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values: * NEXT - Evaluate the policy with the next higher priority number. * END - End policy evaluation. * USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT. * An expression that evaluates to a number. If you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows: * If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next. * If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next. * If the expression evaluates to a priority number that is numerically higher than the highest numbered priority, policy evaluation ends. An UNDEF event is triggered if: * The expression is invalid. * The expression evaluates to a priority number that is numerically lower than the current policy's priority. * The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.
-* `invoke` - (Optional) Invoke flag.
-* `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE.
-* `labeltype` - (Optional) Type of policy label invocation.
-* `type` - (Optional) Type of global bind point for which to show bound policies.
+* `policyname` - (Required) Name of the transform policy.
+* `priority` - (Required) Specifies the priority of the policy.
+* `type` - (Optional) Specifies the bind point to which to bind the policy. Available settings function as follows: * REQ_OVERRIDE - Request override. Binds the policy to the priority request queue. * REQ_DEFAULT - Binds the policy to the default request queue. * HTTPQUIC_REQ_OVERRIDE - Binds the policy to the HTTP_QUIC override request queue. * HTTPQUIC_REQ_DEFAULT - Binds the policy to the HTTP_QUIC default request queue.
+* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forwards the request or response to the specified virtual server or evaluates the specified policy label.
+* `labelname` - (Optional) Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and the label type is Policy Label.
+* `labeltype` - (Optional) Type of invocation. Available settings function as follows: * reqvserver - Send the request to the specified request virtual server. * resvserver - Send the response to the specified response virtual server. * policylabel - Invoke the specified policy label.
+* `globalbindtype` - (Optional) The bind point at which the policy is bound globally. Defaults to `"SYSTEM_GLOBAL"`.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the transformglobal_transformpolicy_binding. It has the same value as the `policyname` attribute.
+* `id` - The id of the transformglobal_transformpolicy_binding. It is the concatenation of the `policyname` and `type` attributes separated by a comma.
 
 
 ## Import
@@ -47,5 +48,5 @@ In addition to the arguments, the following attributes are available:
 A transformglobal_transformpolicy_binding can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding tf_trans_policy
+terraform import citrixadc_transformglobal_transformpolicy_binding.tf_transformglobal_transformpolicy_binding tf_trans_policy,REQ_DEFAULT
 ```

@@ -35,7 +35,7 @@ func (d *VpnvserverVpnsessionpolicyBindingDataSource) Schema(ctx context.Context
 }
 
 func (d *VpnvserverVpnsessionpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverVpnsessionpolicyBindingResourceModel
+	var data VpnvserverVpnsessionpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -44,6 +44,7 @@ func (d *VpnvserverVpnsessionpolicyBindingDataSource) Read(ctx context.Context, 
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -71,6 +72,17 @@ func (d *VpnvserverVpnsessionpolicyBindingDataSource) Read(ctx context.Context, 
 	for i, v := range dataArr {
 		match := true
 
+		// Check bindpoint
+		if val, ok := v["bindpoint"].(string); ok {
+			if bindpoint_Name.IsNull() || val != bindpoint_Name.ValueString() {
+				match = false
+				continue
+			}
+		} else if !bindpoint_Name.IsNull() {
+			match = false
+			continue
+		}
+
 		// Check policy
 		if val, ok := v["policy"].(string); ok {
 			if policy_Name.IsNull() || val != policy_Name.ValueString() {
@@ -89,11 +101,11 @@ func (d *VpnvserverVpnsessionpolicyBindingDataSource) Read(ctx context.Context, 
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnsessionpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnsessionpolicy_binding with bindpoint %s not found", bindpoint_Name))
 		return
 	}
 
-	vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_vpnsessionpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

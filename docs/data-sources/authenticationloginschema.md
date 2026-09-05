@@ -47,3 +47,10 @@ In addition to the arguments, the following attributes are exported:
 * `ssocredentials` - This option indicates whether current factor credentials are the default SSO (SingleSignOn) credentials.
 * `usercredentialindex` - The index at which user entered username should be stored in session.
 * `userexpression` - Expression for username extraction during login. This can be any relevant advanced policy expression.
+
+### Read-only authenticationloginschema metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationloginschema` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

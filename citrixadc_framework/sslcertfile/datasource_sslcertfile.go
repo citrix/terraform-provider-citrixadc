@@ -43,17 +43,31 @@ func (d *SslcertfileDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	// Case 1: Simple find without ID
-	var getResponseData map[string]interface{}
-	var err error
+	// sslcertfile has no reliable get-by-name endpoint; get all records and
+	// filter by the configured name (matches the resource Read and the SDK v2
+	// FindAllResources approach).
+	name := data.Name.ValueString()
 
-	getResponseData, err = d.client.FindResource(service.Sslcertfile.Type(), "")
+	allResources, err := d.client.FindAllResources(service.Sslcertfile.Type())
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sslcertfile, got error: %s", err))
 		return
 	}
 
-	sslcertfileSetAttrFromGet(ctx, &data, getResponseData)
+	var getResponseData map[string]interface{}
+	for _, v := range allResources {
+		if n, ok := v["name"].(string); ok && n == name {
+			getResponseData = v
+			break
+		}
+	}
+
+	if getResponseData == nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read sslcertfile, %s not found", name))
+		return
+	}
+
+	sslcertfileSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

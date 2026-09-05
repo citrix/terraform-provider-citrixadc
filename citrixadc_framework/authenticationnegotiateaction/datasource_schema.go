@@ -1,8 +1,37 @@
 package authenticationnegotiateaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationnegotiateactionDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationnegotiateactionResourceModel. A data source is a
+// pure read surface (Read only; no plan/apply lifecycle), so it can expose the
+// FULL GET projection: the read/write attributes (as Computed outputs) AND the
+// read-only attributes the resource deliberately omits. Every non-key attribute
+// is Computed; the Framework's per-attribute model <-> schema reflection requires
+// this model to have exactly the attributes the data-source schema declares.
+type AuthenticationnegotiateactionDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Domain                     types.String `tfsdk:"domain"`
+	Domainuser                 types.String `tfsdk:"domainuser"`
+	Domainuserpasswd           types.String `tfsdk:"domainuserpasswd"`
+	Keytab                     types.String `tfsdk:"keytab"`
+	Name                       types.String `tfsdk:"name"`
+	Ntlmpath                   types.String `tfsdk:"ntlmpath"`
+	Ou                         types.String `tfsdk:"ou"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationnegotiateaction.json). Never settable;
+	// populated from GET.
+	Kcdspn types.String `tfsdk:"kcdspn"`
+}
 
 func AuthenticationnegotiateactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -26,18 +55,10 @@ func AuthenticationnegotiateactionDataSourceSchema() schema.Schema {
 				Description: "User name of the account that is mapped with Citrix ADC principal. This can be given along with domain and password when keytab file is not available. If username is given along with keytab file, then that keytab file will be searched for this user's credentials.",
 			},
 			"domainuserpasswd": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password of the account that is mapped to the Citrix ADC principal.",
-			},
-			"domainuserpasswd_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password of the account that is mapped to the Citrix ADC principal.",
-			},
-			"domainuserpasswd_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a domainuserpasswd_wo update.",
 			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
@@ -58,6 +79,41 @@ func AuthenticationnegotiateactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Active Directory organizational units (OU) attribute.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"kcdspn": schema.StringAttribute{
+				Computed:    true,
+				Description: "Host SPN extracted from keytab file.",
+			},
 		},
 	}
+}
+
+// authenticationnegotiateactionDataSourceSetAttrFromGet projects a NITRO
+// authenticationnegotiateaction GET response onto the data-source model. Because
+// a data source has no plan/apply reconciliation, attributes are simply filled
+// from the GET (or left Null when the GET omits them). The shared utils.MapGet*
+// helpers implement that projection.
+func authenticationnegotiateactionDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationnegotiateactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationnegotiateactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
+	data.Domain = utils.MapGetString(g, "domain")
+	data.Domainuser = utils.MapGetString(g, "domainuser")
+	data.Keytab = utils.MapGetString(g, "keytab")
+	data.Ntlmpath = utils.MapGetString(g, "ntlmpath")
+	data.Ou = utils.MapGetString(g, "ou")
+
+	// domainuserpasswd is a secret input the GET never returns -> Null.
+	data.Domainuserpasswd = types.StringNull()
+
+	// Read-only attributes.
+	data.Kcdspn = utils.MapGetString(g, "kcdspn")
 }

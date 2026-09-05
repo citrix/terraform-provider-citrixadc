@@ -35,7 +35,7 @@ resource "citrixadc_vpnvserver_intranetip6_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_intranetip6_binding. It is concatenation of `name` and `intranetip6` attributes seperated by comma.
+* `id` - The id of the vpnvserver_intranetip6_binding. It is the concatenation of the `name` and `intranetip6` attributes separated by a comma.
 
 
 ## Import
