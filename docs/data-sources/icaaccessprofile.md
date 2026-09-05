@@ -56,12 +56,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `builtin` - Indicates that the ICA accessprofile is a built-in (SYSTEM INTERNAL) type (`MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
 * `feature` - The feature to be checked while applying this config.
 * `isdefault` - A value of true is returned if it is a default accessprofile.
-
-
-## Import
-
-An icaaccessprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_icaaccessprofile.tf_icaaccessprofile my_ica_accessprofile
-```

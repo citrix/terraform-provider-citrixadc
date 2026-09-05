@@ -39,11 +39,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tmtrafficpolicy` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
 
 * `hits` - Number of hits.
-
-## Import
-
-A tmtrafficpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy my_tmtraffic_policy
-```

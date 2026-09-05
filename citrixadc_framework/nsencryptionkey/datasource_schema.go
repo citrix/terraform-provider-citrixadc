@@ -1,7 +1,12 @@
 package nsencryptionkey
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func NsencryptionkeyDataSourceSchema() schema.Schema {
@@ -21,18 +26,10 @@ func NsencryptionkeyDataSourceSchema() schema.Schema {
 				Description: "The initalization voector (IV) for a block cipher, one block of data used to initialize the encryption. The best practice is to not specify an IV, in which case a new random IV will be generated for each encryption. The format must be iv_data or keyid_iv_data to include the generated IV in the encrypted data. The IV should only be specified if it cannot be included in the encrypted data. The IV length is the cipher block size:\n   RC4    - not used (error if IV is specified)\n   DES    -  8 bytes (all modes)\n   DES3   -  8 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 16 bytes (all modes)\n   AES256 - 16 bytes (all modes)",
 			},
 			"keyvalue": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "The hex-encoded key value. The length is determined by the cipher method:\n   RC4    - 16 bytes\n   DES    -  8 bytes (all modes)\n   DES3   - 24 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 24 bytes (all modes)\n   AES256 - 32 bytes (all modes)\nNote that the keyValue will be encrypted when it it is saved.\n\nThere is a special key value AUTO which generates a new random key for the specified method. This kind of key is\nintended for use cases where the NetScaler both encrypts and decrypts the same data, such an HTTP header.",
-			},
-			"keyvalue_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "The hex-encoded key value. The length is determined by the cipher method:\n   RC4    - 16 bytes\n   DES    -  8 bytes (all modes)\n   DES3   - 24 bytes (all modes)\n   AES128 - 16 bytes (all modes)\n   AES192 - 24 bytes (all modes)\n   AES256 - 32 bytes (all modes)\nNote that the keyValue will be encrypted when it it is saved.\n\nThere is a special key value AUTO which generates a new random key for the specified method. This kind of key is\nintended for use cases where the NetScaler both encrypts and decrypts the same data, such an HTTP header.",
-			},
-			"keyvalue_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a keyvalue_wo update.",
 			},
 			"method": schema.StringAttribute{
 				Optional:    true,
@@ -50,4 +47,52 @@ func NsencryptionkeyDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+type NsencryptionkeyDataSourceModel struct {
+	Id       types.String `tfsdk:"id"`
+	Comment  types.String `tfsdk:"comment"`
+	Iv       types.String `tfsdk:"iv"`
+	Keyvalue types.String `tfsdk:"keyvalue"`
+	Method   types.String `tfsdk:"method"`
+	Name     types.String `tfsdk:"name"`
+	Padding  types.String `tfsdk:"padding"`
+}
+
+func nsencryptionkeyDataSourceSetAttrFromGet(ctx context.Context, data *NsencryptionkeyDataSourceModel, getResponseData map[string]interface{}) *NsencryptionkeyDataSourceModel {
+	tflog.Debug(ctx, "In nsencryptionkeyDataSourceSetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["iv"]; ok && val != nil {
+		data.Iv = types.StringValue(val.(string))
+	} else {
+		data.Iv = types.StringNull()
+	}
+	// keyvalue is not returned by NITRO API (secret/ephemeral) - retain from config
+	if val, ok := getResponseData["method"]; ok && val != nil {
+		data.Method = types.StringValue(val.(string))
+	} else {
+		data.Method = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["padding"]; ok && val != nil {
+		data.Padding = types.StringValue(val.(string))
+	} else {
+		data.Padding = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
+	return data
 }

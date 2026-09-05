@@ -65,11 +65,3 @@ In addition to the arguments, the following attributes are available:
 * `xmlattachmentpercentthreshold` - Minimum percentage of application firewall sessions that must contain a particular XML attachment pattern for the learning engine to learn that XML attachment pattern.
 * `xmlwsiminthreshold` - Minimum number of application firewall sessions that the learning engine must observe to learn web services interoperability (WSI) information.
 * `xmlwsipercentthreshold` - Minimum percentage of application firewall sessions that must contain a particular pattern for the learning engine to learn a web services interoperability (WSI) pattern.
-
-## Import
-
-A appfwlearningsettings can be imported using its profilename, e.g.
-
-```shell
-terraform import citrixadc_appfwlearningsettings.tf_learningsetting tf_appfwprofile
-```

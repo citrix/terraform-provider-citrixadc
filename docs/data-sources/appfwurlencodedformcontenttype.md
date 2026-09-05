@@ -39,11 +39,3 @@ These attributes are GET-only (Computed) and are returned by the appliance on a 
 
 * `builtin` - Flag to determine if urlencoded form contenttype is built-in or not. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A appfwurlencodedformcontenttype can be imported using its urlencodedformcontenttypevalue, e.g.
-
-```shell
-terraform import citrixadc_appfwurlencodedformcontenttype.tf_urlencodedform application/x-www-form-urlencoded
-```

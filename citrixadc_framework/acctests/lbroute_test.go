@@ -253,3 +253,26 @@ func TestAccLbrouteDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLbroute_import verifies import via the composite ID
+// "network,netmask,gatewayname". Pre-fix, ImportStatePassthroughID populated only
+// id, so readLbrouteFromApi (which matches on network/netmask/gatewayname) found no
+// row and dropped the resource -> import always failed.
+func TestAccLbroute_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbrouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbroute_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil)),
+			},
+			{
+				ResourceName:      "citrixadc_lbroute.tf_lbroute",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}

@@ -20,17 +20,13 @@ import (
 // have exactly the attributes the data-source schema declares, which is why it
 // cannot reuse the resource model.
 type SnmpuserDataSourceModel struct {
-	Id                  types.String `tfsdk:"id"`
-	Authpasswd          types.String `tfsdk:"authpasswd"`
-	AuthpasswdWo        types.String `tfsdk:"authpasswd_wo"`
-	AuthpasswdWoVersion types.Int64  `tfsdk:"authpasswd_wo_version"`
-	Authtype            types.String `tfsdk:"authtype"`
-	Group               types.String `tfsdk:"group"`
-	Name                types.String `tfsdk:"name"` // Required lookup key
-	Privpasswd          types.String `tfsdk:"privpasswd"`
-	PrivpasswdWo        types.String `tfsdk:"privpasswd_wo"`
-	PrivpasswdWoVersion types.Int64  `tfsdk:"privpasswd_wo_version"`
-	Privtype            types.String `tfsdk:"privtype"`
+	Id         types.String `tfsdk:"id"`
+	Authpasswd types.String `tfsdk:"authpasswd"`
+	Authtype   types.String `tfsdk:"authtype"`
+	Group      types.String `tfsdk:"group"`
+	Name       types.String `tfsdk:"name"` // Required lookup key
+	Privpasswd types.String `tfsdk:"privpasswd"`
+	Privtype   types.String `tfsdk:"privtype"`
 
 	// Read-only (GET-only) attributes from the NITRO doc read-only set
 	// (zion73x_readonly/snmpuser.json). Never settable; populated from GET.
@@ -46,18 +42,10 @@ func SnmpuserDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"authpasswd": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Plain-text pass phrase to be used by the authentication algorithm specified by the authType (Authentication Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the pass phrase includes one or more spaces, enclose it in double or single quotation marks (for example, \"my phrase\" or 'my phrase').",
-			},
-			"authpasswd_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Plain-text pass phrase to be used by the authentication algorithm specified by the authType (Authentication Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the pass phrase includes one or more spaces, enclose it in double or single quotation marks (for example, \"my phrase\" or 'my phrase').",
-			},
-			"authpasswd_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a authpasswd_wo update.",
 			},
 			"authtype": schema.StringAttribute{
 				Optional:    true,
@@ -74,18 +62,10 @@ func SnmpuserDataSourceSchema() schema.Schema {
 				Description: "Name for the SNMPv3 user. Can consist of 1 to 31 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose it in double or single quotation marks (for example, \"my user\" or 'my user').",
 			},
 			"privpasswd": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the key includes one or more spaces, enclose it in double or single quotation marks (for example, \"my key\" or 'my key').",
-			},
-			"privpasswd_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Encryption key to be used by the encryption algorithm specified by the privType (Encryption Type) parameter. Can consist of 8 to 63 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the key includes one or more spaces, enclose it in double or single quotation marks (for example, \"my key\" or 'my key').",
-			},
-			"privpasswd_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a privpasswd_wo update.",
 			},
 			"privtype": schema.StringAttribute{
 				Optional:    true,
@@ -129,14 +109,9 @@ func snmpuserDataSourceSetAttrFromGet(ctx context.Context, data *SnmpuserDataSou
 	data.Group = utils.MapGetString(g, "group")
 	data.Privtype = utils.MapGetString(g, "privtype")
 
-	// authpasswd / privpasswd (+ their _wo and _wo_version trackers) are
-	// write-only/secret or action-only inputs the GET never returns -> Null.
+	// authpasswd and privpasswd are secret inputs the GET never returns -> Null.
 	data.Authpasswd = types.StringNull()
-	data.AuthpasswdWo = types.StringNull()
-	data.AuthpasswdWoVersion = types.Int64Null()
 	data.Privpasswd = types.StringNull()
-	data.PrivpasswdWo = types.StringNull()
-	data.PrivpasswdWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Engineid = utils.MapGetString(g, "engineid")

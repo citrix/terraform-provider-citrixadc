@@ -48,11 +48,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
 * `feature` - The feature to be checked while applying this configuration.
-
-## Import
-
-A tmsessionaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_tmsessionaction.tf_tmsessionaction my_tmsession_action
-```

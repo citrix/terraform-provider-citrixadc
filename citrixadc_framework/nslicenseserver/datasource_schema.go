@@ -93,6 +93,7 @@ func NslicenseserverDataSourceSchema() schema.Schema {
 				Description: "Unique number that identifies the cluster node.",
 			},
 			"password": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password to use when authenticating with ADM Agent for LAS licensing.",

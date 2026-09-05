@@ -39,11 +39,3 @@ In addition to the arguments, the following attributes are available:
 * `anomalousttfbtime` - Transaction time (in milliseconds) above which a transaction is considered as anomalous. Default is 1 seconds.
 * `wasmmodule` - Name of the WASM Module.
 * `id` - The id of the contentinspectionwasmprofile. It has the same value as the `name` attribute.
-
-## Import
-
-A contentinspectionwasmprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_contentinspectionwasmprofile.tf_contentinspectionwasmprofile my_ci_wasmprofile
-```

@@ -32,3 +32,12 @@ resource "citrixadc_responderhtmlpage" "tf_responder_page" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the responderhtmlpage. It has the same value as the `name` attribute.
+
+
+## Import
+
+A responderhtmlpage can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_responderhtmlpage.tf_responderhtmlpage <name>
+```

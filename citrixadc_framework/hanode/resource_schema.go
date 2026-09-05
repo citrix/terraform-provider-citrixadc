@@ -21,35 +21,37 @@ import (
 
 // HanodeResourceModel describes the resource data model.
 type HanodeResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Completedfliptime    types.String `tfsdk:"completedfliptime"`
-	Curflips             types.String `tfsdk:"curflips"`
-	Deadinterval         types.Int64  `tfsdk:"deadinterval"`
-	Enaifaces            types.String `tfsdk:"enaifaces"`
-	Failsafe             types.String `tfsdk:"failsafe"`
-	Haprop               types.String `tfsdk:"haprop"`
-	Hastatus             types.String `tfsdk:"hastatus"`
-	Hasync               types.String `tfsdk:"hasync"`
-	Hellointerval        types.Int64  `tfsdk:"hellointerval"`
-	Hanodeid             types.Int64  `tfsdk:"hanode_id"`
-	Inc                  types.String `tfsdk:"inc"`
-	Ipaddress            types.String `tfsdk:"ipaddress"`
-	Masterstatetime      types.String `tfsdk:"masterstatetime"`
-	Maxflips             types.Int64  `tfsdk:"maxflips"`
-	Maxfliptime          types.Int64  `tfsdk:"maxfliptime"`
-	Netmask              types.String `tfsdk:"netmask"`
-	Routemonitor         types.String `tfsdk:"routemonitor"`
-	Routemonitorstate    types.String `tfsdk:"routemonitorstate"`
-	Rpcnodepassword      types.String `tfsdk:"rpcnodepassword"`
-	Ssl2                 types.String `tfsdk:"ssl2"`
-	State                types.String `tfsdk:"state"`
-	Syncstatusstrictmode types.String `tfsdk:"syncstatusstrictmode"`
-	Syncvlan             types.Int64  `tfsdk:"syncvlan"`
+	Id                       types.String `tfsdk:"id"`
+	Completedfliptime        types.String `tfsdk:"completedfliptime"`
+	Curflips                 types.String `tfsdk:"curflips"`
+	Deadinterval             types.Int64  `tfsdk:"deadinterval"`
+	Enaifaces                types.String `tfsdk:"enaifaces"`
+	Failsafe                 types.String `tfsdk:"failsafe"`
+	Haprop                   types.String `tfsdk:"haprop"`
+	Hastatus                 types.String `tfsdk:"hastatus"`
+	Hasync                   types.String `tfsdk:"hasync"`
+	Hellointerval            types.Int64  `tfsdk:"hellointerval"`
+	Hanodeid                 types.Int64  `tfsdk:"hanode_id"`
+	Inc                      types.String `tfsdk:"inc"`
+	Ipaddress                types.String `tfsdk:"ipaddress"`
+	Masterstatetime          types.String `tfsdk:"masterstatetime"`
+	Maxflips                 types.Int64  `tfsdk:"maxflips"`
+	Maxfliptime              types.Int64  `tfsdk:"maxfliptime"`
+	Netmask                  types.String `tfsdk:"netmask"`
+	Routemonitor             types.String `tfsdk:"routemonitor"`
+	Routemonitorstate        types.String `tfsdk:"routemonitorstate"`
+	Rpcnodepassword          types.String `tfsdk:"rpcnodepassword"`
+	RpcnodepasswordWo        types.String `tfsdk:"rpcnodepassword_wo"`
+	RpcnodepasswordWoVersion types.Int64  `tfsdk:"rpcnodepassword_wo_version"`
+	Ssl2                     types.String `tfsdk:"ssl2"`
+	State                    types.String `tfsdk:"state"`
+	Syncstatusstrictmode     types.String `tfsdk:"syncstatusstrictmode"`
+	Syncvlan                 types.Int64  `tfsdk:"syncvlan"`
 }
 
 func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Version: 1,
+		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -150,14 +152,34 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "State for route monitor.",
 			},
 			"rpcnodepassword": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Optional:  true,
+				Computed:  true,
+				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					// GH #1436
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Password to be used in authentication with the peer rpc node.",
+			},
+			"rpcnodepassword_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password to be used in authentication with the peer rpc node. Write-only/ephemeral equivalent of rpcnodepassword; the value is not persisted in Terraform state.",
+			},
+			// rpcnodepassword is create-only (ForceNew); rotating the write-only
+			// secret (a bump of rpcnodepassword_wo_version) cannot be applied in
+			// place either, so the version tracker forces resource replacement,
+			// mirroring the plain attribute's RequiresReplaceIfConfigured behaviour.
+			"rpcnodepassword_wo_version": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
+				Description: "Increment this version to signal a rpcnodepassword_wo update.",
 			},
 			"ssl2": schema.StringAttribute{
 				Computed:    true,
@@ -233,6 +255,22 @@ func hanodeGetThePayloadFromthePlan(ctx context.Context, data *HanodeResourceMod
 	}
 
 	return hanode
+}
+
+// hanodeGetThePayloadFromtheConfig overlays write-only attributes (read from the
+// Terraform configuration, since they are nullified in the plan) onto the create
+// payload. If rpcnodepassword_wo is set it takes precedence over the plain
+// rpcnodepassword.
+func hanodeGetThePayloadFromtheConfig(ctx context.Context, data *HanodeResourceModel, payload *ha.Hanode) {
+	tflog.Debug(ctx, "In hanodeGetThePayloadFromtheConfig Function")
+
+	// Handle write-only secret attribute: rpcnodepassword_wo -> rpcnodepassword
+	if !data.RpcnodepasswordWo.IsNull() {
+		rpcnodepasswordWo := data.RpcnodepasswordWo.ValueString()
+		if rpcnodepasswordWo != "" {
+			payload.Rpcnodepassword = rpcnodepasswordWo
+		}
+	}
 }
 
 // hanodeGetTheUpdatablePayloadFromThePlan builds the PUT (update) payload, restricted

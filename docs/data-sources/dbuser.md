@@ -31,4 +31,3 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the dbuser. It has the same value as the `username` attribute.
 * `password` - Password for logging on to the database. Must be the same as the password specified in the database.
-* `password_wo_version` - Version tracker for the `password_wo` write-only attribute.

@@ -30,12 +30,3 @@ In addition to the arguments, the following attributes are available:
 
 * `weight` - Weight of the group.
 * `id` - The id of the aaagroup. It has the same value as the `groupname` attribute.
-
-
-## Import
-
-A aaagroup can be imported using its groupname, e.g.
-
-```shell
-terraform import citrixadc_aaagroup.tf_aaagroup test_group
-```

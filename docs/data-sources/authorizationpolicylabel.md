@@ -48,12 +48,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `invoke_labelname` - Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.
 * `flowtype` - Flowtype of the bound authorization policy.
 * `description` - Description of the policylabel.
-
-
-## Import
-
-A authorizationpolicylabel can be imported using its labelname, e.g.
-
-```shell
-terraform import citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel my_authorizationpolicylabel
-```

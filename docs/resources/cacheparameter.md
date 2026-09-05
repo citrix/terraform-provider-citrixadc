@@ -36,3 +36,12 @@ resource "citrixadc_cacheparameter" "tf_cacheparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the cacheparameter. It is a unique string prefixed with `tf-cacheparameter-` attribute.
+
+
+## Import
+
+A cacheparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_cacheparameter.tf_cacheparameter cacheparameter-config
+```

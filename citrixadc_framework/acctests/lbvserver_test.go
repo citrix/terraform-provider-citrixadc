@@ -1180,3 +1180,107 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
   }
 }
 `
+
+// TestAccLbvserver_sslpolicybinding_subattrUpdate is a regression guard: editing a
+// non-key sub-attribute of an sslpolicy binding (here invoke/labeltype/labelname)
+// while keeping the same policyname+priority must reach the appliance. Pre-fix,
+// syncSslpolicyBindings diffed on (policyname, priority) only, so the edit produced
+// no delete/add and was silently dropped ("Provider produced inconsistent result
+// after apply"; regression vs SDK v2 full-hash parity).
+const testAccLbvserver_sslpolicybinding_subattr_v1 = `
+resource "citrixadc_sslaction" "tf_sslaction_sub" {
+  name                   = "tf_sslact_sub"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+resource "citrixadc_sslpolicy" "tf_sslpolicy_sub" {
+  name   = "tf_sslpol_sub"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction_sub.name
+}
+resource "citrixadc_sslpolicylabel" "tf_sslpol_label" {
+  labelname = "tf_sslpol_label"
+  type      = "CONTROL"
+}
+resource "citrixadc_lbvserver" "tf_lb_sub" {
+  name        = "tf_lb_sslpol_sub"
+  ipv46       = "10.222.74.11"
+  port        = 443
+  servicetype = "SSL"
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy_sub.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+  }
+}
+`
+
+const testAccLbvserver_sslpolicybinding_subattr_v2 = `
+resource "citrixadc_sslaction" "tf_sslaction_sub" {
+  name                   = "tf_sslact_sub"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+resource "citrixadc_sslpolicy" "tf_sslpolicy_sub" {
+  name   = "tf_sslpol_sub"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction_sub.name
+}
+resource "citrixadc_sslpolicylabel" "tf_sslpol_label" {
+  labelname = "tf_sslpol_label"
+  type      = "CONTROL"
+}
+resource "citrixadc_lbvserver" "tf_lb_sub" {
+  name        = "tf_lb_sslpol_sub"
+  ipv46       = "10.222.74.11"
+  port        = 443
+  servicetype = "SSL"
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy_sub.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+    invoke                 = true
+    labeltype              = "policylabel"
+    labelname              = citrixadc_sslpolicylabel.tf_sslpol_label.labelname
+  }
+}
+`
+
+func TestAccLbvserver_sslpolicybinding_subattrUpdate(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_sslpolicybinding_subattr_v1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_lb_sub", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_lbvserver.tf_lb_sub", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_sslpol_sub", "priority": "100", "invoke": "false"}),
+				),
+			},
+			{
+				// Same policyname+priority; invoke false->true (+labeltype/labelname).
+				Config: testAccLbvserver_sslpolicybinding_subattr_v2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_lbvserver.tf_lb_sub", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_sslpol_sub", "priority": "100", "invoke": "true", "labelname": "tf_sslpol_label"}),
+				),
+			},
+			{
+				Config: testAccLbvserver_sslpolicybinding_subattr_v2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}

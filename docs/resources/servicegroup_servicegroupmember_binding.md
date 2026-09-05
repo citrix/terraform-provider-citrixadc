@@ -38,6 +38,8 @@ resource "citrixadc_servicegroup_servicegroupmember_binding" "tf_binding" {
 * `nameserver` - (Optional) Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver.
 * `dbsttl` - (Optional) Specify the TTL for DNS record for domain based service. The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
 * `order` - (Optional) Order number to be assigned to the servicegroup member.
+* `aigwprofilename` - (Optional) Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.
+* `disable_read` - (Optional) Skip reading the resource attributes from the NetScaler during refresh. Useful for bindings that cannot be reliably read back.
 
 
 ## Attribute Reference

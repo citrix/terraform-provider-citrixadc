@@ -30,8 +30,6 @@ type AppfwsettingsDataSourceModel struct {
 	Logmalformedreq          types.String `tfsdk:"logmalformedreq"`
 	Malformedreqaction       types.List   `tfsdk:"malformedreqaction"`
 	Proxypassword            types.String `tfsdk:"proxypassword"`
-	ProxypasswordWo          types.String `tfsdk:"proxypassword_wo"`
-	ProxypasswordWoVersion   types.Int64  `tfsdk:"proxypassword_wo_version"`
 	Proxyport                types.Int64  `tfsdk:"proxyport"`
 	Proxyserver              types.String `tfsdk:"proxyserver"`
 	Proxyusername            types.String `tfsdk:"proxyusername"`
@@ -120,18 +118,10 @@ func AppfwsettingsDataSourceSchema() schema.Schema {
 				Description: "flag to define action on malformed requests that application firewall cannot parse",
 			},
 			"proxypassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password with which proxy user logs on.",
-			},
-			"proxypassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password with which proxy user logs on.",
-			},
-			"proxypassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a proxypassword_wo update.",
 			},
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
@@ -239,11 +229,8 @@ func appfwsettingsDataSourceSetAttrFromGet(ctx context.Context, data *Appfwsetti
 	data.Undefaction = utils.MapGetString(g, "undefaction")
 	data.Useconfigurablesecretkey = utils.MapGetString(g, "useconfigurablesecretkey")
 
-	// proxypassword / proxypassword_wo(+version) are write-only secret inputs
-	// the GET never returns -> Null.
+	// proxypassword is a secret input the GET never returns -> Null.
 	data.Proxypassword = types.StringNull()
-	data.ProxypasswordWo = types.StringNull()
-	data.ProxypasswordWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Learning = utils.MapGetString(g, "learning")

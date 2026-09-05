@@ -55,11 +55,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `sdxvlan` - SDX vlan (for example `YES`, `NO`).
 * `partitionname` - Name of the Partition to which this vlan is bound.
 * `vxlan` - The VXLAN that extends this vlan.
-
-## Import
-
-A vlan can be imported using its vlanid, e.g.
-
-```shell
-terraform import citrixadc_vlan.tf_vlan 40
-```

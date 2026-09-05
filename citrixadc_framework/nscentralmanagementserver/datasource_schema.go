@@ -15,21 +15,17 @@ import (
 // AND the read-only ADM-service metadata the resource deliberately omits
 // (instanceid, customerid, admserviceenvironment, admserviceconnectionstatus).
 type NscentralmanagementserverDataSourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Activationcode       types.String `tfsdk:"activationcode"`
-	Adcpassword          types.String `tfsdk:"adcpassword"`
-	AdcpasswordWo        types.String `tfsdk:"adcpassword_wo"`
-	AdcpasswordWoVersion types.Int64  `tfsdk:"adcpassword_wo_version"`
-	Adcusername          types.String `tfsdk:"adcusername"`
-	Deviceprofilename    types.String `tfsdk:"deviceprofilename"`
-	Ipaddress            types.String `tfsdk:"ipaddress"`
-	Password             types.String `tfsdk:"password"`
-	PasswordWo           types.String `tfsdk:"password_wo"`
-	PasswordWoVersion    types.Int64  `tfsdk:"password_wo_version"`
-	Servername           types.String `tfsdk:"servername"`
-	Type                 types.String `tfsdk:"type"`
-	Username             types.String `tfsdk:"username"`
-	Validatecert         types.String `tfsdk:"validatecert"`
+	Id                types.String `tfsdk:"id"`
+	Activationcode    types.String `tfsdk:"activationcode"`
+	Adcpassword       types.String `tfsdk:"adcpassword"`
+	Adcusername       types.String `tfsdk:"adcusername"`
+	Deviceprofilename types.String `tfsdk:"deviceprofilename"`
+	Ipaddress         types.String `tfsdk:"ipaddress"`
+	Password          types.String `tfsdk:"password"`
+	Servername        types.String `tfsdk:"servername"`
+	Type              types.String `tfsdk:"type"`
+	Username          types.String `tfsdk:"username"`
+	Validatecert      types.String `tfsdk:"validatecert"`
 
 	// Read-only (GET-only) attributes from the NITRO doc read-only set
 	// (zion73x_readonly/nscentralmanagementserver.json). Never settable; populated from GET.
@@ -56,16 +52,6 @@ func NscentralmanagementserverDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "ADC password used to create device profile on ADM",
 			},
-			"adcpassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "ADC password used to create device profile on ADM",
-			},
-			"adcpassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a adcpassword_wo update.",
-			},
 			"adcusername": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -86,16 +72,6 @@ func NscentralmanagementserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "Password for access to central management server. Required for any user account.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Password for access to central management server. Required for any user account.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"servername": schema.StringAttribute{
 				Optional:    true,
@@ -160,11 +136,7 @@ func nscentralmanagementserverDataSourceSetAttrFromGet(ctx context.Context, data
 
 	// Secret / write-only inputs the GET never returns -> Null.
 	data.Adcpassword = types.StringNull()
-	data.AdcpasswordWo = types.StringNull()
-	data.AdcpasswordWoVersion = types.Int64Null()
 	data.Password = types.StringNull()
-	data.PasswordWo = types.StringNull()
-	data.PasswordWoVersion = types.Int64Null()
 
 	// Read-only ADM-service metadata.
 	data.Instanceid = utils.MapGetString(g, "instanceid")

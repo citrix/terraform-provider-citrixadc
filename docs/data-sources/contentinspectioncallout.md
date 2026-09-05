@@ -58,11 +58,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `hits` - Total hits.
 * `undefhits` - Total undefs.
 * `undefreason` - Reason for last undef.
-
-## Import
-
-A contentinspectioncallout can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_contentinspectioncallout.tf_contentinspectioncallout my_ci_callout
-```

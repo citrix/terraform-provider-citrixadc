@@ -70,8 +70,6 @@ type SslprofileDataSourceModel struct {
 	Sessionkeylifetime                types.Int64  `tfsdk:"sessionkeylifetime"`
 	Sessionticket                     types.String `tfsdk:"sessionticket"`
 	Sessionticketkeydata              types.String `tfsdk:"sessionticketkeydata"`
-	SessionticketkeydataWo            types.String `tfsdk:"sessionticketkeydata_wo"`
-	SessionticketkeydataWoVersion     types.Int64  `tfsdk:"sessionticketkeydata_wo_version"`
 	Sessionticketkeyrefresh           types.String `tfsdk:"sessionticketkeyrefresh"`
 	Sessionticketlifetime             types.Int64  `tfsdk:"sessionticketlifetime"`
 	Sessreuse                         types.String `tfsdk:"sessreuse"`
@@ -364,16 +362,6 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "Session ticket enc/dec key , admin can set it",
 			},
-			"sessionticketkeydata_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Session ticket enc/dec key , admin can set it",
-			},
-			"sessionticketkeydata_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a sessionticketkeydata_wo update.",
-			},
 			"sessionticketkeyrefresh": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -663,11 +651,8 @@ func sslprofileDataSourceSetAttrFromGet(ctx context.Context, data *SslprofileDat
 	data.Tls13sessionticketsperauthcontext = utils.MapGetInt64(g, "tls13sessionticketsperauthcontext")
 	data.Zerorttearlydata = utils.MapGetString(g, "zerorttearlydata")
 
-	// sessionticketkeydata / _wo (+version) are write-only secrets the GET never
-	// returns -> Null.
+	// sessionticketkeydata is a secret input the GET never returns -> Null.
 	data.Sessionticketkeydata = types.StringNull()
-	data.SessionticketkeydataWo = types.StringNull()
-	data.SessionticketkeydataWoVersion = types.Int64Null()
 
 	// ecccurvebindings and the cipherbindings block are not projected from the
 	// scalar GET response; leave them as typed Null.

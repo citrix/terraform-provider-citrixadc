@@ -30,11 +30,3 @@ In addition to the arguments, the following attributes are available:
 
 * `password` - Password with which the user logs on. Required for any user account that does not exist on an external authentication server.
 * `id` - The id of the aaauser. It has the same value as the `username` attribute.
-
-## Import
-
-A aaauser can be imported using its username, e.g.
-
-```shell
-terraform import citrixadc_aaauser.tf_aaauser john
-```

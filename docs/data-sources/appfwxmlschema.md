@@ -42,11 +42,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwxmlschema` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
 
 * `response` - Response returned by the appliance for the imported XML Schema object.
-
-## Import
-
-A appfwxmlschema can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_appfwxmlschema.tf_appfwxmlschema tf_appfwxmlschema
-```

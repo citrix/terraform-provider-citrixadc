@@ -50,11 +50,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lsnstatic` resource) and are `Computed`/GET-only. Any attribute the appliance does not return is `null`.
 
 * `status` - The status of the mapping. Status could be Inactive, if mapping addition failed due to already existing dynamic/static mapping, or port allocation failure. Possible values: `ACTIVE`, `INACTIVE`.
-
-## Import
-
-A lsnstatic can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lsnstatic.tf_lsnstatic my_lsn_static
-```

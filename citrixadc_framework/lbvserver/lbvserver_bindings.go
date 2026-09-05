@@ -8,6 +8,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -339,26 +340,54 @@ func (r *LbvserverResource) deleteSingleSslpolicyBinding(name string, b Sslpolic
 	return r.client.DeleteResourceWithArgs("sslvserver_sslpolicy_binding", name, args)
 }
 
+// attrChanged reports whether a binding sub-attribute changed, treating an
+// unknown (unconfigured Computed at plan time) new value as unchanged.
+func attrChanged(oldV, newV attr.Value) bool {
+	if newV.IsUnknown() {
+		return false
+	}
+	return !oldV.Equal(newV)
+}
+
+// sslpolicyBindingChanged reports whether any non-identity sub-attribute of an
+// sslpolicy binding changed. Such an edit keeps the same (policyname, priority)
+// key and is invisible to a key-only diff, so it must trigger a rebind
+// (delete + re-add) to reach the appliance — restoring SDK v2 full-hash parity.
+func sslpolicyBindingChanged(o, n SslpolicybindingModel) bool {
+	return attrChanged(o.Gotopriorityexpression, n.Gotopriorityexpression) ||
+		attrChanged(o.Invoke, n.Invoke) ||
+		attrChanged(o.Labelname, n.Labelname) ||
+		attrChanged(o.Labeltype, n.Labeltype) ||
+		attrChanged(o.Type, n.Type)
+}
+
 func (r *LbvserverResource) syncSslpolicyBindings(ctx context.Context, name string, oldSet, newSet types.Set) error {
 	oldB := r.extractSslpolicyBindings(ctx, oldSet)
 	newB := r.extractSslpolicyBindings(ctx, newSet)
-	oldKeys := map[string]bool{}
+	oldByKey := map[string]SslpolicybindingModel{}
 	for _, b := range oldB {
-		oldKeys[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())] = true
+		oldByKey[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())] = b
 	}
-	newKeys := map[string]bool{}
+	newByKey := map[string]SslpolicybindingModel{}
 	for _, b := range newB {
-		newKeys[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())] = true
+		newByKey[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())] = b
 	}
+	// Remove bindings dropped from config, plus the stale copy of any binding whose
+	// non-key sub-attributes changed (it is re-added below) so the edit reaches the
+	// appliance. A key-only diff would silently drop such an edit (SDK v2 hashed all
+	// fields, so any change rebound).
 	for _, b := range oldB {
-		if !newKeys[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())] {
+		nb, ok := newByKey[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())]
+		if !ok || sslpolicyBindingChanged(b, nb) {
 			if err := r.deleteSingleSslpolicyBinding(name, b); err != nil {
 				return err
 			}
 		}
 	}
+	// Add new bindings, plus re-add any binding whose non-key sub-attributes changed.
 	for _, b := range newB {
-		if !oldKeys[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())] {
+		ob, ok := oldByKey[spbKey(b.Policyname.ValueString(), b.Priority.ValueInt64())]
+		if !ok || sslpolicyBindingChanged(ob, b) {
 			if err := r.addSingleSslpolicyBinding(name, b); err != nil {
 				return err
 			}

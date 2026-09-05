@@ -14,20 +14,18 @@ import (
 // expose the FULL GET projection: the read/write attributes (as Computed
 // outputs) AND the read-only attributes the resource deliberately omits.
 type AaakcdaccountDataSourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Cacert               types.String `tfsdk:"cacert"`
-	Delegateduser        types.String `tfsdk:"delegateduser"`
-	Enterpriserealm      types.String `tfsdk:"enterpriserealm"`
-	Kcdaccount           types.String `tfsdk:"kcdaccount"` // Required lookup key
-	Kcdpassword          types.String `tfsdk:"kcdpassword"`
-	KcdpasswordWo        types.String `tfsdk:"kcdpassword_wo"`
-	KcdpasswordWoVersion types.Int64  `tfsdk:"kcdpassword_wo_version"`
-	Keytab               types.String `tfsdk:"keytab"`
-	Realmstr             types.String `tfsdk:"realmstr"`
-	Saltexpression       types.String `tfsdk:"saltexpression"`
-	Servicespn           types.String `tfsdk:"servicespn"`
-	Usercert             types.String `tfsdk:"usercert"`
-	Userrealm            types.String `tfsdk:"userrealm"`
+	Id              types.String `tfsdk:"id"`
+	Cacert          types.String `tfsdk:"cacert"`
+	Delegateduser   types.String `tfsdk:"delegateduser"`
+	Enterpriserealm types.String `tfsdk:"enterpriserealm"`
+	Kcdaccount      types.String `tfsdk:"kcdaccount"` // Required lookup key
+	Kcdpassword     types.String `tfsdk:"kcdpassword"`
+	Keytab          types.String `tfsdk:"keytab"`
+	Realmstr        types.String `tfsdk:"realmstr"`
+	Saltexpression  types.String `tfsdk:"saltexpression"`
+	Servicespn      types.String `tfsdk:"servicespn"`
+	Usercert        types.String `tfsdk:"usercert"`
+	Userrealm       types.String `tfsdk:"userrealm"`
 
 	// Read-only (GET-only) attributes from the NITRO read-only set
 	// (zion73x_readonly/aaakcdaccount.json). Never settable; populated from GET.
@@ -65,16 +63,6 @@ func AaakcdaccountDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "Password for Delegated User.",
-			},
-			"kcdpassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Password for Delegated User.",
-			},
-			"kcdpassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a kcdpassword_wo update.",
 			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
@@ -143,11 +131,8 @@ func aaakcdaccountDataSourceSetAttrFromGet(ctx context.Context, data *Aaakcdacco
 	data.Usercert = utils.MapGetString(g, "usercert")
 	data.Userrealm = utils.MapGetString(g, "userrealm")
 
-	// kcdpassword / kcdpassword_wo(+version) are write-only secrets the GET never
-	// returns -> Null.
+	// kcdpassword is a secret input the GET never returns -> Null.
 	data.Kcdpassword = types.StringNull()
-	data.KcdpasswordWo = types.StringNull()
-	data.KcdpasswordWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Principle = utils.MapGetString(g, "principle")

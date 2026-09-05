@@ -52,12 +52,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `feature` - The feature to be checked while applying this config.
 * `hits` - Total number of hits.
 * `undefhits` - Total number of undefined policy hits.
-
-
-## Import
-
-A feopolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_feopolicy.tf_feopolicy my_feopolicy
-```

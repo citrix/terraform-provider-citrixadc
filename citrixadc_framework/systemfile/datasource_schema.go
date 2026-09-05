@@ -38,6 +38,7 @@ func SystemfileDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"filecontent": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "file content in Base64 format.",

@@ -24,6 +24,7 @@ resource "citrixadc_systemfile" "tf_file" {
 * `filecontent` - (Optional) File contents.
 * `filelocation` - (Optional) Location of the file on Citrix ADC.
 * `fileencoding` - (Optional) Encoding type of the file content. Defaults to `BASE64`.
+* `is_base64_encoded` - (Optional) Set to true when filecontent is already base64 encoded; otherwise the provider base64-encodes it before upload.
 
 
 ## Attribute Reference

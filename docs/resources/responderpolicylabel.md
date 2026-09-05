@@ -23,6 +23,7 @@ resource "citrixadc_responderpolicylabel" "tf_responder_policylabel" {
 * `labelname` - (Optional) Name for the responder policy label.
 * `policylabeltype` - (Optional) Type of responses sent by the policies bound to this policy label. Types are: * HTTP - HTTP responses. * OTHERTCP - NON-HTTP TCP responses. * SIP_UDP - SIP responses. * RADIUS - RADIUS responses. * MYSQL - SQL responses in MySQL format. * MSSQL - SQL responses in Microsoft SQL format. * NAT - NAT response. Possible values: [ HTTP, OTHERTCP, SIP_UDP, SIP_TCP, MYSQL, MSSQL, NAT, DIAMETER, RADIUS, DNS ]
 * `comment` - (Optional) Any comments to preserve information about this responder policy label.
+* `newname` - (Optional) New name for the responder policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 
 
 ## Attribute Reference

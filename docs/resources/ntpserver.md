@@ -49,3 +49,10 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the ntpserver. It has the same value as the `serverip` or `servername` attribute.
 
 
+## Import
+
+A ntpserver can be imported using its serverip, e.g.
+
+```shell
+terraform import citrixadc_ntpserver.tf_ntpserver <serverip>
+```

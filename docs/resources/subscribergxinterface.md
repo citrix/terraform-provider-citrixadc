@@ -45,3 +45,12 @@ resource "citrixadc_subscribergxinterface" "tf_subscribergxinterface" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the subscribergxinterface. It is a unique string prefixed with `tf-subscribergxinterface-` attribute.
+
+
+## Import
+
+A subscribergxinterface can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_subscribergxinterface.tf_subscribergxinterface subscribergxinterface-config
+```

@@ -75,11 +75,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `ip` - The resolved IP address of the syslog server.
 * `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values = `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A auditsyslogaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_auditsyslogaction.example my_syslog_action
-```

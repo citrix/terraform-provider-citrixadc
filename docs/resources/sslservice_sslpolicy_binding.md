@@ -48,6 +48,7 @@ resource "citrixadc_sslservice_sslpolicy_binding" "tf_binding" {
 * `invoke` - (Optional) Invoke flag. This attribute is relevant only for ADVANCED policies. Changing this forces a new resource to be created.
 * `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE. Changing this forces a new resource to be created.
 * `labeltype` - (Optional) Type of policy label invocation. Changing this forces a new resource to be created.
+* `type` - (Optional) The phase of the SSL connection in which the policy rule is evaluated.
 
 
 ## Attribute Reference

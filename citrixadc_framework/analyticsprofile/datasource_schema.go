@@ -23,8 +23,6 @@ type AnalyticsprofileDataSourceModel struct {
 	Id                           types.String `tfsdk:"id"`
 	Allhttpheaders               types.String `tfsdk:"allhttpheaders"`
 	Analyticsauthtoken           types.String `tfsdk:"analyticsauthtoken"`
-	AnalyticsauthtokenWo         types.String `tfsdk:"analyticsauthtoken_wo"`
-	AnalyticsauthtokenWoVersion  types.Int64  `tfsdk:"analyticsauthtoken_wo_version"`
 	Analyticsendpointcontenttype types.String `tfsdk:"analyticsendpointcontenttype"`
 	Analyticsendpointmetadata    types.String `tfsdk:"analyticsendpointmetadata"`
 	Analyticsendpointurl         types.String `tfsdk:"analyticsendpointurl"`
@@ -83,18 +81,10 @@ func AnalyticsprofileDataSourceSchema() schema.Schema {
 				Description: "On enabling this option, the Citrix ADC will log all the request and response headers.",
 			},
 			"analyticsauthtoken": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
-			},
-			"analyticsauthtoken_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
-			},
-			"analyticsauthtoken_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
 			},
 			"analyticsendpointcontenttype": schema.StringAttribute{
 				Optional:    true,
@@ -366,9 +356,6 @@ func analyticsprofileDataSourceSetAttrFromGet(ctx context.Context, data *Analyti
 	// Read-only metadata.
 	data.Refcnt = utils.MapGetInt64(g, "refcnt")
 
-	// analyticsauthtoken is a secret and analyticsauthtoken_wo(+version) are
-	// write-only/action-only inputs the GET never returns -> Null.
+	// analyticsauthtoken is a secret input the GET never returns -> Null.
 	data.Analyticsauthtoken = types.StringNull()
-	data.AnalyticsauthtokenWo = types.StringNull()
-	data.AnalyticsauthtokenWoVersion = types.Int64Null()
 }

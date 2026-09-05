@@ -27,6 +27,7 @@ resource "citrixadc_contentinspectionpolicy" "tf_contentinspectionpolicy" {
 * `comment` - (Optional) Any type of information about this contentInspection policy.
 * `logaction` - (Optional) Name of the messagelog action to use for requests that match this policy.
 * `undefaction` - (Optional) Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
+* `newname` - (Optional) New name for the contentInspection policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my contentInspection policy" or 'my contentInspection policy').
 
 
 ## Attribute Reference

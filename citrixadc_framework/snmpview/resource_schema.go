@@ -2,6 +2,7 @@ package snmpview
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
@@ -95,10 +96,11 @@ func snmpviewSetAttrFromGet(ctx context.Context, data *SnmpviewResourceModel, ge
 		data.Type = types.StringNull()
 	}
 
-	// Set ID for the resource.
-	// Named resource keyed by name (matches SDK v2 d.SetId(name) and
-	// resource_id_mapping.json "snmpview": "name").
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Set the composite ID. snmpview's identity on the appliance is (name,
+	// subtree) -- readSnmpviewFromApi matches the enumerated array on both, and a
+	// single name can bind several subtrees -- so the ID must encode both. A
+	// single-value ID (name only) cannot round-trip the subtree on import.
+	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Name.ValueString(), data.Subtree.ValueString()))
 
 	return data
 }

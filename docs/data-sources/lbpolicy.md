@@ -51,12 +51,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `undefhits` - Number of policy UNDEF hits.
 * `feature` - The feature to be checked while applying this configuration.
 * `builtin` - Flag to determine whether the LB policy is built-in. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
-
-
-## Import
-
-A lbpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lbpolicy.tf_lbpolicy my_lbpolicy
-```

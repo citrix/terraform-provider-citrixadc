@@ -35,7 +35,7 @@ func (d *SmppuserDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 }
 
 func (d *SmppuserDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SmppuserResourceModel
+	var data SmppuserDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *SmppuserDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	smppuserSetAttrFromGet(ctx, &data, getResponseData)
+	smppuserDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

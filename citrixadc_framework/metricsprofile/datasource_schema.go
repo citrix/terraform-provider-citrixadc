@@ -17,18 +17,16 @@ import (
 // Computed outputs) AND the read-only attributes the resource deliberately
 // omits. Every non-key attribute is Computed.
 type MetricsprofileDataSourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Collector                 types.String `tfsdk:"collector"`
-	Metrics                   types.String `tfsdk:"metrics"`
-	Metricsauthtoken          types.String `tfsdk:"metricsauthtoken"`
-	MetricsauthtokenWo        types.String `tfsdk:"metricsauthtoken_wo"`
-	MetricsauthtokenWoVersion types.Int64  `tfsdk:"metricsauthtoken_wo_version"`
-	Metricsendpointurl        types.String `tfsdk:"metricsendpointurl"`
-	Metricsexportfrequency    types.Int64  `tfsdk:"metricsexportfrequency"`
-	Name                      types.String `tfsdk:"name"` // Required lookup key
-	Outputmode                types.String `tfsdk:"outputmode"`
-	Schemafile                types.String `tfsdk:"schemafile"`
-	Servemode                 types.String `tfsdk:"servemode"`
+	Id                     types.String `tfsdk:"id"`
+	Collector              types.String `tfsdk:"collector"`
+	Metrics                types.String `tfsdk:"metrics"`
+	Metricsauthtoken       types.String `tfsdk:"metricsauthtoken"`
+	Metricsendpointurl     types.String `tfsdk:"metricsendpointurl"`
+	Metricsexportfrequency types.Int64  `tfsdk:"metricsexportfrequency"`
+	Name                   types.String `tfsdk:"name"` // Required lookup key
+	Outputmode             types.String `tfsdk:"outputmode"`
+	Schemafile             types.String `tfsdk:"schemafile"`
+	Servemode              types.String `tfsdk:"servemode"`
 
 	// Read-only (GET-only) attributes from the NITRO doc read-only set
 	// (zion73x_readonly/metricsprofile.json). Never settable; populated from GET.
@@ -53,18 +51,10 @@ func MetricsprofileDataSourceSchema() schema.Schema {
 				Description: "This option is used enable or disable metrics",
 			},
 			"metricsauthtoken": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
-			},
-			"metricsauthtoken_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
-			},
-			"metricsauthtoken_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a metricsauthtoken_wo update.",
 			},
 			"metricsendpointurl": schema.StringAttribute{
 				Optional:    true,
@@ -127,11 +117,8 @@ func metricsprofileDataSourceSetAttrFromGet(ctx context.Context, data *Metricspr
 	data.Schemafile = utils.MapGetString(g, "schemafile")
 	data.Servemode = utils.MapGetString(g, "servemode")
 
-	// metricsauthtoken / metricsauthtoken_wo(+version) are secret/write-only
-	// inputs the GET never returns -> Null.
+	// metricsauthtoken is a secret input the GET never returns -> Null.
 	data.Metricsauthtoken = types.StringNull()
-	data.MetricsauthtokenWo = types.StringNull()
-	data.MetricsauthtokenWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Refcnt = utils.MapGetInt64(g, "refcnt")

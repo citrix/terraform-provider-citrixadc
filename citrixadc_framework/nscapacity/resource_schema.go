@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -85,21 +86,23 @@ func (m unsetOnRemoveBoolModifier) PlanModifyBool(_ context.Context, req planmod
 
 // NscapacityResourceModel describes the resource data model.
 type NscapacityResourceModel struct {
-	Id           types.String `tfsdk:"id"`
-	Bandwidth    types.Int64  `tfsdk:"bandwidth"`
-	Edition      types.String `tfsdk:"edition"`
-	Ignoreexpiry types.Bool   `tfsdk:"ignoreexpiry"`
-	Nodeid       types.Int64  `tfsdk:"nodeid"`
-	Password     types.String `tfsdk:"password"`
-	Platform     types.String `tfsdk:"platform"`
-	Unit         types.String `tfsdk:"unit"`
-	Username     types.String `tfsdk:"username"`
-	Vcpu         types.Bool   `tfsdk:"vcpu"`
+	Id                types.String `tfsdk:"id"`
+	Bandwidth         types.Int64  `tfsdk:"bandwidth"`
+	Edition           types.String `tfsdk:"edition"`
+	Ignoreexpiry      types.Bool   `tfsdk:"ignoreexpiry"`
+	Nodeid            types.Int64  `tfsdk:"nodeid"`
+	Password          types.String `tfsdk:"password"`
+	PasswordWo        types.String `tfsdk:"password_wo"`
+	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
+	Platform          types.String `tfsdk:"platform"`
+	Unit              types.String `tfsdk:"unit"`
+	Username          types.String `tfsdk:"username"`
+	Vcpu              types.Bool   `tfsdk:"vcpu"`
 }
 
 func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Version: 1,
+		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -131,7 +134,20 @@ func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"password": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Password to use when authenticating with ADM Agent for LAS licensing.",
+			},
+			"password_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Password to use when authenticating with ADM Agent for LAS licensing. Write-only/ephemeral equivalent of password; the value is not persisted in Terraform state.",
+			},
+			"password_wo_version": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Default:     int64default.StaticInt64(1),
+				Description: "Increment this version to signal a password_wo update.",
 			},
 			"platform": schema.StringAttribute{
 				Optional:    true,
@@ -201,6 +217,21 @@ func nscapacityGetThePayloadFromtheConfig(ctx context.Context, data *NscapacityR
 	}
 
 	return nscapacity
+}
+
+// nscapacityApplyWriteOnlyConfig overlays write-only attributes (read from the
+// Terraform configuration, since they are nullified in the plan) onto the payload.
+// If password_wo is set it takes precedence over the plain password.
+func nscapacityApplyWriteOnlyConfig(ctx context.Context, config *NscapacityResourceModel, payload *ns.Nscapacity) {
+	tflog.Debug(ctx, "In nscapacityApplyWriteOnlyConfig Function")
+
+	// Handle write-only secret attribute: password_wo -> password
+	if !config.PasswordWo.IsNull() {
+		passwordWo := config.PasswordWo.ValueString()
+		if passwordWo != "" {
+			payload.Password = passwordWo
+		}
+	}
 }
 
 func nscapacitySetAttrFromGet(ctx context.Context, data *NscapacityResourceModel, getResponseData map[string]interface{}) *NscapacityResourceModel {

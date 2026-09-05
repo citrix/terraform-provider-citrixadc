@@ -22,6 +22,7 @@ resource "citrixadc_cmppolicylabel" "tf_cmppolicylabel" {
 
 * `labelname` - (Required) Name of the HTTP compression policy label. Must begin with a letter, number, or the underscore character (_). Additional characters allowed, after the first character, are the hyphen (-), period (.) pound sign (#), space ( ), at sign (@), equals (=), and colon (:). The name must be unique within the list of policy labels for compression policies. Can be renamed after the policy label is created.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cmp policylabel" or 'my cmp policylabel'). Minimum length =  1
 * `type` - (Required) Type of packets (request packets or response) against which to match the policies bound to this policy label. Possible values: [ REQ, RES, HTTPQUIC_REQ, HTTPQUIC_RES ]
+* `newname` - (Optional) New name for the compression policy label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my cmp policylabel" or 'my cmp policylabel').
 
 ## Attribute Reference
 

@@ -57,11 +57,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `undefhits` - Number of policy UNDEF hits.
 * `builtin` - Flag to determine if the videooptimization detection policy is built-in or not. A list of strings.
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A videooptimizationdetectionpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy tf_videooptimizationdetectionpolicy
-```

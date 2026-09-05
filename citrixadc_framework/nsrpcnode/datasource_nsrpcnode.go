@@ -35,7 +35,7 @@ func (d *NsrpcnodeDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *NsrpcnodeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsrpcnodeResourceModel
+	var data NsrpcnodeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *NsrpcnodeDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	nsrpcnodeSetAttrFromGet(ctx, &data, getResponseData)
+	nsrpcnodeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

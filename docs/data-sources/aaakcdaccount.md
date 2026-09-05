@@ -49,12 +49,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `principle` - SPN extracted from keytab file.
 * `kcdspn` - Host SPN extracted from keytab file.
-
-
-## Import
-
-A aaakcdaccount can be imported using its kcdaccount, e.g.
-
-```shell
-terraform import citrixadc_aaakcdaccount.tf_aaakcdaccount my_kcdaccount
-```

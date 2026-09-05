@@ -73,8 +73,6 @@ type LbmonitorDataSourceModel struct {
 	Originhost                       types.String `tfsdk:"originhost"`
 	Originrealm                      types.String `tfsdk:"originrealm"`
 	Password                         types.String `tfsdk:"password"`
-	PasswordWo                       types.String `tfsdk:"password_wo"`
-	PasswordWoVersion                types.Int64  `tfsdk:"password_wo_version"`
 	Productname                      types.String `tfsdk:"productname"`
 	Query                            types.String `tfsdk:"query"`
 	Querytype                        types.String `tfsdk:"querytype"`
@@ -83,8 +81,6 @@ type LbmonitorDataSourceModel struct {
 	Radapn                           types.String `tfsdk:"radapn"`
 	Radframedip                      types.String `tfsdk:"radframedip"`
 	Radkey                           types.String `tfsdk:"radkey"`
-	RadkeyWo                         types.String `tfsdk:"radkey_wo"`
-	RadkeyWoVersion                  types.Int64  `tfsdk:"radkey_wo_version"`
 	Radmsisdn                        types.String `tfsdk:"radmsisdn"`
 	Radnasid                         types.String `tfsdk:"radnasid"`
 	Radnasip                         types.String `tfsdk:"radnasip"`
@@ -98,12 +94,8 @@ type LbmonitorDataSourceModel struct {
 	Scriptargs                       types.String `tfsdk:"scriptargs"`
 	Scriptname                       types.String `tfsdk:"scriptname"`
 	Secondarypassword                types.String `tfsdk:"secondarypassword"`
-	SecondarypasswordWo              types.String `tfsdk:"secondarypassword_wo"`
-	SecondarypasswordWoVersion       types.Int64  `tfsdk:"secondarypassword_wo_version"`
 	Secure                           types.String `tfsdk:"secure"`
 	Secureargs                       types.String `tfsdk:"secureargs"`
-	SecureargsWo                     types.String `tfsdk:"secureargs_wo"`
-	SecureargsWoVersion              types.Int64  `tfsdk:"secureargs_wo_version"`
 	Send                             types.String `tfsdk:"send"`
 	Servicegroupname                 types.String `tfsdk:"servicegroupname"`
 	Servicename                      types.String `tfsdk:"servicename"`
@@ -417,18 +409,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Origin-Realm value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.",
 			},
 			"password": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"productname": schema.StringAttribute{
 				Optional:    true,
@@ -466,18 +450,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Source ip with which the packet will go out . Applicable to monitors of type RADIUS_ACCOUNTING.",
 			},
 			"radkey": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.",
-			},
-			"radkey_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.",
-			},
-			"radkey_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a radkey_wo update.",
 			},
 			"radmsisdn": schema.StringAttribute{
 				Optional:    true,
@@ -541,18 +517,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Path and name of the script to execute. The script must be available on the Citrix ADC, in the /nsconfig/monitors/ directory.",
 			},
 			"secondarypassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors.",
-			},
-			"secondarypassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors.",
-			},
-			"secondarypassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a secondarypassword_wo update.",
 			},
 			"secure": schema.StringAttribute{
 				Optional:    true,
@@ -560,18 +528,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Use a secure SSL connection when monitoring a service. Applicable only to TCP based monitors. The secure option cannot be used with a CITRIX-AG monitor, because a CITRIX-AG monitor uses a secure connection by default.",
 			},
 			"secureargs": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "List of arguments for the script which should be secure",
-			},
-			"secureargs_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "List of arguments for the script which should be secure",
-			},
-			"secureargs_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a secureargs_wo update.",
 			},
 			"send": schema.StringAttribute{
 				Optional:    true,
@@ -913,17 +873,9 @@ func lbmonitorDataSourceSetAttrFromGet(ctx context.Context, data *LbmonitorDataS
 
 	// Secrets / write-only / action-only inputs the GET never returns -> Null.
 	data.Password = types.StringNull()
-	data.PasswordWo = types.StringNull()
-	data.PasswordWoVersion = types.Int64Null()
 	data.Radkey = types.StringNull()
-	data.RadkeyWo = types.StringNull()
-	data.RadkeyWoVersion = types.Int64Null()
 	data.Secondarypassword = types.StringNull()
-	data.SecondarypasswordWo = types.StringNull()
-	data.SecondarypasswordWoVersion = types.Int64Null()
 	data.Secureargs = types.StringNull()
-	data.SecureargsWo = types.StringNull()
-	data.SecureargsWoVersion = types.Int64Null()
 
 	// Read-only lbmonitor metadata.
 	data.Lrtmconf = utils.MapGetInt64(g, "lrtmconf")

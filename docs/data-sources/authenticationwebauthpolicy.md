@@ -35,12 +35,3 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the authenticationwebauthpolicy. It has the same value as the `name` attribute.
 * `action` - Name of the WebAuth action to perform if the policy matches.
 * `rule` - Name of the Citrix ADC named rule, or an expression, that the policy uses to determine whether to attempt to authenticate the user with the Web server.
-
-
-## Import
-
-A authenticationwebauthpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationwebauthpolicy.tf_webauthpolicy my_webauthpolicy
-```

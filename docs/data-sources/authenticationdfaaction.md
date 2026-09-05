@@ -44,11 +44,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `success` - Number of successful authentications through this DFA action.
 * `failure` - Number of failed authentications through this DFA action.
-
-## Import
-
-A authenticationdfaaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationdfaaction.tf_dfaaction my_dfaaction
-```

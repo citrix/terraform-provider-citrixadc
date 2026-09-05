@@ -56,3 +56,12 @@ resource "citrixadc_aaaproxyparam" "tf_aaaproxyparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the aaaproxyparam. Because this is a singleton resource, it has a fixed identifier.
+
+
+## Import
+
+A aaaproxyparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_aaaproxyparam.tf_aaaproxyparam aaaproxyparam-config
+```

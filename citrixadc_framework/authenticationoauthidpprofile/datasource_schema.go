@@ -22,8 +22,6 @@ type AuthenticationoauthidpprofileDataSourceModel struct {
 	Audience                   types.String `tfsdk:"audience"`
 	Clientid                   types.String `tfsdk:"clientid"`
 	Clientsecret               types.String `tfsdk:"clientsecret"`
-	ClientsecretWo             types.String `tfsdk:"clientsecret_wo"`
-	ClientsecretWoVersion      types.Int64  `tfsdk:"clientsecret_wo_version"`
 	Configservice              types.String `tfsdk:"configservice"`
 	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
 	Encrypttoken               types.String `tfsdk:"encrypttoken"`
@@ -69,16 +67,6 @@ func AuthenticationoauthidpprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "Unique secret string to authorize relying party at authorization server.",
-			},
-			"clientsecret_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Unique secret string to authorize relying party at authorization server.",
-			},
-			"clientsecret_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"configservice": schema.StringAttribute{
 				Optional:    true,
@@ -179,11 +167,8 @@ func authenticationoauthidpprofileDataSourceSetAttrFromGet(ctx context.Context, 
 	data.Signatureservice = utils.MapGetString(g, "signatureservice")
 	data.Skewtime = utils.MapGetInt64(g, "skewtime")
 
-	// clientsecret / clientsecret_wo(+version) are write-only or action-only
-	// inputs the GET never returns -> Null.
+	// clientsecret is a secret input the GET never returns -> Null.
 	data.Clientsecret = types.StringNull()
-	data.ClientsecretWo = types.StringNull()
-	data.ClientsecretWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Oauthstatus = utils.MapGetString(g, "oauthstatus")

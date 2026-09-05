@@ -43,11 +43,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `expressiontype` - Type of policy (`Classic Policy` / `Advanced Policy`).
 * `hits` - Number of hits.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-
-## Import
-
-A tmsessionpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_tmsessionpolicy.tf_tmsessionpolicy my_tmsession_policy
-```

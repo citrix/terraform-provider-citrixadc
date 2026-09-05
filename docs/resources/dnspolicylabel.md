@@ -21,6 +21,7 @@ resource "citrixadc_dnspolicylabel" "dnspolicylabel" {
 
 * `labelname` - (Required) Name of the dns policy label.
 * `transform` - (Required) The type of transformations allowed by the policies bound to the label.
+* `newname` - (Optional) The new name of the dns policylabel.
 
 
 ## Attribute Reference

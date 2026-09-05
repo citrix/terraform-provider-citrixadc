@@ -66,11 +66,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `ipaddress` - IP address (resolved) of the RADIUS server.
 * `success` - Number of successful authentication requests.
 * `failure` - Number of failed authentication requests.
-
-## Import
-
-A authenticationradiusaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationradiusaction.tf_radiusaction my_radiusaction
-```

@@ -70,6 +70,11 @@ func (r *WasmmoduleResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// USFU keeps the prior value when the attribute is omitted from
+					// config on an in-place update (e.g. changing comment/settingfile),
+					// so RequiresReplace does not fire and spuriously destroy+recreate
+					// the module (GH#1436 pattern).
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "File name of the WASM module.",
@@ -80,6 +85,9 @@ func (r *WasmmoduleResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					// See modulefile: USFU prevents a spurious replace when this
+					// create-only attr is omitted from config on an in-place update.
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "The SHA256 file contains the hash value used to validate the WASM module.",

@@ -30,8 +30,6 @@ type AaatacacsparamsDataSourceModel struct {
 	Serverip                   types.String `tfsdk:"serverip"`
 	Serverport                 types.Int64  `tfsdk:"serverport"`
 	Tacacssecret               types.String `tfsdk:"tacacssecret"`
-	TacacssecretWo             types.String `tfsdk:"tacacssecret_wo"`
-	TacacssecretWoVersion      types.Int64  `tfsdk:"tacacssecret_wo_version"`
 
 	// Read-only (GET-only) metadata from the NITRO doc read-only set
 	// (zion73x_readonly/aaatacacsparams.json). Never settable; populated from GET.
@@ -91,16 +89,6 @@ func AaatacacsparamsDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "Key shared between the TACACS+ server and clients. Required for allowing the Citrix ADC to communicate with the TACACS+ server.",
 			},
-			"tacacssecret_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Key shared between the TACACS+ server and clients. Required for allowing the Citrix ADC to communicate with the TACACS+ server.",
-			},
-			"tacacssecret_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a tacacssecret_wo update.",
-			},
 
 			// Read-only (GET-only) metadata surfaced by the data source
 			// (these are intentionally NOT modeled on the resource). All Computed.
@@ -138,11 +126,8 @@ func aaatacacsparamsDataSourceSetAttrFromGet(ctx context.Context, data *Aaatacac
 	data.Serverip = utils.MapGetString(g, "serverip")
 	data.Serverport = utils.MapGetInt64(g, "serverport")
 
-	// tacacssecret / tacacssecret_wo(+version) are write-only or secret inputs
-	// the GET never returns -> Null.
+	// tacacssecret is a secret input the GET never returns -> Null.
 	data.Tacacssecret = types.StringNull()
-	data.TacacssecretWo = types.StringNull()
-	data.TacacssecretWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Builtin = utils.MapGetStringList(g, "builtin")

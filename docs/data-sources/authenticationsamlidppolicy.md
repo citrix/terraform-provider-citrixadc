@@ -46,11 +46,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `hits` - Number of hits.
-
-## Import
-
-A authenticationsamlidppolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationsamlidppolicy.tf_samlidppolicy tf_samlidppolicy
-```

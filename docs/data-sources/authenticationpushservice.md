@@ -52,12 +52,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `pushcloudserverstatus` - Status of the cloud service that does push (for example `UP`, `DOWN`).
 * `signingkeyname` - Friendly name of the key used to compute the signature necessary for accessing the notification service.
 * `signingkey` - (Sensitive) Key used to compute the signature necessary for accessing the notification service.
-
-
-## Import
-
-A authenticationpushservice can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationpushservice.tf_pushservice example_pushservice
-```

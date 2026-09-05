@@ -41,12 +41,3 @@ In addition to the arguments, the following attributes are available:
 * `submitmethod` - HTTP method (GET or POST) used by the single sign-on form to send the logon credentials to the logon server.
 * `userfield` - Name of the form field in which the user types in the user ID.
 * `id` - The id of the vpnformssoaction. It has the same value as the `name` attribute.
-
-
-## Import
-
-A vpnformssoaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_vpnformssoaction.tf_vpnformssoaction tf_vpnformssoaction
-```

@@ -85,12 +85,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `ngname` - Nodegroup devno to which this authentication vserver belongs to.
 * `secondary` - Bind the authentication policy to the secondary chain.
 * `groupextraction` - Bind the Authentication policy to a tertiary chain which will be used only for group extraction.
-
-
-## Import
-
-A authenticationvserver can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationvserver.tf_authenticationvserver my_authenticationvserver
-```

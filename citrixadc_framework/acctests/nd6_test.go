@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -94,7 +95,10 @@ func testAccCheckNd6Exist(n string, id *string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
-		data, err := client.FindResource(service.Nd6.Type(), rs.Primary.ID)
+		// The resource ID is the composite "neighbor,td,nodeid"; the NITRO lookup
+		// key is the neighbor (first component).
+		neighbor := strings.SplitN(rs.Primary.ID, ",", 2)[0]
+		data, err := client.FindResource(service.Nd6.Type(), neighbor)
 
 		if err != nil {
 			return err
@@ -124,7 +128,8 @@ func testAccCheckNd6Destroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Nd6.Type(), rs.Primary.ID)
+		neighbor := strings.SplitN(rs.Primary.ID, ",", 2)[0]
+		_, err := client.FindResource(service.Nd6.Type(), neighbor)
 		if err == nil {
 			return fmt.Errorf("nd6 %s still exists", rs.Primary.ID)
 		}
@@ -170,6 +175,29 @@ func TestAccNd6_selfHealing(t *testing.T) {
 				},
 				Config: testAccNd6_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// TestAccNd6_import verifies import via the composite ID "neighbor,td,nodeid".
+// Pre-fix, ImportStatePassthroughID populated only id, so readNd6FromApi (which
+// matches on neighbor/td/nodeid) found no row and dropped the resource -> import
+// always failed.
+func TestAccNd6_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNd6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist("citrixadc_nd6.tf_nd6", nil)),
+			},
+			{
+				ResourceName:      "citrixadc_nd6.tf_nd6",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

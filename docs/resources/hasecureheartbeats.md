@@ -50,3 +50,12 @@ resource "citrixadc_hasecureheartbeats" "tf_hasecureheartbeats" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the hasecureheartbeats. Because this is a singleton resource, it has a fixed identifier.
+
+
+## Import
+
+A hasecureheartbeats can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_hasecureheartbeats.tf_hasecureheartbeats hasecureheartbeats-config
+```

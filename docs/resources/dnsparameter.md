@@ -71,3 +71,12 @@ resource "citrixadc_dnsparameter" "tf_dnsparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the dnsparameter. It is a unique string prefixed with "tf-dnsparameter-".
+
+
+## Import
+
+A dnsparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_dnsparameter.tf_dnsparameter dnsparameter-config
+```

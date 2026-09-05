@@ -103,6 +103,7 @@ resource "citrixadc_lbparameter" "tf_lbparameter" {
 * `lbhashalgorithm` - (Optional) This option dictates the hashing algorithm used for hash based LB methods (URLHASH, DOMAINHASH, SOURCEIPHASH, DESTINATIONIPHASH, SRCIPDESTIPHASH, SRCIPSRCPORTHASH, TOKEN, USER_TOKEN, CALLIDHASH).
 * `dropmqttjumbomessage` - (Optional) When this option is enabled, MQTT messages of length greater than 64k will be dropped and the client/server connections will be reset.
 * `lbhashfingers` - (Optional) This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory.
+* `radiusmessageauthenticator` - (Optional) If enabled, NetScaler will verify the message authenticator and also generate message authenticator if not present.
 
 
 ## Attribute Reference

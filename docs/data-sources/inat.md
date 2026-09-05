@@ -51,12 +51,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_inat` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
 
 * `flags` - Flags for different modes.
-
-
-## Import
-
-An inat can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_inat.tf_inat my_inat
-```

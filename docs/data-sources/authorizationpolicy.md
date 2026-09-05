@@ -48,11 +48,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `activepolicy` - Indicates whether policy is bound or not.
 * `expressiontype` - Type of policy (Classic/Advanced).
 * `hits` - Number of hits.
-
-## Import
-
-A authorizationpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authorizationpolicy.tf_authorizationpolicy my_authorization_policy
-```

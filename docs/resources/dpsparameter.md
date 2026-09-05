@@ -31,3 +31,12 @@ resource "citrixadc_dpsparameter" "tf_dpsparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the dpsparameter. Because this is a singleton resource, it has a fixed identifier.
+
+
+## Import
+
+A dpsparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_dpsparameter.tf_dpsparameter dpsparameter-config
+```

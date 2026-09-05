@@ -21,8 +21,6 @@ type LbparameterDataSourceModel struct {
 	Computedadccookieattribute    types.String `tfsdk:"computedadccookieattribute"`
 	Consolidatedlconn             types.String `tfsdk:"consolidatedlconn"`
 	Cookiepassphrase              types.String `tfsdk:"cookiepassphrase"`
-	CookiepassphraseWo            types.String `tfsdk:"cookiepassphrase_wo"`
-	CookiepassphraseWoVersion     types.Int64  `tfsdk:"cookiepassphrase_wo_version"`
 	Dbsttl                        types.Int64  `tfsdk:"dbsttl"`
 	Dropmqttjumbomessage          types.String `tfsdk:"dropmqttjumbomessage"`
 	Httponlycookieflag            types.String `tfsdk:"httponlycookieflag"`
@@ -76,18 +74,10 @@ func LbparameterDataSourceSchema() schema.Schema {
 				Description: "To find the service with the fewest connections, the virtual server uses the consolidated connection statistics from all the packet engines. The NO setting allows consideration of only the number of connections on the packet engine that received the new connection.",
 			},
 			"cookiepassphrase": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
-			},
-			"cookiepassphrase_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
-			},
-			"cookiepassphrase_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a cookiepassphrase_wo update.",
 			},
 			"dbsttl": schema.Int64Attribute{
 				Optional:    true,
@@ -256,11 +246,8 @@ func lbparameterDataSourceSetAttrFromGet(ctx context.Context, data *LbparameterD
 	data.Usesecuredpersistencecookie = utils.MapGetString(g, "usesecuredpersistencecookie")
 	data.Vserverspecificmac = utils.MapGetString(g, "vserverspecificmac")
 
-	// cookiepassphrase / cookiepassphrase_wo(+version) are secret/write-only
-	// inputs the GET never returns -> Null.
+	// cookiepassphrase is a secret input the GET never returns -> Null.
 	data.Cookiepassphrase = types.StringNull()
-	data.CookiepassphraseWo = types.StringNull()
-	data.CookiepassphraseWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Sessionsthreshold = utils.MapGetInt64(g, "sessionsthreshold")

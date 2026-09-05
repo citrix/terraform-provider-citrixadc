@@ -1,7 +1,11 @@
 package hasecureheartbeats
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func HasecureheartbeatsDataSourceSchema() schema.Schema {
@@ -21,16 +25,30 @@ func HasecureheartbeatsDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "Pre shared key to be used for securing HA heartbeats.",
 			},
-			"hapsk_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Pre shared key to be used for securing HA heartbeats.",
-			},
-			"hapsk_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a hapsk_wo update.",
-			},
 		},
 	}
+}
+
+type HasecureheartbeatsDataSourceModel struct {
+	Id    types.String `tfsdk:"id"`
+	State types.String `tfsdk:"state"`
+	Hapsk types.String `tfsdk:"hapsk"`
+}
+
+func hasecureheartbeatsDataSourceSetAttrFromGet(ctx context.Context, data *HasecureheartbeatsDataSourceModel, getResponseData map[string]interface{}) *HasecureheartbeatsDataSourceModel {
+	tflog.Debug(ctx, "In hasecureheartbeatsDataSourceSetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	// hapsk is not returned by NITRO API in usable form (secret/ephemeral) - retain from config
+
+	// Set ID for the resource
+	// Case 1: No unique attributes - static ID (singleton)
+	data.Id = types.StringValue("hasecureheartbeats-config")
+
+	return data
 }

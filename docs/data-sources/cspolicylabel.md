@@ -60,11 +60,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation (for example `policylabel`).
 * `invoke_labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
-
-## Import
-
-A cspolicylabel can be imported using its labelname, e.g.
-
-```shell
-terraform import citrixadc_cspolicylabel.tf_cspolicylabel tf_policylabel
-```

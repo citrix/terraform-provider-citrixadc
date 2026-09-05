@@ -208,11 +208,13 @@ func TestAccNscapacity_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccNscapacity_basic_step1},
 			{
-				Config:                  testAccNscapacity_basic_step1,
-				ResourceName:            resAddr,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				Config:            testAccNscapacity_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password_wo_version defaults to 1 on create but is a config-only
+				// tracker NITRO never returns on import.
+				ImportStateVerifyIgnore: []string{"password_wo_version"},
 			},
 		},
 	})
@@ -241,6 +243,107 @@ func TestAccNscapacity_sdkv2StateUpgrade(t *testing.T) {
 				Config: testAccNscapacity_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
+				),
+			},
+		},
+	})
+}
+
+// --- password write-only (ephemeral) support (GH #1441) ---
+//
+// password_wo is the WriteOnly twin of password (LAS/ADM-agent licensing
+// credential); it is never persisted in state and pairs with
+// password_wo_version. Like every nscapacity test these require a License Server
+// and are skipped in the standard lab, but they document and exercise the pattern.
+
+// Backward-compatible path: the plain (state-persisted) password still works.
+const testAccNscapacity_password_backward_compat = `
+	variable "nscapacity_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nscapacity" "tf_capacity_wo" {
+		edition  = "Platinum"
+		unit     = "Gbps"
+		nodeid   = 0
+		username = "las_user"
+		password = var.nscapacity_password
+	}
+`
+
+func TestAccNscapacity_password_backward_compat(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
+	t.Setenv("TF_VAR_nscapacity_password", "laspass1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscapacity_password_backward_compat,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity_wo", nil),
+				),
+			},
+		},
+	})
+}
+
+// Ephemeral path: password_wo (WriteOnly, never persisted) + version tracker.
+const testAccNscapacity_password_wo_step1 = `
+	variable "nscapacity_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nscapacity" "tf_capacity_wo" {
+		edition             = "Platinum"
+		unit                = "Gbps"
+		nodeid              = 0
+		username            = "las_user"
+		password_wo         = var.nscapacity_password_wo
+		password_wo_version = 1
+	}
+`
+
+const testAccNscapacity_password_wo_step2 = `
+	variable "nscapacity_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_nscapacity" "tf_capacity_wo" {
+		edition             = "Platinum"
+		unit                = "Gbps"
+		nodeid              = 0
+		username            = "las_user"
+		password_wo         = var.nscapacity_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccNscapacity_password_wo_ephemeral(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
+	t.Setenv("TF_VAR_nscapacity_password_wo", "ephem_las1")
+	t.Setenv("TF_VAR_nscapacity_password_wo_2", "ephem_las2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscapacity_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_nscapacity.tf_capacity_wo", "password_wo_version", "1"),
+					resource.TestCheckNoResourceAttr("citrixadc_nscapacity.tf_capacity_wo", "password_wo"),
+				),
+			},
+			{
+				// Bump the version to re-send the rotated write-only password.
+				Config: testAccNscapacity_password_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_nscapacity.tf_capacity_wo", "password_wo_version", "2"),
 				),
 			},
 		},

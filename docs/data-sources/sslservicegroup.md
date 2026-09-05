@@ -78,11 +78,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `ca` - CA certificate.
 * `snicert` - Whether a CertKey is bound for SNI processing.
 * `quicflag` - Whether the QUIC transport protocol is used by a virtual server or service.
-
-## Import
-
-A sslservicegroup can be imported using its servicegroupname, e.g.
-
-```shell
-terraform import citrixadc_sslservicegroup.tf_sslservicegroup tf_servicegroup
-```

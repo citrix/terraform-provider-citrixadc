@@ -14,44 +14,42 @@ import (
 // can expose the FULL GET projection: the read/write attributes (as Computed
 // outputs) AND the read-only metadata attributes the resource deliberately omits.
 type AuditsyslogactionDataSourceModel struct {
-	Id                     types.String `tfsdk:"id"`
-	Acl                    types.String `tfsdk:"acl"`
-	Alg                    types.String `tfsdk:"alg"`
-	Appflowexport          types.String `tfsdk:"appflowexport"`
-	Contentinspectionlog   types.String `tfsdk:"contentinspectionlog"`
-	Dateformat             types.String `tfsdk:"dateformat"`
-	Denylistviolations     types.String `tfsdk:"denylistviolations"`
-	Dns                    types.String `tfsdk:"dns"`
-	Domainresolvenow       types.Bool   `tfsdk:"domainresolvenow"`
-	Domainresolveretry     types.Int64  `tfsdk:"domainresolveretry"`
-	Httpauthtoken          types.String `tfsdk:"httpauthtoken"`
-	HttpauthtokenWo        types.String `tfsdk:"httpauthtoken_wo"`
-	HttpauthtokenWoVersion types.Int64  `tfsdk:"httpauthtoken_wo_version"`
-	Httpendpointurl        types.String `tfsdk:"httpendpointurl"`
-	Httpschemafile         types.String `tfsdk:"httpschemafile"`
-	Lbvservername          types.String `tfsdk:"lbvservername"`
-	Logfacility            types.String `tfsdk:"logfacility"`
-	Loglevel               types.Set    `tfsdk:"loglevel"`
-	Lsn                    types.String `tfsdk:"lsn"`
-	Managementlog          types.List   `tfsdk:"managementlog"`
-	Maxlogdatasizetohold   types.Int64  `tfsdk:"maxlogdatasizetohold"`
-	Mgmtloglevel           types.List   `tfsdk:"mgmtloglevel"`
-	Name                   types.String `tfsdk:"name"` // Required lookup key
-	Netprofile             types.String `tfsdk:"netprofile"`
-	Protocolviolations     types.String `tfsdk:"protocolviolations"`
-	Serverdomainname       types.String `tfsdk:"serverdomainname"`
-	Serverip               types.String `tfsdk:"serverip"`
-	Serverport             types.Int64  `tfsdk:"serverport"`
-	Sslinterception        types.String `tfsdk:"sslinterception"`
-	Streamanalytics        types.String `tfsdk:"streamanalytics"`
-	Subscriberlog          types.String `tfsdk:"subscriberlog"`
-	Syslogcompliance       types.String `tfsdk:"syslogcompliance"`
-	Tcp                    types.String `tfsdk:"tcp"`
-	Tcpprofilename         types.String `tfsdk:"tcpprofilename"`
-	Timezone               types.String `tfsdk:"timezone"`
-	Transport              types.String `tfsdk:"transport"`
-	Urlfiltering           types.String `tfsdk:"urlfiltering"`
-	Userdefinedauditlog    types.String `tfsdk:"userdefinedauditlog"`
+	Id                   types.String `tfsdk:"id"`
+	Acl                  types.String `tfsdk:"acl"`
+	Alg                  types.String `tfsdk:"alg"`
+	Appflowexport        types.String `tfsdk:"appflowexport"`
+	Contentinspectionlog types.String `tfsdk:"contentinspectionlog"`
+	Dateformat           types.String `tfsdk:"dateformat"`
+	Denylistviolations   types.String `tfsdk:"denylistviolations"`
+	Dns                  types.String `tfsdk:"dns"`
+	Domainresolvenow     types.Bool   `tfsdk:"domainresolvenow"`
+	Domainresolveretry   types.Int64  `tfsdk:"domainresolveretry"`
+	Httpauthtoken        types.String `tfsdk:"httpauthtoken"`
+	Httpendpointurl      types.String `tfsdk:"httpendpointurl"`
+	Httpschemafile       types.String `tfsdk:"httpschemafile"`
+	Lbvservername        types.String `tfsdk:"lbvservername"`
+	Logfacility          types.String `tfsdk:"logfacility"`
+	Loglevel             types.Set    `tfsdk:"loglevel"`
+	Lsn                  types.String `tfsdk:"lsn"`
+	Managementlog        types.List   `tfsdk:"managementlog"`
+	Maxlogdatasizetohold types.Int64  `tfsdk:"maxlogdatasizetohold"`
+	Mgmtloglevel         types.List   `tfsdk:"mgmtloglevel"`
+	Name                 types.String `tfsdk:"name"` // Required lookup key
+	Netprofile           types.String `tfsdk:"netprofile"`
+	Protocolviolations   types.String `tfsdk:"protocolviolations"`
+	Serverdomainname     types.String `tfsdk:"serverdomainname"`
+	Serverip             types.String `tfsdk:"serverip"`
+	Serverport           types.Int64  `tfsdk:"serverport"`
+	Sslinterception      types.String `tfsdk:"sslinterception"`
+	Streamanalytics      types.String `tfsdk:"streamanalytics"`
+	Subscriberlog        types.String `tfsdk:"subscriberlog"`
+	Syslogcompliance     types.String `tfsdk:"syslogcompliance"`
+	Tcp                  types.String `tfsdk:"tcp"`
+	Tcpprofilename       types.String `tfsdk:"tcpprofilename"`
+	Timezone             types.String `tfsdk:"timezone"`
+	Transport            types.String `tfsdk:"transport"`
+	Urlfiltering         types.String `tfsdk:"urlfiltering"`
+	Userdefinedauditlog  types.String `tfsdk:"userdefinedauditlog"`
 
 	// Read-only (GET-only) metadata from the NITRO doc read-only set
 	// (zion73x_readonly/auditsyslogaction.json). Never settable; populated from GET.
@@ -112,18 +110,10 @@ func AuditsyslogactionDataSourceSchema() schema.Schema {
 				Description: "Time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the syslog server if the last query failed.",
 			},
 			"httpauthtoken": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.",
-			},
-			"httpauthtoken_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorization header is required to be of the form - Splunk <auth-token>.",
-			},
-			"httpauthtoken_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a httpauthtoken_wo update.",
 			},
 			"httpendpointurl": schema.StringAttribute{
 				Optional:    true,
@@ -332,11 +322,8 @@ func auditsyslogactionDataSourceSetAttrFromGet(ctx context.Context, data *Audits
 		data.Loglevel = types.SetNull(types.StringType)
 	}
 
-	// httpauthtoken / httpauthtoken_wo(+version) are write-only/secret inputs the
-	// GET never returns -> Null.
+	// httpauthtoken is a secret input the GET never returns -> Null.
 	data.Httpauthtoken = types.StringNull()
-	data.HttpauthtokenWo = types.StringNull()
-	data.HttpauthtokenWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Ip = utils.MapGetString(g, "ip")

@@ -46,11 +46,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `hits` - Number of hits.
 * `undefhits` - Number of Undef hits.
 * `priority` - Specifies the priority of the policy.
-
-## Import
-
-An autoscalepolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_autoscalepolicy.tf_autoscalepolicy my_autoscalepolicy
-```

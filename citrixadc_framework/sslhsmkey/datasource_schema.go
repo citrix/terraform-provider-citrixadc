@@ -19,15 +19,13 @@ import (
 // schema reflection requires this model to have exactly the attributes the
 // data-source schema declares, which is why it cannot reuse the resource model.
 type SslhsmkeyDataSourceModel struct {
-	Id                types.String `tfsdk:"id"`
-	Hsmkeyname        types.String `tfsdk:"hsmkeyname"` // Required lookup key
-	Hsmtype           types.String `tfsdk:"hsmtype"`
-	Key               types.String `tfsdk:"key"`
-	Keystore          types.String `tfsdk:"keystore"`
-	Password          types.String `tfsdk:"password"`
-	PasswordWo        types.String `tfsdk:"password_wo"`
-	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
-	Serialnum         types.String `tfsdk:"serialnum"`
+	Id         types.String `tfsdk:"id"`
+	Hsmkeyname types.String `tfsdk:"hsmkeyname"` // Required lookup key
+	Hsmtype    types.String `tfsdk:"hsmtype"`
+	Key        types.String `tfsdk:"key"`
+	Keystore   types.String `tfsdk:"keystore"`
+	Password   types.String `tfsdk:"password"`
+	Serialnum  types.String `tfsdk:"serialnum"`
 
 	// Read-only (GET-only) attributes from the NITRO doc read-only set
 	// (zion73x_readonly/sslhsmkey.json). Never settable; populated from GET.
@@ -65,16 +63,6 @@ func SslhsmkeyDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "Password for a partition. Applies only to SafeNet HSM.",
 			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Password for a partition. Applies only to SafeNet HSM.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
-			},
 			"serialnum": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -109,11 +97,8 @@ func sslhsmkeyDataSourceSetAttrFromGet(ctx context.Context, data *SslhsmkeyDataS
 	data.Keystore = utils.MapGetString(g, "keystore")
 	data.Serialnum = utils.MapGetString(g, "serialnum")
 
-	// password / password_wo / password_wo_version are write-only secret
-	// inputs the GET never returns -> Null.
+	// password is a secret input the GET never returns -> Null.
 	data.Password = types.StringNull()
-	data.PasswordWo = types.StringNull()
-	data.PasswordWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.State = utils.MapGetString(g, "state")

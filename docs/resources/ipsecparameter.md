@@ -37,3 +37,12 @@ resource "citrixadc_ipsecparameter" "tf_ipsecparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the ipsecparameter. It is a unique string prefixed with `tf-ipsecparameter-` attribute.
+
+
+## Import
+
+A ipsecparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_ipsecparameter.tf_ipsecparameter ipsecparameter-config
+```

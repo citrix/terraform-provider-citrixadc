@@ -33,8 +33,6 @@ type PolicyurlsetDataSourceModel struct {
 	Rowseparator        types.String `tfsdk:"rowseparator"`
 	Subdomainexactmatch types.Bool   `tfsdk:"subdomainexactmatch"`
 	Url                 types.String `tfsdk:"url"`
-	UrlWo               types.String `tfsdk:"url_wo"`
-	UrlWoVersion        types.Int64  `tfsdk:"url_wo_version"`
 
 	// Read-only (GET-only) attributes from the NITRO doc read-only set
 	// (zion73x_readonly/policyurlset.json). Never settable; populated from GET.
@@ -101,18 +99,10 @@ func PolicyurlsetDataSourceSchema() schema.Schema {
 				Description: "Force exact subdomain matching, ex. given an entry 'google.com' in the urlset, a request to 'news.google.com' won't match, if subdomainExactMatch is set.",
 			},
 			"url": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "URL (protocol, host, path and file name) from where the CSV (comma separated file) file will be imported or exported. Each record/line will one entry within the urlset. The first field contains the URL pattern, subsequent fields contains the metadata, if available. HTTP, HTTPS and FTP protocols are supported. NOTE: The operation fails if the destination HTTPS server requires client certificate authentication for access.",
-			},
-			"url_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "URL (protocol, host, path and file name) from where the CSV (comma separated file) file will be imported or exported. Each record/line will one entry within the urlset. The first field contains the URL pattern, subsequent fields contains the metadata, if available. HTTP, HTTPS and FTP protocols are supported. NOTE: The operation fails if the destination HTTPS server requires client certificate authentication for access.",
-			},
-			"url_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a url_wo update.",
 			},
 
 			// Read-only (GET-only) metadata surfaced by the data source
@@ -150,11 +140,8 @@ func policyurlsetDataSourceSetAttrFromGet(ctx context.Context, data *Policyurlse
 	data.Rowseparator = utils.MapGetString(g, "rowseparator")
 	data.Subdomainexactmatch = utils.MapGetBool(g, "subdomainexactmatch")
 
-	// url / url_wo / url_wo_version are write-only secret / action-only inputs the
-	// GET never returns -> Null.
+	// url is a secret input the GET never returns -> Null.
 	data.Url = types.StringNull()
-	data.UrlWo = types.StringNull()
-	data.UrlWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Patterncount = utils.MapGetInt64(g, "patterncount")

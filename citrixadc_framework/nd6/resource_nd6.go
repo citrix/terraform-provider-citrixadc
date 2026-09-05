@@ -3,11 +3,14 @@ package nd6
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -26,7 +29,48 @@ type Nd6Resource struct {
 }
 
 func (r *Nd6Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// nd6 has no single-key GET endpoint; readNd6FromApi matches the enumerated
+	// array on (neighbor, td, nodeid). A bare passthrough would populate only id,
+	// leaving those key attributes null so Read finds nothing and drops the
+	// resource. Parse the composite id "neighbor,td,nodeid" into the key
+	// attributes. td/nodeid default to 0, so a legacy neighbor-only id (the SDK v2
+	// format) is still accepted. neighbor is an IPv6 address (colons, no commas).
+	parts := strings.Split(req.ID, ",")
+	neighbor := parts[0]
+	var td, nodeid int64
+	if len(parts) == 3 {
+		var err error
+		if td, err = strconv.ParseInt(parts[1], 10, 64); err != nil {
+			resp.Diagnostics.AddError("Invalid import ID for nd6", fmt.Sprintf("td component %q is not an integer in ID %q", parts[1], req.ID))
+			return
+		}
+		if nodeid, err = strconv.ParseInt(parts[2], 10, 64); err != nil {
+			resp.Diagnostics.AddError("Invalid import ID for nd6", fmt.Sprintf("nodeid component %q is not an integer in ID %q", parts[2], req.ID))
+			return
+		}
+	} else if len(parts) != 1 {
+		resp.Diagnostics.AddError(
+			"Invalid import ID for nd6",
+			fmt.Sprintf("Expected import ID in the format \"neighbor,td,nodeid\" (or just \"neighbor\"), got %q", req.ID),
+		)
+		return
+	}
+	// The default td/nodeid (0) is omitted from NITRO's GET, so a freshly-created
+	// resource holds them as null in state. Seed the same shape here (0 -> null)
+	// so the imported state matches; readNd6FromApi treats null as 0 when matching
+	// and reconciles any non-zero value from the GET response afterward.
+	tdAttr := types.Int64Null()
+	if td != 0 {
+		tdAttr = types.Int64Value(td)
+	}
+	nodeidAttr := types.Int64Null()
+	if nodeid != 0 {
+		nodeidAttr = types.Int64Value(nodeid)
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("neighbor"), types.StringValue(neighbor))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("td"), tdAttr)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("nodeid"), nodeidAttr)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(fmt.Sprintf("%s,%d,%d", neighbor, td, nodeid)))...)
 }
 
 func (r *Nd6Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

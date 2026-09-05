@@ -69,11 +69,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `lastupdate` - Last update time.
 * `nextupdate` - Next update time.
 * `daystoexpiration` - Number of days remaining for the CRL to expire.
-
-## Import
-
-A sslcrl can be imported using its crlname, e.g.
-
-```shell
-terraform import citrixadc_sslcrl.tf_sslcrl tf_sslcrl
-```

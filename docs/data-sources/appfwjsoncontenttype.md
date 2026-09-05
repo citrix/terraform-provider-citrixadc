@@ -39,11 +39,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `builtin` - Flag to determine if jsoncontenttype is built-in or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A appfwjsoncontenttype can be imported using its jsoncontenttypevalue, e.g.
-
-```shell
-terraform import citrixadc_appfwjsoncontenttype.tf_appfwjsoncontenttype application/json
-```

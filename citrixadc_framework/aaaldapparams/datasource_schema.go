@@ -14,30 +14,28 @@ import (
 // expose the FULL GET projection: the read/write attributes (as Computed
 // outputs) AND the read-only attributes the resource deliberately omits.
 type AaaldapparamsDataSourceModel struct {
-	Id                          types.String `tfsdk:"id"`
-	Authtimeout                 types.Int64  `tfsdk:"authtimeout"`
-	Defaultauthenticationgroup  types.String `tfsdk:"defaultauthenticationgroup"`
-	Groupattrname               types.String `tfsdk:"groupattrname"`
-	Groupnameidentifier         types.String `tfsdk:"groupnameidentifier"`
-	Groupsearchattribute        types.String `tfsdk:"groupsearchattribute"`
-	Groupsearchfilter           types.String `tfsdk:"groupsearchfilter"`
-	Groupsearchsubattribute     types.String `tfsdk:"groupsearchsubattribute"`
-	Ldapbase                    types.String `tfsdk:"ldapbase"`
-	Ldapbinddn                  types.String `tfsdk:"ldapbinddn"`
-	Ldapbinddnpassword          types.String `tfsdk:"ldapbinddnpassword"`
-	LdapbinddnpasswordWo        types.String `tfsdk:"ldapbinddnpassword_wo"`
-	LdapbinddnpasswordWoVersion types.Int64  `tfsdk:"ldapbinddnpassword_wo_version"`
-	Ldaploginname               types.String `tfsdk:"ldaploginname"`
-	Maxnestinglevel             types.Int64  `tfsdk:"maxnestinglevel"`
-	Nestedgroupextraction       types.String `tfsdk:"nestedgroupextraction"`
-	Passwdchange                types.String `tfsdk:"passwdchange"`
-	Searchfilter                types.String `tfsdk:"searchfilter"`
-	Sectype                     types.String `tfsdk:"sectype"`
-	Serverip                    types.String `tfsdk:"serverip"`
-	Serverport                  types.Int64  `tfsdk:"serverport"`
-	Ssonameattribute            types.String `tfsdk:"ssonameattribute"`
-	Subattributename            types.String `tfsdk:"subattributename"`
-	Svrtype                     types.String `tfsdk:"svrtype"`
+	Id                         types.String `tfsdk:"id"`
+	Authtimeout                types.Int64  `tfsdk:"authtimeout"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Groupattrname              types.String `tfsdk:"groupattrname"`
+	Groupnameidentifier        types.String `tfsdk:"groupnameidentifier"`
+	Groupsearchattribute       types.String `tfsdk:"groupsearchattribute"`
+	Groupsearchfilter          types.String `tfsdk:"groupsearchfilter"`
+	Groupsearchsubattribute    types.String `tfsdk:"groupsearchsubattribute"`
+	Ldapbase                   types.String `tfsdk:"ldapbase"`
+	Ldapbinddn                 types.String `tfsdk:"ldapbinddn"`
+	Ldapbinddnpassword         types.String `tfsdk:"ldapbinddnpassword"`
+	Ldaploginname              types.String `tfsdk:"ldaploginname"`
+	Maxnestinglevel            types.Int64  `tfsdk:"maxnestinglevel"`
+	Nestedgroupextraction      types.String `tfsdk:"nestedgroupextraction"`
+	Passwdchange               types.String `tfsdk:"passwdchange"`
+	Searchfilter               types.String `tfsdk:"searchfilter"`
+	Sectype                    types.String `tfsdk:"sectype"`
+	Serverip                   types.String `tfsdk:"serverip"`
+	Serverport                 types.Int64  `tfsdk:"serverport"`
+	Ssonameattribute           types.String `tfsdk:"ssonameattribute"`
+	Subattributename           types.String `tfsdk:"subattributename"`
+	Svrtype                    types.String `tfsdk:"svrtype"`
 
 	// Read-only (GET-only) attributes from the NITRO read-only set
 	// (zion73x_readonly/aaaldapparams.json). Never settable; populated from GET.
@@ -103,16 +101,6 @@ func AaaldapparamsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "Password for binding to the LDAP server.",
-			},
-			"ldapbinddnpassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Password for binding to the LDAP server.",
-			},
-			"ldapbinddnpassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a ldapbinddnpassword_wo update.",
 			},
 			"ldaploginname": schema.StringAttribute{
 				Optional:    true,
@@ -221,11 +209,8 @@ func aaaldapparamsDataSourceSetAttrFromGet(ctx context.Context, data *Aaaldappar
 	data.Subattributename = utils.MapGetString(g, "subattributename")
 	data.Svrtype = utils.MapGetString(g, "svrtype")
 
-	// ldapbinddnpassword / _wo(+version) are write-only secrets the GET never
-	// returns -> Null.
+	// ldapbinddnpassword is a secret input the GET never returns -> Null.
 	data.Ldapbinddnpassword = types.StringNull()
-	data.LdapbinddnpasswordWo = types.StringNull()
-	data.LdapbinddnpasswordWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Ldapcontimeout = utils.MapGetInt64(g, "ldapcontimeout")

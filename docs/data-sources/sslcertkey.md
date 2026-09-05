@@ -90,12 +90,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `certkeydigest` - Digest (fingerprint) of the certificate.
 * `certificatesource` - Source of the certificate.
 * `certkeystatus` - Status of the certificate-key pair.
-
-
-## Import
-
-A sslcertkey can be imported using its certkey, e.g.
-
-```shell
-terraform import citrixadc_sslcertkey.tf_sslcertkey tf_sslcertkey
-```

@@ -25,3 +25,12 @@ resource "citrixadc_appfwpolicylabel" "demo_appfwpolicylabel" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwpolicylabel`. It has the same value as the `labelname` attribute.
+
+
+## Import
+
+A appfwpolicylabel can be imported using its labelname, e.g.
+
+```shell
+terraform import citrixadc_appfwpolicylabel.tf_appfwpolicylabel <labelname>
+```

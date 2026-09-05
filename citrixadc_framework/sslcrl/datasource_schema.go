@@ -20,31 +20,29 @@ import (
 // reflection requires this model to have exactly the attributes the data-source
 // schema declares, which is why it cannot reuse the resource model.
 type SslcrlDataSourceModel struct {
-	Id                types.String `tfsdk:"id"`
-	Basedn            types.String `tfsdk:"basedn"`
-	Binary            types.String `tfsdk:"binary"`
-	Binddn            types.String `tfsdk:"binddn"`
-	Cacert            types.String `tfsdk:"cacert"`
-	Cacertfile        types.String `tfsdk:"cacertfile"`
-	Cakeyfile         types.String `tfsdk:"cakeyfile"`
-	Crlname           types.String `tfsdk:"crlname"` // Required lookup key
-	Crlpath           types.String `tfsdk:"crlpath"`
-	Day               types.Int64  `tfsdk:"day"`
-	Gencrl            types.String `tfsdk:"gencrl"`
-	Indexfile         types.String `tfsdk:"indexfile"`
-	Inform            types.String `tfsdk:"inform"`
-	Interval          types.String `tfsdk:"interval"`
-	Method            types.String `tfsdk:"method"`
-	Password          types.String `tfsdk:"password"`
-	PasswordWo        types.String `tfsdk:"password_wo"`
-	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
-	Port              types.Int64  `tfsdk:"port"`
-	Refresh           types.String `tfsdk:"refresh"`
-	Revoke            types.String `tfsdk:"revoke"`
-	Scope             types.String `tfsdk:"scope"`
-	Server            types.String `tfsdk:"server"`
-	Time              types.String `tfsdk:"time"`
-	Url               types.String `tfsdk:"url"`
+	Id         types.String `tfsdk:"id"`
+	Basedn     types.String `tfsdk:"basedn"`
+	Binary     types.String `tfsdk:"binary"`
+	Binddn     types.String `tfsdk:"binddn"`
+	Cacert     types.String `tfsdk:"cacert"`
+	Cacertfile types.String `tfsdk:"cacertfile"`
+	Cakeyfile  types.String `tfsdk:"cakeyfile"`
+	Crlname    types.String `tfsdk:"crlname"` // Required lookup key
+	Crlpath    types.String `tfsdk:"crlpath"`
+	Day        types.Int64  `tfsdk:"day"`
+	Gencrl     types.String `tfsdk:"gencrl"`
+	Indexfile  types.String `tfsdk:"indexfile"`
+	Inform     types.String `tfsdk:"inform"`
+	Interval   types.String `tfsdk:"interval"`
+	Method     types.String `tfsdk:"method"`
+	Password   types.String `tfsdk:"password"`
+	Port       types.Int64  `tfsdk:"port"`
+	Refresh    types.String `tfsdk:"refresh"`
+	Revoke     types.String `tfsdk:"revoke"`
+	Scope      types.String `tfsdk:"scope"`
+	Server     types.String `tfsdk:"server"`
+	Time       types.String `tfsdk:"time"`
+	Url        types.String `tfsdk:"url"`
 
 	// Read-only (GET-only) CRL metadata from the NITRO doc read-only set
 	// (zion73x_readonly/sslcrl.json). Never settable; populated from GET.
@@ -138,16 +136,6 @@ func SslcrlDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Password to access the CRL in the LDAP repository if access to the LDAP repository is restricted or anonymous access is not allowed.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
@@ -257,11 +245,8 @@ func sslcrlDataSourceSetAttrFromGet(ctx context.Context, data *SslcrlDataSourceM
 	data.Time = utils.MapGetString(g, "time")
 	data.Url = utils.MapGetString(g, "url")
 
-	// password / password_wo(+version) are write-only secret inputs the GET
-	// never returns -> Null.
+	// password is a secret input the GET never returns -> Null.
 	data.Password = types.StringNull()
-	data.PasswordWo = types.StringNull()
-	data.PasswordWoVersion = types.Int64Null()
 
 	// Read-only CRL metadata.
 	data.Flags = utils.MapGetInt64(g, "flags")

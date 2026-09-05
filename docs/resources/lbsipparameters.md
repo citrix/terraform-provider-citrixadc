@@ -38,3 +38,12 @@ resource "citrixadc_lbsipparameters" "tf_lbsipparameters" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the lbsipparameters. It is a unique string prefixed with "tf_lbsipparameters"
+
+
+## Import
+
+A lbsipparameters can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_lbsipparameters.tf_lbsipparameters lbsipparameters-config
+```

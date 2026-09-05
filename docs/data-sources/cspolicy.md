@@ -48,11 +48,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `labeltype` - The invocation type (for example `reqvserver`, `resvserver`, `policylabel`).
 * `activepolicy` - Indicates whether the policy is bound or not.
 * `boundto` - Location where the policy is bound.
-
-## Import
-
-A cspolicy can be imported using its policyname, e.g.
-
-```shell
-terraform import citrixadc_cspolicy.tf_cspolicy my_cspolicy
-```

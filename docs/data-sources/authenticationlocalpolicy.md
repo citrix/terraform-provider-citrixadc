@@ -40,11 +40,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationlocalpolicy` resource). They are GET-only/Computed and are `null` when the appliance omits them.
 
 * `reqaction` - The name of the RADIUS action the policy uses.
-
-## Import
-
-A authenticationlocalpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy my_local_policy
-```

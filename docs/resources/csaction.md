@@ -25,6 +25,7 @@ resource "citrixadc_csaction" "tf_csaction" {
 * `targetvserver` - (Optional) Name of the VPN, GSLB or Authentication virtual server to which the content is switched.
 * `targetvserverexpr` - (Optional) Expression that evaluates to the target load balancing virtual server to which the content is switched.
 * `comment` - (Optional) Comment associated with this content switching action.
+* `newname` - (Optional) New name for the content switching action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
 
 
 ## Attribute Reference

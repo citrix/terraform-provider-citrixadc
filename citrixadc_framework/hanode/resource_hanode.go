@@ -16,6 +16,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &HanodeResource{}
+var _ resource.ResourceWithUpgradeState = &HanodeResource{}
 var _ resource.ResourceWithConfigure = (*HanodeResource)(nil)
 var _ resource.ResourceWithImportState = (*HanodeResource)(nil)
 
@@ -45,11 +46,35 @@ func (r *HanodeResource) Configure(ctx context.Context, req resource.ConfigureRe
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// rpcnodepassword_wo_version tracker to 1 when the stored state has no value for
+// it, so the schema Default does not plan a spurious "null -> 1" update (which,
+// because the version tracker is RequiresReplace, would otherwise force a
+// spurious replace) after upgrading the provider. Paired with the schema Version
+// bump so the upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *HanodeResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data HanodeResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.RpcnodepasswordWoVersion.IsNull() {
+			data.RpcnodepasswordWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
+}
+
 func (r *HanodeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data HanodeResourceModel
+	var data, config HanodeResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -58,6 +83,8 @@ func (r *HanodeResource) Create(ctx context.Context, req resource.CreateRequest,
 	tflog.Debug(ctx, "Creating hanode resource")
 
 	hanode := hanodeGetThePayloadFromthePlan(ctx, &data)
+	// Overlay write-only attributes (rpcnodepassword_wo) from config onto the payload.
+	hanodeGetThePayloadFromtheConfig(ctx, &config, &hanode)
 
 	// The hanode id is the resource identifier. Self node (id == 0) has no name in the
 	// NITRO URL and is configured via UpdateUnnamedResource; peer nodes (id 1-64) are

@@ -71,11 +71,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `ifaces` - Interfaces on which non-multicast is not seen.
 * `hasyncfailurereason` - Displays the reason for HA SYNC Failure.
 * `secureheartbeatstate` - Displays the current state of HA secure heartbeats (`ENABLED`, `DISABLED`).
-
-## Import
-
-A hanode can be imported using its hanode_id, e.g.
-
-```shell
-terraform import citrixadc_hanode.local_node 0
-```

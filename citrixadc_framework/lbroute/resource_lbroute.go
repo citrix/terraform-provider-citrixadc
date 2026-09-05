@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -27,7 +29,24 @@ type LbrouteResource struct {
 }
 
 func (r *LbrouteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// lbroute has no single-key GET endpoint; Read matches the enumerated array on
+	// (network, netmask, gatewayname). A bare passthrough would populate only id,
+	// leaving those key attributes null so Read finds nothing and drops the
+	// resource. Parse the composite id "network,netmask,gatewayname" (the same
+	// format Create/Read set as the canonical id) into the key attributes so Read
+	// can locate the route. SplitN keeps a comma-bearing gatewayname intact.
+	parts := strings.SplitN(req.ID, ",", 3)
+	if len(parts) != 3 {
+		resp.Diagnostics.AddError(
+			"Invalid import ID for lbroute",
+			fmt.Sprintf("Expected import ID in the format \"network,netmask,gatewayname\", got %q", req.ID),
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("network"), types.StringValue(parts[0]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("netmask"), types.StringValue(parts[1]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("gatewayname"), types.StringValue(parts[2]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(req.ID))...)
 }
 
 func (r *LbrouteResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

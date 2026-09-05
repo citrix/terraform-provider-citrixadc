@@ -50,11 +50,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `allowedmanagementinterfacekind` - Value of allowed interface which can be inherited from `Global`, `Group` or `User` (`User`, `Group`, `Global`, `Climode`).
 * `lastpwdchangetimestamp` - Timestamp for the last password change for the system user.
 * `daystoexpirekind` - From where the daystoexpire value has been inherited (`User`, `Group`, `Global`, `Climode`).
-
-## Import
-
-A systemuser can be imported using its username, e.g.
-
-```shell
-terraform import citrixadc_systemuser.tf_user tf_user
-```

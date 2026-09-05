@@ -32,3 +32,12 @@ resource "citrixadc_ssldhparam" "foo" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the ssldhparam. It has the same value as the `dhfile` attribute.
+
+
+## Import
+
+A ssldhparam can be imported using its dhfile, e.g.
+
+```shell
+terraform import citrixadc_ssldhparam.tf_ssldhparam <dhfile>
+```

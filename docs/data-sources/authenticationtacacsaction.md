@@ -70,12 +70,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `success` - Number of successful authentications.
 * `failure` - Number of failed authentications.
-
-
-## Import
-
-A authenticationtacacsaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationtacacsaction.tf_tacacsaction my_tacacsaction
-```

@@ -25,8 +25,6 @@ type SystemuserDataSourceModel struct {
 	Logging                    types.String `tfsdk:"logging"`
 	Maxsession                 types.Int64  `tfsdk:"maxsession"`
 	Password                   types.String `tfsdk:"password"`
-	PasswordWo                 types.String `tfsdk:"password_wo"`
-	PasswordWoVersion          types.Int64  `tfsdk:"password_wo_version"`
 	Promptstring               types.String `tfsdk:"promptstring"`
 	Timeout                    types.Int64  `tfsdk:"timeout"`
 	Username                   types.String `tfsdk:"username"` // Required lookup key
@@ -76,18 +74,10 @@ func SystemuserDataSourceSchema() schema.Schema {
 				Description: "Maximum number of client connection allowed per user",
 			},
 			"password": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password for the system user. Can include any ASCII character.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password for the system user. Can include any ASCII character.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"promptstring": schema.StringAttribute{
 				Optional:    true,
@@ -182,8 +172,6 @@ func systemuserDataSourceSetAttrFromGet(ctx context.Context, data *SystemuserDat
 	// never returned by GET -> Null.
 	data.Hashedpassword = utils.MapGetString(g, "password")
 	data.Password = types.StringNull()
-	data.PasswordWo = types.StringNull()
-	data.PasswordWoVersion = types.Int64Null()
 
 	// Bindings are fetched via a separate NITRO endpoint; the base GET does not
 	// return them -> typed Null.

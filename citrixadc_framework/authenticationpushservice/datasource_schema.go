@@ -19,14 +19,12 @@ import (
 // pushservicestatus, trustservice, pushcloudserverstatus, signingkeyname,
 // signingkey). Every non-key attribute is Computed.
 type AuthenticationpushserviceDataSourceModel struct {
-	Id                    types.String `tfsdk:"id"`
-	Clientid              types.String `tfsdk:"clientid"`
-	Clientsecret          types.String `tfsdk:"clientsecret"`
-	ClientsecretWo        types.String `tfsdk:"clientsecret_wo"`
-	ClientsecretWoVersion types.Int64  `tfsdk:"clientsecret_wo_version"`
-	Customerid            types.String `tfsdk:"customerid"`
-	Name                  types.String `tfsdk:"name"`
-	Refreshinterval       types.Int64  `tfsdk:"refreshinterval"`
+	Id              types.String `tfsdk:"id"`
+	Clientid        types.String `tfsdk:"clientid"`
+	Clientsecret    types.String `tfsdk:"clientsecret"`
+	Customerid      types.String `tfsdk:"customerid"`
+	Name            types.String `tfsdk:"name"`
+	Refreshinterval types.Int64  `tfsdk:"refreshinterval"`
 
 	// Read-only (GET-only) metadata from the NITRO doc read-only set
 	// (zion73x_readonly/authenticationpushservice.json). Never settable;
@@ -56,18 +54,10 @@ func AuthenticationpushserviceDataSourceSchema() schema.Schema {
 				Description: "Unique identity for communicating with Citrix Push server in cloud.",
 			},
 			"clientsecret": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Unique secret for communicating with Citrix Push server in cloud.",
-			},
-			"clientsecret_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Unique secret for communicating with Citrix Push server in cloud.",
-			},
-			"clientsecret_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"customerid": schema.StringAttribute{
 				Optional:    true,
@@ -149,11 +139,8 @@ func authenticationpushserviceDataSourceSetAttrFromGet(ctx context.Context, data
 	data.Customerid = utils.MapGetString(g, "customerid")
 	data.Refreshinterval = utils.MapGetInt64(g, "refreshinterval")
 
-	// clientsecret / clientsecret_wo / clientsecret_wo_version are write-only
-	// secrets and Terraform-only trackers the GET never returns -> Null.
+	// clientsecret is a secret input the GET never returns -> Null.
 	data.Clientsecret = types.StringNull()
-	data.ClientsecretWo = types.StringNull()
-	data.ClientsecretWoVersion = types.Int64Null()
 
 	// Read-only metadata. NITRO returns the namespace key capitalized.
 	data.Namespace = utils.MapGetString(g, "Namespace")

@@ -39,8 +39,6 @@ type SslCertKeyDataSourceModel struct {
 	DeleteFromDevice            types.Bool   `tfsdk:"deletefromdevice"`
 	DeleteCertKeyFilesOnRemoval types.String `tfsdk:"deletecertkeyfilesonremoval"`
 	Passplain                   types.String `tfsdk:"passplain"`
-	PassplainWo                 types.String `tfsdk:"passplain_wo"`
-	PassplainWoVersion          types.Int64  `tfsdk:"passplain_wo_version"`
 	CertHash                    types.String `tfsdk:"cert_hash"`
 	KeyHash                     types.String `tfsdk:"key_hash"`
 
@@ -141,16 +139,9 @@ func SslCertKeyDataSourceSchema() schema.Schema {
 				Description: "Delete certificate and key files when the certificate is removed.",
 			},
 			"passplain": schema.StringAttribute{
+				Sensitive:   true,
 				Computed:    true,
 				Description: "Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format.",
-			},
-			"passplain_wo": schema.StringAttribute{
-				Computed:    true,
-				Description: "Pass phrase used to encrypt the private-key. Required when adding an encrypted private-key in PEM format.",
-			},
-			"passplain_wo_version": schema.Int64Attribute{
-				Description: "Increment this version to signal a passplain_wo update.",
-				Computed:    true,
 			},
 			"cert_hash": schema.StringAttribute{
 				Optional:    true,
@@ -293,14 +284,10 @@ func sslcertkeyDataSourceSetAttrFromGet(ctx context.Context, data *SslCertKeyDat
 	data.DeleteFromDevice = utils.MapGetBool(g, "deletefromdevice")
 	data.DeleteCertKeyFilesOnRemoval = utils.MapGetString(g, "deletecertkeyfilesonremoval")
 
-	// password / passplain / passplain_wo(+version) / nodomaincheck are
-	// write-only or action-only inputs the GET never returns -> Null.
-	// cert_hash / key_hash are Optional config-side helpers -> left as configured.
+	// passplain is a secret input the GET never returns -> Null.
 	data.Password = types.BoolNull()
 	data.NoDomainCheck = types.BoolNull()
 	data.Passplain = types.StringNull()
-	data.PassplainWo = types.StringNull()
-	data.PassplainWoVersion = types.Int64Null()
 
 	// Read-only cert metadata.
 	data.Signaturealg = utils.MapGetString(g, "signaturealg")

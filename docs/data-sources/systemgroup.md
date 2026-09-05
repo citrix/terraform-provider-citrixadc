@@ -48,11 +48,3 @@ In addition to the arguments, the following attributes are available:
 * `timeout` - CLI session inactivity timeout, in seconds. If Restrictedtimeout argument of system parameter is enabled, Timeout can have values in the range [300-86400] seconds. If Restrictedtimeout argument of system parameter is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.
 * `warnpriorndays` - Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
 * `id` - The id of the systemgroup. It has the same value as the `groupname` attribute.
-
-## Import
-
-A systemgroup can be imported using its groupname, e.g.
-
-```shell
-terraform import citrixadc_systemgroup.example my_systemgroup
-```

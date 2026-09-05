@@ -35,7 +35,7 @@ func (d *HasecureheartbeatsDataSourceType) Schema(ctx context.Context, req datas
 }
 
 func (d *HasecureheartbeatsDataSourceType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data HasecureheartbeatsResourceModel
+	var data HasecureheartbeatsDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *HasecureheartbeatsDataSourceType) Read(ctx context.Context, req datasou
 		return
 	}
 
-	hasecureheartbeatsSetAttrFromGet(ctx, &data, getResponseData)
+	hasecureheartbeatsDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

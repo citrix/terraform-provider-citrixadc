@@ -27,6 +27,8 @@ resource "citrixadc_mcpprofile" "tf_mcpprofile" {
 * `tokenorapi` - (Optional) If you like to insert Bearer or API token, configure this parameter with full header.
 * `comment` - (Optional) Any information about the MCP profile.
 * `insertheaderinclientrequest` - (Optional) Whether mcp_token_or_api configuration will be used for MCP requests coming from client. Possible values: `ENABLED`, `DISABLED`. Default: `DISABLED`.
+* `tokenorapi_wo` - (Optional, WriteOnly) If you like to insert Bearer or API token, configure this parameter with full header. (write-only ephemeral variant of tokenorapi)
+* `tokenorapi_wo_version` - (Optional) Increment this version to signal a tokenorapi_wo update.
 
 ## Attribute Reference
 

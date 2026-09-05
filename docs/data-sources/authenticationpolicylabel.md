@@ -49,11 +49,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `flowtype` - Flowtype of the bound authentication policy.
 * `description` - Description of the policylabel.
-
-## Import
-
-A authenticationpolicylabel can be imported using its labelname, e.g.
-
-```shell
-terraform import citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel my_authenticationpolicylabel
-```

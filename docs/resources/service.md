@@ -87,6 +87,9 @@ resource "citrixadc_service" "tf_service" {
 * `disabled_poll_delay` - (Optional) Time period to wait before the first poll for the disabled state read.
 * `disabled_poll_interval` - (Optional) Time period for disabled state read poll interval between tries.
 * `quicprofilename` - (Optional) Name of QUIC profile which will be attached to the service.
+* `aigwprofilename` - (Optional) Name of the AIGW Profile that contains AIGW Endpoint setting for the service.
+* `mcpprofilename` - (Optional) Name of MCP profile which will be attached to the service.
+* `wasmmodule` - (Optional) Name of the WASM module to bind to this service.
 
 
 ## Attribute Reference

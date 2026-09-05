@@ -46,11 +46,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `version` - Build version of the backup file(*.tgz).
 * `createdby` - Name of user who created the backup file(*.tgz).
 * `ipaddress` - Ip of Citrix ADC box where the backup file(*.tgz) was created.
-
-## Import
-
-A systembackup can be imported using its filename, e.g.
-
-```shell
-terraform import citrixadc_systembackup.tf_systembackup my_backup.tgz
-```

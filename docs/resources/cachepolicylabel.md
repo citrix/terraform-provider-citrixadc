@@ -20,6 +20,7 @@ resource "citrixadc_cachepolicylabel" "tf_policylabel" {
 
 * `evaluates` - (Required) When to evaluate policies bound to this label: request-time or response-time.
 * `labelname` - (Required) Name for the label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Can be changed after the label is created.
+* `newname` - (Optional) New name for the cache-policy label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 
 ## Attribute Reference
 

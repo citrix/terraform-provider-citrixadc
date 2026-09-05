@@ -65,6 +65,7 @@ func NscapacityDataSourceSchema() schema.Schema {
 			"password": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Password to use when authenticating with ADM Agent for LAS licensing.",
 			},
 			"platform": schema.StringAttribute{

@@ -38,6 +38,8 @@ resource "citrixadc_sslprofile_sslcertkey_binding" "tf_binding" {
 * `name` - (Required) Name of the SSL profile.
 * `sslicacertkey` - (Required) The certkey (CA certificate + private key) to be used for SSL interception.
 * `cipherpriority` - (Optional) Priority of the cipher binding.
+* `certkeyname` - (Optional) The certkey (CA certificate + private key) to be bound with profile.
+* `forgingcacertkey` - (Optional) The certkey (CA certificate + private key) to be used for signing Forged Client Certificate.
 
 
 ## Attribute Reference

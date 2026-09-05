@@ -42,12 +42,3 @@ In addition to the arguments, the following attributes are available:
 * `logsessdeletion` - LSN Session deletion will not be logged if disabled.
 * `logsubscrinfo` - Subscriber ID information is logged if option is enabled.
 * `id` - The id of the lsnlogprofile. It has the same value as the `logprofilename` attribute.
-
-
-## Import
-
-A lsnlogprofile can be imported using its logprofilename, e.g.
-
-```shell
-terraform import citrixadc_lsnlogprofile.tf_lsnlogprofile my_lsn_logprofile
-```

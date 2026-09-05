@@ -35,3 +35,12 @@ resource "citrixadc_nslicense" "tf_license" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nslicense. It has the same value as the `license_file` attribute.
+
+
+## Import
+
+A nslicense can be imported using its license_file, e.g.
+
+```shell
+terraform import citrixadc_nslicense.tf_nslicense <license_file>
+```

@@ -42,11 +42,3 @@ In addition to the arguments, the following attributes are available:
 * `sso` - Use single sign-on for the resource that the user is accessing now.
 * `userexpression` - expression that will be evaluated to obtain username for SingleSignOn.
 * `id` - The id of the tmtrafficaction. It has the same value as the `name` attribute.
-
-## Import
-
-A tmtrafficaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_tmtrafficaction.tf_tmtrafficaction my_traffic_action
-```

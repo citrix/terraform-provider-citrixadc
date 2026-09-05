@@ -31,3 +31,12 @@ resource "citrixadc_systemautosaveparam" "tf_systemautosaveparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the systemautosaveparam. Because this is a singleton resource, it has a fixed identifier.
+
+
+## Import
+
+A systemautosaveparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_systemautosaveparam.tf_systemautosaveparam systemautosaveparam-config
+```

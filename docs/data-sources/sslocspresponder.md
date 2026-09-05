@@ -59,12 +59,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `ocspaiarefcount` - No of CA certs referencing this AIA responder.
 * `ocspipaddrstr` - DNS resolved IP address.
 * `port` - Port number on which OCSP Server listens. Range 1 - 65535. `*` in CLI is represented as 65535 in NITRO API.
-
-
-## Import
-
-A sslocspresponder can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_sslocspresponder.tf_sslocspresponder tf_sslocspresponder
-```

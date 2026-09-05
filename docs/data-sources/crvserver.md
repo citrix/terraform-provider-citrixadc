@@ -111,11 +111,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `labelname` - Name of the label invoked.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `nodefaultbindings` - Whether the configuration will have default ssl CIPHER and ECC curve bindings (for example `YES`, `NO`).
-
-## Import
-
-A crvserver can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_crvserver.tf_crvserver my_vserver
-```

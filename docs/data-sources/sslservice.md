@@ -80,11 +80,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `dtlsflag` - Whether DTLS is set or not.
 * `quicflag` - Whether the QUIC transport protocol is used by a virtual server or service.
 * `skipcacertbundle` - Whether all CA_names in this particular CA certificate bundle are sent to the SSL client while requesting a client certificate in an SSL handshake.
-
-## Import
-
-A sslservice can be imported using its servicename, e.g.
-
-```shell
-terraform import citrixadc_sslservice.tf_sslservice tf_service
-```

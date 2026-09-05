@@ -234,11 +234,13 @@ func TestAccHanode_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccHanodeLocal_basic},
 			{
-				Config:                  testAccHanodeLocal_basic,
-				ResourceName:            resAddr,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"masterstatetime"},
+				Config:            testAccHanodeLocal_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// masterstatetime is volatile; rpcnodepassword_wo_version defaults to 1
+				// on create but is a config-only tracker NITRO never returns on import.
+				ImportStateVerifyIgnore: []string{"masterstatetime", "rpcnodepassword_wo_version"},
 			},
 		},
 	})
@@ -392,4 +394,108 @@ func testAccCheckHanodeDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+// --- rpcnodepassword write-only (ephemeral) support (GH #1441) ---
+//
+// rpcnodepassword is create-only (ForceNew) on hanode, so its write-only twin
+// rpcnodepassword_wo pairs with rpcnodepassword_wo_version, and a version bump is
+// RequiresReplace (rotation re-adds the peer node). These exercise a remote peer
+// node and therefore require an HA testbed, matching TestAccHanodeRemote_basic.
+
+// Backward-compatible path: the plain (state-persisted) rpcnodepassword still works.
+const testAccHanodeRemote_rpcnodepassword_backward_compat = `
+	variable "hanode_rpcnodepassword" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_hanode" "remote_node" {
+		hanode_id       = 2
+		ipaddress       = "10.222.74.145"
+		rpcnodepassword = var.hanode_rpcnodepassword
+	}
+`
+
+func TestAccHanodeRemote_rpcnodepassword_backward_compat(t *testing.T) {
+	if adcTestbed != "HA" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	t.Setenv("TF_VAR_hanode_rpcnodepassword", "rpcpass1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanodeRemote_rpcnodepassword_backward_compat,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist("citrixadc_hanode.remote_node", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode.remote_node", "hanode_id", "2"),
+				),
+			},
+		},
+	})
+}
+
+// Ephemeral path: rpcnodepassword_wo (WriteOnly, never persisted) + version tracker.
+// Bumping rpcnodepassword_wo_version forces a replace (rpcnodepassword is create-only).
+const testAccHanodeRemote_rpcnodepassword_wo_step1 = `
+	variable "hanode_rpcnodepassword_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_hanode" "remote_node" {
+		hanode_id                  = 2
+		ipaddress                  = "10.222.74.145"
+		rpcnodepassword_wo         = var.hanode_rpcnodepassword_wo
+		rpcnodepassword_wo_version = 1
+	}
+`
+
+const testAccHanodeRemote_rpcnodepassword_wo_step2 = `
+	variable "hanode_rpcnodepassword_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_hanode" "remote_node" {
+		hanode_id                  = 2
+		ipaddress                  = "10.222.74.145"
+		rpcnodepassword_wo         = var.hanode_rpcnodepassword_wo_2
+		rpcnodepassword_wo_version = 2
+	}
+`
+
+func TestAccHanodeRemote_rpcnodepassword_wo_ephemeral(t *testing.T) {
+	if adcTestbed != "HA" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	t.Setenv("TF_VAR_hanode_rpcnodepassword_wo", "ephem_rpc1")
+	t.Setenv("TF_VAR_hanode_rpcnodepassword_wo_2", "ephem_rpc2")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanodeRemote_rpcnodepassword_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist("citrixadc_hanode.remote_node", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode.remote_node", "rpcnodepassword_wo_version", "1"),
+					// The write-only value must never be persisted in state.
+					resource.TestCheckNoResourceAttr("citrixadc_hanode.remote_node", "rpcnodepassword_wo"),
+				),
+			},
+			{
+				// Bump the version (and value) -> RequiresReplace re-adds the node.
+				Config: testAccHanodeRemote_rpcnodepassword_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist("citrixadc_hanode.remote_node", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode.remote_node", "rpcnodepassword_wo_version", "2"),
+				),
+			},
+		},
+	})
 }

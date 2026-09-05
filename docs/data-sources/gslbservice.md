@@ -98,12 +98,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `gslbsvchealth` - Effective health of the GSLB service.
 * `glsbsvchealthdescr` - Warning message related to the health of the GSLB service.
 * `nodefaultbindings` - Whether the configuration will have default SSL CIPHER and ECC curve bindings. Possible values: `YES`, `NO`.
-
-
-## Import
-
-A gslbservice can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_gslbservice.tf_gslbservice my_gslbservice
-```

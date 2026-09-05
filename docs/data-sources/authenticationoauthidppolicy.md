@@ -52,11 +52,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `hits` - Number of hits.
-
-## Import
-
-A authenticationoauthidppolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationoauthidppolicy.tf_authenticationoauthidppolicy my_oauth_idp_policy
-```

@@ -30,6 +30,7 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 * `edtlosstolerant` - (Optional) Enable/Disable EDT Loss Tolerant feature
 * `edtpmtuddftimeout` - (Optional) DF enforcement timeout for EDTPMTUDDF
 * `edtpmtudrediscovery` - (Optional) Enable/Disable EDT PMTUD Rediscovery
+* `insightonlytodirector` - (Optional) Enable/Disable HDX Insight data to Director even if HDX Insight policy is not configured on Gateway and Network Telemtry policy is enabled on VDA. Default value: ENABLED Possible values = ENABLED, DISABLED
 
 
 ## Attribute Reference
@@ -37,3 +38,12 @@ resource "citrixadc_icaparameter" "tf_icaparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of theicaparameter. It is a unique string prefixed with `tf-icaparameter-`.
+
+
+## Import
+
+A icaparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_icaparameter.tf_icaparameter icaparameter-config
+```

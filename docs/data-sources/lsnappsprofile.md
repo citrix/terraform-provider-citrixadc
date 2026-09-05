@@ -50,11 +50,3 @@ In addition to the arguments, the following attributes are available:
 * `tcpproxy` - Enable TCP proxy, which enables the Citrix ADC to optimize the TCP traffic by using Layer 4 features.
 * `l2info` - Enable l2info by creating natpcbs for LSN, which enables the Citrix ADC to use L2CONN/MBF with LSN.
 * `td` - ID of the traffic domain through which the Citrix ADC sends the outbound traffic after performing LSN. If you do not specify an ID, the ADC sends the outbound traffic through the default traffic domain, which has an ID of 0.
-
-## Import
-
-A lsnappsprofile can be imported using its appsprofilename, e.g.
-
-```shell
-terraform import citrixadc_lsnappsprofile.tf_lsnappsprofile my_lsn_appsprofile
-```

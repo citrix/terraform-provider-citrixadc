@@ -29,3 +29,12 @@ resource "citrixadc_interfacepair" "tf_interfacepair" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the interfacepair. It has the same value as the `interface_id` attribute.
+
+
+## Import
+
+A interfacepair can be imported using its interface_id, e.g.
+
+```shell
+terraform import citrixadc_interfacepair.tf_interfacepair <interface_id>
+```

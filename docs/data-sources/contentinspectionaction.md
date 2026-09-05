@@ -59,11 +59,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `undefhits` - The number of times the action resulted in UNDEF.
 * `builtin` - Flag to determine whether contentinspection action is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A contentinspectionaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_contentinspectionaction.tf_contentinspectionaction my_ci_action
-```

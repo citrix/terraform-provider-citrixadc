@@ -47,12 +47,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `regexforfindingurlinxml` - Patclass having regexes to find the URLs in XML.
 * `additionalreqheaderslist` - Patclass having a list of additional request header names that should transformed.
 * `additionalrespheaderslist` - Patclass having a list of additional response header names that should transformed.
-
-
-## Import
-
-A transformprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_transformprofile.tf_trans_profile tf_trans_profile
-```

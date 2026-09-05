@@ -47,12 +47,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `builtin` - Indicates that the ICA action is a built-in (SYSTEM INTERNAL) type. A list of strings (possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
 * `feature` - The feature to be checked while applying this config.
 * `isdefault` - A value of true is returned if it is a default action.
-
-
-## Import
-
-An icaaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_icaaction.tf_icaaction my_ica_action
-```

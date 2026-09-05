@@ -39,11 +39,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `builtin` - Flag to determine if multipart form contenttype is built-in or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A appfwmultipartformcontenttype can be imported using its multipartformcontenttypevalue, e.g.
-
-```shell
-terraform import citrixadc_appfwmultipartformcontenttype.tf_multipartform date/tf_multipartform
-```

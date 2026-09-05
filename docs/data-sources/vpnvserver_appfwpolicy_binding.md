@@ -33,12 +33,3 @@ In addition to the argument, the following attributes are available:
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction.
 * `priority` - Integer specifying the policy's priority. The lower the number, the higher the priority.
 * `secondary` - Bind the authentication policy to the secondary chain.
-
-## Import
-
-A vpnvserver_appfwpolicy_binding can be imported using its name, e.g.
-
-```
-terraform import citrixadc_vpnvserver_appfwpolicy_binding.tf_bind tf_vpnvserver,tf_appfwpolicy
-```
-

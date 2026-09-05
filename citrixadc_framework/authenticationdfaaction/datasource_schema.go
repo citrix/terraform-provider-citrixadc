@@ -22,8 +22,6 @@ type AuthenticationdfaactionDataSourceModel struct {
 	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
 	Name                       types.String `tfsdk:"name"`
 	Passphrase                 types.String `tfsdk:"passphrase"`
-	PassphraseWo               types.String `tfsdk:"passphrase_wo"`
-	PassphraseWoVersion        types.Int64  `tfsdk:"passphrase_wo_version"`
 	Serverurl                  types.String `tfsdk:"serverurl"`
 
 	// Read-only (GET-only) metadata from the NITRO doc read-only set
@@ -53,18 +51,10 @@ func AuthenticationdfaactionDataSourceSchema() schema.Schema {
 				Description: "Name for the DFA action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the DFA action is added.",
 			},
 			"passphrase": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Key shared between the DFA server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the DFA server.",
-			},
-			"passphrase_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Key shared between the DFA server and the Citrix ADC.\nRequired to allow the Citrix ADC to communicate with the DFA server.",
-			},
-			"passphrase_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a passphrase_wo update.",
 			},
 			"serverurl": schema.StringAttribute{
 				Optional:    true,
@@ -102,11 +92,8 @@ func authenticationdfaactionDataSourceSetAttrFromGet(ctx context.Context, data *
 	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
 	data.Serverurl = utils.MapGetString(g, "serverurl")
 
-	// passphrase / passphrase_wo_version are write-only or action-only inputs the
-	// GET never returns -> Null. passphrase_wo is an Optional config-side helper
-	// -> left as configured.
+	// passphrase is a secret input the GET never returns -> Null.
 	data.Passphrase = types.StringNull()
-	data.PassphraseWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Success = utils.MapGetInt64(g, "success")

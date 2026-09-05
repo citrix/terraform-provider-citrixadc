@@ -18,8 +18,6 @@ type LbprofileDataSourceModel struct {
 	Lbprofilename                 types.String `tfsdk:"lbprofilename"` // Required lookup key
 	Computedadccookieattribute    types.String `tfsdk:"computedadccookieattribute"`
 	Cookiepassphrase              types.String `tfsdk:"cookiepassphrase"`
-	CookiepassphraseWo            types.String `tfsdk:"cookiepassphrase_wo"`
-	CookiepassphraseWoVersion     types.Int64  `tfsdk:"cookiepassphrase_wo_version"`
 	Dbslb                         types.String `tfsdk:"dbslb"`
 	Httponlycookieflag            types.String `tfsdk:"httponlycookieflag"`
 	Lbhashalgorithm               types.String `tfsdk:"lbhashalgorithm"`
@@ -50,18 +48,10 @@ func LbprofileDataSourceSchema() schema.Schema {
 				Description: "ComputedADCCookieAttribute accepts ns variable as input in form of string starting with $ (to understand how to configure ns variable, please check man add ns variable). policies can be configured to modify this variable for every transaction and the final value of the variable after policy evaluation will be appended as attribute to Citrix ADC cookie (for example: LB cookie persistence , GSLB sitepersistence, CS cookie persistence, LB group cookie persistence). Only one of ComputedADCCookieAttribute, LiteralADCCookieAttribute can be set.\n\nSample usage -\n             add ns variable lbvar -type TEXT(100) -scope Transaction\n             add ns assignment lbassign -variable $lbvar -set \"\\\\\";SameSite=Strict\\\\\"\"\n             add rewrite policy lbpol <valid policy expression> lbassign\n             bind rewrite global lbpol 100 next -type RES_OVERRIDE\n             add lb profile lbprof -ComputedADCCookieAttribute \"$lbvar\"\n             For incoming client request, if above policy evaluates TRUE, then SameSite=Strict will be appended to ADC generated cookie",
 			},
 			"cookiepassphrase": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
-			},
-			"cookiepassphrase_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Use this parameter to specify the passphrase used to generate secured persistence cookie value. It specifies the passphrase with a maximum of 31 characters.",
-			},
-			"cookiepassphrase_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a cookiepassphrase_wo update.",
 			},
 			"dbslb": schema.StringAttribute{
 				Optional:    true,
@@ -160,11 +150,8 @@ func lbprofileDataSourceSetAttrFromGet(ctx context.Context, data *LbprofileDataS
 	data.Useencryptedpersistencecookie = utils.MapGetString(g, "useencryptedpersistencecookie")
 	data.Usesecuredpersistencecookie = utils.MapGetString(g, "usesecuredpersistencecookie")
 
-	// cookiepassphrase / cookiepassphrase_wo(+version) are write-only inputs the
-	// GET never returns -> Null.
+	// cookiepassphrase is a secret input the GET never returns -> Null.
 	data.Cookiepassphrase = types.StringNull()
-	data.CookiepassphraseWo = types.StringNull()
-	data.CookiepassphraseWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Vsvrcount = utils.MapGetInt64(g, "vsvrcount")

@@ -35,8 +35,6 @@ type GslbsiteDataSourceModel struct {
 	Siteipaddress          types.String `tfsdk:"siteipaddress"`
 	Sitename               types.String `tfsdk:"sitename"` // Required lookup key
 	Sitepassword           types.String `tfsdk:"sitepassword"`
-	SitepasswordWo         types.String `tfsdk:"sitepassword_wo"`
-	SitepasswordWoVersion  types.Int64  `tfsdk:"sitepassword_wo_version"`
 	Sitetype               types.String `tfsdk:"sitetype"`
 	Triggermonitor         types.String `tfsdk:"triggermonitor"`
 
@@ -122,18 +120,10 @@ func GslbsiteDataSourceSchema() schema.Schema {
 				Description: "Name for the GSLB site. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my gslbsite\" or 'my gslbsite').",
 			},
 			"sitepassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password to be used for mep communication between gslb site nodes.",
-			},
-			"sitepassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password to be used for mep communication between gslb site nodes.",
-			},
-			"sitepassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a sitepassword_wo update.",
 			},
 			"sitetype": schema.StringAttribute{
 				Optional:    true,
@@ -205,11 +195,8 @@ func gslbsiteDataSourceSetAttrFromGet(ctx context.Context, data *GslbsiteDataSou
 	data.Sitetype = utils.MapGetString(g, "sitetype")
 	data.Triggermonitor = utils.MapGetString(g, "triggermonitor")
 
-	// sitepassword / sitepassword_wo(+version) are secret/write-only inputs the
-	// GET never returns -> Null.
+	// sitepassword is a secret input the GET never returns -> Null.
 	data.Sitepassword = types.StringNull()
-	data.SitepasswordWo = types.StringNull()
-	data.SitepasswordWoVersion = types.Int64Null()
 
 	// Read-only NITRO attributes.
 	data.Status = utils.MapGetString(g, "status")

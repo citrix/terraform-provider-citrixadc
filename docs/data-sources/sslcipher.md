@@ -35,11 +35,3 @@ In addition to the arguments, the following attributes are available:
 * `ciphgrpalias` - The individual cipher name(s), a user-defined cipher group, or a system predefined cipher alias that will be added to the predefined cipher alias that will be added to the group cipherGroupName. If a cipher alias or a cipher group is specified, all the individual ciphers in the cipher alias or group will be added to the user-defined cipher group.
 * `id` - The id of the sslcipher. It has the same value as the `ciphergroupname` attribute.
 * `sslprofile` - Name of the profile to which cipher is attached.
-
-## Import
-
-A sslcipher can be imported using its ciphergroupname, e.g.
-
-```shell
-terraform import citrixadc_sslcipher.tf_sslcipher tfAccsslcipher
-```

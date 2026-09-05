@@ -26,8 +26,6 @@ type BotsettingsDataSourceModel struct {
 	Dfprequestlimit            types.Int64  `tfsdk:"dfprequestlimit"`
 	Javascriptname             types.String `tfsdk:"javascriptname"`
 	Proxypassword              types.String `tfsdk:"proxypassword"`
-	ProxypasswordWo            types.String `tfsdk:"proxypassword_wo"`
-	ProxypasswordWoVersion     types.Int64  `tfsdk:"proxypassword_wo_version"`
 	Proxyport                  types.Int64  `tfsdk:"proxyport"`
 	Proxyserver                types.String `tfsdk:"proxyserver"`
 	Proxyusername              types.String `tfsdk:"proxyusername"`
@@ -72,18 +70,10 @@ func BotsettingsDataSourceSchema() schema.Schema {
 				Description: "Name of the JavaScript that the Bot Management feature  uses in response.\nMust begin with a letter or number, and can consist of from 1 to 31 letters, numbers, and the hyphen (-) and underscore (_) symbols.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cookie name\" or 'my cookie name').",
 			},
 			"proxypassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password with which user logs on.",
-			},
-			"proxypassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password with which user logs on.",
-			},
-			"proxypassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a proxypassword_wo update.",
 			},
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
@@ -179,11 +169,8 @@ func botsettingsDataSourceSetAttrFromGet(ctx context.Context, data *BotsettingsD
 	data.Trapurlinterval = utils.MapGetInt64(g, "trapurlinterval")
 	data.Trapurllength = utils.MapGetInt64(g, "trapurllength")
 
-	// proxypassword / proxypassword_wo / proxypassword_wo_version are write-only
-	// secrets the GET never returns -> Null.
+	// proxypassword is a secret input the GET never returns -> Null.
 	data.Proxypassword = types.StringNull()
-	data.ProxypasswordWo = types.StringNull()
-	data.ProxypasswordWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Builtin = utils.MapGetStringList(g, "builtin")

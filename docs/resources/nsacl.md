@@ -63,6 +63,7 @@ resource "citrixadc_nsacl" "tf_nsacl" {
 * `srcport` - (Optional) Port number or range of port numbers to match against the source port number of an incoming IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.
 * `srcportdataset` - (Optional) Policy dataset which can have multiple port ranges bound to it.
 * `type` - (Optional) Type of the acl ,default will be CLASSIC. Available options as follows: * CLASSIC - specifies the regular extended acls. * DFD - cluster specific acls,specifies hashmethod for steering of the packet in cluster.
+* `newname` - (Optional) New name for the extended ACL rule. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 
 
 ## Attribute Reference

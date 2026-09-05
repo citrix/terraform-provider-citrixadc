@@ -39,11 +39,3 @@ In addition to the arguments, the following attributes are available:
 * `ssosuccessrule` - Expression, that checks to see if single sign-on is successful.
 * `submitmethod` - HTTP method used by the single sign-on form to send the logon credentials to the logon server. Possible values: [ GET, POST ]
 * `userfield` - Name of the form field in which the user types in the user ID.
-
-## Import
-
-A tmformssoaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_tmformssoaction.tf_tmformssoaction my_formsso_action
-```

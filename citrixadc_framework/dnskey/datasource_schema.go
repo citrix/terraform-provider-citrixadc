@@ -29,8 +29,6 @@ type DnskeyDataSourceModel struct {
 	Keytype            types.String `tfsdk:"keytype"`
 	Notificationperiod types.Int64  `tfsdk:"notificationperiod"`
 	Password           types.String `tfsdk:"password"`
-	PasswordWo         types.String `tfsdk:"password_wo"`
-	PasswordWoVersion  types.Int64  `tfsdk:"password_wo_version"`
 	Privatekey         types.String `tfsdk:"privatekey"`
 	Publickey          types.String `tfsdk:"publickey"`
 	Revoke             types.Bool   `tfsdk:"revoke"`
@@ -103,16 +101,6 @@ func DnskeyDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Sensitive:   true,
 				Description: "Passphrase for reading the encrypted public/private DNS keys",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Passphrase for reading the encrypted public/private DNS keys",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"privatekey": schema.StringAttribute{
 				Optional:    true,
@@ -228,11 +216,8 @@ func dnskeyDataSourceSetAttrFromGet(ctx context.Context, data *DnskeyDataSourceM
 	data.Units2 = utils.MapGetString(g, "units2")
 	data.Zonename = utils.MapGetString(g, "zonename")
 
-	// password / password_wo(+version) are write-only secret inputs the GET
-	// never returns -> Null.
+	// password is a secret input the GET never returns -> Null.
 	data.Password = types.StringNull()
-	data.PasswordWo = types.StringNull()
-	data.PasswordWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.State = utils.MapGetString(g, "state")

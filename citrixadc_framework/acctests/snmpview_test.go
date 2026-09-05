@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -133,7 +134,9 @@ func testAccCheckSnmpviewExist(n string, id *string) resource.TestCheckFunc {
 		}
 		dataArr, err := client.FindAllResources(service.Snmpview.Type())
 
-		snmpviewName := rs.Primary.ID
+		// The resource ID is the composite "name,subtree"; the NITRO name is the
+		// first component.
+		snmpviewName := strings.SplitN(rs.Primary.ID, ",", 2)[0]
 		// Unexpected error
 		if err != nil {
 			return err
@@ -172,7 +175,8 @@ func testAccCheckSnmpviewDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Snmpview.Type(), rs.Primary.ID)
+		snmpviewName := strings.SplitN(rs.Primary.ID, ",", 2)[0]
+		_, err := client.FindResource(service.Snmpview.Type(), snmpviewName)
 		if err == nil {
 			return fmt.Errorf("snmpview %s still exists", rs.Primary.ID)
 		}
@@ -205,6 +209,29 @@ func TestAccSnmpview_selfHealing(t *testing.T) {
 				},
 				Config: testAccSnmpview_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// TestAccSnmpview_import verifies import via the composite ID "name,subtree".
+// Pre-fix, ImportStatePassthroughID populated only id, so readSnmpviewFromApi
+// (which matches on name/subtree) found no row and dropped the resource -> import
+// always failed.
+func TestAccSnmpview_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil)),
+			},
+			{
+				ResourceName:      "citrixadc_snmpview.tf_snmpview",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

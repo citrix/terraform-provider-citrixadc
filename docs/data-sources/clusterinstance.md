@@ -66,11 +66,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `clusterhbhmacerrordetected` - Whether a cluster heartbeat HMAC error was detected (could be due to version mismatch).
 * `nodepenummismatch` - Whether there is a PE mismatch at cluster node level.
 * `operationalpropstate` - Cluster Operational Propagation State. Possible values: `UNKNOWN`, `ENABLED`, `DISABLED`, `AUTO DISABLED`, `AUTO DISABLED (Disk Encryption Mismatch)`.
-
-## Import
-
-A clusterinstance can be imported using its clid, e.g.
-
-```shell
-terraform import citrixadc_clusterinstance.tf_clusterinstance 1
-```

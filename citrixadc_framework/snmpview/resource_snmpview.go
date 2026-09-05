@@ -3,6 +3,7 @@ package snmpview
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -27,7 +28,24 @@ type SnmpviewResource struct {
 }
 
 func (r *SnmpviewResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	// snmpview has no single-key GET endpoint; readSnmpviewFromApi matches the
+	// enumerated array on (name, subtree) -- a single name can bind several
+	// subtrees. A bare passthrough would populate only id, leaving name/subtree
+	// null so Read finds nothing and drops the resource. Parse the composite id
+	// "name,subtree" into the key attributes. name cannot contain a comma, so the
+	// first comma separates name from subtree (SplitN keeps a comma-bearing
+	// subtree intact).
+	parts := strings.SplitN(req.ID, ",", 2)
+	if len(parts) != 2 {
+		resp.Diagnostics.AddError(
+			"Invalid import ID for snmpview",
+			fmt.Sprintf("Expected import ID in the format \"name,subtree\", got %q", req.ID),
+		)
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), types.StringValue(parts[0]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("subtree"), types.StringValue(parts[1]))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), types.StringValue(req.ID))...)
 }
 
 func (r *SnmpviewResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

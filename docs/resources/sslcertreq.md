@@ -130,3 +130,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslcertreq. It is a unique string prefixed with "tf-sslcertreq-"
 
+
+## Import
+
+A sslcertreq can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_sslcertreq.tf_sslcertreq sslcertreq-config
+```

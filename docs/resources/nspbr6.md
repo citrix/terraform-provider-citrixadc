@@ -62,6 +62,7 @@ resource "citrixadc_nspbr6" "tf_nspbr6" {
 * `nexthopvlan` - (Optional) VLAN number to be used for link local nexthop . Minimum value =  1 Maximum value =  4094
 * `ownergroup` - (Optional) The owner node group in a Cluster for this pbr rule. If owner node group is not specified then the pbr rule is treated as Striped pbr rule. Minimum length =  1
 * `detail` - (Optional) To get a detailed view.
+* `interface` - (Optional) ID of an interface. The Citrix ADC compares the PBR6 only to the outgoing packets on the specified interface. If you do not specify a value, the appliance compares the PBR6 to the outgoing packets on all interfaces.
 
 
 ## Attribute Reference

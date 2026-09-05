@@ -31,8 +31,6 @@ type IpsecprofileDataSourceModel struct {
 	Perfectforwardsecrecy types.String `tfsdk:"perfectforwardsecrecy"`
 	Privatekey            types.String `tfsdk:"privatekey"`
 	Psk                   types.String `tfsdk:"psk"`
-	PskWo                 types.String `tfsdk:"psk_wo"`
-	PskWoVersion          types.Int64  `tfsdk:"psk_wo_version"`
 	Publickey             types.String `tfsdk:"publickey"`
 	Replaywindowsize      types.Int64  `tfsdk:"replaywindowsize"`
 	Retransmissiontime    types.Int64  `tfsdk:"retransmissiontime"`
@@ -102,18 +100,10 @@ func IpsecprofileDataSourceSchema() schema.Schema {
 				Description: "Private key file path",
 			},
 			"psk": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Pre shared key value",
-			},
-			"psk_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Pre shared key value",
-			},
-			"psk_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a psk_wo update.",
 			},
 			"publickey": schema.StringAttribute{
 				Optional:    true,
@@ -178,11 +168,8 @@ func ipsecprofileDataSourceSetAttrFromGet(ctx context.Context, data *Ipsecprofil
 	data.Replaywindowsize = utils.MapGetInt64(g, "replaywindowsize")
 	data.Retransmissiontime = utils.MapGetInt64(g, "retransmissiontime")
 
-	// psk / psk_wo / psk_wo_version are write-only or action-only inputs the GET
-	// never returns -> Null.
+	// psk is a secret input the GET never returns -> Null.
 	data.Psk = types.StringNull()
-	data.PskWo = types.StringNull()
-	data.PskWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Responderonly = utils.MapGetString(g, "responderonly")

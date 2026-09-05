@@ -81,6 +81,8 @@ resource "citrixadc_nshttpprofile" "tf_httpprofile" {
 * `passprotocolupgrade` - (Optional) Pass protocol upgrade request to the server.
 * `http2extendedconnect` - (Optional) Choose whether to enable HTTP/2 Extended CONNECT mechanism.
 * `http2smallwndtimeout` - (Optional) Timeout (in seconds) for HTTP/2 small-window stalled streams. Configure this parameter to mitigate CVE-2026-13474.
+* `normalizeurl` - (Optional) Enable or disable RFC 3986 normalization of incoming URL before validation or consumption.
+* `normalizeurltoorigin` - (Optional) Enable or disable RFC 3986 URL normalization for request sent to the origin server.
 
 ## Attribute Reference
 

@@ -43,11 +43,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `hits` - Number of hits recorded against the policy.
 * `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]. A list of strings.
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A aaapreauthenticationpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy my_policy
-```

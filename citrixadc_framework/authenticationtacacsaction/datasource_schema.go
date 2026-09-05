@@ -42,8 +42,6 @@ type AuthenticationtacacsactionDataSourceModel struct {
 	Serverip                   types.String `tfsdk:"serverip"`
 	Serverport                 types.Int64  `tfsdk:"serverport"`
 	Tacacssecret               types.String `tfsdk:"tacacssecret"`
-	TacacssecretWo             types.String `tfsdk:"tacacssecret_wo"`
-	TacacssecretWoVersion      types.Int64  `tfsdk:"tacacssecret_wo_version"`
 
 	// Read-only (GET-only) attributes from the NITRO doc read-only set
 	// (zion73x_readonly/authenticationtacacsaction.json). Never settable;
@@ -188,18 +186,10 @@ func AuthenticationtacacsactionDataSourceSchema() schema.Schema {
 				Description: "Port number on which the TACACS+ server listens for connections.",
 			},
 			"tacacssecret": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Key shared between the TACACS+ server and the Citrix ADC.\nRequired for allowing the Citrix ADC to communicate with the TACACS+ server.",
-			},
-			"tacacssecret_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Key shared between the TACACS+ server and the Citrix ADC.\nRequired for allowing the Citrix ADC to communicate with the TACACS+ server.",
-			},
-			"tacacssecret_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a tacacssecret_wo update.",
 			},
 			"success": schema.Int64Attribute{
 				Computed:    true,
@@ -253,10 +243,7 @@ func authenticationtacacsactionDataSourceSetAttrFromGet(ctx context.Context, dat
 	data.Serverport = utils.MapGetInt64(g, "serverport")
 	data.Tacacssecret = utils.MapGetString(g, "tacacssecret")
 
-	// tacacssecret_wo (write-only) and its TF-only version tracker are never
-	// returned by GET -> Null.
-	data.TacacssecretWo = types.StringNull()
-	data.TacacssecretWoVersion = types.Int64Null()
+	// tacacssecret is a secret input the GET never returns -> Null.
 
 	// Read-only attributes.
 	data.Success = utils.MapGetInt64(g, "success")

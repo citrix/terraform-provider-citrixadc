@@ -37,11 +37,3 @@ In addition to the arguments, the following attributes are available:
 * `settingfile` - The WASM module filename contains module-specific configuration settings.
 * `comment` - Any type of information about this WASM module.
 * `id` - The id of the wasmmodule. It has the same value as the `name` attribute.
-
-## Import
-
-A wasmmodule can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_wasmmodule.tf_wasmmodule my_wasmmodule
-```

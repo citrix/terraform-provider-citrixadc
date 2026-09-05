@@ -23,6 +23,7 @@ resource "citrixadc_nsxmlnamespace" "tf_nsxmlnamespace" {
 * `prefix` - (Required) XML prefix. Minimum length =  1
 * `Namespace` - (Required) Expanded namespace for which the XML prefix is provided. Minimum length =  1
 * `description` - (Optional) Description for the prefix. Minimum length =  1
+* `namespace` - (Required) Expanded namespace for which the XML prefix is provided.
 
 
 ## Attribute Reference

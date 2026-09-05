@@ -24,6 +24,24 @@ resource "citrixadc_hanode" "remote_node" {
 }
 ```
 
+### Using an ephemeral (write-only) rpcnodepassword
+
+The `rpcnodepassword_wo` attribute sends the peer RPC node password to the ADC without storing it in Terraform state. Pair it with `rpcnodepassword_wo_version`; increment the version to rotate the secret (which replaces the hanode, because `rpcnodepassword` is create-only).
+
+```hcl
+variable "rpcnodepassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_hanode" "remote_node" {
+  hanode_id                  = 3
+  ipaddress                  = "10.222.74.145"
+  rpcnodepassword_wo         = var.rpcnodepassword
+  rpcnodepassword_wo_version = 1
+}
+```
+
 
 ## Argument Reference
 
@@ -40,7 +58,9 @@ resource "citrixadc_hanode" "remote_node" {
 * `maxfliptime` - (Optional) Interval after which flipping of node states can again start
 * `syncstatusstrictmode` - (Optional) strict mode flag for sync status
 * `syncvlan` - (Optional) Vlan on which HA related communication is sent. This include sync, propagation , connection mirroring , LB persistency config sync, persistent session sync and session state sync. However HA heartbeats can go all interfaces.
-* `rpcnodepassword` - (Optional) Password to be used in authentication with the peer rpc node.
+* `rpcnodepassword` - (Optional, Sensitive) Password to be used in authentication with the peer rpc node. The value is persisted in Terraform state. See also `rpcnodepassword_wo` for an ephemeral alternative.
+* `rpcnodepassword_wo` - (Optional, Sensitive, WriteOnly) Same as `rpcnodepassword`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `rpcnodepassword_wo_version`. If both `rpcnodepassword` and `rpcnodepassword_wo` are set, `rpcnodepassword_wo` takes precedence. Because `rpcnodepassword` is create-only, rotating the write-only value (by bumping `rpcnodepassword_wo_version`) forces the hanode resource to be replaced.
+* `rpcnodepassword_wo_version` - (Optional) An integer version tracker for `rpcnodepassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Defaults to `1`.
 
 
 ## Attribute Reference
@@ -48,6 +68,15 @@ resource "citrixadc_hanode" "remote_node" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the hanode. It has the same value as the `hanode_id` attribute.
+* `completedfliptime` - To inform user whether flip time is elapsed or not.
+* `curflips` - Keeps track of number of flips that have happened till now in current interval.
+* `enaifaces` - Enabled interfaces.
+* `masterstatetime` - Time elapsed in current master state.
+* `netmask` - The netmask.
+* `routemonitor` - The IP address (IPv4 or IPv6).
+* `routemonitorstate` - State for route monitor.
+* `ssl2` - SSL card status.
+* `state` - HA master state.
 
 
 ## Import

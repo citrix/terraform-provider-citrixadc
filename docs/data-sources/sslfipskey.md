@@ -53,11 +53,3 @@ PEM - Privacy Enhanced Mail; select when importing a non-FIPS key.
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslfipskey` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
 * `size` - Size.
-
-## Import
-
-A sslfipskey can be imported using its fipskeyname, e.g.
-
-```shell
-terraform import citrixadc_sslfipskey.demo_sslfipskey f1
-```

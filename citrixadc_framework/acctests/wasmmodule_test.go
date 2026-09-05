@@ -22,6 +22,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -292,6 +293,50 @@ func TestAccWasmmodule_selfHealing(t *testing.T) {
 				},
 				Config: testAccWasmmodule_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckWasmmoduleExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// TestAccWasmmodule_noReplaceOnInPlaceChange is a regression guard for GH#1436:
+// changing an in-place attribute (comment) while the create-only file attributes
+// (modulefile/signaturefile) are OMITTED from config must NOT destroy+recreate the
+// module. Pre-fix, the omitted Optional+Computed file attrs went unknown and their
+// bare RequiresReplace() forced a full replace; UseStateForUnknown() fixes it.
+const testAccWasmmodule_noReplace_step1 = `
+resource "citrixadc_wasmmodule" "tf_wasmmodule_nr" {
+	name          = "tf_wasmmodule_nr"
+	modulefile    = "tfwasmfile.wasm"
+	signaturefile = "tfwasmfile.sig"
+	comment       = "before"
+}
+`
+
+const testAccWasmmodule_noReplace_step2 = `
+resource "citrixadc_wasmmodule" "tf_wasmmodule_nr" {
+	name    = "tf_wasmmodule_nr"
+	comment = "after"
+}
+`
+
+func TestAccWasmmodule_noReplaceOnInPlaceChange(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doWasmmodulePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckWasmmoduleDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccWasmmodule_noReplace_step1},
+			{
+				// modulefile + signaturefile omitted; only comment changes -> must be
+				// an in-place update, never a replace.
+				Config: testAccWasmmodule_noReplace_step2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWasmmoduleExist("citrixadc_wasmmodule.tf_wasmmodule_nr", nil),
+					resource.TestCheckResourceAttr("citrixadc_wasmmodule.tf_wasmmodule_nr", "comment", "after"),
+				),
 			},
 		},
 	})

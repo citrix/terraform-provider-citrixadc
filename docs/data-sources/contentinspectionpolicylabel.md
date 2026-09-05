@@ -49,11 +49,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `invoke_labelname` - If labelType is policylabel, name of the policy label to invoke; if labelType is reqvserver or resvserver, name of the virtual server to which to forward the request or response.
 * `flowtype` - Flowtype of the bound contentInspection policy.
 * `isdefault` - A value of true is returned if it is a default cipolicylabel.
-
-## Import
-
-A contentinspectionpolicylabel can be imported using its labelname, e.g.
-
-```shell
-terraform import citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel my_ci_policylabel
-```

@@ -87,11 +87,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationsamlaction` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
 
 * `metadataimportstatus` - Describes the metadata import status (for example `INIT`, `SUCCESS`, `FAIL`).
-
-## Import
-
-A authenticationsamlaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationsamlaction.tf_samlaction my_samlaction
-```

@@ -79,11 +79,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_analyticsprofile` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
 
 * `refcnt` - The number of references to the profile.
-
-## Import
-
-A analyticsprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_analyticsprofile.tf_analyticsprofile my_analyticsprofile
-```

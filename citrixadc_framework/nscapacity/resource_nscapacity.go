@@ -17,6 +17,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NscapacityResource{}
+var _ resource.ResourceWithUpgradeState = &NscapacityResource{}
 var _ resource.ResourceWithConfigure = (*NscapacityResource)(nil)
 var _ resource.ResourceWithImportState = (*NscapacityResource)(nil)
 
@@ -46,11 +47,34 @@ func (r *NscapacityResource) Configure(ctx context.Context, req resource.Configu
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// password_wo_version tracker to 1 when the stored state has no value for it, so
+// the schema Default does not plan a spurious "null -> 1" update after upgrading
+// the provider. Paired with the schema Version bump so the upgrade path actually
+// runs. See utils.WoVersionUpgradeState.
+func (r *NscapacityResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data NscapacityResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.PasswordWoVersion.IsNull() {
+			data.PasswordWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
+}
+
 func (r *NscapacityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data NscapacityResourceModel
+	var data, config NscapacityResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -61,6 +85,8 @@ func (r *NscapacityResource) Create(ctx context.Context, req resource.CreateRequ
 	// Build the NITRO payload from the plan (Optional+Computed attributes that were
 	// not configured are unknown and are skipped by the payload builder).
 	nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+	// Overlay write-only attributes (password_wo) from config onto the payload.
+	nscapacityApplyWriteOnlyConfig(ctx, &config, &nscapacity)
 
 	// Singleton resource - use UpdateUnnamedResource to push the capacity config.
 	err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
@@ -158,6 +184,7 @@ func (r *NscapacityResource) Update(ctx context.Context, req resource.UpdateRequ
 	// normal config push.
 	if !data.Edition.Equal(state.Edition) || !data.Ignoreexpiry.Equal(state.Ignoreexpiry) ||
 		!data.Nodeid.Equal(state.Nodeid) || !data.Password.Equal(state.Password) ||
+		!data.PasswordWoVersion.Equal(state.PasswordWoVersion) ||
 		!data.Unit.Equal(state.Unit) || !data.Username.Equal(state.Username) {
 		hasChange = true
 	}
@@ -165,6 +192,8 @@ func (r *NscapacityResource) Update(ctx context.Context, req resource.UpdateRequ
 	if hasChange {
 		// Build the NITRO payload from the plan.
 		nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+		// Overlay write-only attributes (password_wo) from config onto the payload.
+		nscapacityApplyWriteOnlyConfig(ctx, &config, &nscapacity)
 
 		// Singleton resource - use UpdateUnnamedResource. SDK v2 shared its create func
 		// for updates, so the update path mirrors create (push config + warm reboot).

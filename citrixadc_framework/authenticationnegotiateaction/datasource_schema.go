@@ -22,8 +22,6 @@ type AuthenticationnegotiateactionDataSourceModel struct {
 	Domain                     types.String `tfsdk:"domain"`
 	Domainuser                 types.String `tfsdk:"domainuser"`
 	Domainuserpasswd           types.String `tfsdk:"domainuserpasswd"`
-	DomainuserpasswdWo         types.String `tfsdk:"domainuserpasswd_wo"`
-	DomainuserpasswdWoVersion  types.Int64  `tfsdk:"domainuserpasswd_wo_version"`
 	Keytab                     types.String `tfsdk:"keytab"`
 	Name                       types.String `tfsdk:"name"`
 	Ntlmpath                   types.String `tfsdk:"ntlmpath"`
@@ -57,18 +55,10 @@ func AuthenticationnegotiateactionDataSourceSchema() schema.Schema {
 				Description: "User name of the account that is mapped with Citrix ADC principal. This can be given along with domain and password when keytab file is not available. If username is given along with keytab file, then that keytab file will be searched for this user's credentials.",
 			},
 			"domainuserpasswd": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password of the account that is mapped to the Citrix ADC principal.",
-			},
-			"domainuserpasswd_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password of the account that is mapped to the Citrix ADC principal.",
-			},
-			"domainuserpasswd_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a domainuserpasswd_wo update.",
 			},
 			"keytab": schema.StringAttribute{
 				Optional:    true,
@@ -121,11 +111,8 @@ func authenticationnegotiateactionDataSourceSetAttrFromGet(ctx context.Context, 
 	data.Ntlmpath = utils.MapGetString(g, "ntlmpath")
 	data.Ou = utils.MapGetString(g, "ou")
 
-	// domainuserpasswd / domainuserpasswd_wo(+version) are write-only or
-	// action-only inputs the GET never returns -> Null.
+	// domainuserpasswd is a secret input the GET never returns -> Null.
 	data.Domainuserpasswd = types.StringNull()
-	data.DomainuserpasswdWo = types.StringNull()
-	data.DomainuserpasswdWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Kcdspn = utils.MapGetString(g, "kcdspn")

@@ -43,12 +43,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `labeltype` - Type of invocation (reqvserver, policylabel).
 * `invoke_labelname` - Name of the policy label.
 * `description` - Description of the policylabel.
-
-
-## Import
-
-A transformpolicylabel can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_transformpolicylabel.transformpolicylabel label_1
-```

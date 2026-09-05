@@ -41,17 +41,3 @@ In addition to the arguments, the following attributes are available:
 * `maxpoll` - Maximum time after which the NTP server must poll the NTP messages. In seconds, expressed as a power of 2.
 * `minpoll` - Minimum time after which the NTP server must poll the NTP messages. In seconds, expressed as a power of 2.
 * `preferredntpserver` - Preferred NTP server. The Citrix ADC chooses this NTP server for time synchronization among a set of correctly operating hosts.
-
-## Import
-
-A ntpserver can be imported using its serverip or servername, e.g.
-
-```shell
-terraform import citrixadc_ntpserver.tf_ntpserver 10.222.74.150
-```
-
-or
-
-```shell
-terraform import citrixadc_ntpserver.tf_ntpserver www.example.com
-```

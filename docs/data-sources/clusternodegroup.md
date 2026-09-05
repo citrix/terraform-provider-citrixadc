@@ -51,11 +51,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `boundedentitiescntfrompe` - Count of bounded entities to this nodegroup according to PE.
 * `activelist` - Active node list of this nodegroup. A list of strings.
 * `backuplist` - Backup node list of this nodegroup. A list of strings.
-
-## Import
-
-A clusternodegroup can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_clusternodegroup.tf_clusternodegroup my_clusternode
-```

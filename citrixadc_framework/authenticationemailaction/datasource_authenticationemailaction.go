@@ -35,7 +35,7 @@ func (d *AuthenticationemailactionDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *AuthenticationemailactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationemailactionResourceModel
+	var data AuthenticationemailactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AuthenticationemailactionDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	authenticationemailactionSetAttrFromGet(ctx, &data, getResponseData)
+	authenticationemailactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

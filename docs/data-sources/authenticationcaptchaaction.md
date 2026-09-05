@@ -38,11 +38,3 @@ In addition to the arguments, the following attributes are available:
 * `serverurl` - This is the endpoint at which captcha response is validated.
 * `sitekey` - Sitekey to identify gateway fqdn while loading captcha. (Note: This value is encrypted when retrieved from the API)
 * `id` - The id of the authenticationcaptchaaction. It has the same value as the `name` attribute.
-
-## Import
-
-A authenticationcaptchaaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationcaptchaaction.tf_captchaaction my_captchaaction
-```

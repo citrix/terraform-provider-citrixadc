@@ -72,3 +72,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslecdsakey. It is a unique string prefixed with "tf-sslecdsakey-"
 
+
+## Import
+
+A sslecdsakey can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_sslecdsakey.tf_sslecdsakey sslecdsakey-config
+```

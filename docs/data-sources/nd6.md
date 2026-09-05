@@ -48,11 +48,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `flags` - Flag for static/permanent entry.
 * `controlplane` - Whether this nd6 entry is populated by a control plane protocol.
 * `channel` - The tunnel that is bound to a netbridge.
-
-## Import
-
-A nd6 can be imported using its neighbor, e.g.
-
-```shell
-terraform import citrixadc_nd6.tf_nd6 2001::5
-```

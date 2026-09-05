@@ -20,12 +20,10 @@ import (
 // the data-source schema declares, which is why it cannot reuse the resource
 // model.
 type SslcertkeybundleDataSourceModel struct {
-	Id                 types.String `tfsdk:"id"`
-	Bundlefile         types.String `tfsdk:"bundlefile"`
-	Certkeybundlename  types.String `tfsdk:"certkeybundlename"` // Required lookup key
-	Passplain          types.String `tfsdk:"passplain"`
-	PassplainWo        types.String `tfsdk:"passplain_wo"`
-	PassplainWoVersion types.Int64  `tfsdk:"passplain_wo_version"`
+	Id                types.String `tfsdk:"id"`
+	Bundlefile        types.String `tfsdk:"bundlefile"`
+	Certkeybundlename types.String `tfsdk:"certkeybundlename"` // Required lookup key
+	Passplain         types.String `tfsdk:"passplain"`
 
 	// Read-only (GET-only) metadata from the NITRO doc read-only set
 	// (zion73x_readonly/sslcertkeybundle.json). Never settable; populated from
@@ -54,16 +52,6 @@ func SslcertkeybundleDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "Pass phrase used to encrypt the private-key. Required when certificate bundle file contains encrypted private-key in PEM format.",
 			},
-			"passplain_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Pass phrase used to encrypt the private-key. Required when certificate bundle file contains encrypted private-key in PEM format.",
-			},
-			"passplain_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a passplain_wo update.",
-			},
 
 			// Read-only (GET-only) metadata surfaced by the data source
 			// (these are intentionally NOT modeled on the resource). All Computed.
@@ -91,11 +79,8 @@ func sslcertkeybundleDataSourceSetAttrFromGet(ctx context.Context, data *Sslcert
 	// Read/write attribute as read-back output.
 	data.Bundlefile = utils.MapGetString(g, "bundlefile")
 
-	// passplain / passplain_wo(+version) are write-only secret inputs the GET
-	// never returns -> Null.
+	// passplain is a secret input the GET never returns -> Null.
 	data.Passplain = types.StringNull()
-	data.PassplainWo = types.StringNull()
-	data.PassplainWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Certkeybundledigest = utils.MapGetString(g, "certkeybundledigest")

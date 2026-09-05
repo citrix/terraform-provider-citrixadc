@@ -50,12 +50,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnintranetapplication` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
 * `ipaddress` - The IP address for the application. This address is the real application server IP address.
-
-
-## Import
-
-A vpnintranetapplication can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_vpnintranetapplication.tf_vpnintranetapplication tf_vpnintranetapplication
-```

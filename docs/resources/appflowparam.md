@@ -120,6 +120,7 @@ resource "citrixadc_appflowparam" "tf_appflowparam" {
 * `usagerecordinterval` - (Optional) On enabling this option, the NGS will send bandwidth usage record to configured collectors.
 * `videoinsight` - (Optional) Enable/disable the feature individually on appflow action.
 * `websaasappusagereporting` - (Optional) On enabling this option, NGS will send data used by Web/saas app at the end of every HTTP transaction to configured collectors.
+* `logalljsonfields` - (Optional) Overrides the field filtering for all analytics profiles, and sends all the fields for the configured insights.
 
 
 ## Attribute Reference

@@ -36,6 +36,4 @@ The following attributes are available:
 * `proxyauthorization` - Indicates whether the Proxy-Authorization header will be sent. Possible values: [ disabled, basic ]
 * `proxyusername` - Username that will be sent as part of the Basic Proxy-Authorization header.
 * `proxypassword` - Password that will be sent as part of the Basic Proxy-Authorization header. (Sensitive; returned by the appliance only in encrypted form.)
-* `proxypassword_wo` - Write-only (ephemeral) equivalent of `proxypassword`. Never persisted to state.
-* `proxypassword_wo_version` - Version tracker for `proxypassword_wo`.
 * `id` - The id of the aaaproxyparam. It is a system-generated identifier.

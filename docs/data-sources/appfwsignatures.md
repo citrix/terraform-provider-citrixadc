@@ -59,11 +59,3 @@ These attributes are GET-only (Computed) and are returned by the appliance on a 
 
 * `response` - Signature response returned by the appliance.
 * `encryptedversion` - Encrypted signature version.
-
-## Import
-
-Application Firewall signatures can be imported using the signature object name:
-
-```shell
-terraform import citrixadc_appfwsignatures.example my_signature_object
-```

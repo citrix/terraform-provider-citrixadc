@@ -61,3 +61,12 @@ resource citrixadc_appfwprofile demo_appfwprofile {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwpolicy`. It has the same value as the `name` attribute.
+
+
+## Import
+
+A appfwpolicy can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_appfwpolicy.tf_appfwpolicy <name>
+```

@@ -48,11 +48,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `undefhits` - The number of times the action resulted in UNDEF.
 * `builtin` - Flag to determine whether the action is built-in (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
 * `feature` - The feature to be checked while applying this config.
-
-## Import
-
-A csaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_csaction.tf_csaction my_csaction
-```

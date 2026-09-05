@@ -51,11 +51,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 
 * `builtin` - Flag to determine whether the DTLS profile is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
 * `feature` - The feature to be checked while applying this configuration.
-
-## Import
-
-A ssldtlsprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_ssldtlsprofile.tf_ssldtlsprofile tf_ssldtlsprofile
-```

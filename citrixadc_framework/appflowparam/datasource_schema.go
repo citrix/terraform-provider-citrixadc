@@ -22,8 +22,6 @@ type AppflowparamDataSourceModel struct {
 	Id                                  types.String `tfsdk:"id"`
 	Aaausername                         types.String `tfsdk:"aaausername"`
 	Analyticsauthtoken                  types.String `tfsdk:"analyticsauthtoken"`
-	AnalyticsauthtokenWo                types.String `tfsdk:"analyticsauthtoken_wo"`
-	AnalyticsauthtokenWoVersion         types.Int64  `tfsdk:"analyticsauthtoken_wo_version"`
 	Appnamerefresh                      types.Int64  `tfsdk:"appnamerefresh"`
 	Auditlogs                           types.String `tfsdk:"auditlogs"`
 	Cacheinsight                        types.String `tfsdk:"cacheinsight"`
@@ -95,18 +93,10 @@ func AppflowparamDataSourceSchema() schema.Schema {
 				Description: "Enable AppFlow AAA Username logging.",
 			},
 			"analyticsauthtoken": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Authentication token to be set by the agent.",
-			},
-			"analyticsauthtoken_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Authentication token to be set by the agent.",
-			},
-			"analyticsauthtoken_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
 			},
 			"appnamerefresh": schema.Int64Attribute{
 				Optional:    true,
@@ -445,11 +435,8 @@ func appflowparamDataSourceSetAttrFromGet(ctx context.Context, data *Appflowpara
 	data.Videoinsight = utils.MapGetString(g, "videoinsight")
 	data.Websaasappusagereporting = utils.MapGetString(g, "websaasappusagereporting")
 
-	// analyticsauthtoken / analyticsauthtoken_wo(+version) are secret/write-only
-	// inputs the GET never returns -> Null.
+	// analyticsauthtoken is a secret input the GET never returns -> Null.
 	data.Analyticsauthtoken = types.StringNull()
-	data.AnalyticsauthtokenWo = types.StringNull()
-	data.AnalyticsauthtokenWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Builtin = utils.MapGetStringList(g, "builtin")

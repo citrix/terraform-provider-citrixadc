@@ -53,12 +53,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `vsvrcount` - Total number of vservers the profile is bound to.
 * `adccookieattributewarningmsg` - Describes any configuration issue with respect to the ns variable configured as part of add/set lb profile.
 * `lbhashalgowinsize` - Window size used in the LB hashing algorithm (DEFAULT).
-
-
-## Import
-
-A lbprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lbprofile.tf_lbprofile my_lbprofile
-```

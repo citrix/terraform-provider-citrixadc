@@ -39,6 +39,7 @@ resource "citrixadc_auditsyslogparams" "tf_auditsyslogparams" {
 * `contentinspectionlog` - (Optional) Log Content Inspection event ifnormation. Possible values: [ ENABLED, DISABLED ]
 * `protocolviolations` - (Optional) Log protocol violations
 * `streamanalytics` - (Optional) Export log stream analytics statistics to syslog server
+* `denylistviolations` - (Optional) Log denylist violations.
 
 
 ## Attribute Reference
@@ -46,3 +47,12 @@ resource "citrixadc_auditsyslogparams" "tf_auditsyslogparams" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of theauditsyslogparams. It is a unique string prefixde with `tf-auditsyslogparams-` attribute.
+
+
+## Import
+
+A auditsyslogparams can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_auditsyslogparams.tf_auditsyslogparams auditsyslogparams-config
+```

@@ -43,12 +43,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `metrictype` - Indication if it is a configured or internal metric table. Possible values: `INTERNAL`, `CONFIGURED`.
 * `builtin` - Flag to determine whether the metric table is built-in. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
 * `feature` - The feature to be checked while applying this configuration.
-
-
-## Import
-
-A lbmetrictable can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lbmetrictable.tf_lbmetrictable my_lbmetrictable
-```

@@ -27,8 +27,6 @@ type RdpclientprofileDataSourceModel struct {
 	Multimonitorsupport  types.String `tfsdk:"multimonitorsupport"`
 	Name                 types.String `tfsdk:"name"` // Required lookup key
 	Psk                  types.String `tfsdk:"psk"`
-	PskWo                types.String `tfsdk:"psk_wo"`
-	PskWoVersion         types.Int64  `tfsdk:"psk_wo_version"`
 	Randomizerdpfilename types.String `tfsdk:"randomizerdpfilename"`
 	Rdpcookievalidity    types.Int64  `tfsdk:"rdpcookievalidity"`
 	Rdpcustomparams      types.String `tfsdk:"rdpcustomparams"`
@@ -84,18 +82,10 @@ func RdpclientprofileDataSourceSchema() schema.Schema {
 				Description: "The name of the rdp profile",
 			},
 			"psk": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Pre shared key value",
-			},
-			"psk_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Pre shared key value",
-			},
-			"psk_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a psk_wo update.",
 			},
 			"randomizerdpfilename": schema.StringAttribute{
 				Optional:    true,
@@ -234,11 +224,8 @@ func rdpclientprofileDataSourceSetAttrFromGet(ctx context.Context, data *Rdpclie
 	data.Redirectprinters = utils.MapGetString(g, "redirectprinters")
 	data.Videoplaybackmode = utils.MapGetString(g, "videoplaybackmode")
 
-	// psk / psk_wo / psk_wo_version are write-only secret / version-tracker inputs
-	// the GET never returns -> Null.
+	// psk is a secret input the GET never returns -> Null.
 	data.Psk = types.StringNull()
-	data.PskWo = types.StringNull()
-	data.PskWoVersion = types.Int64Null()
 
 	// Read-only attributes.
 	data.Builtin = utils.MapGetStringList(g, "builtin")

@@ -37,8 +37,6 @@ type AaaradiusparamsDataSourceModel struct {
 	Radgroupseparator          types.String `tfsdk:"radgroupseparator"`
 	Radgroupsprefix            types.String `tfsdk:"radgroupsprefix"`
 	Radkey                     types.String `tfsdk:"radkey"`
-	RadkeyWo                   types.String `tfsdk:"radkey_wo"`
-	RadkeyWoVersion            types.Int64  `tfsdk:"radkey_wo_version"`
 	Radnasid                   types.String `tfsdk:"radnasid"`
 	Radnasip                   types.String `tfsdk:"radnasip"`
 	Radvendorid                types.Int64  `tfsdk:"radvendorid"`
@@ -141,16 +139,6 @@ func AaaradiusparamsDataSourceSchema() schema.Schema {
 				Sensitive:   true,
 				Description: "The key shared between the RADIUS server and clients.\nRequired for allowing the Citrix ADC to communicate with the RADIUS server.",
 			},
-			"radkey_wo": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "The key shared between the RADIUS server and clients.\nRequired for allowing the Citrix ADC to communicate with the RADIUS server.",
-			},
-			"radkey_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a radkey_wo update.",
-			},
 			"radnasid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -239,11 +227,8 @@ func aaaradiusparamsDataSourceSetAttrFromGet(ctx context.Context, data *Aaaradiu
 	data.Serverport = utils.MapGetInt64(g, "serverport")
 	data.Tunnelendpointclientip = utils.MapGetString(g, "tunnelendpointclientip")
 
-	// radkey / radkey_wo(+version) are write-only or secret inputs the GET never
-	// returns -> Null.
+	// radkey is a secret input the GET never returns -> Null.
 	data.Radkey = types.StringNull()
-	data.RadkeyWo = types.StringNull()
-	data.RadkeyWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Groupauthname = utils.MapGetString(g, "groupauthname")

@@ -30,3 +30,12 @@ resource "citrixadc_nsvpxparam" "tf_vpxparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nsvpxparam. It is a unique string prefixed with "tf-nsvpxparam-".
+
+
+## Import
+
+A nsvpxparam can be imported using its ownernode, e.g.
+
+```shell
+terraform import citrixadc_nsvpxparam.tf_nsvpxparam <ownernode>
+```

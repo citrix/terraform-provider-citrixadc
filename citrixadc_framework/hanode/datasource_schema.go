@@ -150,6 +150,7 @@ func HanodeDataSourceSchema() schema.Schema {
 			"rpcnodepassword": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Password to be used in authentication with the peer rpc node.",
 			},
 			"ssl2": schema.StringAttribute{

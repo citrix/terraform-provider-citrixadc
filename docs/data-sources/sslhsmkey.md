@@ -42,11 +42,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslhsmkey` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
 * `state` - Current state of key. Possible values: `Created`, `Access Token Unavailable`, `Unauthorized`, `Does not exist`, `Unreachable`, `Marked down`, `Key operations successful`, `Key operations failed`, `Key operation throttled`.
-
-## Import
-
-A sslhsmkey can be imported using its hsmkeyname, e.g.
-
-```shell
-terraform import citrixadc_sslhsmkey.tf_hsmkey1 hsmkey1
-```

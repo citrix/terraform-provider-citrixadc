@@ -32,3 +32,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nsdiameter. It is a unique string prefixed with "tf-nsdiameter-"
 
+
+## Import
+
+A nsdiameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nsdiameter.tf_nsdiameter nsdiameter-config
+```

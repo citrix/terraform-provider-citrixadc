@@ -84,11 +84,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationoauthaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
 * `oauthstatus` - Describes status information of the OAuth server. Possible values: `INIT`, `CERTFETCH`, `AADFORGRAPH`, `GRAPH`, `AADFORMDM`, `MDMINFO`, `COMPLETE`.
-
-## Import
-
-An authenticationoauthaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationoauthaction.tf_authenticationoauthaction my_oauth_action
-```

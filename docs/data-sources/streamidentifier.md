@@ -56,11 +56,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_streamidentifier` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
 * `rule` - Rule. A list of strings.
-
-## Import
-
-A streamidentifier can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_streamidentifier.tf_streamidentifier my_streamidentifier
-```

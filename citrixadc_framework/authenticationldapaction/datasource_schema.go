@@ -18,65 +18,63 @@ import (
 // the attributes the data-source schema declares, which is why it cannot reuse
 // the resource model.
 type AuthenticationldapactionDataSourceModel struct {
-	Id                          types.String `tfsdk:"id"`
-	Alternateemailattr          types.String `tfsdk:"alternateemailattr"`
-	Attribute1                  types.String `tfsdk:"attribute1"`
-	Attribute10                 types.String `tfsdk:"attribute10"`
-	Attribute11                 types.String `tfsdk:"attribute11"`
-	Attribute12                 types.String `tfsdk:"attribute12"`
-	Attribute13                 types.String `tfsdk:"attribute13"`
-	Attribute14                 types.String `tfsdk:"attribute14"`
-	Attribute15                 types.String `tfsdk:"attribute15"`
-	Attribute16                 types.String `tfsdk:"attribute16"`
-	Attribute2                  types.String `tfsdk:"attribute2"`
-	Attribute3                  types.String `tfsdk:"attribute3"`
-	Attribute4                  types.String `tfsdk:"attribute4"`
-	Attribute5                  types.String `tfsdk:"attribute5"`
-	Attribute6                  types.String `tfsdk:"attribute6"`
-	Attribute7                  types.String `tfsdk:"attribute7"`
-	Attribute8                  types.String `tfsdk:"attribute8"`
-	Attribute9                  types.String `tfsdk:"attribute9"`
-	Attributes                  types.String `tfsdk:"attributes"`
-	Authentication              types.String `tfsdk:"authentication"`
-	Authtimeout                 types.Int64  `tfsdk:"authtimeout"`
-	Cloudattributes             types.String `tfsdk:"cloudattributes"`
-	Defaultauthenticationgroup  types.String `tfsdk:"defaultauthenticationgroup"`
-	Email                       types.String `tfsdk:"email"`
-	Followreferrals             types.String `tfsdk:"followreferrals"`
-	Groupattrname               types.String `tfsdk:"groupattrname"`
-	Groupnameidentifier         types.String `tfsdk:"groupnameidentifier"`
-	Groupsearchattribute        types.String `tfsdk:"groupsearchattribute"`
-	Groupsearchfilter           types.String `tfsdk:"groupsearchfilter"`
-	Groupsearchsubattribute     types.String `tfsdk:"groupsearchsubattribute"`
-	Kbattribute                 types.String `tfsdk:"kbattribute"`
-	Ldapbase                    types.String `tfsdk:"ldapbase"`
-	Ldapbinddn                  types.String `tfsdk:"ldapbinddn"`
-	Ldapbinddnpassword          types.String `tfsdk:"ldapbinddnpassword"`
-	LdapbinddnpasswordWo        types.String `tfsdk:"ldapbinddnpassword_wo"`
-	LdapbinddnpasswordWoVersion types.Int64  `tfsdk:"ldapbinddnpassword_wo_version"`
-	Ldaphostname                types.String `tfsdk:"ldaphostname"`
-	Ldaploginname               types.String `tfsdk:"ldaploginname"`
-	Maxldapreferrals            types.Int64  `tfsdk:"maxldapreferrals"`
-	Maxnestinglevel             types.Int64  `tfsdk:"maxnestinglevel"`
-	Mssrvrecordlocation         types.String `tfsdk:"mssrvrecordlocation"`
-	Name                        types.String `tfsdk:"name"`
-	Nestedgroupextraction       types.String `tfsdk:"nestedgroupextraction"`
-	Otpsecret                   types.String `tfsdk:"otpsecret"`
-	Passwdchange                types.String `tfsdk:"passwdchange"`
-	Passwordlessmgmtaccess      types.String `tfsdk:"passwordlessmgmtaccess"`
-	Pushservice                 types.String `tfsdk:"pushservice"`
-	Referraldnslookup           types.String `tfsdk:"referraldnslookup"`
-	Requireuser                 types.String `tfsdk:"requireuser"`
-	Searchfilter                types.String `tfsdk:"searchfilter"`
-	Sectype                     types.String `tfsdk:"sectype"`
-	Serverip                    types.String `tfsdk:"serverip"`
-	Servername                  types.String `tfsdk:"servername"`
-	Serverport                  types.Int64  `tfsdk:"serverport"`
-	Sshpublickey                types.String `tfsdk:"sshpublickey"`
-	Ssonameattribute            types.String `tfsdk:"ssonameattribute"`
-	Subattributename            types.String `tfsdk:"subattributename"`
-	Svrtype                     types.String `tfsdk:"svrtype"`
-	Validateservercert          types.String `tfsdk:"validateservercert"`
+	Id                         types.String `tfsdk:"id"`
+	Alternateemailattr         types.String `tfsdk:"alternateemailattr"`
+	Attribute1                 types.String `tfsdk:"attribute1"`
+	Attribute10                types.String `tfsdk:"attribute10"`
+	Attribute11                types.String `tfsdk:"attribute11"`
+	Attribute12                types.String `tfsdk:"attribute12"`
+	Attribute13                types.String `tfsdk:"attribute13"`
+	Attribute14                types.String `tfsdk:"attribute14"`
+	Attribute15                types.String `tfsdk:"attribute15"`
+	Attribute16                types.String `tfsdk:"attribute16"`
+	Attribute2                 types.String `tfsdk:"attribute2"`
+	Attribute3                 types.String `tfsdk:"attribute3"`
+	Attribute4                 types.String `tfsdk:"attribute4"`
+	Attribute5                 types.String `tfsdk:"attribute5"`
+	Attribute6                 types.String `tfsdk:"attribute6"`
+	Attribute7                 types.String `tfsdk:"attribute7"`
+	Attribute8                 types.String `tfsdk:"attribute8"`
+	Attribute9                 types.String `tfsdk:"attribute9"`
+	Attributes                 types.String `tfsdk:"attributes"`
+	Authentication             types.String `tfsdk:"authentication"`
+	Authtimeout                types.Int64  `tfsdk:"authtimeout"`
+	Cloudattributes            types.String `tfsdk:"cloudattributes"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Email                      types.String `tfsdk:"email"`
+	Followreferrals            types.String `tfsdk:"followreferrals"`
+	Groupattrname              types.String `tfsdk:"groupattrname"`
+	Groupnameidentifier        types.String `tfsdk:"groupnameidentifier"`
+	Groupsearchattribute       types.String `tfsdk:"groupsearchattribute"`
+	Groupsearchfilter          types.String `tfsdk:"groupsearchfilter"`
+	Groupsearchsubattribute    types.String `tfsdk:"groupsearchsubattribute"`
+	Kbattribute                types.String `tfsdk:"kbattribute"`
+	Ldapbase                   types.String `tfsdk:"ldapbase"`
+	Ldapbinddn                 types.String `tfsdk:"ldapbinddn"`
+	Ldapbinddnpassword         types.String `tfsdk:"ldapbinddnpassword"`
+	Ldaphostname               types.String `tfsdk:"ldaphostname"`
+	Ldaploginname              types.String `tfsdk:"ldaploginname"`
+	Maxldapreferrals           types.Int64  `tfsdk:"maxldapreferrals"`
+	Maxnestinglevel            types.Int64  `tfsdk:"maxnestinglevel"`
+	Mssrvrecordlocation        types.String `tfsdk:"mssrvrecordlocation"`
+	Name                       types.String `tfsdk:"name"`
+	Nestedgroupextraction      types.String `tfsdk:"nestedgroupextraction"`
+	Otpsecret                  types.String `tfsdk:"otpsecret"`
+	Passwdchange               types.String `tfsdk:"passwdchange"`
+	Passwordlessmgmtaccess     types.String `tfsdk:"passwordlessmgmtaccess"`
+	Pushservice                types.String `tfsdk:"pushservice"`
+	Referraldnslookup          types.String `tfsdk:"referraldnslookup"`
+	Requireuser                types.String `tfsdk:"requireuser"`
+	Searchfilter               types.String `tfsdk:"searchfilter"`
+	Sectype                    types.String `tfsdk:"sectype"`
+	Serverip                   types.String `tfsdk:"serverip"`
+	Servername                 types.String `tfsdk:"servername"`
+	Serverport                 types.Int64  `tfsdk:"serverport"`
+	Sshpublickey               types.String `tfsdk:"sshpublickey"`
+	Ssonameattribute           types.String `tfsdk:"ssonameattribute"`
+	Subattributename           types.String `tfsdk:"subattributename"`
+	Svrtype                    types.String `tfsdk:"svrtype"`
+	Validateservercert         types.String `tfsdk:"validateservercert"`
 
 	// Read-only (GET-only) metadata from the NITRO doc read-only set
 	// (zion73x_readonly/authenticationldapaction.json). Never settable.
@@ -252,18 +250,10 @@ func AuthenticationldapactionDataSourceSchema() schema.Schema {
 				Description: "Full distinguished name (DN) that is used to bind to the LDAP server.\nDefault: cn=Manager,dc=netscaler,dc=com",
 			},
 			"ldapbinddnpassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password used to bind to the LDAP server.",
-			},
-			"ldapbinddnpassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password used to bind to the LDAP server.",
-			},
-			"ldapbinddnpassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a ldapbinddnpassword_wo update.",
 			},
 			"ldaphostname": schema.StringAttribute{
 				Optional:    true,
@@ -465,11 +455,8 @@ func authenticationldapactionDataSourceSetAttrFromGet(ctx context.Context, data 
 	data.Svrtype = utils.MapGetString(g, "svrtype")
 	data.Validateservercert = utils.MapGetString(g, "validateservercert")
 
-	// ldapbinddnpassword / ldapbinddnpassword_wo_version are secret or version
-	// tracker inputs the GET never returns -> Null. ldapbinddnpassword_wo is an
-	// Optional config-side helper -> left as configured.
+	// ldapbinddnpassword is a secret input the GET never returns -> Null.
 	data.Ldapbinddnpassword = types.StringNull()
-	data.LdapbinddnpasswordWoVersion = types.Int64Null()
 
 	// Read-only metadata.
 	data.Ldapcontimeout = utils.MapGetInt64(g, "ldapcontimeout")

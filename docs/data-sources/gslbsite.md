@@ -58,12 +58,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `curbackupparentip` - Current active backup parent IP address since the configured is DOWN.
 * `sitestate` - Site state (for example `UP`, `DOWN`, `OUT OF SERVICE`, `DISABLED`).
 * `oldname` - Old name for the GSLB site.
-
-
-## Import
-
-A gslbsite can be imported using its sitename, e.g.
-
-```shell
-terraform import citrixadc_gslbsite.tf_gslbsite Site-GSLB-East-Coast
-```

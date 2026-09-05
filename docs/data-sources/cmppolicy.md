@@ -53,11 +53,3 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `builtin` - Flag to determine if compression policy is builtin or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
 * `feature` - The feature to be checked while applying this config.
 * `isdefault` - A value of true is returned if it is a default policy.
-
-## Import
-
-A cmppolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_cmppolicy.tf_cmppolicy my_cmppolicy
-```

@@ -52,6 +52,7 @@ resource "citrixadc_appflowpolicylabel_appflowpolicy_binding" "tf_appflowpolicyl
 * `invoke_labelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
 * `labeltype` - (Optional) Type of policy label to be invoked.
 * `priority` - (Optional) Specifies the priority of the policy.
+* `invokelabelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
 
 
 ## Attribute Reference

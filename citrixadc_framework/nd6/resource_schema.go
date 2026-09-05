@@ -2,6 +2,7 @@ package nd6
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -207,8 +208,19 @@ func nd6SetAttrFromGet(ctx context.Context, data *Nd6ResourceModel, getResponseD
 		data.Vxlan = types.Int64Null()
 	}
 
-	// Set ID for the resource - just use neighbor as the primary key
-	data.Id = data.Neighbor
+	// Set the composite ID. nd6's identity on the appliance is (neighbor, td,
+	// nodeid) -- readNd6FromApi matches the enumerated array on all three -- so the
+	// ID must encode them all. A single-value ID (neighbor only) cannot round-trip
+	// a non-default td/nodeid on import. td/nodeid default to 0 when omitted.
+	tdVal := int64(0)
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		tdVal = data.Td.ValueInt64()
+	}
+	nodeidVal := int64(0)
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
+		nodeidVal = data.Nodeid.ValueInt64()
+	}
+	data.Id = types.StringValue(fmt.Sprintf("%s,%d,%d", data.Neighbor.ValueString(), tdVal, nodeidVal))
 
 	return data
 }

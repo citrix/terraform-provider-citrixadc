@@ -25,6 +25,7 @@ resource "citrixadc_userprotocol" "tf_userprotocol" {
 * `transport` - (Required) Transport layer's protocol. Possible values: [ TCP, SSL ]
 * `extension` - (Required) Name of the extension to add parsing and runtime handling of the protocol packets.
 * `comment` - (Optional) Any comments associated with the protocol.
+* `wasmmodule` - (Optional) Wasm module needs to attach with the user protocol.
 
 
 ## Attribute Reference

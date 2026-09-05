@@ -55,11 +55,3 @@ In addition to the arguments, the following attributes are available:
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lsngroup` resource) and are `Computed`/GET-only. Any attribute the appliance does not return is `null`.
 
 * `groupid` - Unique identifier assigned to the LSN group by the appliance.
-
-## Import
-
-A lsngroup can be imported using its groupname, e.g.
-
-```shell
-terraform import citrixadc_lsngroup.tf_lsngroup my_lsngroup_ds
-```
