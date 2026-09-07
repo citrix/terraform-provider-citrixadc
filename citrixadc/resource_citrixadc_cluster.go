@@ -1644,7 +1644,10 @@ func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map
 		Timeout:     meta.(*NetScalerNitroClient).NsTimeout,
 	}
 
-	log.Printf("[DEBUG]  citrixadc-provider: node client params %v", params)
+	// Shallow-copy params and mask the password so it never lands in logs in clear text.
+	safeParams := params
+	safeParams.Password = "****"
+	log.Printf("[DEBUG]  citrixadc-provider: node client params %+v", safeParams)
 
 	nodeClient, err := service.NewNitroClientFromParams(params)
 	return nodeClient, err
