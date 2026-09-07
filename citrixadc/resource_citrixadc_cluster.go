@@ -741,7 +741,9 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	log.Printf("[DEBUG]  citrixadc-provider: first node client %v", nodeClient)
+	// Log only the client's URL, not the whole struct: %v on *NitroClient prints its
+	// unexported password field in clear text.
+	log.Printf("[DEBUG]  citrixadc-provider: first node client for url %s", nodeClient.GetURL())
 
 	clid := d.Get("clid").(int)
 	clusterId := strconv.Itoa(clid)
@@ -1644,7 +1646,10 @@ func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map
 		Timeout:     meta.(*NetScalerNitroClient).NsTimeout,
 	}
 
-	log.Printf("[DEBUG]  citrixadc-provider: node client params %v", params)
+	// Shallow-copy params and mask the password so it never lands in logs in clear text.
+	safeParams := params
+	safeParams.Password = "****"
+	log.Printf("[DEBUG]  citrixadc-provider: node client params %+v", safeParams)
 
 	nodeClient, err := service.NewNitroClientFromParams(params)
 	return nodeClient, err
