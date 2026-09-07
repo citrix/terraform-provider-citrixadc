@@ -1,3 +1,50 @@
+## 3.0.0 (September 07, 2026)
+
+FEATURES
+
+* **New Resource**: citrixadc_aaagroup_vpnsecureprivateaccessprofile_binding
+* **New Resource**: citrixadc_aaauser_vpnsecureprivateaccessprofile_binding
+* **New Resource**: citrixadc_cloudgcpstaticroutes
+* **New Resource**: citrixadc_cloudroutes
+* **New Resource**: citrixadc_cloudtrafficroutes
+* **New Resource**: citrixadc_contentinspectionwasmprofile
+* **New Resource**: citrixadc_dnssvcbrec
+* **New Resource**: citrixadc_dpsparameter
+* **New Resource**: citrixadc_hasecureheartbeats
+* **New Resource**: citrixadc_mcpprofile
+* **New Resource**: citrixadc_nsaigwprofile
+* **New Resource**: citrixadc_nsmemrecovery_start
+* **New Resource**: citrixadc_nsmigration_start
+* **New Resource**: citrixadc_nsmigration_stop
+* **New Resource**: citrixadc_nsmigration_complete
+* **New Resource**: citrixadc_nstrace_start
+* **New Resource**: citrixadc_nstrace_stop
+* **New Resource**: citrixadc_ssldynamicclientcertcache_flush
+* **New Resource**: citrixadc_sslzerotouchparam
+* **New Resource**: citrixadc_systemautosaveparam
+* **New Resource**: citrixadc_systemscalablemgmtthreads_enable
+* **New Resource**: citrixadc_systemscalablemgmtthreads_disable
+* **New Resource**: citrixadc_vpnglobal_vpnsecureprivateaccessprofile_binding
+* **New Resource**: citrixadc_vpnsecureprivateaccessprofile
+* **New Resource**: citrixadc_vpnvserver_vpnsecureprivateaccessprofile_binding
+* **New Resource**: citrixadc_wasmfile
+* **New Resource**: citrixadc_wasmmodule
+* **Data Sources**: Added data sources corresponding to the new resources listed above.
+
+ENHANCEMENTS
+
+* **provider**: Data sources now expose read-only NITRO attributes (GET-only metadata the resource does not manage), so they can be read and referenced in configuration.
+* **provider**: Added Unset support to resources, so removing an optional attribute from configuration reverts it to its NetScaler default.
+* **provider**: Standardized the `id` format for resources whose identity is a combination of attributes (binding resources and multi-key configuration resources). The `id` is now a self-describing composite of `key:value` pairs joined by commas — `key1:value1,key2:value2` — with each value URL-encoded. Use this format when importing; refer to each resource's documentation for its exact keys. For example, `terraform import citrixadc_lbvserver_service_binding.example "name:lb1,servicename:svc1"`. Existing state, including legacy comma-joined (value-only) ids, is upgraded automatically.
+  * Note: Preserved backward compatibility for legacy (pre-migration) resource ids on read, update, and import, so existing state and import workflows keep working after upgrade.
+
+UPDATES
+
+* **provider**: Refreshed and aligned the entire provider with NetScaler build 14.1-73.30. The adc-nitro-go client library, every existing resource and data source, and the new resources in this release are updated to this build's NITRO schema.
+* **provider**: Completed the migration to the Terraform Plugin Framework. The provider binary now serves only the Framework implementation over Terraform protocol v6; the legacy SDKv2 provider and the SDKv2-to-Framework mux server have been removed. Existing state is upgraded in place, so no configuration changes are required.
+  * Note: If you run into any issues while upgrading, please raise a GitHub issue at https://github.com/citrix/terraform-provider-citrixadc/issues.
+
+
 ## 2.3.2 (August 24, 2026)
 
 BUG FIXES
