@@ -741,7 +741,9 @@ func createFirstClusterNode(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	log.Printf("[DEBUG]  citrixadc-provider: first node client %v", nodeClient)
+	// Log only the client's URL, not the whole struct: %v on *NitroClient prints its
+	// unexported password field in clear text.
+	log.Printf("[DEBUG]  citrixadc-provider: first node client for url %s", nodeClient.GetURL())
 
 	clid := d.Get("clid").(int)
 	clusterId := strconv.Itoa(clid)
