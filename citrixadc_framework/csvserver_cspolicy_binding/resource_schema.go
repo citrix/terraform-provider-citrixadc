@@ -191,6 +191,14 @@ func csvserver_cspolicy_bindingSetAttrFromGet(ctx context.Context, data *Csvserv
 	}
 	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
 		data.Targetlbvserver = types.StringValue(val.(string))
+	} else if data.Targetlbvserver.IsUnknown() {
+		// NITRO omits targetlbvserver for action-based cspolicy bindings (a policy has
+		// EITHER an action OR a targetlbvserver, never both). Resolve the Optional+
+		// Computed value to null so it is not left Unknown after apply, which would
+		// otherwise fail with "invalid result object after apply" (GH #1458). A set
+		// (target-based) value is echoed by GET, so the branch above handles it and
+		// this never clobbers a configured value.
+		data.Targetlbvserver = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
