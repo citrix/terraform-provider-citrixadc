@@ -150,17 +150,17 @@ func authenticationnegotiateactionSetAttrFromGet(ctx context.Context, data *Auth
 	// Convert API response to model
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
+	} else if data.Domain.IsUnknown() {
 		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["domainuser"]; ok && val != nil {
 		data.Domainuser = types.StringValue(val.(string))
-	} else {
+	} else if data.Domainuser.IsUnknown() {
 		data.Domainuser = types.StringNull()
 	}
 	// domainuserpasswd is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -168,22 +168,22 @@ func authenticationnegotiateactionSetAttrFromGet(ctx context.Context, data *Auth
 	// domainuserpasswd_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["keytab"]; ok && val != nil {
 		data.Keytab = types.StringValue(val.(string))
-	} else {
+	} else if data.Keytab.IsUnknown() {
 		data.Keytab = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["ntlmpath"]; ok && val != nil {
 		data.Ntlmpath = types.StringValue(val.(string))
-	} else {
+	} else if data.Ntlmpath.IsUnknown() {
 		data.Ntlmpath = types.StringNull()
 	}
 	if val, ok := getResponseData["ou"]; ok && val != nil {
 		data.Ou = types.StringValue(val.(string))
-	} else {
+	} else if data.Ou.IsUnknown() {
 		data.Ou = types.StringNull()
 	}
 

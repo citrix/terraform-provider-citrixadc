@@ -122,48 +122,48 @@ func authenticationloginschemaSetAttrFromGet(ctx context.Context, data *Authenti
 	// Convert API response to model
 	if val, ok := getResponseData["authenticationschema"]; ok && val != nil {
 		data.Authenticationschema = types.StringValue(val.(string))
-	} else {
+	} else if data.Authenticationschema.IsUnknown() {
 		data.Authenticationschema = types.StringNull()
 	}
 	if val, ok := getResponseData["authenticationstrength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Authenticationstrength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Authenticationstrength.IsUnknown() {
 		data.Authenticationstrength = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["passwdexpression"]; ok && val != nil {
 		data.Passwdexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Passwdexpression.IsUnknown() {
 		data.Passwdexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["passwordcredentialindex"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Passwordcredentialindex = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Passwordcredentialindex.IsUnknown() {
 		data.Passwordcredentialindex = types.Int64Null()
 	}
 	if val, ok := getResponseData["ssocredentials"]; ok && val != nil {
 		data.Ssocredentials = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssocredentials.IsUnknown() {
 		data.Ssocredentials = types.StringNull()
 	}
 	if val, ok := getResponseData["usercredentialindex"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Usercredentialindex = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Usercredentialindex.IsUnknown() {
 		data.Usercredentialindex = types.Int64Null()
 	}
 	if val, ok := getResponseData["userexpression"]; ok && val != nil {
 		data.Userexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Userexpression.IsUnknown() {
 		data.Userexpression = types.StringNull()
 	}
 

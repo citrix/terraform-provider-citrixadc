@@ -114,24 +114,24 @@ func cloudtunnelvserverSetAttrFromGet(ctx context.Context, data *Cloudtunnelvser
 	// Convert API response to model
 	if val, ok := getResponseData["listenpolicy"]; ok && val != nil {
 		data.Listenpolicy = types.StringValue(val.(string))
-	} else {
+	} else if data.Listenpolicy.IsUnknown() {
 		data.Listenpolicy = types.StringNull()
 	}
 	if val, ok := getResponseData["listenpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Listenpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Listenpriority.IsUnknown() {
 		data.Listenpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicetype.IsUnknown() {
 		data.Servicetype = types.StringNull()
 	}
 

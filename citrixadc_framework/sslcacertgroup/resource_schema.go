@@ -56,7 +56,7 @@ func sslcacertgroupSetAttrFromGet(ctx context.Context, data *SslcacertgroupResou
 	// Convert API response to model
 	if val, ok := getResponseData["cacertgroupname"]; ok && val != nil {
 		data.Cacertgroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertgroupname.IsUnknown() {
 		data.Cacertgroupname = types.StringNull()
 	}
 

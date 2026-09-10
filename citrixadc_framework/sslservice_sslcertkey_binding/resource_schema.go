@@ -142,37 +142,37 @@ func sslservice_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Ssls
 	// Convert API response to model
 	if val, ok := getResponseData["ca"]; ok && val != nil {
 		data.Ca = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Ca.IsUnknown() {
 		data.Ca = types.BoolNull()
 	}
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeyname.IsUnknown() {
 		data.Certkeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["crlcheck"]; ok && val != nil {
 		data.Crlcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Crlcheck.IsUnknown() {
 		data.Crlcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspcheck"]; ok && val != nil {
 		data.Ocspcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspcheck.IsUnknown() {
 		data.Ocspcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicename.IsUnknown() {
 		data.Servicename = types.StringNull()
 	}
 	if val, ok := getResponseData["skipcaname"]; ok && val != nil {
 		data.Skipcaname = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Skipcaname.IsUnknown() {
 		data.Skipcaname = types.BoolNull()
 	}
 	if val, ok := getResponseData["snicert"]; ok && val != nil {
 		data.Snicert = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Snicert.IsUnknown() {
 		data.Snicert = types.BoolNull()
 	}
 

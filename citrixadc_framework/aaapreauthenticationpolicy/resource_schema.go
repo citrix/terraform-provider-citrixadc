@@ -91,17 +91,17 @@ func aaapreauthenticationpolicySetAttrFromGet(ctx context.Context, data *Aaaprea
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["reqaction"]; ok && val != nil {
 		data.Reqaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Reqaction.IsUnknown() {
 		data.Reqaction = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
-	} else {
+	} else if data.Rule.IsUnknown() {
 		data.Rule = types.StringNull()
 	}
 

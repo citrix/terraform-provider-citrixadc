@@ -88,28 +88,28 @@ func appqoeparameterSetAttrFromGet(ctx context.Context, data *AppqoeparameterRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Avgwaitingclient = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Avgwaitingclient.IsUnknown() {
 		data.Avgwaitingclient = types.Int64Null()
 	}
 	if val, ok := getResponseData["dosattackthresh"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dosattackthresh = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dosattackthresh.IsUnknown() {
 		data.Dosattackthresh = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxaltrespbandwidth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxaltrespbandwidth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxaltrespbandwidth.IsUnknown() {
 		data.Maxaltrespbandwidth = types.Int64Null()
 	}
 	if val, ok := getResponseData["sessionlife"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessionlife = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessionlife.IsUnknown() {
 		data.Sessionlife = types.Int64Null()
 	}
 

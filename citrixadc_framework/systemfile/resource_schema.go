@@ -124,9 +124,13 @@ func systemfileSetAttrFromGet(ctx context.Context, data *SystemfileResourceModel
 
 	if val, ok := getResponseData["filelocation"]; ok && val != nil {
 		data.Filelocation = types.StringValue(val.(string))
+	} else if data.Filelocation.IsUnknown() {
+		data.Filelocation = types.StringNull()
 	}
 	if val, ok := getResponseData["filename"]; ok && val != nil {
 		data.Filename = types.StringValue(val.(string))
+	} else if data.Filename.IsUnknown() {
+		data.Filename = types.StringNull()
 	}
 
 	// is_base64_encoded is a client-side-only flag never returned by GET.

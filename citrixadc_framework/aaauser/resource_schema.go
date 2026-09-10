@@ -116,7 +116,7 @@ func aaauserSetAttrFromGet(ctx context.Context, data *AaauserResourceModel, getR
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

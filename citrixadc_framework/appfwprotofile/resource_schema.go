@@ -96,6 +96,8 @@ func appfwprotofileSetAttrFromGet(ctx context.Context, data *AppfwprotofileResou
 	// only update `name` and `src` (the response-side fields) from the API.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// `src` is the URL supplied at Import time; the NITRO server normalizes it
 	// (e.g., strips the "local:" protocol prefix) and returns the bare filename.

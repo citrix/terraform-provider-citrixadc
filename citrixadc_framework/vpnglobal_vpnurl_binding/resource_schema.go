@@ -71,12 +71,12 @@ func vpnglobal_vpnurl_bindingSetAttrFromGet(ctx context.Context, data *Vpnglobal
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["urlname"]; ok && val != nil {
 		data.Urlname = types.StringValue(val.(string))
-	} else {
+	} else if data.Urlname.IsUnknown() {
 		data.Urlname = types.StringNull()
 	}
 

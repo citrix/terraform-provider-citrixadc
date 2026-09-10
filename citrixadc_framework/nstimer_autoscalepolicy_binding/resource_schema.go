@@ -132,11 +132,15 @@ func nstimer_autoscalepolicy_bindingSetAttrFromGet(ctx context.Context, data *Ns
 	if data.Name.IsNull() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	if data.Policyname.IsNull() || data.Policyname.ValueString() == "" {
 		if val, ok := getResponseData["policyname"]; ok && val != nil {
 			data.Policyname = types.StringValue(val.(string))
+		} else if data.Policyname.IsUnknown() {
+			data.Policyname = types.StringNull()
 		}
 	}
 
@@ -145,6 +149,8 @@ func nstimer_autoscalepolicy_bindingSetAttrFromGet(ctx context.Context, data *Ns
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// gotopriorityexpression, samplesize, threshold, vserver are preserved from

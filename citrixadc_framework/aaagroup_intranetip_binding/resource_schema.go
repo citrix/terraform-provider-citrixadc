@@ -96,22 +96,22 @@ func aaagroup_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Aaagro
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["intranetip"]; ok && val != nil {
 		data.Intranetip = types.StringValue(val.(string))
-	} else {
+	} else if data.Intranetip.IsUnknown() {
 		data.Intranetip = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 

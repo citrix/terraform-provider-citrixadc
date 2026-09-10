@@ -79,10 +79,12 @@ func vxlan_srcip_bindingSetAttrFromGet(ctx context.Context, data *VxlanSrcipBind
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlanid = types.Int64Value(intVal)
 		}
+	} else if data.Vxlanid.IsUnknown() {
+		data.Vxlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.StringNull()
 	}
 

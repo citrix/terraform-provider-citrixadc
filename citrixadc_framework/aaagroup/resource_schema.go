@@ -73,14 +73,14 @@ func aaagroupSetAttrFromGet(ctx context.Context, data *AaagroupResourceModel, ge
 	// Convert API response to model
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Weight.IsUnknown() {
 		data.Weight = types.Int64Null()
 	}
 

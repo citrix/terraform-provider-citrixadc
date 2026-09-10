@@ -67,12 +67,12 @@ func mapdomainSetAttrFromGet(ctx context.Context, data *MapdomainResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["mapdmrname"]; ok && val != nil {
 		data.Mapdmrname = types.StringValue(val.(string))
-	} else {
+	} else if data.Mapdmrname.IsUnknown() {
 		data.Mapdmrname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

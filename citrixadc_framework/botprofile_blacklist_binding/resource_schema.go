@@ -160,12 +160,12 @@ func botprofile_blacklist_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_blacklist"]; ok && val != nil {
 		data.BotBlacklist = types.BoolValue(val.(bool))
-	} else {
+	} else if data.BotBlacklist.IsUnknown() {
 		data.BotBlacklist = types.BoolNull()
 	}
 	if val, ok := getResponseData["bot_blacklist_action"]; ok && val != nil {
@@ -181,27 +181,27 @@ func botprofile_blacklist_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 	}
 	if val, ok := getResponseData["bot_blacklist_enabled"]; ok && val != nil {
 		data.BotBlacklistEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBlacklistEnabled.IsUnknown() {
 		data.BotBlacklistEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_blacklist_type"]; ok && val != nil {
 		data.BotBlacklistType = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBlacklistType.IsUnknown() {
 		data.BotBlacklistType = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_blacklist_value"]; ok && val != nil {
 		data.BotBlacklistValue = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBlacklistValue.IsUnknown() {
 		data.BotBlacklistValue = types.StringNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

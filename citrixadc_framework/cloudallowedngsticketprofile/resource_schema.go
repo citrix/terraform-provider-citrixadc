@@ -65,12 +65,12 @@ func cloudallowedngsticketprofileSetAttrFromGet(ctx context.Context, data *Cloud
 	// Convert API response to model
 	if val, ok := getResponseData["creator"]; ok && val != nil {
 		data.Creator = types.StringValue(val.(string))
-	} else {
+	} else if data.Creator.IsUnknown() {
 		data.Creator = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

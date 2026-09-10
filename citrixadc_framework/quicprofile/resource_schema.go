@@ -233,118 +233,118 @@ func quicprofileSetAttrFromGet(ctx context.Context, data *QuicprofileResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ackdelayexponent = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ackdelayexponent.IsUnknown() {
 		data.Ackdelayexponent = types.Int64Null()
 	}
 	if val, ok := getResponseData["activeconnectionidlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Activeconnectionidlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Activeconnectionidlimit.IsUnknown() {
 		data.Activeconnectionidlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["activeconnectionmigration"]; ok && val != nil {
 		data.Activeconnectionmigration = types.StringValue(val.(string))
-	} else {
+	} else if data.Activeconnectionmigration.IsUnknown() {
 		data.Activeconnectionmigration = types.StringNull()
 	}
 	if val, ok := getResponseData["congestionctrlalgorithm"]; ok && val != nil {
 		data.Congestionctrlalgorithm = types.StringValue(val.(string))
-	} else {
+	} else if data.Congestionctrlalgorithm.IsUnknown() {
 		data.Congestionctrlalgorithm = types.StringNull()
 	}
 	if val, ok := getResponseData["initialmaxdata"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Initialmaxdata = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Initialmaxdata.IsUnknown() {
 		data.Initialmaxdata = types.Int64Null()
 	}
 	if val, ok := getResponseData["initialmaxstreamdatabidilocal"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Initialmaxstreamdatabidilocal = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Initialmaxstreamdatabidilocal.IsUnknown() {
 		data.Initialmaxstreamdatabidilocal = types.Int64Null()
 	}
 	if val, ok := getResponseData["initialmaxstreamdatabidiremote"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Initialmaxstreamdatabidiremote = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Initialmaxstreamdatabidiremote.IsUnknown() {
 		data.Initialmaxstreamdatabidiremote = types.Int64Null()
 	}
 	if val, ok := getResponseData["initialmaxstreamdatauni"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Initialmaxstreamdatauni = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Initialmaxstreamdatauni.IsUnknown() {
 		data.Initialmaxstreamdatauni = types.Int64Null()
 	}
 	if val, ok := getResponseData["initialmaxstreamsbidi"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Initialmaxstreamsbidi = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Initialmaxstreamsbidi.IsUnknown() {
 		data.Initialmaxstreamsbidi = types.Int64Null()
 	}
 	if val, ok := getResponseData["initialmaxstreamsuni"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Initialmaxstreamsuni = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Initialmaxstreamsuni.IsUnknown() {
 		data.Initialmaxstreamsuni = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxackdelay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxackdelay = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxackdelay.IsUnknown() {
 		data.Maxackdelay = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxidletimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxidletimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxidletimeout.IsUnknown() {
 		data.Maxidletimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxudpdatagramsperburst"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxudpdatagramsperburst = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxudpdatagramsperburst.IsUnknown() {
 		data.Maxudpdatagramsperburst = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxudppayloadsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxudppayloadsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxudppayloadsize.IsUnknown() {
 		data.Maxudppayloadsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["newtokenvalidityperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Newtokenvalidityperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Newtokenvalidityperiod.IsUnknown() {
 		data.Newtokenvalidityperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["retrytokenvalidityperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retrytokenvalidityperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retrytokenvalidityperiod.IsUnknown() {
 		data.Retrytokenvalidityperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["statelessaddressvalidation"]; ok && val != nil {
 		data.Statelessaddressvalidation = types.StringValue(val.(string))
-	} else {
+	} else if data.Statelessaddressvalidation.IsUnknown() {
 		data.Statelessaddressvalidation = types.StringNull()
 	}
 

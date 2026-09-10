@@ -72,14 +72,14 @@ func nd6ravariables_onlinkipv6prefix_bindingSetAttrFromGet(ctx context.Context, 
 	// Convert API response to model
 	if val, ok := getResponseData["ipv6prefix"]; ok && val != nil {
 		data.Ipv6prefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv6prefix.IsUnknown() {
 		data.Ipv6prefix = types.StringNull()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlan.IsUnknown() {
 		data.Vlan = types.Int64Null()
 	}
 

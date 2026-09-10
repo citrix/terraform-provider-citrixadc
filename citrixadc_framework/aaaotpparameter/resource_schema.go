@@ -76,19 +76,19 @@ func aaaotpparameterSetAttrFromGet(ctx context.Context, data *AaaotpparameterRes
 	// Convert API response to model
 	if val, ok := getResponseData["encryption"]; ok && val != nil {
 		data.Encryption = types.StringValue(val.(string))
-	} else {
+	} else if data.Encryption.IsUnknown() {
 		data.Encryption = types.StringNull()
 	}
 	if val, ok := getResponseData["maxotpdevices"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxotpdevices = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxotpdevices.IsUnknown() {
 		data.Maxotpdevices = types.Int64Null()
 	}
 	if val, ok := getResponseData["otptype"]; ok && val != nil {
 		data.Otptype = types.StringValue(val.(string))
-	} else {
+	} else if data.Otptype.IsUnknown() {
 		data.Otptype = types.StringNull()
 	}
 

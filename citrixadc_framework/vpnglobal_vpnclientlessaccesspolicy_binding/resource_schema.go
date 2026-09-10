@@ -212,7 +212,7 @@ func vpnglobal_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Feature.IsNull() || data.Feature.IsUnknown() {
 		if val, ok := getResponseData["feature"]; ok && val != nil {
 			data.Feature = types.StringValue(val.(string))
-		} else {
+		} else if data.Feature.IsUnknown() {
 			data.Feature = types.StringNull()
 		}
 	}
@@ -220,7 +220,7 @@ func vpnglobal_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Globalbindtype.IsNull() || data.Globalbindtype.IsUnknown() {
 		if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 			data.Globalbindtype = types.StringValue(val.(string))
-		} else {
+		} else if data.Globalbindtype.IsUnknown() {
 			data.Globalbindtype = types.StringNull()
 		}
 	}
@@ -228,7 +228,7 @@ func vpnglobal_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
 		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 			data.Gotopriorityexpression = types.StringValue(val.(string))
-		} else {
+		} else if data.Gotopriorityexpression.IsUnknown() {
 			data.Gotopriorityexpression = types.StringNull()
 		}
 	}
@@ -236,23 +236,25 @@ func vpnglobal_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Groupextraction.IsNull() || data.Groupextraction.IsUnknown() {
 		if val, ok := getResponseData["groupextraction"]; ok && val != nil {
 			data.Groupextraction = types.BoolValue(val.(bool))
-		} else {
+		} else if data.Groupextraction.IsUnknown() {
 			data.Groupextraction = types.BoolNull()
 		}
 	}
 	// policyname is the identity key; adopt from GET (matches configured value).
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	// priority: honored by the server; preserve plan/state value, fall back to GET.
 	if data.Priority.IsNull() || data.Priority.IsUnknown() {
 		if val, ok := getResponseData["priority"]; ok && val != nil {
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Priority = types.Int64Value(intVal)
-			} else {
+			} else if data.Priority.IsUnknown() {
 				data.Priority = types.Int64Null()
 			}
-		} else {
+		} else if data.Priority.IsUnknown() {
 			data.Priority = types.Int64Null()
 		}
 	}
@@ -260,7 +262,7 @@ func vpnglobal_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Secondary.IsNull() || data.Secondary.IsUnknown() {
 		if val, ok := getResponseData["secondary"]; ok && val != nil {
 			data.Secondary = types.BoolValue(val.(bool))
-		} else {
+		} else if data.Secondary.IsUnknown() {
 			data.Secondary = types.BoolNull()
 		}
 	}
@@ -268,7 +270,7 @@ func vpnglobal_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Type.IsNull() || data.Type.IsUnknown() {
 		if val, ok := getResponseData["type"]; ok && val != nil {
 			data.Type = types.StringValue(val.(string))
-		} else {
+		} else if data.Type.IsUnknown() {
 			data.Type = types.StringNull()
 		}
 	}

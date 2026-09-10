@@ -224,17 +224,17 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 	// Convert API response to model
 	if val, ok := getResponseData["automaticconfigsync"]; ok && val != nil {
 		data.Automaticconfigsync = types.StringValue(val.(string))
-	} else {
+	} else if data.Automaticconfigsync.IsUnknown() {
 		data.Automaticconfigsync = types.StringNull()
 	}
 	if val, ok := getResponseData["dropldnsreq"]; ok && val != nil {
 		data.Dropldnsreq = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropldnsreq.IsUnknown() {
 		data.Dropldnsreq = types.StringNull()
 	}
 	if val, ok := getResponseData["gslbconfigsyncmonitor"]; ok && val != nil {
 		data.Gslbconfigsyncmonitor = types.StringValue(val.(string))
-	} else {
+	} else if data.Gslbconfigsyncmonitor.IsUnknown() {
 		data.Gslbconfigsyncmonitor = types.StringNull()
 	}
 	if val, ok := getResponseData["gslbsvcstatedelaytime"]; ok && val != nil {
@@ -250,34 +250,34 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Gslbsyncinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Gslbsyncinterval.IsUnknown() {
 		data.Gslbsyncinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["gslbsynclocfiles"]; ok && val != nil {
 		data.Gslbsynclocfiles = types.StringValue(val.(string))
-	} else {
+	} else if data.Gslbsynclocfiles.IsUnknown() {
 		data.Gslbsynclocfiles = types.StringNull()
 	}
 	if val, ok := getResponseData["gslbsyncmode"]; ok && val != nil {
 		data.Gslbsyncmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Gslbsyncmode.IsUnknown() {
 		data.Gslbsyncmode = types.StringNull()
 	}
 	if val, ok := getResponseData["gslbsyncsaveconfigcommand"]; ok && val != nil {
 		data.Gslbsyncsaveconfigcommand = types.StringValue(val.(string))
-	} else {
+	} else if data.Gslbsyncsaveconfigcommand.IsUnknown() {
 		data.Gslbsyncsaveconfigcommand = types.StringNull()
 	}
 	if val, ok := getResponseData["ldnsentrytimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ldnsentrytimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ldnsentrytimeout.IsUnknown() {
 		data.Ldnsentrytimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ldnsmask"]; ok && val != nil {
 		data.Ldnsmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Ldnsmask.IsUnknown() {
 		data.Ldnsmask = types.StringNull()
 	}
 	if val, ok := getResponseData["ldnsprobeorder"]; ok && val != nil {
@@ -295,19 +295,19 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mepkeepalivetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mepkeepalivetimeout.IsUnknown() {
 		data.Mepkeepalivetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["rtttolerance"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rtttolerance = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rtttolerance.IsUnknown() {
 		data.Rtttolerance = types.Int64Null()
 	}
 	if val, ok := getResponseData["sourceipwhitelisting"]; ok && val != nil {
 		data.Sourceipwhitelisting = types.StringValue(val.(string))
-	} else {
+	} else if data.Sourceipwhitelisting.IsUnknown() {
 		data.Sourceipwhitelisting = types.StringNull()
 	}
 	if val, ok := getResponseData["svcstatelearningtime"]; ok && val != nil {
@@ -321,19 +321,19 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 	if val, ok := getResponseData["usekrpcchannelforsync"]; ok && val != nil {
 		data.Usekrpcchannelforsync = types.StringValue(val.(string))
-	} else {
+	} else if data.Usekrpcchannelforsync.IsUnknown() {
 		data.Usekrpcchannelforsync = types.StringNull()
 	}
 	if val, ok := getResponseData["v6ldnsmasklen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.V6ldnsmasklen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.V6ldnsmasklen.IsUnknown() {
 		data.V6ldnsmasklen = types.Int64Null()
 	}
 

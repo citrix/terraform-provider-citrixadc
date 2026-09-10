@@ -155,9 +155,13 @@ func authenticationvserver_tmsessionpolicy_bindingSetAttrFromGet(ctx context.Con
 	// Identity fields are always echoed — safe to adopt from the response.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 
 	// All other attributes are preserved from the plan/state (see function comment).

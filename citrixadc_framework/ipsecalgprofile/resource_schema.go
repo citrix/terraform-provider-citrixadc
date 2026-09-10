@@ -100,7 +100,7 @@ func ipsecalgprofileSetAttrFromGet(ctx context.Context, data *IpsecalgprofileRes
 	// Convert API response to model
 	if val, ok := getResponseData["connfailover"]; ok && val != nil {
 		data.Connfailover = types.StringValue(val.(string))
-	} else {
+	} else if data.Connfailover.IsUnknown() {
 		data.Connfailover = types.StringNull()
 	}
 	if val, ok := getResponseData["espgatetimeout"]; ok && val != nil {
@@ -126,7 +126,7 @@ func ipsecalgprofileSetAttrFromGet(ctx context.Context, data *IpsecalgprofileRes
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

@@ -184,42 +184,42 @@ func appfwprofile_xmlxss_bindingSetAttrFromGet(ctx context.Context, data *Appfwp
 	// did NOT d.Set these two fields.
 	if val, ok := getResponseData["as_scan_location_xmlxss"]; ok && val != nil {
 		data.AsScanLocationXmlxss = types.StringValue(val.(string))
-	} else {
+	} else if data.AsScanLocationXmlxss.IsUnknown() {
 		data.AsScanLocationXmlxss = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex_xmlxss"]; ok && val != nil {
 		data.IsregexXmlxss = types.StringValue(val.(string))
-	} else {
+	} else if data.IsregexXmlxss.IsUnknown() {
 		data.IsregexXmlxss = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlxss"]; ok && val != nil {
 		data.Xmlxss = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlxss.IsUnknown() {
 		data.Xmlxss = types.StringNull()
 	}
 

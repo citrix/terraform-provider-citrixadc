@@ -73,6 +73,8 @@ func policystringmapSetAttrFromGet(ctx context.Context, data *PolicystringmapRes
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// Set ID for the resource

@@ -102,6 +102,8 @@ func appfwhtmlerrorpageSetAttrFromGet(ctx context.Context, data *Appfwhtmlerrorp
 	// name: refresh from the API response (primary key)
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// comment: not returned by the NITRO GET - preserve plan/state value,

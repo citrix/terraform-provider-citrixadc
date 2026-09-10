@@ -85,14 +85,20 @@ func fis_channel_bindingSetAttrFromGet(ctx context.Context, data *FisChannelBind
 	// Convert API response to model
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
+	} else if data.Ifnum.IsUnknown() {
+		data.Ifnum = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["ownernode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
+	} else if data.Ownernode.IsUnknown() {
+		data.Ownernode = types.Int64Null()
 	}
 
 	return data

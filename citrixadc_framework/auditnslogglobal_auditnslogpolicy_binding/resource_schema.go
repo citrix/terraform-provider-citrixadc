@@ -112,19 +112,19 @@ func auditnslogglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context
 	}
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Globalbindtype.IsUnknown() {
 		data.Globalbindtype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Policyname.IsUnknown() {
 		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 

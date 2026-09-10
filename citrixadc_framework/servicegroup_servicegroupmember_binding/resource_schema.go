@@ -260,22 +260,32 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 	}
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
+	} else if data.Customserverid.IsUnknown() {
+		data.Customserverid = types.StringNull()
 	}
 	if val, ok := getResponseData["dbsttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dbsttl = types.Int64Value(intVal)
 		}
+	} else if data.Dbsttl.IsUnknown() {
+		data.Dbsttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["hashid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hashid = types.Int64Value(intVal)
 		}
+	} else if data.Hashid.IsUnknown() {
+		data.Hashid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ip"]; ok && val != nil {
 		data.Ip = types.StringValue(val.(string))
+	} else if data.Ip.IsUnknown() {
+		data.Ip = types.StringNull()
 	}
 	if val, ok := getResponseData["nameserver"]; ok && val != nil {
 		data.Nameserver = types.StringValue(val.(string))
+	} else if data.Nameserver.IsUnknown() {
+		data.Nameserver = types.StringNull()
 	}
 	// "order" is never echoed by the NITRO GET response (only "orderstr" is
 	// returned). Preserve the existing plan/state value rather than nulling it.
@@ -283,30 +293,44 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
 		}
+	} else if data.Order.IsUnknown() {
+		data.Order = types.Int64Null()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
+	} else if data.Port.IsUnknown() {
+		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["serverid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverid = types.Int64Value(intVal)
 		}
+	} else if data.Serverid.IsUnknown() {
+		data.Serverid = types.Int64Null()
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
+	} else if data.Servername.IsUnknown() {
+		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
+	} else if data.Servicegroupname.IsUnknown() {
+		data.Servicegroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
+	} else if data.Weight.IsUnknown() {
+		data.Weight = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

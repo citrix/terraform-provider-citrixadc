@@ -71,12 +71,12 @@ func lsngroup_lsnhttphdrlogprofile_bindingSetAttrFromGet(ctx context.Context, da
 	// Convert API response to model
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["httphdrlogprofilename"]; ok && val != nil {
 		data.Httphdrlogprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Httphdrlogprofilename.IsUnknown() {
 		data.Httphdrlogprofilename = types.StringNull()
 	}
 

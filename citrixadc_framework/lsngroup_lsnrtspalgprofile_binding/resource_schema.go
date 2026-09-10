@@ -72,9 +72,13 @@ func lsngroup_lsnrtspalgprofile_bindingSetAttrFromGet(ctx context.Context, data 
 	// so it is not recomputed here.
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
+	} else if data.Groupname.IsUnknown() {
+		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["rtspalgprofilename"]; ok && val != nil {
 		data.Rtspalgprofilename = types.StringValue(val.(string))
+	} else if data.Rtspalgprofilename.IsUnknown() {
+		data.Rtspalgprofilename = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.

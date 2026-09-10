@@ -174,26 +174,30 @@ func authenticationsamlidppolicySetAttrFromGet(ctx context.Context, data *Authen
 	// Required, in-config value.
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
+	} else if data.Action.IsUnknown() {
+		data.Action = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 	// comment, logaction and undefaction are Optional+Computed. NITRO omits them from
 	// the GET response when empty, so set Null when absent to resolve the
 	// known-after-apply (unknown) plan value.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Logaction.IsUnknown() {
 		data.Logaction = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 	// name is the user-facing key. Once a rename has happened (via newname), the live
@@ -205,6 +209,8 @@ func authenticationsamlidppolicySetAttrFromGet(ctx context.Context, data *Authen
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve the plan/state value.

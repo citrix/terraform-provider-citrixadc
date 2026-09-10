@@ -302,27 +302,27 @@ func rdpclientprofileSetAttrFromGet(ctx context.Context, data *RdpclientprofileR
 	// Convert API response to model
 	if val, ok := getResponseData["addusernameinrdpfile"]; ok && val != nil {
 		data.Addusernameinrdpfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Addusernameinrdpfile.IsUnknown() {
 		data.Addusernameinrdpfile = types.StringNull()
 	}
 	if val, ok := getResponseData["audiocapturemode"]; ok && val != nil {
 		data.Audiocapturemode = types.StringValue(val.(string))
-	} else {
+	} else if data.Audiocapturemode.IsUnknown() {
 		data.Audiocapturemode = types.StringNull()
 	}
 	if val, ok := getResponseData["keyboardhook"]; ok && val != nil {
 		data.Keyboardhook = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyboardhook.IsUnknown() {
 		data.Keyboardhook = types.StringNull()
 	}
 	if val, ok := getResponseData["multimonitorsupport"]; ok && val != nil {
 		data.Multimonitorsupport = types.StringValue(val.(string))
-	} else {
+	} else if data.Multimonitorsupport.IsUnknown() {
 		data.Multimonitorsupport = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// psk is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -330,91 +330,91 @@ func rdpclientprofileSetAttrFromGet(ctx context.Context, data *RdpclientprofileR
 	// psk_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["randomizerdpfilename"]; ok && val != nil {
 		data.Randomizerdpfilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Randomizerdpfilename.IsUnknown() {
 		data.Randomizerdpfilename = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpcookievalidity"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rdpcookievalidity = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rdpcookievalidity.IsUnknown() {
 		data.Rdpcookievalidity = types.Int64Null()
 	}
 	if val, ok := getResponseData["rdpcustomparams"]; ok && val != nil {
 		data.Rdpcustomparams = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpcustomparams.IsUnknown() {
 		data.Rdpcustomparams = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpfilename"]; ok && val != nil {
 		data.Rdpfilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpfilename.IsUnknown() {
 		data.Rdpfilename = types.StringNull()
 	}
 	if val, ok := getResponseData["rdphost"]; ok && val != nil {
 		data.Rdphost = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdphost.IsUnknown() {
 		data.Rdphost = types.StringNull()
 	}
 	if val, ok := getResponseData["rdplinkattribute"]; ok && val != nil {
 		data.Rdplinkattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdplinkattribute.IsUnknown() {
 		data.Rdplinkattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["rdplistener"]; ok && val != nil {
 		data.Rdplistener = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdplistener.IsUnknown() {
 		data.Rdplistener = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpurlmaxlen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rdpurlmaxlen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rdpurlmaxlen.IsUnknown() {
 		data.Rdpurlmaxlen = types.Int64Null()
 	}
 	if val, ok := getResponseData["rdpurlmaxlencheck"]; ok && val != nil {
 		data.Rdpurlmaxlencheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpurlmaxlencheck.IsUnknown() {
 		data.Rdpurlmaxlencheck = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpurloverride"]; ok && val != nil {
 		data.Rdpurloverride = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpurloverride.IsUnknown() {
 		data.Rdpurloverride = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpvalidateclientip"]; ok && val != nil {
 		data.Rdpvalidateclientip = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpvalidateclientip.IsUnknown() {
 		data.Rdpvalidateclientip = types.StringNull()
 	}
 	if val, ok := getResponseData["redirectclipboard"]; ok && val != nil {
 		data.Redirectclipboard = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectclipboard.IsUnknown() {
 		data.Redirectclipboard = types.StringNull()
 	}
 	if val, ok := getResponseData["redirectcomports"]; ok && val != nil {
 		data.Redirectcomports = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectcomports.IsUnknown() {
 		data.Redirectcomports = types.StringNull()
 	}
 	if val, ok := getResponseData["redirectdrives"]; ok && val != nil {
 		data.Redirectdrives = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectdrives.IsUnknown() {
 		data.Redirectdrives = types.StringNull()
 	}
 	if val, ok := getResponseData["redirectpnpdevices"]; ok && val != nil {
 		data.Redirectpnpdevices = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectpnpdevices.IsUnknown() {
 		data.Redirectpnpdevices = types.StringNull()
 	}
 	if val, ok := getResponseData["redirectprinters"]; ok && val != nil {
 		data.Redirectprinters = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectprinters.IsUnknown() {
 		data.Redirectprinters = types.StringNull()
 	}
 	if val, ok := getResponseData["videoplaybackmode"]; ok && val != nil {
 		data.Videoplaybackmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Videoplaybackmode.IsUnknown() {
 		data.Videoplaybackmode = types.StringNull()
 	}
 

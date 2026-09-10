@@ -87,6 +87,8 @@ func cachepolicylabelSetAttrFromGet(ctx context.Context, data *CachepolicylabelR
 	// value is never clobbered by an absent field.
 	if val, ok := getResponseData["evaluates"]; ok && val != nil {
 		data.Evaluates = types.StringValue(val.(string))
+	} else if data.Evaluates.IsUnknown() {
+		data.Evaluates = types.StringNull()
 	}
 	// labelname is the user-facing key. Once a rename has happened (via newname), the
 	// live object name (tracked by data.Id) diverges from the configured labelname,
@@ -97,6 +99,8 @@ func cachepolicylabelSetAttrFromGet(ctx context.Context, data *CachepolicylabelR
 	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
 		if val, ok := getResponseData["labelname"]; ok && val != nil {
 			data.Labelname = types.StringValue(val.(string))
+		} else if data.Labelname.IsUnknown() {
+			data.Labelname = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.

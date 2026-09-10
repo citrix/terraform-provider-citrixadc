@@ -150,31 +150,31 @@ func systemgroupSetAttrFromGet(ctx context.Context, data *SystemgroupResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Daystoexpire = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Daystoexpire.IsUnknown() {
 		data.Daystoexpire = types.Int64Null()
 	}
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["promptstring"]; ok && val != nil {
 		data.Promptstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Promptstring.IsUnknown() {
 		data.Promptstring = types.StringNull()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
 		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["warnpriorndays"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Warnpriorndays = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Warnpriorndays.IsUnknown() {
 		data.Warnpriorndays = types.Int64Null()
 	}
 	if val, ok := getResponseData["allowedmanagementinterface"]; ok && val != nil {

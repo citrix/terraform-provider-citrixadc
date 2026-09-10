@@ -212,10 +212,10 @@ func nssimpleaclSetAttrFromGet(ctx context.Context, data *NssimpleaclResourceMod
 		if val, ok := getResponseData["ttl"]; ok && val != nil {
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Ttl = types.Int64Value(intVal)
-			} else {
+			} else if data.Ttl.IsUnknown() {
 				data.Ttl = types.Int64Null()
 			}
-		} else {
+		} else if data.Ttl.IsUnknown() {
 			data.Ttl = types.Int64Null()
 		}
 	}

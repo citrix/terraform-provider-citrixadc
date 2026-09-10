@@ -88,19 +88,19 @@ func vpnvserver_intranetip6_bindingSetAttrFromGet(ctx context.Context, data *Vpn
 	// Convert API response to model
 	if val, ok := getResponseData["intranetip6"]; ok && val != nil {
 		data.Intranetip6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Intranetip6.IsUnknown() {
 		data.Intranetip6 = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["numaddr"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Numaddr = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Numaddr.IsUnknown() {
 		data.Numaddr = types.Int64Null()
 	}
 

@@ -182,6 +182,8 @@ func sslpolicySetAttrFromGet(ctx context.Context, data *SslpolicyResourceModel, 
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// reqaction is never returned by NITRO GET; preserve the configured/prior
 	// value and only resolve an unknown (Computed, unconfigured) to null.
@@ -190,6 +192,8 @@ func sslpolicySetAttrFromGet(ctx context.Context, data *SslpolicyResourceModel, 
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))

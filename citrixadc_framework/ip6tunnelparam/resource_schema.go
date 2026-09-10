@@ -90,7 +90,7 @@ func ip6tunnelparamSetAttrFromGet(ctx context.Context, data *Ip6tunnelparamResou
 	// Convert API response to model
 	if val, ok := getResponseData["dropfrag"]; ok && val != nil {
 		data.Dropfrag = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropfrag.IsUnknown() {
 		data.Dropfrag = types.StringNull()
 	}
 	if val, ok := getResponseData["dropfragcputhreshold"]; ok && val != nil {
@@ -105,17 +105,17 @@ func ip6tunnelparamSetAttrFromGet(ctx context.Context, data *Ip6tunnelparamResou
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.StringNull()
 	}
 	if val, ok := getResponseData["srciproundrobin"]; ok && val != nil {
 		data.Srciproundrobin = types.StringValue(val.(string))
-	} else {
+	} else if data.Srciproundrobin.IsUnknown() {
 		data.Srciproundrobin = types.StringNull()
 	}
 	if val, ok := getResponseData["useclientsourceipv6"]; ok && val != nil {
 		data.Useclientsourceipv6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Useclientsourceipv6.IsUnknown() {
 		data.Useclientsourceipv6 = types.StringNull()
 	}
 

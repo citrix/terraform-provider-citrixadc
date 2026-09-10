@@ -587,7 +587,7 @@ func appflowparamSetAttrFromGet(ctx context.Context, data *AppflowparamResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["aaausername"]; ok && val != nil {
 		data.Aaausername = types.StringValue(val.(string))
-	} else {
+	} else if data.Aaausername.IsUnknown() {
 		data.Aaausername = types.StringNull()
 	}
 	// analyticsauthtoken is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -597,270 +597,270 @@ func appflowparamSetAttrFromGet(ctx context.Context, data *AppflowparamResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Appnamerefresh = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Appnamerefresh.IsUnknown() {
 		data.Appnamerefresh = types.Int64Null()
 	}
 	if val, ok := getResponseData["auditlogs"]; ok && val != nil {
 		data.Auditlogs = types.StringValue(val.(string))
-	} else {
+	} else if data.Auditlogs.IsUnknown() {
 		data.Auditlogs = types.StringNull()
 	}
 	if val, ok := getResponseData["cacheinsight"]; ok && val != nil {
 		data.Cacheinsight = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacheinsight.IsUnknown() {
 		data.Cacheinsight = types.StringNull()
 	}
 	if val, ok := getResponseData["clienttrafficonly"]; ok && val != nil {
 		data.Clienttrafficonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Clienttrafficonly.IsUnknown() {
 		data.Clienttrafficonly = types.StringNull()
 	}
 	if val, ok := getResponseData["connectionchaining"]; ok && val != nil {
 		data.Connectionchaining = types.StringValue(val.(string))
-	} else {
+	} else if data.Connectionchaining.IsUnknown() {
 		data.Connectionchaining = types.StringNull()
 	}
 	if val, ok := getResponseData["cqareporting"]; ok && val != nil {
 		data.Cqareporting = types.StringValue(val.(string))
-	} else {
+	} else if data.Cqareporting.IsUnknown() {
 		data.Cqareporting = types.StringNull()
 	}
 	if val, ok := getResponseData["distributedtracing"]; ok && val != nil {
 		data.Distributedtracing = types.StringValue(val.(string))
-	} else {
+	} else if data.Distributedtracing.IsUnknown() {
 		data.Distributedtracing = types.StringNull()
 	}
 	if val, ok := getResponseData["disttracingsamplingrate"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Disttracingsamplingrate = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Disttracingsamplingrate.IsUnknown() {
 		data.Disttracingsamplingrate = types.Int64Null()
 	}
 	if val, ok := getResponseData["emailaddress"]; ok && val != nil {
 		data.Emailaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Emailaddress.IsUnknown() {
 		data.Emailaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["events"]; ok && val != nil {
 		data.Events = types.StringValue(val.(string))
-	} else {
+	} else if data.Events.IsUnknown() {
 		data.Events = types.StringNull()
 	}
 	if val, ok := getResponseData["flowrecordinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Flowrecordinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Flowrecordinterval.IsUnknown() {
 		data.Flowrecordinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["gxsessionreporting"]; ok && val != nil {
 		data.Gxsessionreporting = types.StringValue(val.(string))
-	} else {
+	} else if data.Gxsessionreporting.IsUnknown() {
 		data.Gxsessionreporting = types.StringNull()
 	}
 	if val, ok := getResponseData["httpauthorization"]; ok && val != nil {
 		data.Httpauthorization = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpauthorization.IsUnknown() {
 		data.Httpauthorization = types.StringNull()
 	}
 	if val, ok := getResponseData["httpcontenttype"]; ok && val != nil {
 		data.Httpcontenttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpcontenttype.IsUnknown() {
 		data.Httpcontenttype = types.StringNull()
 	}
 	if val, ok := getResponseData["httpcookie"]; ok && val != nil {
 		data.Httpcookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpcookie.IsUnknown() {
 		data.Httpcookie = types.StringNull()
 	}
 	if val, ok := getResponseData["httpdomain"]; ok && val != nil {
 		data.Httpdomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpdomain.IsUnknown() {
 		data.Httpdomain = types.StringNull()
 	}
 	if val, ok := getResponseData["httphost"]; ok && val != nil {
 		data.Httphost = types.StringValue(val.(string))
-	} else {
+	} else if data.Httphost.IsUnknown() {
 		data.Httphost = types.StringNull()
 	}
 	if val, ok := getResponseData["httplocation"]; ok && val != nil {
 		data.Httplocation = types.StringValue(val.(string))
-	} else {
+	} else if data.Httplocation.IsUnknown() {
 		data.Httplocation = types.StringNull()
 	}
 	if val, ok := getResponseData["httpmethod"]; ok && val != nil {
 		data.Httpmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpmethod.IsUnknown() {
 		data.Httpmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["httpquerywithurl"]; ok && val != nil {
 		data.Httpquerywithurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpquerywithurl.IsUnknown() {
 		data.Httpquerywithurl = types.StringNull()
 	}
 	if val, ok := getResponseData["httpreferer"]; ok && val != nil {
 		data.Httpreferer = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpreferer.IsUnknown() {
 		data.Httpreferer = types.StringNull()
 	}
 	if val, ok := getResponseData["httpsetcookie"]; ok && val != nil {
 		data.Httpsetcookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpsetcookie.IsUnknown() {
 		data.Httpsetcookie = types.StringNull()
 	}
 	if val, ok := getResponseData["httpsetcookie2"]; ok && val != nil {
 		data.Httpsetcookie2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpsetcookie2.IsUnknown() {
 		data.Httpsetcookie2 = types.StringNull()
 	}
 	if val, ok := getResponseData["httpurl"]; ok && val != nil {
 		data.Httpurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpurl.IsUnknown() {
 		data.Httpurl = types.StringNull()
 	}
 	if val, ok := getResponseData["httpuseragent"]; ok && val != nil {
 		data.Httpuseragent = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpuseragent.IsUnknown() {
 		data.Httpuseragent = types.StringNull()
 	}
 	if val, ok := getResponseData["httpvia"]; ok && val != nil {
 		data.Httpvia = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpvia.IsUnknown() {
 		data.Httpvia = types.StringNull()
 	}
 	if val, ok := getResponseData["httpxforwardedfor"]; ok && val != nil {
 		data.Httpxforwardedfor = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpxforwardedfor.IsUnknown() {
 		data.Httpxforwardedfor = types.StringNull()
 	}
 	if val, ok := getResponseData["identifiername"]; ok && val != nil {
 		data.Identifiername = types.StringValue(val.(string))
-	} else {
+	} else if data.Identifiername.IsUnknown() {
 		data.Identifiername = types.StringNull()
 	}
 	if val, ok := getResponseData["identifiersessionname"]; ok && val != nil {
 		data.Identifiersessionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Identifiersessionname.IsUnknown() {
 		data.Identifiersessionname = types.StringNull()
 	}
 	if val, ok := getResponseData["logalljsonfields"]; ok && val != nil {
 		data.Logalljsonfields = types.StringValue(val.(string))
-	} else {
+	} else if data.Logalljsonfields.IsUnknown() {
 		data.Logalljsonfields = types.StringNull()
 	}
 	if val, ok := getResponseData["logstreamovernsip"]; ok && val != nil {
 		data.Logstreamovernsip = types.StringValue(val.(string))
-	} else {
+	} else if data.Logstreamovernsip.IsUnknown() {
 		data.Logstreamovernsip = types.StringNull()
 	}
 	if val, ok := getResponseData["lsnlogging"]; ok && val != nil {
 		data.Lsnlogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Lsnlogging.IsUnknown() {
 		data.Lsnlogging = types.StringNull()
 	}
 	if val, ok := getResponseData["metrics"]; ok && val != nil {
 		data.Metrics = types.StringValue(val.(string))
-	} else {
+	} else if data.Metrics.IsUnknown() {
 		data.Metrics = types.StringNull()
 	}
 	if val, ok := getResponseData["observationdomainid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Observationdomainid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Observationdomainid.IsUnknown() {
 		data.Observationdomainid = types.Int64Null()
 	}
 	if val, ok := getResponseData["observationdomainname"]; ok && val != nil {
 		data.Observationdomainname = types.StringValue(val.(string))
-	} else {
+	} else if data.Observationdomainname.IsUnknown() {
 		data.Observationdomainname = types.StringNull()
 	}
 	if val, ok := getResponseData["observationpointid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Observationpointid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Observationpointid.IsUnknown() {
 		data.Observationpointid = types.Int64Null()
 	}
 	if val, ok := getResponseData["securityinsightrecordinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Securityinsightrecordinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Securityinsightrecordinterval.IsUnknown() {
 		data.Securityinsightrecordinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["securityinsighttraffic"]; ok && val != nil {
 		data.Securityinsighttraffic = types.StringValue(val.(string))
-	} else {
+	} else if data.Securityinsighttraffic.IsUnknown() {
 		data.Securityinsighttraffic = types.StringNull()
 	}
 	if val, ok := getResponseData["skipcacheredirectionhttptransaction"]; ok && val != nil {
 		data.Skipcacheredirectionhttptransaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Skipcacheredirectionhttptransaction.IsUnknown() {
 		data.Skipcacheredirectionhttptransaction = types.StringNull()
 	}
 	if val, ok := getResponseData["subscriberawareness"]; ok && val != nil {
 		data.Subscriberawareness = types.StringValue(val.(string))
-	} else {
+	} else if data.Subscriberawareness.IsUnknown() {
 		data.Subscriberawareness = types.StringNull()
 	}
 	if val, ok := getResponseData["subscriberidobfuscation"]; ok && val != nil {
 		data.Subscriberidobfuscation = types.StringValue(val.(string))
-	} else {
+	} else if data.Subscriberidobfuscation.IsUnknown() {
 		data.Subscriberidobfuscation = types.StringNull()
 	}
 	if val, ok := getResponseData["subscriberidobfuscationalgo"]; ok && val != nil {
 		data.Subscriberidobfuscationalgo = types.StringValue(val.(string))
-	} else {
+	} else if data.Subscriberidobfuscationalgo.IsUnknown() {
 		data.Subscriberidobfuscationalgo = types.StringNull()
 	}
 	if val, ok := getResponseData["tcpattackcounterinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcpattackcounterinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcpattackcounterinterval.IsUnknown() {
 		data.Tcpattackcounterinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["templaterefresh"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Templaterefresh = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Templaterefresh.IsUnknown() {
 		data.Templaterefresh = types.Int64Null()
 	}
 	if val, ok := getResponseData["timeseriesovernsip"]; ok && val != nil {
 		data.Timeseriesovernsip = types.StringValue(val.(string))
-	} else {
+	} else if data.Timeseriesovernsip.IsUnknown() {
 		data.Timeseriesovernsip = types.StringNull()
 	}
 	if val, ok := getResponseData["udppmtu"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Udppmtu = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Udppmtu.IsUnknown() {
 		data.Udppmtu = types.Int64Null()
 	}
 	if val, ok := getResponseData["urlcategory"]; ok && val != nil {
 		data.Urlcategory = types.StringValue(val.(string))
-	} else {
+	} else if data.Urlcategory.IsUnknown() {
 		data.Urlcategory = types.StringNull()
 	}
 	if val, ok := getResponseData["usagerecordinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Usagerecordinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Usagerecordinterval.IsUnknown() {
 		data.Usagerecordinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["videoinsight"]; ok && val != nil {
 		data.Videoinsight = types.StringValue(val.(string))
-	} else {
+	} else if data.Videoinsight.IsUnknown() {
 		data.Videoinsight = types.StringNull()
 	}
 	if val, ok := getResponseData["websaasappusagereporting"]; ok && val != nil {
 		data.Websaasappusagereporting = types.StringValue(val.(string))
-	} else {
+	} else if data.Websaasappusagereporting.IsUnknown() {
 		data.Websaasappusagereporting = types.StringNull()
 	}
 

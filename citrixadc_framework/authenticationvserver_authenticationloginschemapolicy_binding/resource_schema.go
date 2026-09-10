@@ -158,9 +158,13 @@ func authenticationvserver_authenticationloginschemapolicy_bindingSetAttrFromGet
 	// them on import, where the model carries only the ID).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 
 	// All other attributes (bindpoint, gotopriorityexpression, groupextraction,

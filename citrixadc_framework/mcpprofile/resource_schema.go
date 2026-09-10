@@ -231,32 +231,32 @@ func mcpprofileSetAttrFromGet(ctx context.Context, data *McpprofileResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["proxymode"]; ok && val != nil {
 		data.Proxymode = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxymode.IsUnknown() {
 		data.Proxymode = types.StringNull()
 	}
 	if val, ok := getResponseData["profiletype"]; ok && val != nil {
 		data.Profiletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Profiletype.IsUnknown() {
 		data.Profiletype = types.StringNull()
 	}
 	if val, ok := getResponseData["hostreplacement"]; ok && val != nil {
 		data.Hostreplacement = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostreplacement.IsUnknown() {
 		data.Hostreplacement = types.StringNull()
 	}
 	if val, ok := getResponseData["urlreplacement"]; ok && val != nil {
 		data.Urlreplacement = types.StringValue(val.(string))
-	} else {
+	} else if data.Urlreplacement.IsUnknown() {
 		data.Urlreplacement = types.StringNull()
 	}
 	if val, ok := getResponseData["protocolversion"]; ok && val != nil {
 		data.Protocolversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Protocolversion.IsUnknown() {
 		data.Protocolversion = types.StringNull()
 	}
 	// tokenorapi is a secret returned by NITRO only in an encrypted form that does
@@ -267,19 +267,19 @@ func mcpprofileSetAttrFromGet(ctx context.Context, data *McpprofileResourceModel
 	// value.
 	if !data.Tokenorapi.IsNull() && !data.Tokenorapi.IsUnknown() {
 		// retain the configured plaintext value
-	} else {
+	} else if data.Tokenorapi.IsUnknown() {
 		data.Tokenorapi = types.StringNull()
 	}
 	// tokenorapi_wo / tokenorapi_wo_version are write-only/ephemeral and are never
 	// returned by NITRO; retain them from config/state.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["insertheaderinclientrequest"]; ok && val != nil {
 		data.Insertheaderinclientrequest = types.StringValue(val.(string))
-	} else {
+	} else if data.Insertheaderinclientrequest.IsUnknown() {
 		data.Insertheaderinclientrequest = types.StringNull()
 	}
 

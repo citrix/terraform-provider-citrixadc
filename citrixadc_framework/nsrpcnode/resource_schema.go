@@ -123,7 +123,7 @@ func nsrpcnodeSetAttrFromGet(ctx context.Context, data *NsrpcnodeResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -131,17 +131,17 @@ func nsrpcnodeSetAttrFromGet(ctx context.Context, data *NsrpcnodeResourceModel, 
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["secure"]; ok && val != nil {
 		data.Secure = types.StringValue(val.(string))
-	} else {
+	} else if data.Secure.IsUnknown() {
 		data.Secure = types.StringNull()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.StringNull()
 	}
 	if val, ok := getResponseData["validatecert"]; ok && val != nil {
 		data.Validatecert = types.StringValue(val.(string))
-	} else {
+	} else if data.Validatecert.IsUnknown() {
 		data.Validatecert = types.StringNull()
 	}
 

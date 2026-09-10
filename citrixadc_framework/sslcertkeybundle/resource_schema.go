@@ -104,12 +104,12 @@ func sslcertkeybundleSetAttrFromGet(ctx context.Context, data *SslcertkeybundleR
 	// Convert API response to model
 	if val, ok := getResponseData["bundlefile"]; ok && val != nil {
 		data.Bundlefile = types.StringValue(val.(string))
-	} else {
+	} else if data.Bundlefile.IsUnknown() {
 		data.Bundlefile = types.StringNull()
 	}
 	if val, ok := getResponseData["certkeybundlename"]; ok && val != nil {
 		data.Certkeybundlename = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeybundlename.IsUnknown() {
 		data.Certkeybundlename = types.StringNull()
 	}
 	// passplain is not returned by NITRO API (secret/ephemeral) - retain from config

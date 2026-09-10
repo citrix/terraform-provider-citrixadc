@@ -100,6 +100,8 @@ func appfwxmlschemaSetAttrFromGet(ctx context.Context, data *AppfwxmlschemaResou
 	// retained from the plan/state rather than overwritten with null.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// Resolve any unresolved (unknown) Optional+Computed values so the saved

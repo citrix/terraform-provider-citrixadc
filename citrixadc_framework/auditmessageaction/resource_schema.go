@@ -123,7 +123,7 @@ func auditmessageactionSetAttrFromGet(ctx context.Context, data *Auditmessageact
 	// Convert API response to model
 	if val, ok := getResponseData["bypasssafetycheck"]; ok && val != nil {
 		data.Bypasssafetycheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Bypasssafetycheck.IsUnknown() {
 		data.Bypasssafetycheck = types.StringNull()
 	}
 	// Note: NITRO GET returns the resolved log level in the read-only "loglevel1"
@@ -131,22 +131,22 @@ func auditmessageactionSetAttrFromGet(ctx context.Context, data *Auditmessageact
 	// backward compatibility.
 	if val, ok := getResponseData["loglevel1"]; ok && val != nil {
 		data.Loglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Loglevel.IsUnknown() {
 		data.Loglevel = types.StringNull()
 	}
 	if val, ok := getResponseData["logtonewnslog"]; ok && val != nil {
 		data.Logtonewnslog = types.StringValue(val.(string))
-	} else {
+	} else if data.Logtonewnslog.IsUnknown() {
 		data.Logtonewnslog = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["stringbuilderexpr"]; ok && val != nil {
 		data.Stringbuilderexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Stringbuilderexpr.IsUnknown() {
 		data.Stringbuilderexpr = types.StringNull()
 	}
 

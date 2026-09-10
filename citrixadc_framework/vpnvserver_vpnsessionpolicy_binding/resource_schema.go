@@ -146,28 +146,42 @@ func vpnvserver_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data
 	// returned by NITRO GET for this binding -> preserve the existing plan/state value.
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
+	} else if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["groupextraction"]; ok && val != nil {
 		data.Groupextraction = types.BoolValue(val.(bool))
+	} else if data.Groupextraction.IsUnknown() {
+		data.Groupextraction = types.BoolNull()
 	}
 	if val, ok := getResponseData["secondary"]; ok && val != nil {
 		data.Secondary = types.BoolValue(val.(bool))
+	} else if data.Secondary.IsUnknown() {
+		data.Secondary = types.BoolNull()
 	}
 
 	// Identity + server-returned attributes.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

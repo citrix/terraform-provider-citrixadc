@@ -166,7 +166,7 @@ func azureapplicationSetAttrFromGet(ctx context.Context, data *AzureapplicationR
 	// Convert API response to model
 	if val, ok := getResponseData["clientid"]; ok && val != nil {
 		data.Clientid = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientid.IsUnknown() {
 		data.Clientid = types.StringNull()
 	}
 	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -174,22 +174,22 @@ func azureapplicationSetAttrFromGet(ctx context.Context, data *AzureapplicationR
 	// clientsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["tenantid"]; ok && val != nil {
 		data.Tenantid = types.StringValue(val.(string))
-	} else {
+	} else if data.Tenantid.IsUnknown() {
 		data.Tenantid = types.StringNull()
 	}
 	if val, ok := getResponseData["tokenendpoint"]; ok && val != nil {
 		data.Tokenendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Tokenendpoint.IsUnknown() {
 		data.Tokenendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["vaultresource"]; ok && val != nil {
 		data.Vaultresource = types.StringValue(val.(string))
-	} else {
+	} else if data.Vaultresource.IsUnknown() {
 		data.Vaultresource = types.StringNull()
 	}
 

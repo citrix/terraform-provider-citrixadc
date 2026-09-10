@@ -156,23 +156,35 @@ func appfwprofile_starturl_bindingSetAttrFromGet(ctx context.Context, data *Appf
 	// Convert API response to model
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
+	} else if data.Alertonly.IsUnknown() {
+		data.Alertonly = types.StringNull()
 	}
 	// comment is not echoed back by GET; preserve the existing plan/state value.
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
+	} else if data.Isautodeployed.IsUnknown() {
+		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
+	} else if data.Resourceid.IsUnknown() {
+		data.Resourceid = types.StringNull()
 	}
 	// ruletype is not echoed back by GET; preserve the existing plan/state value.
 	if val, ok := getResponseData["starturl"]; ok && val != nil {
 		data.Starturl = types.StringValue(val.(string))
+	} else if data.Starturl.IsUnknown() {
+		data.Starturl = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

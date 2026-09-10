@@ -246,6 +246,8 @@ func rnatSetAttrFromGet(ctx context.Context, data *RnatResourceModel, getRespons
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["natip"]; ok && val != nil {

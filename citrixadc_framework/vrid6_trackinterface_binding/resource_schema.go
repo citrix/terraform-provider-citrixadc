@@ -77,9 +77,13 @@ func vrid6_trackinterface_bindingSetAttrFromGet(ctx context.Context, data *Vrid6
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.VridId = types.Int64Value(intVal)
 		}
+	} else if data.VridId.IsUnknown() {
+		data.VridId = types.Int64Null()
 	}
 	if val, ok := getResponseData["trackifnum"]; ok && val != nil {
 		data.Trackifnum = types.StringValue(val.(string))
+	} else if data.Trackifnum.IsUnknown() {
+		data.Trackifnum = types.StringNull()
 	}
 
 	return data

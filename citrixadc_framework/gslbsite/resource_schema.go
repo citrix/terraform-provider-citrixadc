@@ -327,62 +327,62 @@ func gslbsiteSetAttrFromGet(ctx context.Context, data *GslbsiteResourceModel, ge
 	}
 	if val, ok := getResponseData["clip"]; ok && val != nil {
 		data.Clip = types.StringValue(val.(string))
-	} else {
+	} else if data.Clip.IsUnknown() {
 		data.Clip = types.StringNull()
 	}
 	if val, ok := getResponseData["krpcnodesrcip"]; ok && val != nil {
 		data.Krpcnodesrcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Krpcnodesrcip.IsUnknown() {
 		data.Krpcnodesrcip = types.StringNull()
 	}
 	if val, ok := getResponseData["metricexchange"]; ok && val != nil {
 		data.Metricexchange = types.StringValue(val.(string))
-	} else {
+	} else if data.Metricexchange.IsUnknown() {
 		data.Metricexchange = types.StringNull()
 	}
 	if val, ok := getResponseData["naptrreplacementsuffix"]; ok && val != nil {
 		data.Naptrreplacementsuffix = types.StringValue(val.(string))
-	} else {
+	} else if data.Naptrreplacementsuffix.IsUnknown() {
 		data.Naptrreplacementsuffix = types.StringNull()
 	}
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
-	} else {
+	} else if data.Newname.IsUnknown() {
 		data.Newname = types.StringNull()
 	}
 	if val, ok := getResponseData["nwmetricexchange"]; ok && val != nil {
 		data.Nwmetricexchange = types.StringValue(val.(string))
-	} else {
+	} else if data.Nwmetricexchange.IsUnknown() {
 		data.Nwmetricexchange = types.StringNull()
 	}
 	if val, ok := getResponseData["parentsite"]; ok && val != nil {
 		data.Parentsite = types.StringValue(val.(string))
-	} else {
+	} else if data.Parentsite.IsUnknown() {
 		data.Parentsite = types.StringNull()
 	}
 	if val, ok := getResponseData["publicclip"]; ok && val != nil {
 		data.Publicclip = types.StringValue(val.(string))
-	} else {
+	} else if data.Publicclip.IsUnknown() {
 		data.Publicclip = types.StringNull()
 	}
 	if val, ok := getResponseData["publicip"]; ok && val != nil {
 		data.Publicip = types.StringValue(val.(string))
-	} else {
+	} else if data.Publicip.IsUnknown() {
 		data.Publicip = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionexchange"]; ok && val != nil {
 		data.Sessionexchange = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionexchange.IsUnknown() {
 		data.Sessionexchange = types.StringNull()
 	}
 	if val, ok := getResponseData["siteipaddress"]; ok && val != nil {
 		data.Siteipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Siteipaddress.IsUnknown() {
 		data.Siteipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["sitename"]; ok && val != nil {
 		data.Sitename = types.StringValue(val.(string))
-	} else {
+	} else if data.Sitename.IsUnknown() {
 		data.Sitename = types.StringNull()
 	}
 	// sitepassword is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -390,12 +390,12 @@ func gslbsiteSetAttrFromGet(ctx context.Context, data *GslbsiteResourceModel, ge
 	// sitepassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["sitetype"]; ok && val != nil {
 		data.Sitetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Sitetype.IsUnknown() {
 		data.Sitetype = types.StringNull()
 	}
 	if val, ok := getResponseData["triggermonitor"]; ok && val != nil {
 		data.Triggermonitor = types.StringValue(val.(string))
-	} else {
+	} else if data.Triggermonitor.IsUnknown() {
 		data.Triggermonitor = types.StringNull()
 	}
 

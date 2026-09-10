@@ -100,6 +100,8 @@ func appfwxmlerrorpageSetAttrFromGet(ctx context.Context, data *Appfwxmlerrorpag
 
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// Resolve unknown values for Optional+Computed attributes that are not

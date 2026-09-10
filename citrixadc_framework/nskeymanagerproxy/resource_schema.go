@@ -94,17 +94,17 @@ func nskeymanagerproxySetAttrFromGet(ctx context.Context, data *Nskeymanagerprox
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 

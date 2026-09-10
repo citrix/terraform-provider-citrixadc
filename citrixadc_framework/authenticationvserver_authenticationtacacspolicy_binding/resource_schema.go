@@ -165,14 +165,14 @@ func authenticationvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx 
 	if data.Bindpoint.IsUnknown() {
 		if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 			data.Bindpoint = types.StringValue(val.(string))
-		} else {
+		} else if data.Bindpoint.IsUnknown() {
 			data.Bindpoint = types.StringNull()
 		}
 	}
 	if data.Gotopriorityexpression.IsUnknown() {
 		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 			data.Gotopriorityexpression = types.StringValue(val.(string))
-		} else {
+		} else if data.Gotopriorityexpression.IsUnknown() {
 			data.Gotopriorityexpression = types.StringNull()
 		}
 	}
@@ -185,25 +185,29 @@ func authenticationvserver_authenticationtacacspolicy_bindingSetAttrFromGet(ctx 
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if data.Nextfactor.IsUnknown() {
 		if val, ok := getResponseData["nextfactor"]; ok && val != nil {
 			data.Nextfactor = types.StringValue(val.(string))
-		} else {
+		} else if data.Nextfactor.IsUnknown() {
 			data.Nextfactor = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 	if data.Priority.IsUnknown() {
 		if val, ok := getResponseData["priority"]; ok && val != nil {
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Priority = types.Int64Value(intVal)
-			} else {
+			} else if data.Priority.IsUnknown() {
 				data.Priority = types.Int64Null()
 			}
-		} else {
+		} else if data.Priority.IsUnknown() {
 			data.Priority = types.Int64Null()
 		}
 	}

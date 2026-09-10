@@ -344,48 +344,48 @@ func dnskeySetAttrFromGet(ctx context.Context, data *DnskeyResourceModel, getRes
 	// Convert API response to model
 	if val, ok := getResponseData["algorithm"]; ok && val != nil {
 		data.Algorithm = types.StringValue(val.(string))
-	} else {
+	} else if data.Algorithm.IsUnknown() {
 		data.Algorithm = types.StringNull()
 	}
 	if val, ok := getResponseData["autorollover"]; ok && val != nil {
 		data.Autorollover = types.StringValue(val.(string))
-	} else {
+	} else if data.Autorollover.IsUnknown() {
 		data.Autorollover = types.StringNull()
 	}
 	if val, ok := getResponseData["expires"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Expires = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Expires.IsUnknown() {
 		data.Expires = types.Int64Null()
 	}
 	if val, ok := getResponseData["filenameprefix"]; ok && val != nil {
 		data.Filenameprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Filenameprefix.IsUnknown() {
 		data.Filenameprefix = types.StringNull()
 	}
 	if val, ok := getResponseData["keyname"]; ok && val != nil {
 		data.Keyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyname.IsUnknown() {
 		data.Keyname = types.StringNull()
 	}
 	if val, ok := getResponseData["keysize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Keysize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Keysize.IsUnknown() {
 		data.Keysize = types.Int64Null()
 	}
 	if val, ok := getResponseData["keytype"]; ok && val != nil {
 		data.Keytype = types.StringValue(val.(string))
-	} else {
+	} else if data.Keytype.IsUnknown() {
 		data.Keytype = types.StringNull()
 	}
 	if val, ok := getResponseData["notificationperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Notificationperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Notificationperiod.IsUnknown() {
 		data.Notificationperiod = types.Int64Null()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -393,49 +393,49 @@ func dnskeySetAttrFromGet(ctx context.Context, data *DnskeyResourceModel, getRes
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["privatekey"]; ok && val != nil {
 		data.Privatekey = types.StringValue(val.(string))
-	} else {
+	} else if data.Privatekey.IsUnknown() {
 		data.Privatekey = types.StringNull()
 	}
 	if val, ok := getResponseData["publickey"]; ok && val != nil {
 		data.Publickey = types.StringValue(val.(string))
-	} else {
+	} else if data.Publickey.IsUnknown() {
 		data.Publickey = types.StringNull()
 	}
 	if val, ok := getResponseData["revoke"]; ok && val != nil {
 		data.Revoke = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Revoke.IsUnknown() {
 		data.Revoke = types.BoolNull()
 	}
 	if val, ok := getResponseData["rollovermethod"]; ok && val != nil {
 		data.Rollovermethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Rollovermethod.IsUnknown() {
 		data.Rollovermethod = types.StringNull()
 	}
 	if val, ok := getResponseData["src"]; ok && val != nil {
 		data.Src = types.StringValue(val.(string))
-	} else {
+	} else if data.Src.IsUnknown() {
 		data.Src = types.StringNull()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["units1"]; ok && val != nil {
 		data.Units1 = types.StringValue(val.(string))
-	} else {
+	} else if data.Units1.IsUnknown() {
 		data.Units1 = types.StringNull()
 	}
 	if val, ok := getResponseData["units2"]; ok && val != nil {
 		data.Units2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Units2.IsUnknown() {
 		data.Units2 = types.StringNull()
 	}
 	if val, ok := getResponseData["zonename"]; ok && val != nil {
 		data.Zonename = types.StringValue(val.(string))
-	} else {
+	} else if data.Zonename.IsUnknown() {
 		data.Zonename = types.StringNull()
 	}
 

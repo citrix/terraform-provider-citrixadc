@@ -82,17 +82,17 @@ func sslvserver_sslcertkeybundle_bindingSetAttrFromGet(ctx context.Context, data
 	// Convert API response to model
 	if val, ok := getResponseData["certkeybundlename"]; ok && val != nil {
 		data.Certkeybundlename = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeybundlename.IsUnknown() {
 		data.Certkeybundlename = types.StringNull()
 	}
 	if val, ok := getResponseData["snicertkeybundle"]; ok && val != nil {
 		data.Snicertkeybundle = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Snicertkeybundle.IsUnknown() {
 		data.Snicertkeybundle = types.BoolNull()
 	}
 	if val, ok := getResponseData["vservername"]; ok && val != nil {
 		data.Vservername = types.StringValue(val.(string))
-	} else {
+	} else if data.Vservername.IsUnknown() {
 		data.Vservername = types.StringNull()
 	}
 

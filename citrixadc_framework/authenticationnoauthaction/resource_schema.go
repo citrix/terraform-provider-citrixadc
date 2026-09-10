@@ -79,7 +79,7 @@ func authenticationnoauthactionSetAttrFromGet(ctx context.Context, data *Authent
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

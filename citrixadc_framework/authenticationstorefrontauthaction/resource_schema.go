@@ -138,22 +138,22 @@ func authenticationstorefrontauthactionSetAttrFromGet(ctx context.Context, data 
 	// Convert API response to model
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
+	} else if data.Domain.IsUnknown() {
 		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverurl.IsUnknown() {
 		data.Serverurl = types.StringNull()
 	}
 

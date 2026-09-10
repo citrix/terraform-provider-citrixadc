@@ -81,17 +81,17 @@ func azurekeyvaultSetAttrFromGet(ctx context.Context, data *AzurekeyvaultResourc
 	// Convert API response to model
 	if val, ok := getResponseData["azureapplication"]; ok && val != nil {
 		data.Azureapplication = types.StringValue(val.(string))
-	} else {
+	} else if data.Azureapplication.IsUnknown() {
 		data.Azureapplication = types.StringNull()
 	}
 	if val, ok := getResponseData["azurevaultname"]; ok && val != nil {
 		data.Azurevaultname = types.StringValue(val.(string))
-	} else {
+	} else if data.Azurevaultname.IsUnknown() {
 		data.Azurevaultname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

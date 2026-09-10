@@ -136,37 +136,37 @@ func botprofile_kmdetectionexpr_bindingSetAttrFromGet(ctx context.Context, data 
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_km_detection_enabled"]; ok && val != nil {
 		data.BotKmDetectionEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotKmDetectionEnabled.IsUnknown() {
 		data.BotKmDetectionEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_km_expression_name"]; ok && val != nil {
 		data.BotKmExpressionName = types.StringValue(val.(string))
-	} else {
+	} else if data.BotKmExpressionName.IsUnknown() {
 		data.BotKmExpressionName = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_km_expression_value"]; ok && val != nil {
 		data.BotKmExpressionValue = types.StringValue(val.(string))
-	} else {
+	} else if data.BotKmExpressionValue.IsUnknown() {
 		data.BotKmExpressionValue = types.StringNull()
 	}
 	if val, ok := getResponseData["kmdetectionexpr"]; ok && val != nil {
 		data.Kmdetectionexpr = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Kmdetectionexpr.IsUnknown() {
 		data.Kmdetectionexpr = types.BoolNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

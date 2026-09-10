@@ -120,12 +120,12 @@ func dnsaaaarecSetAttrFromGet(ctx context.Context, data *DnsaaaarecResourceModel
 	}
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
 		data.Hostname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostname.IsUnknown() {
 		data.Hostname = types.StringNull()
 	}
 	if val, ok := getResponseData["ipv6address"]; ok && val != nil {
 		data.Ipv6address = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv6address.IsUnknown() {
 		data.Ipv6address = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {

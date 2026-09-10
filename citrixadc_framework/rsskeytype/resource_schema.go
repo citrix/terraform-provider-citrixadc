@@ -51,7 +51,7 @@ func rsskeytypeSetAttrFromGet(ctx context.Context, data *RsskeytypeResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["rsstype"]; ok && val != nil {
 		data.Rsstype = types.StringValue(val.(string))
-	} else {
+	} else if data.Rsstype.IsUnknown() {
 		data.Rsstype = types.StringNull()
 	}
 

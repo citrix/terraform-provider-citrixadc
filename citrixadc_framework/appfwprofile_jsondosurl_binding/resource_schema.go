@@ -324,104 +324,104 @@ func appfwprofile_jsondosurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	// separate setter that faithfully copies the GET response.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["jsondosurl"]; ok && val != nil {
 		data.Jsondosurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsondosurl.IsUnknown() {
 		data.Jsondosurl = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmaxarraylength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmaxarraylength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmaxarraylength.IsUnknown() {
 		data.Jsonmaxarraylength = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmaxarraylengthcheck"]; ok && val != nil {
 		data.Jsonmaxarraylengthcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmaxarraylengthcheck.IsUnknown() {
 		data.Jsonmaxarraylengthcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmaxcontainerdepth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmaxcontainerdepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmaxcontainerdepth.IsUnknown() {
 		data.Jsonmaxcontainerdepth = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmaxcontainerdepthcheck"]; ok && val != nil {
 		data.Jsonmaxcontainerdepthcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmaxcontainerdepthcheck.IsUnknown() {
 		data.Jsonmaxcontainerdepthcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmaxdocumentlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmaxdocumentlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmaxdocumentlength.IsUnknown() {
 		data.Jsonmaxdocumentlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmaxdocumentlengthcheck"]; ok && val != nil {
 		data.Jsonmaxdocumentlengthcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmaxdocumentlengthcheck.IsUnknown() {
 		data.Jsonmaxdocumentlengthcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmaxobjectkeycount"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmaxobjectkeycount = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmaxobjectkeycount.IsUnknown() {
 		data.Jsonmaxobjectkeycount = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmaxobjectkeycountcheck"]; ok && val != nil {
 		data.Jsonmaxobjectkeycountcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmaxobjectkeycountcheck.IsUnknown() {
 		data.Jsonmaxobjectkeycountcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmaxobjectkeylength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmaxobjectkeylength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmaxobjectkeylength.IsUnknown() {
 		data.Jsonmaxobjectkeylength = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmaxobjectkeylengthcheck"]; ok && val != nil {
 		data.Jsonmaxobjectkeylengthcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmaxobjectkeylengthcheck.IsUnknown() {
 		data.Jsonmaxobjectkeylengthcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmaxstringlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmaxstringlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmaxstringlength.IsUnknown() {
 		data.Jsonmaxstringlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmaxstringlengthcheck"]; ok && val != nil {
 		data.Jsonmaxstringlengthcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmaxstringlengthcheck.IsUnknown() {
 		data.Jsonmaxstringlengthcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

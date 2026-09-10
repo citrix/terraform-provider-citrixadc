@@ -86,14 +86,20 @@ func lsnpool_lsnip_bindingSetAttrFromGet(ctx context.Context, data *LsnpoolLsnip
 	// Convert API response to model
 	if val, ok := getResponseData["lsnip"]; ok && val != nil {
 		data.Lsnip = types.StringValue(val.(string))
+	} else if data.Lsnip.IsUnknown() {
+		data.Lsnip = types.StringNull()
 	}
 	if val, ok := getResponseData["ownernode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
+	} else if data.Ownernode.IsUnknown() {
+		data.Ownernode = types.Int64Null()
 	}
 	if val, ok := getResponseData["poolname"]; ok && val != nil {
 		data.Poolname = types.StringValue(val.(string))
+	} else if data.Poolname.IsUnknown() {
+		data.Poolname = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.

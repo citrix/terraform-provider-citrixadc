@@ -173,37 +173,37 @@ func contentinspectioncalloutSetAttrFromGet(ctx context.Context, data *Contentin
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["profilename"]; ok && val != nil {
 		data.Profilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Profilename.IsUnknown() {
 		data.Profilename = types.StringNull()
 	}
 	if val, ok := getResponseData["resultexpr"]; ok && val != nil {
 		data.Resultexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Resultexpr.IsUnknown() {
 		data.Resultexpr = types.StringNull()
 	}
 	if val, ok := getResponseData["returntype"]; ok && val != nil {
 		data.Returntype = types.StringValue(val.(string))
-	} else {
+	} else if data.Returntype.IsUnknown() {
 		data.Returntype = types.StringNull()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
@@ -218,7 +218,7 @@ func contentinspectioncalloutSetAttrFromGet(ctx context.Context, data *Contentin
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 

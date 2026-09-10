@@ -98,27 +98,27 @@ func appfwconfidfieldSetAttrFromGet(ctx context.Context, data *AppfwconfidfieldR
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["fieldname"]; ok && val != nil {
 		data.Fieldname = types.StringValue(val.(string))
-	} else {
+	} else if data.Fieldname.IsUnknown() {
 		data.Fieldname = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex"]; ok && val != nil {
 		data.Isregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isregex.IsUnknown() {
 		data.Isregex = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["url"]; ok && val != nil {
 		data.Url = types.StringValue(val.(string))
-	} else {
+	} else if data.Url.IsUnknown() {
 		data.Url = types.StringNull()
 	}
 

@@ -115,7 +115,7 @@ func authenticationpolicylabelSetAttrFromGet(ctx context.Context, data *Authenti
 	// Convert API response to model.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	// labelname is the user-facing key. Once a rename has happened (via newname),
@@ -127,17 +127,19 @@ func authenticationpolicylabelSetAttrFromGet(ctx context.Context, data *Authenti
 	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
 		if val, ok := getResponseData["labelname"]; ok && val != nil {
 			data.Labelname = types.StringValue(val.(string))
+		} else if data.Labelname.IsUnknown() {
+			data.Labelname = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["loginschema"]; ok && val != nil {
 		data.Loginschema = types.StringValue(val.(string))
-	} else {
+	} else if data.Loginschema.IsUnknown() {
 		data.Loginschema = types.StringNull()
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 

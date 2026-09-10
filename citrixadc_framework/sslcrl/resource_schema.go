@@ -378,74 +378,74 @@ func sslcrlSetAttrFromGet(ctx context.Context, data *SslcrlResourceModel, getRes
 	// Convert API response to model
 	if val, ok := getResponseData["basedn"]; ok && val != nil {
 		data.Basedn = types.StringValue(val.(string))
-	} else {
+	} else if data.Basedn.IsUnknown() {
 		data.Basedn = types.StringNull()
 	}
 	if val, ok := getResponseData["binary"]; ok && val != nil {
 		data.Binary = types.StringValue(val.(string))
-	} else {
+	} else if data.Binary.IsUnknown() {
 		data.Binary = types.StringNull()
 	}
 	if val, ok := getResponseData["binddn"]; ok && val != nil {
 		data.Binddn = types.StringValue(val.(string))
-	} else {
+	} else if data.Binddn.IsUnknown() {
 		data.Binddn = types.StringNull()
 	}
 	if val, ok := getResponseData["cacert"]; ok && val != nil {
 		data.Cacert = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacert.IsUnknown() {
 		data.Cacert = types.StringNull()
 	}
 	if val, ok := getResponseData["cacertfile"]; ok && val != nil {
 		data.Cacertfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertfile.IsUnknown() {
 		data.Cacertfile = types.StringNull()
 	}
 	if val, ok := getResponseData["cakeyfile"]; ok && val != nil {
 		data.Cakeyfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Cakeyfile.IsUnknown() {
 		data.Cakeyfile = types.StringNull()
 	}
 	if val, ok := getResponseData["crlname"]; ok && val != nil {
 		data.Crlname = types.StringValue(val.(string))
-	} else {
+	} else if data.Crlname.IsUnknown() {
 		data.Crlname = types.StringNull()
 	}
 	if val, ok := getResponseData["crlpath"]; ok && val != nil {
 		data.Crlpath = types.StringValue(val.(string))
-	} else {
+	} else if data.Crlpath.IsUnknown() {
 		data.Crlpath = types.StringNull()
 	}
 	if val, ok := getResponseData["day"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Day = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Day.IsUnknown() {
 		data.Day = types.Int64Null()
 	}
 	if val, ok := getResponseData["gencrl"]; ok && val != nil {
 		data.Gencrl = types.StringValue(val.(string))
-	} else {
+	} else if data.Gencrl.IsUnknown() {
 		data.Gencrl = types.StringNull()
 	}
 	if val, ok := getResponseData["indexfile"]; ok && val != nil {
 		data.Indexfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Indexfile.IsUnknown() {
 		data.Indexfile = types.StringNull()
 	}
 	if val, ok := getResponseData["inform"]; ok && val != nil {
 		data.Inform = types.StringValue(val.(string))
-	} else {
+	} else if data.Inform.IsUnknown() {
 		data.Inform = types.StringNull()
 	}
 	if val, ok := getResponseData["interval"]; ok && val != nil {
 		data.Interval = types.StringValue(val.(string))
-	} else {
+	} else if data.Interval.IsUnknown() {
 		data.Interval = types.StringNull()
 	}
 	if val, ok := getResponseData["method"]; ok && val != nil {
 		data.Method = types.StringValue(val.(string))
-	} else {
+	} else if data.Method.IsUnknown() {
 		data.Method = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -455,37 +455,37 @@ func sslcrlSetAttrFromGet(ctx context.Context, data *SslcrlResourceModel, getRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["refresh"]; ok && val != nil {
 		data.Refresh = types.StringValue(val.(string))
-	} else {
+	} else if data.Refresh.IsUnknown() {
 		data.Refresh = types.StringNull()
 	}
 	if val, ok := getResponseData["revoke"]; ok && val != nil {
 		data.Revoke = types.StringValue(val.(string))
-	} else {
+	} else if data.Revoke.IsUnknown() {
 		data.Revoke = types.StringNull()
 	}
 	if val, ok := getResponseData["scope"]; ok && val != nil {
 		data.Scope = types.StringValue(val.(string))
-	} else {
+	} else if data.Scope.IsUnknown() {
 		data.Scope = types.StringNull()
 	}
 	if val, ok := getResponseData["server"]; ok && val != nil {
 		data.Server = types.StringValue(val.(string))
-	} else {
+	} else if data.Server.IsUnknown() {
 		data.Server = types.StringNull()
 	}
 	if val, ok := getResponseData["time"]; ok && val != nil {
 		data.Time = types.StringValue(val.(string))
-	} else {
+	} else if data.Time.IsUnknown() {
 		data.Time = types.StringNull()
 	}
 	if val, ok := getResponseData["url"]; ok && val != nil {
 		data.Url = types.StringValue(val.(string))
-	} else {
+	} else if data.Url.IsUnknown() {
 		data.Url = types.StringNull()
 	}
 

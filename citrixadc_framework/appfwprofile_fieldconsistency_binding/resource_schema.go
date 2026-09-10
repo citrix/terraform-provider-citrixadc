@@ -177,47 +177,47 @@ func appfwprofile_fieldconsistency_bindingSetAttrFromGet(ctx context.Context, da
 	// Convert API response to model
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["fieldconsistency"]; ok && val != nil {
 		data.Fieldconsistency = types.StringValue(val.(string))
-	} else {
+	} else if data.Fieldconsistency.IsUnknown() {
 		data.Fieldconsistency = types.StringNull()
 	}
 	if val, ok := getResponseData["formactionurl_ffc"]; ok && val != nil {
 		data.FormactionurlFfc = types.StringValue(val.(string))
-	} else {
+	} else if data.FormactionurlFfc.IsUnknown() {
 		data.FormactionurlFfc = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex_ffc"]; ok && val != nil {
 		data.IsregexFfc = types.StringValue(val.(string))
-	} else {
+	} else if data.IsregexFfc.IsUnknown() {
 		data.IsregexFfc = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

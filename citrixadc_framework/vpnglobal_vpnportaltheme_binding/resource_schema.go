@@ -77,9 +77,13 @@ func vpnglobal_vpnportaltheme_bindingSetAttrFromGet(ctx context.Context, data *V
 	// existing plan/state value rather than nulling it (Pattern 7).
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["portaltheme"]; ok && val != nil {
 		data.Portaltheme = types.StringValue(val.(string))
+	} else if data.Portaltheme.IsUnknown() {
+		data.Portaltheme = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

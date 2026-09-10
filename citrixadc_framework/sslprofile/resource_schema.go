@@ -1055,245 +1055,245 @@ func sslprofileSetAttrFromGet(ctx context.Context, data *SslprofileResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["allowextendedmastersecret"]; ok && val != nil {
 		data.Allowextendedmastersecret = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowextendedmastersecret.IsUnknown() {
 		data.Allowextendedmastersecret = types.StringNull()
 	}
 	if val, ok := getResponseData["allowlegacykdf"]; ok && val != nil {
 		data.Allowlegacykdf = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowlegacykdf.IsUnknown() {
 		data.Allowlegacykdf = types.StringNull()
 	}
 	if val, ok := getResponseData["allowunknownsni"]; ok && val != nil {
 		data.Allowunknownsni = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowunknownsni.IsUnknown() {
 		data.Allowunknownsni = types.StringNull()
 	}
 	if val, ok := getResponseData["alpnprotocol"]; ok && val != nil {
 		data.Alpnprotocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Alpnprotocol.IsUnknown() {
 		data.Alpnprotocol = types.StringNull()
 	}
 	if val, ok := getResponseData["ciphername"]; ok && val != nil {
 		data.Ciphername = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciphername.IsUnknown() {
 		data.Ciphername = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cipherpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cipherpriority.IsUnknown() {
 		data.Cipherpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["cipherredirect"]; ok && val != nil {
 		data.Cipherredirect = types.StringValue(val.(string))
-	} else {
+	} else if data.Cipherredirect.IsUnknown() {
 		data.Cipherredirect = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherurl"]; ok && val != nil {
 		data.Cipherurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Cipherurl.IsUnknown() {
 		data.Cipherurl = types.StringNull()
 	}
 	if val, ok := getResponseData["cleartextport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cleartextport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cleartextport.IsUnknown() {
 		data.Cleartextport = types.Int64Null()
 	}
 	if val, ok := getResponseData["clientauth"]; ok && val != nil {
 		data.Clientauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientauth.IsUnknown() {
 		data.Clientauth = types.StringNull()
 	}
 	if val, ok := getResponseData["clientauthuseboundcachain"]; ok && val != nil {
 		data.Clientauthuseboundcachain = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientauthuseboundcachain.IsUnknown() {
 		data.Clientauthuseboundcachain = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcert"]; ok && val != nil {
 		data.Clientcert = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcert.IsUnknown() {
 		data.Clientcert = types.StringNull()
 	}
 	if val, ok := getResponseData["commonname"]; ok && val != nil {
 		data.Commonname = types.StringValue(val.(string))
-	} else {
+	} else if data.Commonname.IsUnknown() {
 		data.Commonname = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultsni"]; ok && val != nil {
 		data.Defaultsni = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultsni.IsUnknown() {
 		data.Defaultsni = types.StringNull()
 	}
 	if val, ok := getResponseData["denysslreneg"]; ok && val != nil {
 		data.Denysslreneg = types.StringValue(val.(string))
-	} else {
+	} else if data.Denysslreneg.IsUnknown() {
 		data.Denysslreneg = types.StringNull()
 	}
 	if val, ok := getResponseData["dh"]; ok && val != nil {
 		data.Dh = types.StringValue(val.(string))
-	} else {
+	} else if data.Dh.IsUnknown() {
 		data.Dh = types.StringNull()
 	}
 	if val, ok := getResponseData["dhcount"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dhcount = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dhcount.IsUnknown() {
 		data.Dhcount = types.Int64Null()
 	}
 	if val, ok := getResponseData["dhekeyexchangewithpsk"]; ok && val != nil {
 		data.Dhekeyexchangewithpsk = types.StringValue(val.(string))
-	} else {
+	} else if data.Dhekeyexchangewithpsk.IsUnknown() {
 		data.Dhekeyexchangewithpsk = types.StringNull()
 	}
 	if val, ok := getResponseData["dhfile"]; ok && val != nil {
 		data.Dhfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Dhfile.IsUnknown() {
 		data.Dhfile = types.StringNull()
 	}
 	if val, ok := getResponseData["dhkeyexpsizelimit"]; ok && val != nil {
 		data.Dhkeyexpsizelimit = types.StringValue(val.(string))
-	} else {
+	} else if data.Dhkeyexpsizelimit.IsUnknown() {
 		data.Dhkeyexpsizelimit = types.StringNull()
 	}
 	if val, ok := getResponseData["dropreqwithnohostheader"]; ok && val != nil {
 		data.Dropreqwithnohostheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropreqwithnohostheader.IsUnknown() {
 		data.Dropreqwithnohostheader = types.StringNull()
 	}
 	if val, ok := getResponseData["dynamicclientcert"]; ok && val != nil {
 		data.Dynamicclientcert = types.StringValue(val.(string))
-	} else {
+	} else if data.Dynamicclientcert.IsUnknown() {
 		data.Dynamicclientcert = types.StringNull()
 	}
 	if val, ok := getResponseData["encryptedclienthello"]; ok && val != nil {
 		data.Encryptedclienthello = types.StringValue(val.(string))
-	} else {
+	} else if data.Encryptedclienthello.IsUnknown() {
 		data.Encryptedclienthello = types.StringNull()
 	}
 	if val, ok := getResponseData["encrypttriggerpktcount"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Encrypttriggerpktcount = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Encrypttriggerpktcount.IsUnknown() {
 		data.Encrypttriggerpktcount = types.Int64Null()
 	}
 	if val, ok := getResponseData["ersa"]; ok && val != nil {
 		data.Ersa = types.StringValue(val.(string))
-	} else {
+	} else if data.Ersa.IsUnknown() {
 		data.Ersa = types.StringNull()
 	}
 	if val, ok := getResponseData["ersacount"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ersacount = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ersacount.IsUnknown() {
 		data.Ersacount = types.Int64Null()
 	}
 	if val, ok := getResponseData["hsts"]; ok && val != nil {
 		data.Hsts = types.StringValue(val.(string))
-	} else {
+	} else if data.Hsts.IsUnknown() {
 		data.Hsts = types.StringNull()
 	}
 	if val, ok := getResponseData["includesubdomains"]; ok && val != nil {
 		data.Includesubdomains = types.StringValue(val.(string))
-	} else {
+	} else if data.Includesubdomains.IsUnknown() {
 		data.Includesubdomains = types.StringNull()
 	}
 	if val, ok := getResponseData["insertionencoding"]; ok && val != nil {
 		data.Insertionencoding = types.StringValue(val.(string))
-	} else {
+	} else if data.Insertionencoding.IsUnknown() {
 		data.Insertionencoding = types.StringNull()
 	}
 	if val, ok := getResponseData["maxage"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxage = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxage.IsUnknown() {
 		data.Maxage = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxrenegrate"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxrenegrate = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxrenegrate.IsUnknown() {
 		data.Maxrenegrate = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// nodefaultbindings, nodefaultecccurvebindings, nodefaultcipherbindings are not returned by NITRO API - retain from config
 	if val, ok := getResponseData["ocspstapling"]; ok && val != nil {
 		data.Ocspstapling = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspstapling.IsUnknown() {
 		data.Ocspstapling = types.StringNull()
 	}
 	if val, ok := getResponseData["preload"]; ok && val != nil {
 		data.Preload = types.StringValue(val.(string))
-	} else {
+	} else if data.Preload.IsUnknown() {
 		data.Preload = types.StringNull()
 	}
 	if val, ok := getResponseData["prevsessionkeylifetime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Prevsessionkeylifetime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Prevsessionkeylifetime.IsUnknown() {
 		data.Prevsessionkeylifetime = types.Int64Null()
 	}
 	if val, ok := getResponseData["pushenctrigger"]; ok && val != nil {
 		data.Pushenctrigger = types.StringValue(val.(string))
-	} else {
+	} else if data.Pushenctrigger.IsUnknown() {
 		data.Pushenctrigger = types.StringNull()
 	}
 	if val, ok := getResponseData["pushenctriggertimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pushenctriggertimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pushenctriggertimeout.IsUnknown() {
 		data.Pushenctriggertimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["pushflag"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pushflag = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pushflag.IsUnknown() {
 		data.Pushflag = types.Int64Null()
 	}
 	if val, ok := getResponseData["quantumsize"]; ok && val != nil {
 		data.Quantumsize = types.StringValue(val.(string))
-	} else {
+	} else if data.Quantumsize.IsUnknown() {
 		data.Quantumsize = types.StringNull()
 	}
 	if val, ok := getResponseData["redirectportrewrite"]; ok && val != nil {
 		data.Redirectportrewrite = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectportrewrite.IsUnknown() {
 		data.Redirectportrewrite = types.StringNull()
 	}
 	if val, ok := getResponseData["sendclosenotify"]; ok && val != nil {
 		data.Sendclosenotify = types.StringValue(val.(string))
-	} else {
+	} else if data.Sendclosenotify.IsUnknown() {
 		data.Sendclosenotify = types.StringNull()
 	}
 	if val, ok := getResponseData["serverauth"]; ok && val != nil {
 		data.Serverauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverauth.IsUnknown() {
 		data.Serverauth = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionkeylifetime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessionkeylifetime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessionkeylifetime.IsUnknown() {
 		data.Sessionkeylifetime = types.Int64Null()
 	}
 	if val, ok := getResponseData["sessionticket"]; ok && val != nil {
 		data.Sessionticket = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionticket.IsUnknown() {
 		data.Sessionticket = types.StringNull()
 	}
 	// sessionticketkeydata is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -1301,142 +1301,142 @@ func sslprofileSetAttrFromGet(ctx context.Context, data *SslprofileResourceModel
 	// sessionticketkeydata_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["sessionticketkeyrefresh"]; ok && val != nil {
 		data.Sessionticketkeyrefresh = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionticketkeyrefresh.IsUnknown() {
 		data.Sessionticketkeyrefresh = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionticketlifetime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessionticketlifetime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessionticketlifetime.IsUnknown() {
 		data.Sessionticketlifetime = types.Int64Null()
 	}
 	if val, ok := getResponseData["sessreuse"]; ok && val != nil {
 		data.Sessreuse = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessreuse.IsUnknown() {
 		data.Sessreuse = types.StringNull()
 	}
 	if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sesstimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sesstimeout.IsUnknown() {
 		data.Sesstimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["skipclientcertpolicycheck"]; ok && val != nil {
 		data.Skipclientcertpolicycheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Skipclientcertpolicycheck.IsUnknown() {
 		data.Skipclientcertpolicycheck = types.StringNull()
 	}
 	if val, ok := getResponseData["snienable"]; ok && val != nil {
 		data.Snienable = types.StringValue(val.(string))
-	} else {
+	} else if data.Snienable.IsUnknown() {
 		data.Snienable = types.StringNull()
 	}
 	if val, ok := getResponseData["snihttphostmatch"]; ok && val != nil {
 		data.Snihttphostmatch = types.StringValue(val.(string))
-	} else {
+	} else if data.Snihttphostmatch.IsUnknown() {
 		data.Snihttphostmatch = types.StringNull()
 	}
 	if val, ok := getResponseData["ssl3"]; ok && val != nil {
 		data.Ssl3 = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssl3.IsUnknown() {
 		data.Ssl3 = types.StringNull()
 	}
 	if val, ok := getResponseData["sslclientlogs"]; ok && val != nil {
 		data.Sslclientlogs = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslclientlogs.IsUnknown() {
 		data.Sslclientlogs = types.StringNull()
 	}
 	if val, ok := getResponseData["sslimaxsessperserver"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sslimaxsessperserver = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sslimaxsessperserver.IsUnknown() {
 		data.Sslimaxsessperserver = types.Int64Null()
 	}
 	if val, ok := getResponseData["sslinterception"]; ok && val != nil {
 		data.Sslinterception = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslinterception.IsUnknown() {
 		data.Sslinterception = types.StringNull()
 	}
 	if val, ok := getResponseData["ssliocspcheck"]; ok && val != nil {
 		data.Ssliocspcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssliocspcheck.IsUnknown() {
 		data.Ssliocspcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["sslireneg"]; ok && val != nil {
 		data.Sslireneg = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslireneg.IsUnknown() {
 		data.Sslireneg = types.StringNull()
 	}
 	if val, ok := getResponseData["ssllogprofile"]; ok && val != nil {
 		data.Ssllogprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssllogprofile.IsUnknown() {
 		data.Ssllogprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["sslprofiletype"]; ok && val != nil {
 		data.Sslprofiletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslprofiletype.IsUnknown() {
 		data.Sslprofiletype = types.StringNull()
 	}
 	if val, ok := getResponseData["sslredirect"]; ok && val != nil {
 		data.Sslredirect = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslredirect.IsUnknown() {
 		data.Sslredirect = types.StringNull()
 	}
 	if val, ok := getResponseData["ssltriggertimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ssltriggertimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ssltriggertimeout.IsUnknown() {
 		data.Ssltriggertimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["strictcachecks"]; ok && val != nil {
 		data.Strictcachecks = types.StringValue(val.(string))
-	} else {
+	} else if data.Strictcachecks.IsUnknown() {
 		data.Strictcachecks = types.StringNull()
 	}
 	if val, ok := getResponseData["strictclientekucheck"]; ok && val != nil {
 		data.Strictclientekucheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Strictclientekucheck.IsUnknown() {
 		data.Strictclientekucheck = types.StringNull()
 	}
 	if val, ok := getResponseData["strictsigdigestcheck"]; ok && val != nil {
 		data.Strictsigdigestcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Strictsigdigestcheck.IsUnknown() {
 		data.Strictsigdigestcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["tls1"]; ok && val != nil {
 		data.Tls1 = types.StringValue(val.(string))
-	} else {
+	} else if data.Tls1.IsUnknown() {
 		data.Tls1 = types.StringNull()
 	}
 	if val, ok := getResponseData["tls11"]; ok && val != nil {
 		data.Tls11 = types.StringValue(val.(string))
-	} else {
+	} else if data.Tls11.IsUnknown() {
 		data.Tls11 = types.StringNull()
 	}
 	if val, ok := getResponseData["tls12"]; ok && val != nil {
 		data.Tls12 = types.StringValue(val.(string))
-	} else {
+	} else if data.Tls12.IsUnknown() {
 		data.Tls12 = types.StringNull()
 	}
 	if val, ok := getResponseData["tls13"]; ok && val != nil {
 		data.Tls13 = types.StringValue(val.(string))
-	} else {
+	} else if data.Tls13.IsUnknown() {
 		data.Tls13 = types.StringNull()
 	}
 	if val, ok := getResponseData["tls13sessionticketsperauthcontext"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tls13sessionticketsperauthcontext = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tls13sessionticketsperauthcontext.IsUnknown() {
 		data.Tls13sessionticketsperauthcontext = types.Int64Null()
 	}
 	if val, ok := getResponseData["zerorttearlydata"]; ok && val != nil {
 		data.Zerorttearlydata = types.StringValue(val.(string))
-	} else {
+	} else if data.Zerorttearlydata.IsUnknown() {
 		data.Zerorttearlydata = types.StringNull()
 	}
 

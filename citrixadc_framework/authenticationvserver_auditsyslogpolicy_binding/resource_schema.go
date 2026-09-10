@@ -149,14 +149,20 @@ func authenticationvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.C
 	// Echoed by GET: name, policy, priority.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	// bindpoint, gotopriorityexpression, groupextraction, nextfactor, secondary are not
 	// echoed by the ADC -> preserve existing plan/state values (do NOT null them).

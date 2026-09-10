@@ -90,7 +90,7 @@ func hasecureheartbeatsSetAttrFromGet(ctx context.Context, data *Hasecureheartbe
 	// Convert API response to model
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	// hapsk is not returned by NITRO API in usable form (secret/ephemeral) - retain from config

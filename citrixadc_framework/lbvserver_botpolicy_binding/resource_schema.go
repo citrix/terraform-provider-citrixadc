@@ -174,37 +174,55 @@ func lbvserver_botpolicy_bindingSetAttrFromGet(ctx context.Context, data *Lbvser
 	// Key attributes are always echoed by NITRO and are safe to adopt from the response.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 
 	// Non-key attributes: adopt from GET only when present and non-nil; otherwise
 	// preserve the existing plan/state value (do NOT null it out).
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
+	} else if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
+	} else if data.Invoke.IsUnknown() {
+		data.Invoke = types.BoolNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
+	} else if data.Labelname.IsUnknown() {
+		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
+	} else if data.Labeltype.IsUnknown() {
+		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["order"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
 		}
+	} else if data.Order.IsUnknown() {
+		data.Order = types.Int64Null()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// Set ID for the resource

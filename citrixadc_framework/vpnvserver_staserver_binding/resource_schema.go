@@ -84,17 +84,17 @@ func vpnvserver_staserver_bindingSetAttrFromGet(ctx context.Context, data *Vpnvs
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["staaddresstype"]; ok && val != nil {
 		data.Staaddresstype = types.StringValue(val.(string))
-	} else {
+	} else if data.Staaddresstype.IsUnknown() {
 		data.Staaddresstype = types.StringNull()
 	}
 	if val, ok := getResponseData["staserver"]; ok && val != nil {
 		data.Staserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Staserver.IsUnknown() {
 		data.Staserver = types.StringNull()
 	}
 

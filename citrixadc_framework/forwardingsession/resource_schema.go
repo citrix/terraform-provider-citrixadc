@@ -174,42 +174,42 @@ func forwardingsessionSetAttrFromGet(ctx context.Context, data *Forwardingsessio
 	// Convert API response to model
 	if val, ok := getResponseData["acl6name"]; ok && val != nil {
 		data.Acl6name = types.StringValue(val.(string))
-	} else {
+	} else if data.Acl6name.IsUnknown() {
 		data.Acl6name = types.StringNull()
 	}
 	if val, ok := getResponseData["aclname"]; ok && val != nil {
 		data.Aclname = types.StringValue(val.(string))
-	} else {
+	} else if data.Aclname.IsUnknown() {
 		data.Aclname = types.StringNull()
 	}
 	if val, ok := getResponseData["connfailover"]; ok && val != nil {
 		data.Connfailover = types.StringValue(val.(string))
-	} else {
+	} else if data.Connfailover.IsUnknown() {
 		data.Connfailover = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["network"]; ok && val != nil {
 		data.Network = types.StringValue(val.(string))
-	} else {
+	} else if data.Network.IsUnknown() {
 		data.Network = types.StringNull()
 	}
 	if val, ok := getResponseData["processlocal"]; ok && val != nil {
 		data.Processlocal = types.StringValue(val.(string))
-	} else {
+	} else if data.Processlocal.IsUnknown() {
 		data.Processlocal = types.StringNull()
 	}
 	if val, ok := getResponseData["sourceroutecache"]; ok && val != nil {
 		data.Sourceroutecache = types.StringValue(val.(string))
-	} else {
+	} else if data.Sourceroutecache.IsUnknown() {
 		data.Sourceroutecache = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {

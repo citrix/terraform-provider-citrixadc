@@ -83,19 +83,19 @@ func clusternode_routemonitor_bindingSetAttrFromGet(ctx context.Context, data *C
 	// Convert API response to model
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["routemonitor"]; ok && val != nil {
 		data.Routemonitor = types.StringValue(val.(string))
-	} else {
+	} else if data.Routemonitor.IsUnknown() {
 		data.Routemonitor = types.StringNull()
 	}
 

@@ -91,22 +91,22 @@ func policystringmap_pattern_bindingSetAttrFromGet(ctx context.Context, data *Po
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["key"]; ok && val != nil {
 		data.Key = types.StringValue(val.(string))
-	} else {
+	} else if data.Key.IsUnknown() {
 		data.Key = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["value"]; ok && val != nil {
 		data.Value = types.StringValue(val.(string))
-	} else {
+	} else if data.Value.IsUnknown() {
 		data.Value = types.StringNull()
 	}
 

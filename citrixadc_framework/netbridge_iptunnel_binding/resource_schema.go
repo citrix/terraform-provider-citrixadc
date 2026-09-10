@@ -71,12 +71,12 @@ func netbridge_iptunnel_bindingSetAttrFromGet(ctx context.Context, data *Netbrid
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["tunnel"]; ok && val != nil {
 		data.Tunnel = types.StringValue(val.(string))
-	} else {
+	} else if data.Tunnel.IsUnknown() {
 		data.Tunnel = types.StringNull()
 	}
 

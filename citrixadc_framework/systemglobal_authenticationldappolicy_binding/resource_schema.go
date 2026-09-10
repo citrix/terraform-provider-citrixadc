@@ -145,17 +145,25 @@ func systemglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx context.Con
 	// Echoed-back fields: copy from the GET response.
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
+	} else if data.Feature.IsUnknown() {
+		data.Feature = types.StringNull()
 	}
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
+	} else if data.Globalbindtype.IsUnknown() {
+		data.Globalbindtype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// gotopriorityexpression, nextfactor and builtin are not returned by GET;

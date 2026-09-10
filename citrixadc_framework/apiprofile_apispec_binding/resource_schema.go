@@ -76,9 +76,13 @@ func apiprofile_apispec_bindingSetAttrFromGet(ctx context.Context, data *Apiprof
 	// Convert API response to model, preserving existing values when not echoed back.
 	if val, ok := getResponseData["apispec"]; ok && val != nil {
 		data.Apispec = types.StringValue(val.(string))
+	} else if data.Apispec.IsUnknown() {
+		data.Apispec = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	return data

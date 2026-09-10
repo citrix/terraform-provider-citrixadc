@@ -91,21 +91,29 @@ func nsmgmtparamSetAttrFromGet(ctx context.Context, data *NsmgmtparamResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Httpdmaxclients = types.Int64Value(intVal)
 		}
+	} else if data.Httpdmaxclients.IsUnknown() {
+		data.Httpdmaxclients = types.Int64Null()
 	}
 	if val, ok := getResponseData["httpdmaxreqworkers"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Httpdmaxreqworkers = types.Int64Value(intVal)
 		}
+	} else if data.Httpdmaxreqworkers.IsUnknown() {
+		data.Httpdmaxreqworkers = types.Int64Null()
 	}
 	if val, ok := getResponseData["mgmthttpport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mgmthttpport = types.Int64Value(intVal)
 		}
+	} else if data.Mgmthttpport.IsUnknown() {
+		data.Mgmthttpport = types.Int64Null()
 	}
 	if val, ok := getResponseData["mgmthttpsport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mgmthttpsport = types.Int64Value(intVal)
 		}
+	} else if data.Mgmthttpsport.IsUnknown() {
+		data.Mgmthttpsport = types.Int64Null()
 	}
 
 	return data

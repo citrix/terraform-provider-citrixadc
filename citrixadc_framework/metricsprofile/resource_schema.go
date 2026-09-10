@@ -165,12 +165,12 @@ func metricsprofileSetAttrFromGet(ctx context.Context, data *MetricsprofileResou
 	// Convert API response to model
 	if val, ok := getResponseData["collector"]; ok && val != nil {
 		data.Collector = types.StringValue(val.(string))
-	} else {
+	} else if data.Collector.IsUnknown() {
 		data.Collector = types.StringNull()
 	}
 	if val, ok := getResponseData["metrics"]; ok && val != nil {
 		data.Metrics = types.StringValue(val.(string))
-	} else {
+	} else if data.Metrics.IsUnknown() {
 		data.Metrics = types.StringNull()
 	}
 	// metricsauthtoken is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -178,34 +178,34 @@ func metricsprofileSetAttrFromGet(ctx context.Context, data *MetricsprofileResou
 	// metricsauthtoken_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["metricsendpointurl"]; ok && val != nil {
 		data.Metricsendpointurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Metricsendpointurl.IsUnknown() {
 		data.Metricsendpointurl = types.StringNull()
 	}
 	if val, ok := getResponseData["metricsexportfrequency"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Metricsexportfrequency = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Metricsexportfrequency.IsUnknown() {
 		data.Metricsexportfrequency = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["outputmode"]; ok && val != nil {
 		data.Outputmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Outputmode.IsUnknown() {
 		data.Outputmode = types.StringNull()
 	}
 	if val, ok := getResponseData["schemafile"]; ok && val != nil {
 		data.Schemafile = types.StringValue(val.(string))
-	} else {
+	} else if data.Schemafile.IsUnknown() {
 		data.Schemafile = types.StringNull()
 	}
 	if val, ok := getResponseData["servemode"]; ok && val != nil {
 		data.Servemode = types.StringValue(val.(string))
-	} else {
+	} else if data.Servemode.IsUnknown() {
 		data.Servemode = types.StringNull()
 	}
 

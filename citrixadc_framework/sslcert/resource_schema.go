@@ -277,59 +277,59 @@ func sslcertSetAttrFromGet(ctx context.Context, data *SslcertResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["cacert"]; ok && val != nil {
 		data.Cacert = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacert.IsUnknown() {
 		data.Cacert = types.StringNull()
 	}
 	if val, ok := getResponseData["cacertform"]; ok && val != nil {
 		data.Cacertform = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertform.IsUnknown() {
 		data.Cacertform = types.StringNull()
 	}
 	if val, ok := getResponseData["cakey"]; ok && val != nil {
 		data.Cakey = types.StringValue(val.(string))
-	} else {
+	} else if data.Cakey.IsUnknown() {
 		data.Cakey = types.StringNull()
 	}
 	if val, ok := getResponseData["cakeyform"]; ok && val != nil {
 		data.Cakeyform = types.StringValue(val.(string))
-	} else {
+	} else if data.Cakeyform.IsUnknown() {
 		data.Cakeyform = types.StringNull()
 	}
 	if val, ok := getResponseData["caserial"]; ok && val != nil {
 		data.Caserial = types.StringValue(val.(string))
-	} else {
+	} else if data.Caserial.IsUnknown() {
 		data.Caserial = types.StringNull()
 	}
 	if val, ok := getResponseData["certfile"]; ok && val != nil {
 		data.Certfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Certfile.IsUnknown() {
 		data.Certfile = types.StringNull()
 	}
 	if val, ok := getResponseData["certform"]; ok && val != nil {
 		data.Certform = types.StringValue(val.(string))
-	} else {
+	} else if data.Certform.IsUnknown() {
 		data.Certform = types.StringNull()
 	}
 	if val, ok := getResponseData["certtype"]; ok && val != nil {
 		data.Certtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Certtype.IsUnknown() {
 		data.Certtype = types.StringNull()
 	}
 	if val, ok := getResponseData["days"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Days = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Days.IsUnknown() {
 		data.Days = types.Int64Null()
 	}
 	if val, ok := getResponseData["keyfile"]; ok && val != nil {
 		data.Keyfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyfile.IsUnknown() {
 		data.Keyfile = types.StringNull()
 	}
 	if val, ok := getResponseData["keyform"]; ok && val != nil {
 		data.Keyform = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyform.IsUnknown() {
 		data.Keyform = types.StringNull()
 	}
 	// pempassphrase is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -337,12 +337,12 @@ func sslcertSetAttrFromGet(ctx context.Context, data *SslcertResourceModel, getR
 	// pempassphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["reqfile"]; ok && val != nil {
 		data.Reqfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Reqfile.IsUnknown() {
 		data.Reqfile = types.StringNull()
 	}
 	if val, ok := getResponseData["subjectaltname"]; ok && val != nil {
 		data.Subjectaltname = types.StringValue(val.(string))
-	} else {
+	} else if data.Subjectaltname.IsUnknown() {
 		data.Subjectaltname = types.StringNull()
 	}
 

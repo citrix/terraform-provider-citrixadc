@@ -89,12 +89,18 @@ func vpnvserver_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpnv
 	// Convert API response to model
 	if val, ok := getResponseData["intranetip"]; ok && val != nil {
 		data.Intranetip = types.StringValue(val.(string))
+	} else if data.Intranetip.IsUnknown() {
+		data.Intranetip = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
+	} else if data.Netmask.IsUnknown() {
+		data.Netmask = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

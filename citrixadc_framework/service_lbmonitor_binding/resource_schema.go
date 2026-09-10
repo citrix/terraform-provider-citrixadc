@@ -115,29 +115,29 @@ func service_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data *ServiceL
 	// Convert API response to model
 	if val, ok := getResponseData["monitor_name"]; ok && val != nil {
 		data.MonitorName = types.StringValue(val.(string))
-	} else {
+	} else if data.MonitorName.IsUnknown() {
 		data.MonitorName = types.StringNull()
 	}
 	if val, ok := getResponseData["monstate"]; ok && val != nil {
 		data.Monstate = types.StringValue(val.(string))
-	} else {
+	} else if data.Monstate.IsUnknown() {
 		data.Monstate = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["passive"]; ok && val != nil {
 		data.Passive = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Passive.IsUnknown() {
 		data.Passive = types.BoolNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Weight.IsUnknown() {
 		data.Weight = types.Int64Null()
 	}
 

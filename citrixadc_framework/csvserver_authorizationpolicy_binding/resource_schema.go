@@ -181,35 +181,35 @@ func csvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, da
 		// preserve user-configured value
 	} else if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Bindpoint.IsUnknown() {
 		data.Bindpoint = types.StringNull()
 	}
 	if !data.Gotopriorityexpression.IsNull() && !data.Gotopriorityexpression.IsUnknown() {
 		// preserve user-configured value
 	} else if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if !data.Invoke.IsNull() && !data.Invoke.IsUnknown() {
 		// preserve user-configured value
 	} else if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Invoke.IsUnknown() {
 		data.Invoke = types.BoolNull()
 	}
 	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		// preserve user-configured value
 	} else if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
+	} else if data.Labelname.IsUnknown() {
 		data.Labelname = types.StringNull()
 	}
 	if !data.Labeltype.IsNull() && !data.Labeltype.IsUnknown() {
 		// preserve user-configured value
 	} else if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
-	} else {
+	} else if data.Labeltype.IsUnknown() {
 		data.Labeltype = types.StringNull()
 	}
 	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
@@ -217,17 +217,17 @@ func csvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, da
 	} else if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
-		} else {
+		} else if data.Priority.IsUnknown() {
 			data.Priority = types.Int64Null()
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 	if !data.Targetlbvserver.IsNull() && !data.Targetlbvserver.IsUnknown() {
 		// preserve user-configured value
 	} else if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
 		data.Targetlbvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Targetlbvserver.IsUnknown() {
 		data.Targetlbvserver = types.StringNull()
 	}
 
@@ -235,11 +235,15 @@ func csvserver_authorizationpolicy_bindingSetAttrFromGet(ctx context.Context, da
 	if data.Name.IsNull() || data.Name.IsUnknown() {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
 		if val, ok := getResponseData["policyname"]; ok && val != nil {
 			data.Policyname = types.StringValue(val.(string))
+		} else if data.Policyname.IsUnknown() {
+			data.Policyname = types.StringNull()
 		}
 	}
 

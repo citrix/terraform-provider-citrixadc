@@ -162,6 +162,8 @@ func nsassignmentSetAttrFromGet(ctx context.Context, data *NsassignmentResourceM
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["set"]; ok && val != nil {
 		data.Set = types.StringValue(val.(string))
@@ -175,6 +177,8 @@ func nsassignmentSetAttrFromGet(ctx context.Context, data *NsassignmentResourceM
 	}
 	if val, ok := getResponseData["variable"]; ok && val != nil {
 		data.Variable = types.StringValue(val.(string))
+	} else if data.Variable.IsUnknown() {
+		data.Variable = types.StringNull()
 	}
 
 	// Set ID for the resource

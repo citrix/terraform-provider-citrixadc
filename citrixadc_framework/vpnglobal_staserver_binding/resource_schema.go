@@ -88,9 +88,13 @@ func vpnglobal_staserver_bindingSetAttrFromGet(ctx context.Context, data *Vpnglo
 	// nulling it, which would cause an "inconsistent result after apply" / perpetual diff.
 	if val, ok := getResponseData["staaddresstype"]; ok && val != nil {
 		data.Staaddresstype = types.StringValue(val.(string))
+	} else if data.Staaddresstype.IsUnknown() {
+		data.Staaddresstype = types.StringNull()
 	}
 	if val, ok := getResponseData["staserver"]; ok && val != nil {
 		data.Staserver = types.StringValue(val.(string))
+	} else if data.Staserver.IsUnknown() {
+		data.Staserver = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

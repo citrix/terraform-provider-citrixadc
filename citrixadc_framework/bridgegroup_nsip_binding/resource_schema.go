@@ -131,20 +131,30 @@ func bridgegroup_nsip_bindingSetAttrFromGet(ctx context.Context, data *Bridgegro
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bridgegroupid = types.Int64Value(intVal)
 		}
+	} else if data.Bridgegroupid.IsUnknown() {
+		data.Bridgegroupid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
+	} else if data.Ipaddress.IsUnknown() {
+		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
+	} else if data.Netmask.IsUnknown() {
+		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
 		data.Ownergroup = types.StringValue(val.(string))
+	} else if data.Ownergroup.IsUnknown() {
+		data.Ownergroup = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource before reading state.

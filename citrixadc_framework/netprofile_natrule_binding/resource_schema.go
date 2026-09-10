@@ -97,22 +97,22 @@ func netprofile_natrule_bindingSetAttrFromGet(ctx context.Context, data *Netprof
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["natrule"]; ok && val != nil {
 		data.Natrule = types.StringValue(val.(string))
-	} else {
+	} else if data.Natrule.IsUnknown() {
 		data.Natrule = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["rewriteip"]; ok && val != nil {
 		data.Rewriteip = types.StringValue(val.(string))
-	} else {
+	} else if data.Rewriteip.IsUnknown() {
 		data.Rewriteip = types.StringNull()
 	}
 

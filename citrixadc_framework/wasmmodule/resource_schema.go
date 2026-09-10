@@ -165,27 +165,27 @@ func wasmmoduleSetAttrFromGet(ctx context.Context, data *WasmmoduleResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["modulefile"]; ok && val != nil {
 		data.Modulefile = types.StringValue(val.(string))
-	} else {
+	} else if data.Modulefile.IsUnknown() {
 		data.Modulefile = types.StringNull()
 	}
 	if val, ok := getResponseData["signaturefile"]; ok && val != nil {
 		data.Signaturefile = types.StringValue(val.(string))
-	} else {
+	} else if data.Signaturefile.IsUnknown() {
 		data.Signaturefile = types.StringNull()
 	}
 	if val, ok := getResponseData["settingfile"]; ok && val != nil {
 		data.Settingfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Settingfile.IsUnknown() {
 		data.Settingfile = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	// Read-only NITRO properties referencecount, _nextgenapiresource and __count

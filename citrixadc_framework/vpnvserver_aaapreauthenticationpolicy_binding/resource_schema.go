@@ -135,9 +135,13 @@ func vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGet(ctx context.Con
 	// name and policy form the identity; always adopt from the GET response.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 
 	// All remaining attributes are Optional, RequiresReplace inputs that the binding

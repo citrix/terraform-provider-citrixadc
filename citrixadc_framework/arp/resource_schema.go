@@ -172,17 +172,17 @@ func arpSetAttrFromGet(ctx context.Context, data *ArpResourceModel, getResponseD
 
 	if val, ok := getResponseData["all"]; ok && val != nil {
 		data.All = types.BoolValue(val.(bool))
-	} else {
+	} else if data.All.IsUnknown() {
 		data.All = types.BoolNull()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
-	} else {
+	} else if data.Ifnum.IsUnknown() {
 		data.Ifnum = types.StringNull()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	// mac is intentionally NOT set from the API response (SDK v2 parity) -
@@ -191,40 +191,40 @@ func arpSetAttrFromGet(ctx context.Context, data *ArpResourceModel, getResponseD
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ownernode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ownernode.IsUnknown() {
 		data.Ownernode = types.Int64Null()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlan.IsUnknown() {
 		data.Vlan = types.Int64Null()
 	}
 	if val, ok := getResponseData["vtep"]; ok && val != nil {
 		data.Vtep = types.StringValue(val.(string))
-	} else {
+	} else if data.Vtep.IsUnknown() {
 		data.Vtep = types.StringNull()
 	}
 	if val, ok := getResponseData["vxlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlan.IsUnknown() {
 		data.Vxlan = types.Int64Null()
 	}
 

@@ -91,22 +91,22 @@ func endpointinfoSetAttrFromGet(ctx context.Context, data *EndpointinfoResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["endpointkind"]; ok && val != nil {
 		data.Endpointkind = types.StringValue(val.(string))
-	} else {
+	} else if data.Endpointkind.IsUnknown() {
 		data.Endpointkind = types.StringNull()
 	}
 	if val, ok := getResponseData["endpointlabelsjson"]; ok && val != nil {
 		data.Endpointlabelsjson = types.StringValue(val.(string))
-	} else {
+	} else if data.Endpointlabelsjson.IsUnknown() {
 		data.Endpointlabelsjson = types.StringNull()
 	}
 	if val, ok := getResponseData["endpointmetadata"]; ok && val != nil {
 		data.Endpointmetadata = types.StringValue(val.(string))
-	} else {
+	} else if data.Endpointmetadata.IsUnknown() {
 		data.Endpointmetadata = types.StringNull()
 	}
 	if val, ok := getResponseData["endpointname"]; ok && val != nil {
 		data.Endpointname = types.StringValue(val.(string))
-	} else {
+	} else if data.Endpointname.IsUnknown() {
 		data.Endpointname = types.StringNull()
 	}
 

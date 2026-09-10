@@ -87,12 +87,12 @@ func lsnclient_nsacl6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclient
 	// Convert API response to model
 	if val, ok := getResponseData["acl6name"]; ok && val != nil {
 		data.Acl6name = types.StringValue(val.(string))
-	} else {
+	} else if data.Acl6name.IsUnknown() {
 		data.Acl6name = types.StringNull()
 	}
 	if val, ok := getResponseData["clientname"]; ok && val != nil {
 		data.Clientname = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientname.IsUnknown() {
 		data.Clientname = types.StringNull()
 	}
 	// "td" is not echoed back by the NITRO GET for this binding. Only adopt it when
@@ -102,6 +102,8 @@ func lsnclient_nsacl6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclient
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource

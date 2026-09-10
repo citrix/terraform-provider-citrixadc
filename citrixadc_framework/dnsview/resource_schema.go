@@ -56,7 +56,7 @@ func dnsviewSetAttrFromGet(ctx context.Context, data *DnsviewResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
 		data.Viewname = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewname.IsUnknown() {
 		data.Viewname = types.StringNull()
 	}
 

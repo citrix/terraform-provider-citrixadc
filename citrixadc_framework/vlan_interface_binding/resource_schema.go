@@ -120,16 +120,24 @@ func vlan_interface_bindingSetAttrFromGet(ctx context.Context, data *VlanInterfa
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlanid = types.Int64Value(intVal)
 		}
+	} else if data.Vlanid.IsUnknown() {
+		data.Vlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
+	} else if data.Ifnum.IsUnknown() {
+		data.Ifnum = types.StringNull()
 	}
 	// ownergroup and tagged are server-defaulted; adopt the GET value.
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
 		data.Ownergroup = types.StringValue(val.(string))
+	} else if data.Ownergroup.IsUnknown() {
+		data.Ownergroup = types.StringNull()
 	}
 	if val, ok := getResponseData["tagged"]; ok && val != nil {
 		data.Tagged = types.BoolValue(val.(bool))
+	} else if data.Tagged.IsUnknown() {
+		data.Tagged = types.BoolNull()
 	}
 
 	// Compose the composite ID (vlanid:..,ifnum:..)

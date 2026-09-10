@@ -71,12 +71,12 @@ func sslservicegroup_sslcacertbundle_bindingSetAttrFromGet(ctx context.Context, 
 	// Convert API response to model
 	if val, ok := getResponseData["cacertbundlename"]; ok && val != nil {
 		data.Cacertbundlename = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertbundlename.IsUnknown() {
 		data.Cacertbundlename = types.StringNull()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicegroupname.IsUnknown() {
 		data.Servicegroupname = types.StringNull()
 	}
 

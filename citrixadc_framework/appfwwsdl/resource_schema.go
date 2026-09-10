@@ -112,6 +112,8 @@ func appfwwsdlSetAttrFromGet(ctx context.Context, data *AppfwwsdlResourceModel, 
 	// SDK v2 read, which only did d.Set("name", ...).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// Set ID for the resource

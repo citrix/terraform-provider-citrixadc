@@ -96,12 +96,12 @@ func cloudgcpstaticroutesSetAttrFromGet(ctx context.Context, data *Cloudgcpstati
 	// Convert API response to model
 	if val, ok := getResponseData["status"]; ok && val != nil {
 		data.Status = types.StringValue(val.(string))
-	} else {
+	} else if data.Status.IsUnknown() {
 		data.Status = types.StringNull()
 	}
 	if val, ok := getResponseData["project"]; ok && val != nil {
 		data.Project = types.StringValue(val.(string))
-	} else {
+	} else if data.Project.IsUnknown() {
 		data.Project = types.StringNull()
 	}
 

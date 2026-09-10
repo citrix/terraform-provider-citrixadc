@@ -140,28 +140,28 @@ func nsextensionSetAttrFromGet(ctx context.Context, data *NsextensionResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// src / overwrite: preserve existing plan/state value (write-only import inputs).
 	if val, ok := getResponseData["trace"]; ok && val != nil {
 		data.Trace = types.StringValue(val.(string))
-	} else {
+	} else if data.Trace.IsUnknown() {
 		data.Trace = types.StringNull()
 	}
 	if val, ok := getResponseData["tracefunctions"]; ok && val != nil {
 		data.Tracefunctions = types.StringValue(val.(string))
-	} else {
+	} else if data.Tracefunctions.IsUnknown() {
 		data.Tracefunctions = types.StringNull()
 	}
 	if val, ok := getResponseData["tracevariables"]; ok && val != nil {
 		data.Tracevariables = types.StringValue(val.(string))
-	} else {
+	} else if data.Tracevariables.IsUnknown() {
 		data.Tracevariables = types.StringNull()
 	}
 

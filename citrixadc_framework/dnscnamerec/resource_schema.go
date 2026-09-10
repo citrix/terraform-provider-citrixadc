@@ -113,12 +113,12 @@ func dnscnamerecSetAttrFromGet(ctx context.Context, data *DnscnamerecResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["aliasname"]; ok && val != nil {
 		data.Aliasname = types.StringValue(val.(string))
-	} else {
+	} else if data.Aliasname.IsUnknown() {
 		data.Aliasname = types.StringNull()
 	}
 	if val, ok := getResponseData["canonicalname"]; ok && val != nil {
 		data.Canonicalname = types.StringValue(val.(string))
-	} else {
+	} else if data.Canonicalname.IsUnknown() {
 		data.Canonicalname = types.StringNull()
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {

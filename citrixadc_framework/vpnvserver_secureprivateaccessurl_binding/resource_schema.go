@@ -71,12 +71,12 @@ func vpnvserver_secureprivateaccessurl_bindingSetAttrFromGet(ctx context.Context
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["secureprivateaccessurl"]; ok && val != nil {
 		data.Secureprivateaccessurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Secureprivateaccessurl.IsUnknown() {
 		data.Secureprivateaccessurl = types.StringNull()
 	}
 

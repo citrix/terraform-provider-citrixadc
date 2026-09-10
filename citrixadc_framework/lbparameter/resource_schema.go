@@ -308,17 +308,17 @@ func lbparameterSetAttrFromGet(ctx context.Context, data *LbparameterResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["allowboundsvcremoval"]; ok && val != nil {
 		data.Allowboundsvcremoval = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowboundsvcremoval.IsUnknown() {
 		data.Allowboundsvcremoval = types.StringNull()
 	}
 	if val, ok := getResponseData["computedadccookieattribute"]; ok && val != nil {
 		data.Computedadccookieattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Computedadccookieattribute.IsUnknown() {
 		data.Computedadccookieattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["consolidatedlconn"]; ok && val != nil {
 		data.Consolidatedlconn = types.StringValue(val.(string))
-	} else {
+	} else if data.Consolidatedlconn.IsUnknown() {
 		data.Consolidatedlconn = types.StringNull()
 	}
 	// cookiepassphrase is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -328,106 +328,108 @@ func lbparameterSetAttrFromGet(ctx context.Context, data *LbparameterResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dbsttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dbsttl.IsUnknown() {
 		data.Dbsttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["dropmqttjumbomessage"]; ok && val != nil {
 		data.Dropmqttjumbomessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropmqttjumbomessage.IsUnknown() {
 		data.Dropmqttjumbomessage = types.StringNull()
 	}
 	if val, ok := getResponseData["httponlycookieflag"]; ok && val != nil {
 		data.Httponlycookieflag = types.StringValue(val.(string))
-	} else {
+	} else if data.Httponlycookieflag.IsUnknown() {
 		data.Httponlycookieflag = types.StringNull()
 	}
 	if val, ok := getResponseData["lbhashalgorithm"]; ok && val != nil {
 		data.Lbhashalgorithm = types.StringValue(val.(string))
-	} else {
+	} else if data.Lbhashalgorithm.IsUnknown() {
 		data.Lbhashalgorithm = types.StringNull()
 	}
 	if val, ok := getResponseData["lbhashfingers"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Lbhashfingers = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Lbhashfingers.IsUnknown() {
 		data.Lbhashfingers = types.Int64Null()
 	}
 	if val, ok := getResponseData["literaladccookieattribute"]; ok && val != nil {
 		data.Literaladccookieattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Literaladccookieattribute.IsUnknown() {
 		data.Literaladccookieattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["maxpipelinenat"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxpipelinenat = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxpipelinenat.IsUnknown() {
 		data.Maxpipelinenat = types.Int64Null()
 	}
 	if val, ok := getResponseData["monitorconnectionclose"]; ok && val != nil {
 		data.Monitorconnectionclose = types.StringValue(val.(string))
-	} else {
+	} else if data.Monitorconnectionclose.IsUnknown() {
 		data.Monitorconnectionclose = types.StringNull()
 	}
 	if val, ok := getResponseData["monitorskipmaxclient"]; ok && val != nil {
 		data.Monitorskipmaxclient = types.StringValue(val.(string))
-	} else {
+	} else if data.Monitorskipmaxclient.IsUnknown() {
 		data.Monitorskipmaxclient = types.StringNull()
 	}
 	if val, ok := getResponseData["preferdirectroute"]; ok && val != nil {
 		data.Preferdirectroute = types.StringValue(val.(string))
-	} else {
+	} else if data.Preferdirectroute.IsUnknown() {
 		data.Preferdirectroute = types.StringNull()
 	}
 	if val, ok := getResponseData["proximityfromself"]; ok && val != nil {
 		data.Proximityfromself = types.StringValue(val.(string))
-	} else {
+	} else if data.Proximityfromself.IsUnknown() {
 		data.Proximityfromself = types.StringNull()
 	}
 	if val, ok := getResponseData["radiusmessageauthenticator"]; ok && val != nil {
 		data.Radiusmessageauthenticator = types.StringValue(val.(string))
-	} else {
+	} else if data.Radiusmessageauthenticator.IsUnknown() {
 		data.Radiusmessageauthenticator = types.StringNull()
 	}
 	if val, ok := getResponseData["retainservicestate"]; ok && val != nil {
 		data.Retainservicestate = types.StringValue(val.(string))
-	} else {
+	} else if data.Retainservicestate.IsUnknown() {
 		data.Retainservicestate = types.StringNull()
 	}
 	if val, ok := getResponseData["startuprrfactor"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Startuprrfactor = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Startuprrfactor.IsUnknown() {
 		data.Startuprrfactor = types.Int64Null()
 	}
 	if val, ok := getResponseData["storemqttclientidandusername"]; ok && val != nil {
 		data.Storemqttclientidandusername = types.StringValue(val.(string))
-	} else {
+	} else if data.Storemqttclientidandusername.IsUnknown() {
 		data.Storemqttclientidandusername = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 	if val, ok := getResponseData["useencryptedpersistencecookie"]; ok && val != nil {
 		data.Useencryptedpersistencecookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Useencryptedpersistencecookie.IsUnknown() {
 		data.Useencryptedpersistencecookie = types.StringNull()
 	}
 	if val, ok := getResponseData["useportforhashlb"]; ok && val != nil {
 		data.Useportforhashlb = types.StringValue(val.(string))
-	} else {
+	} else if data.Useportforhashlb.IsUnknown() {
 		data.Useportforhashlb = types.StringNull()
 	}
 	if val, ok := getResponseData["usesecuredpersistencecookie"]; ok && val != nil {
 		data.Usesecuredpersistencecookie = types.StringValue(val.(string))
+	} else if data.Usesecuredpersistencecookie.IsUnknown() {
+		data.Usesecuredpersistencecookie = types.StringNull()
 	}
 	if val, ok := getResponseData["vserverspecificmac"]; ok && val != nil {
 		data.Vserverspecificmac = types.StringValue(val.(string))
-	} else {
+	} else if data.Vserverspecificmac.IsUnknown() {
 		data.Vserverspecificmac = types.StringNull()
 	}
 

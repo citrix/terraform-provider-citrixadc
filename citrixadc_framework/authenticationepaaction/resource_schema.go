@@ -179,37 +179,37 @@ func authenticationepaactionSetAttrFromGet(ctx context.Context, data *Authentica
 	// Convert API response to model
 	if val, ok := getResponseData["csecexpr"]; ok && val != nil {
 		data.Csecexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Csecexpr.IsUnknown() {
 		data.Csecexpr = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultepagroup"]; ok && val != nil {
 		data.Defaultepagroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultepagroup.IsUnknown() {
 		data.Defaultepagroup = types.StringNull()
 	}
 	if val, ok := getResponseData["deletefiles"]; ok && val != nil {
 		data.Deletefiles = types.StringValue(val.(string))
-	} else {
+	} else if data.Deletefiles.IsUnknown() {
 		data.Deletefiles = types.StringNull()
 	}
 	if val, ok := getResponseData["deviceposture"]; ok && val != nil {
 		data.Deviceposture = types.StringValue(val.(string))
-	} else {
+	} else if data.Deviceposture.IsUnknown() {
 		data.Deviceposture = types.StringNull()
 	}
 	if val, ok := getResponseData["killprocess"]; ok && val != nil {
 		data.Killprocess = types.StringValue(val.(string))
-	} else {
+	} else if data.Killprocess.IsUnknown() {
 		data.Killprocess = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["quarantinegroup"]; ok && val != nil {
 		data.Quarantinegroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Quarantinegroup.IsUnknown() {
 		data.Quarantinegroup = types.StringNull()
 	}
 

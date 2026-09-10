@@ -143,7 +143,7 @@ func botprofile_ipreputation_bindingSetAttrFromGet(ctx context.Context, data *Bo
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_iprep_action"]; ok && val != nil {
@@ -159,27 +159,27 @@ func botprofile_ipreputation_bindingSetAttrFromGet(ctx context.Context, data *Bo
 	}
 	if val, ok := getResponseData["bot_iprep_enabled"]; ok && val != nil {
 		data.BotIprepEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotIprepEnabled.IsUnknown() {
 		data.BotIprepEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_ipreputation"]; ok && val != nil {
 		data.BotIpreputation = types.BoolValue(val.(bool))
-	} else {
+	} else if data.BotIpreputation.IsUnknown() {
 		data.BotIpreputation = types.BoolNull()
 	}
 	if val, ok := getResponseData["category"]; ok && val != nil {
 		data.Category = types.StringValue(val.(string))
-	} else {
+	} else if data.Category.IsUnknown() {
 		data.Category = types.StringNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

@@ -152,6 +152,8 @@ func systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.C
 	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
 		if val, ok := getResponseData["policyname"]; ok && val != nil {
 			data.Policyname = types.StringValue(fmt.Sprintf("%v", val))
+		} else if data.Policyname.IsUnknown() {
+			data.Policyname = types.StringNull()
 		}
 	}
 
@@ -183,6 +185,8 @@ func systemglobal_authenticationradiuspolicy_bindingSetAttrFromGet(ctx context.C
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Priority = types.Int64Value(intVal)
 			}
+		} else if data.Priority.IsUnknown() {
+			data.Priority = types.Int64Null()
 		}
 	}
 

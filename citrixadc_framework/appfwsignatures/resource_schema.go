@@ -192,6 +192,8 @@ func appfwsignaturesSetAttrFromGet(ctx context.Context, data *AppfwsignaturesRes
 
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// The API does not return these fields; resolve unknowns to null and otherwise

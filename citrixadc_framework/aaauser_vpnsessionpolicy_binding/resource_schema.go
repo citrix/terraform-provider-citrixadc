@@ -112,19 +112,19 @@ func aaauser_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data *A
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
-	} else {
+	} else if data.Policy.IsUnknown() {
 		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 	// Pattern 7: NITRO does not echo 'type' back in the binding GET response.
@@ -132,10 +132,12 @@ func aaauser_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data *A
 	// (overwriting with null would cause "inconsistent result after apply").
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

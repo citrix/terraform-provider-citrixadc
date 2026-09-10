@@ -165,6 +165,8 @@ func dnssoarecSetAttrFromGet(ctx context.Context, data *DnssoarecResourceModel, 
 	// domain is the primary key and is always returned by NITRO.
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
+	} else if data.Domain.IsUnknown() {
+		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))

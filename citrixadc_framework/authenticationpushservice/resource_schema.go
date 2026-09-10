@@ -126,7 +126,7 @@ func authenticationpushserviceSetAttrFromGet(ctx context.Context, data *Authenti
 	// Convert API response to model
 	if val, ok := getResponseData["clientid"]; ok && val != nil {
 		data.Clientid = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientid.IsUnknown() {
 		data.Clientid = types.StringNull()
 	}
 	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -134,19 +134,19 @@ func authenticationpushserviceSetAttrFromGet(ctx context.Context, data *Authenti
 	// clientsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["customerid"]; ok && val != nil {
 		data.Customerid = types.StringValue(val.(string))
-	} else {
+	} else if data.Customerid.IsUnknown() {
 		data.Customerid = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["refreshinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Refreshinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Refreshinterval.IsUnknown() {
 		data.Refreshinterval = types.Int64Null()
 	}
 

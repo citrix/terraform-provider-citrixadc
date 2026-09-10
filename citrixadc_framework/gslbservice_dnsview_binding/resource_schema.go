@@ -85,17 +85,17 @@ func gslbservice_dnsview_bindingSetAttrFromGet(ctx context.Context, data *Gslbse
 	// Convert API response to model
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicename.IsUnknown() {
 		data.Servicename = types.StringNull()
 	}
 	if val, ok := getResponseData["viewip"]; ok && val != nil {
 		data.Viewip = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewip.IsUnknown() {
 		data.Viewip = types.StringNull()
 	}
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
 		data.Viewname = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewname.IsUnknown() {
 		data.Viewname = types.StringNull()
 	}
 

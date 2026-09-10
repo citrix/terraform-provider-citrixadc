@@ -179,26 +179,40 @@ func crvserver_crpolicy_bindingSetAttrFromGet(ctx context.Context, data *Crvserv
 	// Optional+Computed attributes: adopt the GET value when present, else preserve plan.
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
+	} else if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(fmt.Sprintf("%v", val))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
+	} else if data.Invoke.IsUnknown() {
+		data.Invoke = types.BoolNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
+	} else if data.Labelname.IsUnknown() {
+		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
+	} else if data.Labeltype.IsUnknown() {
+		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
 		data.Targetvserver = types.StringValue(val.(string))
+	} else if data.Targetvserver.IsUnknown() {
+		data.Targetvserver = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

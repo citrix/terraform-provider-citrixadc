@@ -306,141 +306,141 @@ func aaaparameterSetAttrFromGet(ctx context.Context, data *AaaparameterResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["aaadloglevel"]; ok && val != nil {
 		data.Aaadloglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Aaadloglevel.IsUnknown() {
 		data.Aaadloglevel = types.StringNull()
 	}
 	if val, ok := getResponseData["aaadnatip"]; ok && val != nil {
 		data.Aaadnatip = types.StringValue(val.(string))
-	} else {
+	} else if data.Aaadnatip.IsUnknown() {
 		data.Aaadnatip = types.StringNull()
 	}
 	if val, ok := getResponseData["aaasessionloglevel"]; ok && val != nil {
 		data.Aaasessionloglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Aaasessionloglevel.IsUnknown() {
 		data.Aaasessionloglevel = types.StringNull()
 	}
 	if val, ok := getResponseData["apitokencache"]; ok && val != nil {
 		data.Apitokencache = types.StringValue(val.(string))
-	} else {
+	} else if data.Apitokencache.IsUnknown() {
 		data.Apitokencache = types.StringNull()
 	}
 	if val, ok := getResponseData["classicendpoints"]; ok && val != nil {
 		data.Classicendpoints = types.StringValue(val.(string))
-	} else {
+	} else if data.Classicendpoints.IsUnknown() {
 		data.Classicendpoints = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthtype"]; ok && val != nil {
 		data.Defaultauthtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthtype.IsUnknown() {
 		data.Defaultauthtype = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultcspheader"]; ok && val != nil {
 		data.Defaultcspheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultcspheader.IsUnknown() {
 		data.Defaultcspheader = types.StringNull()
 	}
 	if val, ok := getResponseData["dynaddr"]; ok && val != nil {
 		data.Dynaddr = types.StringValue(val.(string))
-	} else {
+	} else if data.Dynaddr.IsUnknown() {
 		data.Dynaddr = types.StringNull()
 	}
 	if val, ok := getResponseData["enableenhancedauthfeedback"]; ok && val != nil {
 		data.Enableenhancedauthfeedback = types.StringValue(val.(string))
-	} else {
+	} else if data.Enableenhancedauthfeedback.IsUnknown() {
 		data.Enableenhancedauthfeedback = types.StringNull()
 	}
 	if val, ok := getResponseData["enablesessionstickiness"]; ok && val != nil {
 		data.Enablesessionstickiness = types.StringValue(val.(string))
-	} else {
+	} else if data.Enablesessionstickiness.IsUnknown() {
 		data.Enablesessionstickiness = types.StringNull()
 	}
 	if val, ok := getResponseData["enablestaticpagecaching"]; ok && val != nil {
 		data.Enablestaticpagecaching = types.StringValue(val.(string))
-	} else {
+	} else if data.Enablestaticpagecaching.IsUnknown() {
 		data.Enablestaticpagecaching = types.StringNull()
 	}
 	if val, ok := getResponseData["enhancedepa"]; ok && val != nil {
 		data.Enhancedepa = types.StringValue(val.(string))
-	} else {
+	} else if data.Enhancedepa.IsUnknown() {
 		data.Enhancedepa = types.StringNull()
 	}
 	if val, ok := getResponseData["failedlogintimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Failedlogintimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Failedlogintimeout.IsUnknown() {
 		data.Failedlogintimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ftmode"]; ok && val != nil {
 		data.Ftmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Ftmode.IsUnknown() {
 		data.Ftmode = types.StringNull()
 	}
 	if val, ok := getResponseData["httponlycookie"]; ok && val != nil {
 		data.Httponlycookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Httponlycookie.IsUnknown() {
 		data.Httponlycookie = types.StringNull()
 	}
 	if val, ok := getResponseData["loginencryption"]; ok && val != nil {
 		data.Loginencryption = types.StringValue(val.(string))
-	} else {
+	} else if data.Loginencryption.IsUnknown() {
 		data.Loginencryption = types.StringNull()
 	}
 	if val, ok := getResponseData["maxaaausers"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxaaausers = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxaaausers.IsUnknown() {
 		data.Maxaaausers = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxkbquestions"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxkbquestions = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxkbquestions.IsUnknown() {
 		data.Maxkbquestions = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxloginattempts"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxloginattempts = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxloginattempts.IsUnknown() {
 		data.Maxloginattempts = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxsamldeflatesize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxsamldeflatesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxsamldeflatesize.IsUnknown() {
 		data.Maxsamldeflatesize = types.Int64Null()
 	}
 	if val, ok := getResponseData["persistentloginattempts"]; ok && val != nil {
 		data.Persistentloginattempts = types.StringValue(val.(string))
-	} else {
+	} else if data.Persistentloginattempts.IsUnknown() {
 		data.Persistentloginattempts = types.StringNull()
 	}
 	if val, ok := getResponseData["pwdexpirynotificationdays"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pwdexpirynotificationdays = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pwdexpirynotificationdays.IsUnknown() {
 		data.Pwdexpirynotificationdays = types.Int64Null()
 	}
 	if val, ok := getResponseData["samesite"]; ok && val != nil {
 		data.Samesite = types.StringValue(val.(string))
-	} else {
+	} else if data.Samesite.IsUnknown() {
 		data.Samesite = types.StringNull()
 	}
 	if val, ok := getResponseData["securityinsights"]; ok && val != nil {
 		data.Securityinsights = types.StringValue(val.(string))
-	} else {
+	} else if data.Securityinsights.IsUnknown() {
 		data.Securityinsights = types.StringNull()
 	}
 	if val, ok := getResponseData["tokenintrospectioninterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tokenintrospectioninterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tokenintrospectioninterval.IsUnknown() {
 		data.Tokenintrospectioninterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["wafprotection"]; ok && val != nil {
@@ -456,7 +456,7 @@ func aaaparameterSetAttrFromGet(ctx context.Context, data *AaaparameterResourceM
 	}
 	if val, ok := getResponseData["webviewendpoints"]; ok && val != nil {
 		data.Webviewendpoints = types.StringValue(val.(string))
-	} else {
+	} else if data.Webviewendpoints.IsUnknown() {
 		data.Webviewendpoints = types.StringNull()
 	}
 

@@ -143,22 +143,22 @@ func cmpactionSetAttrFromGet(ctx context.Context, data *CmpactionResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["addvaryheader"]; ok && val != nil {
 		data.Addvaryheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Addvaryheader.IsUnknown() {
 		data.Addvaryheader = types.StringNull()
 	}
 	if val, ok := getResponseData["cmptype"]; ok && val != nil {
 		data.Cmptype = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmptype.IsUnknown() {
 		data.Cmptype = types.StringNull()
 	}
 	if val, ok := getResponseData["deltatype"]; ok && val != nil {
 		data.Deltatype = types.StringValue(val.(string))
-	} else {
+	} else if data.Deltatype.IsUnknown() {
 		data.Deltatype = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// newname is a rename-only parameter and is never returned by the NITRO GET.
@@ -171,7 +171,7 @@ func cmpactionSetAttrFromGet(ctx context.Context, data *CmpactionResourceModel, 
 	}
 	if val, ok := getResponseData["varyheadervalue"]; ok && val != nil {
 		data.Varyheadervalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Varyheadervalue.IsUnknown() {
 		data.Varyheadervalue = types.StringNull()
 	}
 

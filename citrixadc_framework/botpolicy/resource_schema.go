@@ -169,12 +169,12 @@ func botpolicySetAttrFromGet(ctx context.Context, data *BotpolicyResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Logaction.IsUnknown() {
 		data.Logaction = types.StringNull()
 	}
 
@@ -196,17 +196,17 @@ func botpolicySetAttrFromGet(ctx context.Context, data *BotpolicyResourceModel, 
 
 	if val, ok := getResponseData["profilename"]; ok && val != nil {
 		data.Profilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Profilename.IsUnknown() {
 		data.Profilename = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
-	} else {
+	} else if data.Rule.IsUnknown() {
 		data.Rule = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 

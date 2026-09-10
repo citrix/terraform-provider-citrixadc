@@ -71,12 +71,12 @@ func rnat_retainsourceportset_bindingSetAttrFromGet(ctx context.Context, data *R
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["retainsourceportrange"]; ok && val != nil {
 		data.Retainsourceportrange = types.StringValue(val.(string))
-	} else {
+	} else if data.Retainsourceportrange.IsUnknown() {
 		data.Retainsourceportrange = types.StringNull()
 	}
 

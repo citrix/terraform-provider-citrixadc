@@ -86,17 +86,17 @@ func lbmetrictable_metric_bindingSetAttrFromGet(ctx context.Context, data *Lbmet
 	// Convert API response to model
 	if val, ok := getResponseData["Snmpoid"]; ok && val != nil {
 		data.Snmpoid = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmpoid.IsUnknown() {
 		data.Snmpoid = types.StringNull()
 	}
 	if val, ok := getResponseData["metric"]; ok && val != nil {
 		data.Metric = types.StringValue(val.(string))
-	} else {
+	} else if data.Metric.IsUnknown() {
 		data.Metric = types.StringNull()
 	}
 	if val, ok := getResponseData["metrictable"]; ok && val != nil {
 		data.Metrictable = types.StringValue(val.(string))
-	} else {
+	} else if data.Metrictable.IsUnknown() {
 		data.Metrictable = types.StringNull()
 	}
 

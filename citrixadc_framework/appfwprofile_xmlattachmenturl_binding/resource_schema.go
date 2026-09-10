@@ -242,7 +242,7 @@ func appfwprofile_xmlattachmenturl_bindingSetAttrFromGet(ctx context.Context, da
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattachmentsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxattachmentsize.IsUnknown() {
 		data.Xmlmaxattachmentsize = types.Int64Null()
 	}
 	data.Xmlmaxattachmentsizecheck = adopt(data.Xmlmaxattachmentsizecheck, "xmlmaxattachmentsizecheck")

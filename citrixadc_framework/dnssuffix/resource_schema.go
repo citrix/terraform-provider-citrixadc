@@ -57,7 +57,7 @@ func dnssuffixSetAttrFromGet(ctx context.Context, data *DnssuffixResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["Dnssuffix"]; ok && val != nil {
 		data.Dnssuffix = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnssuffix.IsUnknown() {
 		data.Dnssuffix = types.StringNull()
 	}
 

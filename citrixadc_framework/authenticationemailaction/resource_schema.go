@@ -199,22 +199,22 @@ func authenticationemailactionSetAttrFromGet(ctx context.Context, data *Authenti
 	// Convert API response to model
 	if val, ok := getResponseData["content"]; ok && val != nil {
 		data.Content = types.StringValue(val.(string))
-	} else {
+	} else if data.Content.IsUnknown() {
 		data.Content = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["emailaddress"]; ok && val != nil {
 		data.Emailaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Emailaddress.IsUnknown() {
 		data.Emailaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -222,22 +222,24 @@ func authenticationemailactionSetAttrFromGet(ctx context.Context, data *Authenti
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverurl.IsUnknown() {
 		data.Serverurl = types.StringNull()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
+	} else if data.Timeout.IsUnknown() {
+		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

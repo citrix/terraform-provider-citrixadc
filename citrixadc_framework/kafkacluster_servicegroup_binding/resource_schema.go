@@ -71,12 +71,12 @@ func kafkacluster_servicegroup_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicegroupname.IsUnknown() {
 		data.Servicegroupname = types.StringNull()
 	}
 

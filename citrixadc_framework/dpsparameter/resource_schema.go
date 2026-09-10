@@ -96,17 +96,17 @@ func dpsparameterSetAttrFromGet(ctx context.Context, data *DpsparameterResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["customerid"]; ok && val != nil {
 		data.Customerid = types.StringValue(val.(string))
-	} else {
+	} else if data.Customerid.IsUnknown() {
 		data.Customerid = types.StringNull()
 	}
 	if val, ok := getResponseData["deployment"]; ok && val != nil {
 		data.Deployment = types.StringValue(val.(string))
-	} else {
+	} else if data.Deployment.IsUnknown() {
 		data.Deployment = types.StringNull()
 	}
 	if val, ok := getResponseData["serviceurl"]; ok && val != nil {
 		data.Serviceurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Serviceurl.IsUnknown() {
 		data.Serviceurl = types.StringNull()
 	}
 	// Read-only NITRO props (builtin, feature, _nextgenapiresource) are omitted

@@ -177,11 +177,15 @@ func cacheglobal_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Ca
 	if data.Policy.IsNull() || data.Policy.ValueString() == "" {
 		if val, ok := getResponseData["policy"]; ok && val != nil {
 			data.Policy = types.StringValue(val.(string))
+		} else if data.Policy.IsUnknown() {
+			data.Policy = types.StringNull()
 		}
 	}
 	if data.Type.IsNull() || data.Type.ValueString() == "" {
 		if val, ok := getResponseData["type"]; ok && val != nil {
 			data.Type = types.StringValue(val.(string))
+		} else if data.Type.IsUnknown() {
+			data.Type = types.StringNull()
 		}
 	}
 
@@ -193,6 +197,8 @@ func cacheglobal_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Ca
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Priority = types.Int64Value(intVal)
 			}
+		} else if data.Priority.IsUnknown() {
+			data.Priority = types.Int64Null()
 		}
 	}
 
@@ -206,42 +212,42 @@ func cacheglobal_cachepolicy_bindingSetAttrFromGet(ctx context.Context, data *Ca
 	if data.Globalbindtype.IsNull() || data.Globalbindtype.IsUnknown() {
 		if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 			data.Globalbindtype = types.StringValue(val.(string))
-		} else {
+		} else if data.Globalbindtype.IsUnknown() {
 			data.Globalbindtype = types.StringNull()
 		}
 	}
 	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
 		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 			data.Gotopriorityexpression = types.StringValue(val.(string))
-		} else {
+		} else if data.Gotopriorityexpression.IsUnknown() {
 			data.Gotopriorityexpression = types.StringNull()
 		}
 	}
 	if data.Invoke.IsNull() || data.Invoke.IsUnknown() {
 		if val, ok := getResponseData["invoke"]; ok && val != nil {
 			data.Invoke = types.BoolValue(val.(bool))
-		} else {
+		} else if data.Invoke.IsUnknown() {
 			data.Invoke = types.BoolNull()
 		}
 	}
 	if data.Labelname.IsNull() || data.Labelname.IsUnknown() {
 		if val, ok := getResponseData["labelname"]; ok && val != nil {
 			data.Labelname = types.StringValue(val.(string))
-		} else {
+		} else if data.Labelname.IsUnknown() {
 			data.Labelname = types.StringNull()
 		}
 	}
 	if data.Labeltype.IsNull() || data.Labeltype.IsUnknown() {
 		if val, ok := getResponseData["labeltype"]; ok && val != nil {
 			data.Labeltype = types.StringValue(val.(string))
-		} else {
+		} else if data.Labeltype.IsUnknown() {
 			data.Labeltype = types.StringNull()
 		}
 	}
 	if data.Precededefrules.IsNull() || data.Precededefrules.IsUnknown() {
 		if val, ok := getResponseData["precededefrules"]; ok && val != nil {
 			data.Precededefrules = types.StringValue(val.(string))
-		} else {
+		} else if data.Precededefrules.IsUnknown() {
 			data.Precededefrules = types.StringNull()
 		}
 	}

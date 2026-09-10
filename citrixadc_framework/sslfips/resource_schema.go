@@ -174,15 +174,17 @@ func sslfipsSetAttrFromGet(ctx context.Context, data *SslfipsResourceModel, getR
 	// it back. Preserve the existing plan/state value to avoid a perpetual diff (Pattern 7).
 	if val, ok := getResponseData["fipsfw"]; ok && val != nil {
 		data.Fipsfw = types.StringValue(val.(string))
+	} else if data.Fipsfw.IsUnknown() {
+		data.Fipsfw = types.StringNull()
 	}
 	if val, ok := getResponseData["hsmlabel"]; ok && val != nil {
 		data.Hsmlabel = types.StringValue(val.(string))
-	} else {
+	} else if data.Hsmlabel.IsUnknown() {
 		data.Hsmlabel = types.StringNull()
 	}
 	if val, ok := getResponseData["inithsm"]; ok && val != nil {
 		data.Inithsm = types.StringValue(val.(string))
-	} else {
+	} else if data.Inithsm.IsUnknown() {
 		data.Inithsm = types.StringNull()
 	}
 	// oldsopassword is not returned by NITRO API (secret/ephemeral) - retain from config

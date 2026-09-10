@@ -57,7 +57,7 @@ func aaaglobal_authenticationnegotiateaction_bindingSetAttrFromGet(ctx context.C
 	// Convert API response to model
 	if val, ok := getResponseData["windowsprofile"]; ok && val != nil {
 		data.Windowsprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Windowsprofile.IsUnknown() {
 		data.Windowsprofile = types.StringNull()
 	}
 

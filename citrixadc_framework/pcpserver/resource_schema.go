@@ -111,24 +111,24 @@ func pcpserverSetAttrFromGet(ctx context.Context, data *PcpserverResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["pcpprofile"]; ok && val != nil {
 		data.Pcpprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Pcpprofile.IsUnknown() {
 		data.Pcpprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 

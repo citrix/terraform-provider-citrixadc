@@ -128,34 +128,34 @@ func sslcipher_sslciphersuite_bindingSetAttrFromGet(ctx context.Context, data *S
 	// Convert API response to model
 	if val, ok := getResponseData["ciphergroupname"]; ok && val != nil {
 		data.Ciphergroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciphergroupname.IsUnknown() {
 		data.Ciphergroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["ciphername"]; ok && val != nil {
 		data.Ciphername = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciphername.IsUnknown() {
 		data.Ciphername = types.StringNull()
 	}
 	if val, ok := getResponseData["cipheroperation"]; ok && val != nil {
 		data.Cipheroperation = types.StringValue(val.(string))
-	} else {
+	} else if data.Cipheroperation.IsUnknown() {
 		data.Cipheroperation = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cipherpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cipherpriority.IsUnknown() {
 		data.Cipherpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["ciphgrpals"]; ok && val != nil {
 		data.Ciphgrpals = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciphgrpals.IsUnknown() {
 		data.Ciphgrpals = types.StringNull()
 	}
 	if val, ok := getResponseData["description"]; ok && val != nil {
 		data.Description = types.StringValue(val.(string))
-	} else {
+	} else if data.Description.IsUnknown() {
 		data.Description = types.StringNull()
 	}
 

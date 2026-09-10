@@ -456,17 +456,17 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Appflowlog.IsUnknown() {
 		data.Appflowlog = types.StringNull()
 	}
 	if val, ok := getResponseData["cip"]; ok && val != nil {
 		data.Cip = types.StringValue(val.(string))
-	} else {
+	} else if data.Cip.IsUnknown() {
 		data.Cip = types.StringNull()
 	}
 	if val, ok := getResponseData["cipheader"]; ok && val != nil {
 		data.Cipheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Cipheader.IsUnknown() {
 		data.Cipheader = types.StringNull()
 	}
 	if val, ok := getResponseData["clttimeout"]; ok && val != nil {
@@ -478,12 +478,12 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["cnameentry"]; ok && val != nil {
 		data.Cnameentry = types.StringValue(val.(string))
-	} else {
+	} else if data.Cnameentry.IsUnknown() {
 		data.Cnameentry = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["cookietimeout"]; ok && val != nil {
@@ -500,7 +500,7 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
 		data.Downstateflush = types.StringValue(val.(string))
-	} else {
+	} else if data.Downstateflush.IsUnknown() {
 		data.Downstateflush = types.StringNull()
 	}
 	if val, ok := getResponseData["hashid"]; ok && val != nil {
@@ -512,7 +512,7 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["healthmonitor"]; ok && val != nil {
 		data.Healthmonitor = types.StringValue(val.(string))
-	} else {
+	} else if data.Healthmonitor.IsUnknown() {
 		data.Healthmonitor = types.StringNull()
 	}
 	// ip is not returned by NITRO; SDK v2 maps it from ipaddress.
@@ -548,7 +548,7 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["monitornamesvc"]; ok && val != nil {
 		data.Monitornamesvc = types.StringValue(val.(string))
-	} else {
+	} else if data.Monitornamesvc.IsUnknown() {
 		data.Monitornamesvc = types.StringNull()
 	}
 	if val, ok := getResponseData["monthreshold"]; ok && val != nil {
@@ -581,12 +581,12 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["naptrreplacement"]; ok && val != nil {
 		data.Naptrreplacement = types.StringValue(val.(string))
-	} else {
+	} else if data.Naptrreplacement.IsUnknown() {
 		data.Naptrreplacement = types.StringNull()
 	}
 	if val, ok := getResponseData["naptrservices"]; ok && val != nil {
 		data.Naptrservices = types.StringValue(val.(string))
-	} else {
+	} else if data.Naptrservices.IsUnknown() {
 		data.Naptrservices = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
@@ -598,7 +598,7 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["publicip"]; ok && val != nil {
 		data.Publicip = types.StringValue(val.(string))
-	} else {
+	} else if data.Publicip.IsUnknown() {
 		data.Publicip = types.StringNull()
 	}
 	if val, ok := getResponseData["publicport"]; ok && val != nil {
@@ -610,37 +610,37 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicename.IsUnknown() {
 		data.Servicename = types.StringNull()
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicetype.IsUnknown() {
 		data.Servicetype = types.StringNull()
 	}
 	if val, ok := getResponseData["sitename"]; ok && val != nil {
 		data.Sitename = types.StringValue(val.(string))
-	} else {
+	} else if data.Sitename.IsUnknown() {
 		data.Sitename = types.StringNull()
 	}
 	if val, ok := getResponseData["sitepersistence"]; ok && val != nil {
 		data.Sitepersistence = types.StringValue(val.(string))
-	} else {
+	} else if data.Sitepersistence.IsUnknown() {
 		data.Sitepersistence = types.StringNull()
 	}
 	if val, ok := getResponseData["siteprefix"]; ok && val != nil {
 		data.Siteprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Siteprefix.IsUnknown() {
 		data.Siteprefix = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["svrtimeout"]; ok && val != nil {
@@ -652,12 +652,12 @@ func gslbserviceSetAttrFromGet(ctx context.Context, data *GslbserviceResourceMod
 	}
 	if val, ok := getResponseData["viewip"]; ok && val != nil {
 		data.Viewip = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewip.IsUnknown() {
 		data.Viewip = types.StringNull()
 	}
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
 		data.Viewname = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewname.IsUnknown() {
 		data.Viewname = types.StringNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {

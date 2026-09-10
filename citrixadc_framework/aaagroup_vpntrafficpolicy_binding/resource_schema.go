@@ -119,9 +119,13 @@ func aaagroup_vpntrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
+	} else if data.Groupname.IsUnknown() {
+		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 
 	// Set ID for the resource

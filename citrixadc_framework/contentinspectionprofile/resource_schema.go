@@ -150,7 +150,7 @@ func contentinspectionprofileSetAttrFromGet(ctx context.Context, data *Contentin
 	// Convert API response to model
 	if val, ok := getResponseData["egressinterface"]; ok && val != nil {
 		data.Egressinterface = types.StringValue(val.(string))
-	} else {
+	} else if data.Egressinterface.IsUnknown() {
 		data.Egressinterface = types.StringNull()
 	}
 	if val, ok := getResponseData["egressvlan"]; ok && val != nil {
@@ -163,7 +163,7 @@ func contentinspectionprofileSetAttrFromGet(ctx context.Context, data *Contentin
 	}
 	if val, ok := getResponseData["ingressinterface"]; ok && val != nil {
 		data.Ingressinterface = types.StringValue(val.(string))
-	} else {
+	} else if data.Ingressinterface.IsUnknown() {
 		data.Ingressinterface = types.StringNull()
 	}
 	if val, ok := getResponseData["ingressvlan"]; ok && val != nil {
@@ -176,17 +176,17 @@ func contentinspectionprofileSetAttrFromGet(ctx context.Context, data *Contentin
 	}
 	if val, ok := getResponseData["iptunnel"]; ok && val != nil {
 		data.Iptunnel = types.StringValue(val.(string))
-	} else {
+	} else if data.Iptunnel.IsUnknown() {
 		data.Iptunnel = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 

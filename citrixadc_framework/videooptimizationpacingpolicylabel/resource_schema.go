@@ -95,12 +95,12 @@ func videooptimizationpacingpolicylabelSetAttrFromGet(ctx context.Context, data 
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
+	} else if data.Labelname.IsUnknown() {
 		data.Labelname = types.StringNull()
 	}
 	// newname is a rename-only write parameter that the NITRO GET response never
@@ -108,7 +108,7 @@ func videooptimizationpacingpolicylabelSetAttrFromGet(ctx context.Context, data 
 	// otherwise a configured value would be wiped on every Read (Pattern 7).
 	if val, ok := getResponseData["policylabeltype"]; ok && val != nil {
 		data.Policylabeltype = types.StringValue(val.(string))
-	} else {
+	} else if data.Policylabeltype.IsUnknown() {
 		data.Policylabeltype = types.StringNull()
 	}
 

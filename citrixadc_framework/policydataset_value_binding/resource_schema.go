@@ -114,29 +114,29 @@ func policydataset_value_bindingSetAttrFromGet(ctx context.Context, data *Policy
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["endrange"]; ok && val != nil {
 		data.Endrange = types.StringValue(val.(string))
-	} else {
+	} else if data.Endrange.IsUnknown() {
 		data.Endrange = types.StringNull()
 	}
 	if val, ok := getResponseData["index"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Index = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Index.IsUnknown() {
 		data.Index = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["value"]; ok && val != nil {
 		data.Value = types.StringValue(val.(string))
-	} else {
+	} else if data.Value.IsUnknown() {
 		data.Value = types.StringNull()
 	}
 

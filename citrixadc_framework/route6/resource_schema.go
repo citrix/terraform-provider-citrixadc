@@ -322,6 +322,8 @@ func route6SetAttrFromGet(ctx context.Context, data *Route6ResourceModel, getRes
 	if data.Network.IsNull() || data.Network.IsUnknown() {
 		if val, ok := getResponseData["network"]; ok && val != nil {
 			data.Network = types.StringValue(val.(string))
+		} else if data.Network.IsUnknown() {
+			data.Network = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {

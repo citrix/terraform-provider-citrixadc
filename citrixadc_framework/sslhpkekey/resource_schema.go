@@ -78,17 +78,17 @@ func sslhpkekeySetAttrFromGet(ctx context.Context, data *SslhpkekeyResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["dhkem"]; ok && val != nil {
 		data.Dhkem = types.StringValue(val.(string))
-	} else {
+	} else if data.Dhkem.IsUnknown() {
 		data.Dhkem = types.StringNull()
 	}
 	if val, ok := getResponseData["file"]; ok && val != nil {
 		data.File = types.StringValue(val.(string))
-	} else {
+	} else if data.File.IsUnknown() {
 		data.File = types.StringNull()
 	}
 	if val, ok := getResponseData["hpkekeyname"]; ok && val != nil {
 		data.Hpkekeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hpkekeyname.IsUnknown() {
 		data.Hpkekeyname = types.StringNull()
 	}
 

@@ -54,7 +54,7 @@ func contentinspectionparameterSetAttrFromGet(ctx context.Context, data *Content
 	// Convert API response to model
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 

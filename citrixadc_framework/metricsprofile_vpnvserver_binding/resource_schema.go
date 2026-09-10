@@ -80,17 +80,17 @@ func metricsprofile_vpnvserver_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["entityname"]; ok && val != nil {
 		data.Entityname = types.StringValue(val.(string))
-	} else {
+	} else if data.Entityname.IsUnknown() {
 		data.Entityname = types.StringNull()
 	}
 	if val, ok := getResponseData["entitytype"]; ok && val != nil {
 		data.Entitytype = types.StringValue(val.(string))
-	} else {
+	} else if data.Entitytype.IsUnknown() {
 		data.Entitytype = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

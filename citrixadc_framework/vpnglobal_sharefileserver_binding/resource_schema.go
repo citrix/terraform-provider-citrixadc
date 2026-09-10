@@ -79,6 +79,8 @@ func vpnglobal_sharefileserver_bindingSetAttrFromGet(ctx context.Context, data *
 
 	if val, ok := getResponseData["sharefile"]; ok && val != nil {
 		data.Sharefile = types.StringValue(val.(string))
+	} else if data.Sharefile.IsUnknown() {
+		data.Sharefile = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

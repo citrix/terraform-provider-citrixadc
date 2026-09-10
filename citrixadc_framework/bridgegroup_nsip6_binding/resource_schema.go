@@ -124,20 +124,30 @@ func bridgegroup_nsip6_bindingSetAttrFromGet(ctx context.Context, data *Bridgegr
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.BridgegroupId = types.Int64Value(intVal)
 		}
+	} else if data.BridgegroupId.IsUnknown() {
+		data.BridgegroupId = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
+	} else if data.Ipaddress.IsUnknown() {
+		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
+	} else if data.Netmask.IsUnknown() {
+		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
 		data.Ownergroup = types.StringValue(val.(string))
+	} else if data.Ownergroup.IsUnknown() {
+		data.Ownergroup = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

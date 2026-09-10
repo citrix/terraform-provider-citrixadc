@@ -97,6 +97,8 @@ func nstrafficdomainSetAttrFromGet(ctx context.Context, data *NstrafficdomainRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["vmac"]; ok && val != nil {
 		data.Vmac = types.StringValue(val.(string))

@@ -192,32 +192,32 @@ func sslecdsakeySetAttrFromGet(ctx context.Context, data *SslecdsakeyResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["aes256"]; ok && val != nil {
 		data.Aes256 = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Aes256.IsUnknown() {
 		data.Aes256 = types.BoolNull()
 	}
 	if val, ok := getResponseData["curve"]; ok && val != nil {
 		data.Curve = types.StringValue(val.(string))
-	} else {
+	} else if data.Curve.IsUnknown() {
 		data.Curve = types.StringNull()
 	}
 	if val, ok := getResponseData["des"]; ok && val != nil {
 		data.Des = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Des.IsUnknown() {
 		data.Des = types.BoolNull()
 	}
 	if val, ok := getResponseData["des3"]; ok && val != nil {
 		data.Des3 = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Des3.IsUnknown() {
 		data.Des3 = types.BoolNull()
 	}
 	if val, ok := getResponseData["keyfile"]; ok && val != nil {
 		data.Keyfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyfile.IsUnknown() {
 		data.Keyfile = types.StringNull()
 	}
 	if val, ok := getResponseData["keyform"]; ok && val != nil {
 		data.Keyform = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyform.IsUnknown() {
 		data.Keyform = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -225,7 +225,7 @@ func sslecdsakeySetAttrFromGet(ctx context.Context, data *SslecdsakeyResourceMod
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["pkcs8"]; ok && val != nil {
 		data.Pkcs8 = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Pkcs8.IsUnknown() {
 		data.Pkcs8 = types.BoolNull()
 	}
 

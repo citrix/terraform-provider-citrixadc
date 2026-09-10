@@ -103,12 +103,12 @@ func nat64SetAttrFromGet(ctx context.Context, data *Nat64ResourceModel, getRespo
 	// Convert API response to model
 	if val, ok := getResponseData["acl6name"]; ok && val != nil {
 		data.Acl6name = types.StringValue(val.(string))
-	} else {
+	} else if data.Acl6name.IsUnknown() {
 		data.Acl6name = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["netprofile"]; ok && val != nil {

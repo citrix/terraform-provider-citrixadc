@@ -93,29 +93,29 @@ func appfwfieldtypeSetAttrFromGet(ctx context.Context, data *AppfwfieldtypeResou
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["nocharmaps"]; ok && val != nil {
 		data.Nocharmaps = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Nocharmaps.IsUnknown() {
 		data.Nocharmaps = types.BoolNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["regex"]; ok && val != nil {
 		data.Regex = types.StringValue(val.(string))
-	} else {
+	} else if data.Regex.IsUnknown() {
 		data.Regex = types.StringNull()
 	}
 

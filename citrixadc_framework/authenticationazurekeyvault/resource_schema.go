@@ -189,12 +189,12 @@ func authenticationazurekeyvaultSetAttrFromGet(ctx context.Context, data *Authen
 	// Convert API response to model
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["clientid"]; ok && val != nil {
 		data.Clientid = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientid.IsUnknown() {
 		data.Clientid = types.StringNull()
 	}
 	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -202,49 +202,49 @@ func authenticationazurekeyvaultSetAttrFromGet(ctx context.Context, data *Authen
 	// clientsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["pushservice"]; ok && val != nil {
 		data.Pushservice = types.StringValue(val.(string))
-	} else {
+	} else if data.Pushservice.IsUnknown() {
 		data.Pushservice = types.StringNull()
 	}
 	if val, ok := getResponseData["refreshinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Refreshinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Refreshinterval.IsUnknown() {
 		data.Refreshinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicekeyname"]; ok && val != nil {
 		data.Servicekeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicekeyname.IsUnknown() {
 		data.Servicekeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["signaturealg"]; ok && val != nil {
 		data.Signaturealg = types.StringValue(val.(string))
-	} else {
+	} else if data.Signaturealg.IsUnknown() {
 		data.Signaturealg = types.StringNull()
 	}
 	if val, ok := getResponseData["tenantid"]; ok && val != nil {
 		data.Tenantid = types.StringValue(val.(string))
-	} else {
+	} else if data.Tenantid.IsUnknown() {
 		data.Tenantid = types.StringNull()
 	}
 	if val, ok := getResponseData["tokenendpoint"]; ok && val != nil {
 		data.Tokenendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Tokenendpoint.IsUnknown() {
 		data.Tokenendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["vaultname"]; ok && val != nil {
 		data.Vaultname = types.StringValue(val.(string))
-	} else {
+	} else if data.Vaultname.IsUnknown() {
 		data.Vaultname = types.StringNull()
 	}
 

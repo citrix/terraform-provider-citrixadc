@@ -207,88 +207,88 @@ func l2paramSetAttrFromGet(ctx context.Context, data *L2paramResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["bdggrpproxyarp"]; ok && val != nil {
 		data.Bdggrpproxyarp = types.StringValue(val.(string))
-	} else {
+	} else if data.Bdggrpproxyarp.IsUnknown() {
 		data.Bdggrpproxyarp = types.StringNull()
 	}
 	if val, ok := getResponseData["bdgsetting"]; ok && val != nil {
 		data.Bdgsetting = types.StringValue(val.(string))
-	} else {
+	} else if data.Bdgsetting.IsUnknown() {
 		data.Bdgsetting = types.StringNull()
 	}
 	if val, ok := getResponseData["bridgeagetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bridgeagetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bridgeagetimeout.IsUnknown() {
 		data.Bridgeagetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["garponvridintf"]; ok && val != nil {
 		data.Garponvridintf = types.StringValue(val.(string))
-	} else {
+	} else if data.Garponvridintf.IsUnknown() {
 		data.Garponvridintf = types.StringNull()
 	}
 	if val, ok := getResponseData["garpreply"]; ok && val != nil {
 		data.Garpreply = types.StringValue(val.(string))
-	} else {
+	} else if data.Garpreply.IsUnknown() {
 		data.Garpreply = types.StringNull()
 	}
 	if val, ok := getResponseData["macmodefwdmypkt"]; ok && val != nil {
 		data.Macmodefwdmypkt = types.StringValue(val.(string))
-	} else {
+	} else if data.Macmodefwdmypkt.IsUnknown() {
 		data.Macmodefwdmypkt = types.StringNull()
 	}
 	if val, ok := getResponseData["maxbridgecollision"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxbridgecollision = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxbridgecollision.IsUnknown() {
 		data.Maxbridgecollision = types.Int64Null()
 	}
 	if val, ok := getResponseData["mbfinstlearning"]; ok && val != nil {
 		data.Mbfinstlearning = types.StringValue(val.(string))
-	} else {
+	} else if data.Mbfinstlearning.IsUnknown() {
 		data.Mbfinstlearning = types.StringNull()
 	}
 	if val, ok := getResponseData["mbfpeermacupdate"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mbfpeermacupdate = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mbfpeermacupdate.IsUnknown() {
 		data.Mbfpeermacupdate = types.Int64Null()
 	}
 	if val, ok := getResponseData["proxyarp"]; ok && val != nil {
 		data.Proxyarp = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyarp.IsUnknown() {
 		data.Proxyarp = types.StringNull()
 	}
 	if val, ok := getResponseData["returntoethernetsender"]; ok && val != nil {
 		data.Returntoethernetsender = types.StringValue(val.(string))
-	} else {
+	} else if data.Returntoethernetsender.IsUnknown() {
 		data.Returntoethernetsender = types.StringNull()
 	}
 	if val, ok := getResponseData["rstintfonhafo"]; ok && val != nil {
 		data.Rstintfonhafo = types.StringValue(val.(string))
-	} else {
+	} else if data.Rstintfonhafo.IsUnknown() {
 		data.Rstintfonhafo = types.StringNull()
 	}
 	if val, ok := getResponseData["skipproxyingbsdtraffic"]; ok && val != nil {
 		data.Skipproxyingbsdtraffic = types.StringValue(val.(string))
-	} else {
+	} else if data.Skipproxyingbsdtraffic.IsUnknown() {
 		data.Skipproxyingbsdtraffic = types.StringNull()
 	}
 	if val, ok := getResponseData["stopmacmoveupdate"]; ok && val != nil {
 		data.Stopmacmoveupdate = types.StringValue(val.(string))
-	} else {
+	} else if data.Stopmacmoveupdate.IsUnknown() {
 		data.Stopmacmoveupdate = types.StringNull()
 	}
 	if val, ok := getResponseData["usemymac"]; ok && val != nil {
 		data.Usemymac = types.StringValue(val.(string))
-	} else {
+	} else if data.Usemymac.IsUnknown() {
 		data.Usemymac = types.StringNull()
 	}
 	if val, ok := getResponseData["usenetprofilebsdtraffic"]; ok && val != nil {
 		data.Usenetprofilebsdtraffic = types.StringValue(val.(string))
-	} else {
+	} else if data.Usenetprofilebsdtraffic.IsUnknown() {
 		data.Usenetprofilebsdtraffic = types.StringNull()
 	}
 

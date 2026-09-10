@@ -333,6 +333,8 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hanodeid = types.Int64Value(intVal)
 		}
+	} else if data.Hanodeid.IsUnknown() {
+		data.Hanodeid = types.Int64Null()
 	}
 
 	// ---- Optional+Computed numeric attributes ----
@@ -426,47 +428,47 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 	// ---- Read only attributes (strings per the NITRO Hanode struct) ----
 	if val, ok := getResponseData["completedfliptime"]; ok && val != nil {
 		data.Completedfliptime = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Completedfliptime.IsUnknown() {
 		data.Completedfliptime = types.StringNull()
 	}
 	if val, ok := getResponseData["curflips"]; ok && val != nil {
 		data.Curflips = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Curflips.IsUnknown() {
 		data.Curflips = types.StringNull()
 	}
 	if val, ok := getResponseData["enaifaces"]; ok && val != nil {
 		data.Enaifaces = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Enaifaces.IsUnknown() {
 		data.Enaifaces = types.StringNull()
 	}
 	if val, ok := getResponseData["masterstatetime"]; ok && val != nil {
 		data.Masterstatetime = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Masterstatetime.IsUnknown() {
 		data.Masterstatetime = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["routemonitor"]; ok && val != nil {
 		data.Routemonitor = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Routemonitor.IsUnknown() {
 		data.Routemonitor = types.StringNull()
 	}
 	if val, ok := getResponseData["routemonitorstate"]; ok && val != nil {
 		data.Routemonitorstate = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Routemonitorstate.IsUnknown() {
 		data.Routemonitorstate = types.StringNull()
 	}
 	if val, ok := getResponseData["ssl2"]; ok && val != nil {
 		data.Ssl2 = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.Ssl2.IsUnknown() {
 		data.Ssl2 = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(fmt.Sprintf("%v", val))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

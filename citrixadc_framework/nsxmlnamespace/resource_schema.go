@@ -89,6 +89,8 @@ func nsxmlnamespaceSetAttrFromGet(ctx context.Context, data *NsxmlnamespaceResou
 		data.Namespace = types.StringValue(val.(string))
 	} else if val, ok := getResponseData["namespace"]; ok && val != nil {
 		data.Namespace = types.StringValue(val.(string))
+	} else if data.Namespace.IsUnknown() {
+		data.Namespace = types.StringNull()
 	}
 	// else: preserve the configured value; never null a Required attribute.
 
@@ -101,6 +103,8 @@ func nsxmlnamespaceSetAttrFromGet(ctx context.Context, data *NsxmlnamespaceResou
 	}
 	if val, ok := getResponseData["prefix"]; ok && val != nil {
 		data.Prefix = types.StringValue(val.(string))
+	} else if data.Prefix.IsUnknown() {
+		data.Prefix = types.StringNull()
 	}
 
 	// Set ID for the resource - Case 2: single unique attribute (plain value).

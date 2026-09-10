@@ -188,17 +188,17 @@ func appfwprofile_blockkeyword_bindingSetAttrFromGet(ctx context.Context, data *
 	// so the Computed values become known after apply (Pattern 7 ECHOED branch).
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 
@@ -213,21 +213,29 @@ func appfwprofile_blockkeyword_bindingSetAttrFromGet(ctx context.Context, data *
 	if data.AsFieldnameIsregexBlockkeyword.IsNull() {
 		if val, ok := getResponseData["as_fieldname_isregex_blockkeyword"]; ok && val != nil {
 			data.AsFieldnameIsregexBlockkeyword = types.StringValue(val.(string))
+		} else if data.AsFieldnameIsregexBlockkeyword.IsUnknown() {
+			data.AsFieldnameIsregexBlockkeyword = types.StringNull()
 		}
 	}
 	if data.Blockkeywordtype.IsNull() {
 		if val, ok := getResponseData["blockkeywordtype"]; ok && val != nil {
 			data.Blockkeywordtype = types.StringValue(val.(string))
+		} else if data.Blockkeywordtype.IsUnknown() {
+			data.Blockkeywordtype = types.StringNull()
 		}
 	}
 	if data.State.IsNull() {
 		if val, ok := getResponseData["state"]; ok && val != nil {
 			data.State = types.StringValue(val.(string))
+		} else if data.State.IsUnknown() {
+			data.State = types.StringNull()
 		}
 	}
 	if data.Comment.IsNull() {
 		if val, ok := getResponseData["comment"]; ok && val != nil {
 			data.Comment = types.StringValue(val.(string))
+		} else if data.Comment.IsUnknown() {
+			data.Comment = types.StringNull()
 		}
 	}
 

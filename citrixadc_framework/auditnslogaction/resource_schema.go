@@ -268,49 +268,49 @@ func auditnslogactionSetAttrFromGet(ctx context.Context, data *AuditnslogactionR
 	// Convert API response to model
 	if val, ok := getResponseData["acl"]; ok && val != nil {
 		data.Acl = types.StringValue(val.(string))
-	} else {
+	} else if data.Acl.IsUnknown() {
 		data.Acl = types.StringNull()
 	}
 	if val, ok := getResponseData["alg"]; ok && val != nil {
 		data.Alg = types.StringValue(val.(string))
-	} else {
+	} else if data.Alg.IsUnknown() {
 		data.Alg = types.StringNull()
 	}
 	if val, ok := getResponseData["appflowexport"]; ok && val != nil {
 		data.Appflowexport = types.StringValue(val.(string))
-	} else {
+	} else if data.Appflowexport.IsUnknown() {
 		data.Appflowexport = types.StringNull()
 	}
 	if val, ok := getResponseData["contentinspectionlog"]; ok && val != nil {
 		data.Contentinspectionlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Contentinspectionlog.IsUnknown() {
 		data.Contentinspectionlog = types.StringNull()
 	}
 	if val, ok := getResponseData["dateformat"]; ok && val != nil {
 		data.Dateformat = types.StringValue(val.(string))
-	} else {
+	} else if data.Dateformat.IsUnknown() {
 		data.Dateformat = types.StringNull()
 	}
 	if val, ok := getResponseData["denylistviolations"]; ok && val != nil {
 		data.Denylistviolations = types.StringValue(val.(string))
-	} else {
+	} else if data.Denylistviolations.IsUnknown() {
 		data.Denylistviolations = types.StringNull()
 	}
 	if val, ok := getResponseData["domainresolvenow"]; ok && val != nil {
 		data.Domainresolvenow = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Domainresolvenow.IsUnknown() {
 		data.Domainresolvenow = types.BoolNull()
 	}
 	if val, ok := getResponseData["domainresolveretry"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Domainresolveretry = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Domainresolveretry.IsUnknown() {
 		data.Domainresolveretry = types.Int64Null()
 	}
 	if val, ok := getResponseData["logfacility"]; ok && val != nil {
 		data.Logfacility = types.StringValue(val.(string))
-	} else {
+	} else if data.Logfacility.IsUnknown() {
 		data.Logfacility = types.StringNull()
 	}
 	if val, ok := getResponseData["loglevel"]; ok && val != nil {
@@ -330,64 +330,64 @@ func auditnslogactionSetAttrFromGet(ctx context.Context, data *AuditnslogactionR
 	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))
-	} else {
+	} else if data.Lsn.IsUnknown() {
 		data.Lsn = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["protocolviolations"]; ok && val != nil {
 		data.Protocolviolations = types.StringValue(val.(string))
-	} else {
+	} else if data.Protocolviolations.IsUnknown() {
 		data.Protocolviolations = types.StringNull()
 	}
 	if val, ok := getResponseData["serverdomainname"]; ok && val != nil {
 		data.Serverdomainname = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverdomainname.IsUnknown() {
 		data.Serverdomainname = types.StringNull()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serverport.IsUnknown() {
 		data.Serverport = types.Int64Null()
 	}
 	if val, ok := getResponseData["sslinterception"]; ok && val != nil {
 		data.Sslinterception = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslinterception.IsUnknown() {
 		data.Sslinterception = types.StringNull()
 	}
 	if val, ok := getResponseData["subscriberlog"]; ok && val != nil {
 		data.Subscriberlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Subscriberlog.IsUnknown() {
 		data.Subscriberlog = types.StringNull()
 	}
 	if val, ok := getResponseData["tcp"]; ok && val != nil {
 		data.Tcp = types.StringValue(val.(string))
-	} else {
+	} else if data.Tcp.IsUnknown() {
 		data.Tcp = types.StringNull()
 	}
 	if val, ok := getResponseData["timezone"]; ok && val != nil {
 		data.Timezone = types.StringValue(val.(string))
-	} else {
+	} else if data.Timezone.IsUnknown() {
 		data.Timezone = types.StringNull()
 	}
 	if val, ok := getResponseData["urlfiltering"]; ok && val != nil {
 		data.Urlfiltering = types.StringValue(val.(string))
-	} else {
+	} else if data.Urlfiltering.IsUnknown() {
 		data.Urlfiltering = types.StringNull()
 	}
 	if val, ok := getResponseData["userdefinedauditlog"]; ok && val != nil {
 		data.Userdefinedauditlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Userdefinedauditlog.IsUnknown() {
 		data.Userdefinedauditlog = types.StringNull()
 	}
 

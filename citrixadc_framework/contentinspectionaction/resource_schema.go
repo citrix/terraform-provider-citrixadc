@@ -212,27 +212,27 @@ func contentinspectionactionSetAttrFromGet(ctx context.Context, data *Contentins
 	// Convert API response to model
 	if val, ok := getResponseData["icapprofilename"]; ok && val != nil {
 		data.Icapprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Icapprofilename.IsUnknown() {
 		data.Icapprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["ifserverdown"]; ok && val != nil {
 		data.Ifserverdown = types.StringValue(val.(string))
-	} else {
+	} else if data.Ifserverdown.IsUnknown() {
 		data.Ifserverdown = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
@@ -245,12 +245,12 @@ func contentinspectionactionSetAttrFromGet(ctx context.Context, data *Contentins
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["wasmprofilename"]; ok && val != nil {
 		data.Wasmprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Wasmprofilename.IsUnknown() {
 		data.Wasmprofilename = types.StringNull()
 	}
 

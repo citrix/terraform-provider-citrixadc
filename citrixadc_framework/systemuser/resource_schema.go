@@ -202,19 +202,19 @@ func systemuserSetAttrFromGet(ctx context.Context, data *SystemuserResourceModel
 	}
 	if val, ok := getResponseData["externalauth"]; ok && val != nil {
 		data.Externalauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Externalauth.IsUnknown() {
 		data.Externalauth = types.StringNull()
 	}
 	if val, ok := getResponseData["logging"]; ok && val != nil {
 		data.Logging = types.StringValue(val.(string))
-	} else {
+	} else if data.Logging.IsUnknown() {
 		data.Logging = types.StringNull()
 	}
 	if val, ok := getResponseData["maxsession"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxsession = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxsession.IsUnknown() {
 		data.Maxsession = types.Int64Null()
 	}
 	// The NITRO API returns the hashed password in the "password" response field.
@@ -232,26 +232,26 @@ func systemuserSetAttrFromGet(ctx context.Context, data *SystemuserResourceModel
 			}
 		}
 		data.Hashedpassword = types.StringValue(newHashedPassword)
-	} else {
+	} else if data.Hashedpassword.IsUnknown() {
 		data.Hashedpassword = types.StringNull()
 	}
 	// password_wo is not returned by NITRO API (write-only/ephemeral) - retain from config
 	// password_wo_version is not returned by NITRO API (version tracker) - retain from config
 	if val, ok := getResponseData["promptstring"]; ok && val != nil {
 		data.Promptstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Promptstring.IsUnknown() {
 		data.Promptstring = types.StringNull()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
 		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

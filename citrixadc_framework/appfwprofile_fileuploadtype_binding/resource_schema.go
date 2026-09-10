@@ -209,17 +209,17 @@ func appfwprofile_fileuploadtype_bindingSetAttrFromGet(ctx context.Context, data
 	// Convert API response to model
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["as_fileuploadtypes_url"]; ok && val != nil {
 		data.AsFileuploadtypesUrl = types.StringValue(val.(string))
-	} else {
+	} else if data.AsFileuploadtypesUrl.IsUnknown() {
 		data.AsFileuploadtypesUrl = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["filetype"]; ok && val != nil {
@@ -235,42 +235,42 @@ func appfwprofile_fileuploadtype_bindingSetAttrFromGet(ctx context.Context, data
 	}
 	if val, ok := getResponseData["fileuploadtype"]; ok && val != nil {
 		data.Fileuploadtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Fileuploadtype.IsUnknown() {
 		data.Fileuploadtype = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["isnameregex"]; ok && val != nil {
 		data.Isnameregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isnameregex.IsUnknown() {
 		data.Isnameregex = types.StringNull()
 	}
 	if val, ok := getResponseData["isregexfileuploadtypesurl"]; ok && val != nil {
 		data.IsregexFileuploadtypesUrl = types.StringValue(val.(string))
-	} else {
+	} else if data.IsregexFileuploadtypesUrl.IsUnknown() {
 		data.IsregexFileuploadtypesUrl = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

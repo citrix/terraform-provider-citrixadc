@@ -67,17 +67,17 @@ func systemcmdpolicySetAttrFromGet(ctx context.Context, data *SystemcmdpolicyRes
 	// Convert API response to model
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
-	} else {
+	} else if data.Action.IsUnknown() {
 		data.Action = types.StringNull()
 	}
 	if val, ok := getResponseData["cmdspec"]; ok && val != nil {
 		data.Cmdspec = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmdspec.IsUnknown() {
 		data.Cmdspec = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Policyname.IsUnknown() {
 		data.Policyname = types.StringNull()
 	}
 

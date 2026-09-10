@@ -77,6 +77,8 @@ func sslcertfileSetAttrFromGet(ctx context.Context, data *SslcertfileResourceMod
 	if data.Name.IsNull() || data.Name.IsUnknown() {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 

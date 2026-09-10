@@ -144,18 +144,26 @@ func cachepolicylabel_cachepolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	// Identity attributes - always adopt from GET (also makes imported state usable)
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
+	} else if data.Labelname.IsUnknown() {
+		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 
 	// Server-overridden / non-echoed RequiresReplace inputs:
 	// adopt from GET only when present; otherwise preserve the existing plan/state value.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
+	} else if data.Invoke.IsUnknown() {
+		data.Invoke = types.BoolNull()
 	}
 	// invokelabelname and labeltype are Optional+Computed but are NOT echoed by the
 	// NITRO GET response. Adopt from GET when present; otherwise keep the existing
@@ -175,6 +183,8 @@ func cachepolicylabel_cachepolicy_bindingSetAttrFromGet(ctx context.Context, dat
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

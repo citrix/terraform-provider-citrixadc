@@ -96,7 +96,7 @@ func radiusnodeSetAttrFromGet(ctx context.Context, data *RadiusnodeResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["nodeprefix"]; ok && val != nil {
 		data.Nodeprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Nodeprefix.IsUnknown() {
 		data.Nodeprefix = types.StringNull()
 	}
 	// radkey is not returned by NITRO API (secret/ephemeral) - retain from config

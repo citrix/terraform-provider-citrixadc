@@ -184,42 +184,42 @@ func appfwprofile_xmlsqlinjection_bindingSetAttrFromGet(ctx context.Context, dat
 	// did NOT d.Set these two fields.
 	if val, ok := getResponseData["as_scan_location_xmlsql"]; ok && val != nil {
 		data.AsScanLocationXmlsql = types.StringValue(val.(string))
-	} else {
+	} else if data.AsScanLocationXmlsql.IsUnknown() {
 		data.AsScanLocationXmlsql = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex_xmlsql"]; ok && val != nil {
 		data.IsregexXmlsql = types.StringValue(val.(string))
-	} else {
+	} else if data.IsregexXmlsql.IsUnknown() {
 		data.IsregexXmlsql = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlsqlinjection"]; ok && val != nil {
 		data.Xmlsqlinjection = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlsqlinjection.IsUnknown() {
 		data.Xmlsqlinjection = types.StringNull()
 	}
 

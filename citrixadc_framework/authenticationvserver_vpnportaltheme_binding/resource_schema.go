@@ -71,12 +71,12 @@ func authenticationvserver_vpnportaltheme_bindingSetAttrFromGet(ctx context.Cont
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["portaltheme"]; ok && val != nil {
 		data.Portaltheme = types.StringValue(val.(string))
-	} else {
+	} else if data.Portaltheme.IsUnknown() {
 		data.Portaltheme = types.StringNull()
 	}
 

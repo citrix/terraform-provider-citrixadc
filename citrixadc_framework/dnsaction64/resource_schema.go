@@ -85,7 +85,7 @@ func dnsaction64SetAttrFromGet(ctx context.Context, data *Dnsaction64ResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["actionname"]; ok && val != nil {
 		data.Actionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Actionname.IsUnknown() {
 		data.Actionname = types.StringNull()
 	}
 	if val, ok := getResponseData["excluderule"]; ok && val != nil {
@@ -104,7 +104,7 @@ func dnsaction64SetAttrFromGet(ctx context.Context, data *Dnsaction64ResourceMod
 	}
 	if val, ok := getResponseData["prefix"]; ok && val != nil {
 		data.Prefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Prefix.IsUnknown() {
 		data.Prefix = types.StringNull()
 	}
 

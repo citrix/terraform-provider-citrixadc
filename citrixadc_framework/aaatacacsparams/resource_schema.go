@@ -158,46 +158,46 @@ func aaatacacsparamsSetAttrFromGet(ctx context.Context, data *AaatacacsparamsRes
 	// Convert API response to model
 	if val, ok := getResponseData["accounting"]; ok && val != nil {
 		data.Accounting = types.StringValue(val.(string))
-	} else {
+	} else if data.Accounting.IsUnknown() {
 		data.Accounting = types.StringNull()
 	}
 	if val, ok := getResponseData["auditfailedcmds"]; ok && val != nil {
 		data.Auditfailedcmds = types.StringValue(val.(string))
-	} else {
+	} else if data.Auditfailedcmds.IsUnknown() {
 		data.Auditfailedcmds = types.StringNull()
 	}
 	if val, ok := getResponseData["authorization"]; ok && val != nil {
 		data.Authorization = types.StringValue(val.(string))
-	} else {
+	} else if data.Authorization.IsUnknown() {
 		data.Authorization = types.StringNull()
 	}
 	if val, ok := getResponseData["authtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Authtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Authtimeout.IsUnknown() {
 		data.Authtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["groupattrname"]; ok && val != nil {
 		data.Groupattrname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupattrname.IsUnknown() {
 		data.Groupattrname = types.StringNull()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serverport.IsUnknown() {
 		data.Serverport = types.Int64Null()
 	}
 	// tacacssecret is not returned by NITRO API (secret/ephemeral) - retain from config

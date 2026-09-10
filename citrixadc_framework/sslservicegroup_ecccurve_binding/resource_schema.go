@@ -71,12 +71,12 @@ func sslservicegroup_ecccurve_bindingSetAttrFromGet(ctx context.Context, data *S
 	// Convert API response to model
 	if val, ok := getResponseData["ecccurvename"]; ok && val != nil {
 		data.Ecccurvename = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecccurvename.IsUnknown() {
 		data.Ecccurvename = types.StringNull()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicegroupname.IsUnknown() {
 		data.Servicegroupname = types.StringNull()
 	}
 

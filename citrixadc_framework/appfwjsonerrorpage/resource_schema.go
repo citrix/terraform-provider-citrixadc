@@ -106,6 +106,8 @@ func appfwjsonerrorpageSetAttrFromGet(ctx context.Context, data *Appfwjsonerrorp
 	// name is the key and is echoed back; use it (also populates state on import).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// comment / overwrite are never returned by NITRO. Preserve the plan/state

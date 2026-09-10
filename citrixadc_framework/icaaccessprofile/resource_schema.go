@@ -209,77 +209,77 @@ func icaaccessprofileSetAttrFromGet(ctx context.Context, data *IcaaccessprofileR
 	// Convert API response to model
 	if val, ok := getResponseData["clientaudioredirection"]; ok && val != nil {
 		data.Clientaudioredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientaudioredirection.IsUnknown() {
 		data.Clientaudioredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["clientclipboardredirection"]; ok && val != nil {
 		data.Clientclipboardredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientclipboardredirection.IsUnknown() {
 		data.Clientclipboardredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcomportredirection"]; ok && val != nil {
 		data.Clientcomportredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcomportredirection.IsUnknown() {
 		data.Clientcomportredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["clientdriveredirection"]; ok && val != nil {
 		data.Clientdriveredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientdriveredirection.IsUnknown() {
 		data.Clientdriveredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["clientprinterredirection"]; ok && val != nil {
 		data.Clientprinterredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientprinterredirection.IsUnknown() {
 		data.Clientprinterredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["clienttwaindeviceredirection"]; ok && val != nil {
 		data.Clienttwaindeviceredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clienttwaindeviceredirection.IsUnknown() {
 		data.Clienttwaindeviceredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["clientusbdriveredirection"]; ok && val != nil {
 		data.Clientusbdriveredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientusbdriveredirection.IsUnknown() {
 		data.Clientusbdriveredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["connectclientlptports"]; ok && val != nil {
 		data.Connectclientlptports = types.StringValue(val.(string))
-	} else {
+	} else if data.Connectclientlptports.IsUnknown() {
 		data.Connectclientlptports = types.StringNull()
 	}
 	if val, ok := getResponseData["draganddrop"]; ok && val != nil {
 		data.Draganddrop = types.StringValue(val.(string))
-	} else {
+	} else if data.Draganddrop.IsUnknown() {
 		data.Draganddrop = types.StringNull()
 	}
 	if val, ok := getResponseData["fido2redirection"]; ok && val != nil {
 		data.Fido2redirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Fido2redirection.IsUnknown() {
 		data.Fido2redirection = types.StringNull()
 	}
 	if val, ok := getResponseData["localremotedatasharing"]; ok && val != nil {
 		data.Localremotedatasharing = types.StringValue(val.(string))
-	} else {
+	} else if data.Localremotedatasharing.IsUnknown() {
 		data.Localremotedatasharing = types.StringNull()
 	}
 	if val, ok := getResponseData["multistream"]; ok && val != nil {
 		data.Multistream = types.StringValue(val.(string))
-	} else {
+	} else if data.Multistream.IsUnknown() {
 		data.Multistream = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["smartcardredirection"]; ok && val != nil {
 		data.Smartcardredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Smartcardredirection.IsUnknown() {
 		data.Smartcardredirection = types.StringNull()
 	}
 	if val, ok := getResponseData["wiaredirection"]; ok && val != nil {
 		data.Wiaredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Wiaredirection.IsUnknown() {
 		data.Wiaredirection = types.StringNull()
 	}
 

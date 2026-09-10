@@ -488,172 +488,172 @@ func sslactionSetAttrFromGet(ctx context.Context, data *SslactionResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["alpnhttp2"]; ok && val != nil {
 		data.Alpnhttp2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Alpnhttp2.IsUnknown() {
 		data.Alpnhttp2 = types.StringNull()
 	}
 	if val, ok := getResponseData["cacertgrpname"]; ok && val != nil {
 		data.Cacertgrpname = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertgrpname.IsUnknown() {
 		data.Cacertgrpname = types.StringNull()
 	}
 	if val, ok := getResponseData["certfingerprintdigest"]; ok && val != nil {
 		data.Certfingerprintdigest = types.StringValue(val.(string))
-	} else {
+	} else if data.Certfingerprintdigest.IsUnknown() {
 		data.Certfingerprintdigest = types.StringNull()
 	}
 	if val, ok := getResponseData["certfingerprintheader"]; ok && val != nil {
 		data.Certfingerprintheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certfingerprintheader.IsUnknown() {
 		data.Certfingerprintheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certhashheader"]; ok && val != nil {
 		data.Certhashheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certhashheader.IsUnknown() {
 		data.Certhashheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certheader"]; ok && val != nil {
 		data.Certheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certheader.IsUnknown() {
 		data.Certheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certissuerheader"]; ok && val != nil {
 		data.Certissuerheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certissuerheader.IsUnknown() {
 		data.Certissuerheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certnotafterheader"]; ok && val != nil {
 		data.Certnotafterheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certnotafterheader.IsUnknown() {
 		data.Certnotafterheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certnotbeforeheader"]; ok && val != nil {
 		data.Certnotbeforeheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certnotbeforeheader.IsUnknown() {
 		data.Certnotbeforeheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certserialheader"]; ok && val != nil {
 		data.Certserialheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certserialheader.IsUnknown() {
 		data.Certserialheader = types.StringNull()
 	}
 	if val, ok := getResponseData["certsubjectheader"]; ok && val != nil {
 		data.Certsubjectheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Certsubjectheader.IsUnknown() {
 		data.Certsubjectheader = types.StringNull()
 	}
 	if val, ok := getResponseData["cipher"]; ok && val != nil {
 		data.Cipher = types.StringValue(val.(string))
-	} else {
+	} else if data.Cipher.IsUnknown() {
 		data.Cipher = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherheader"]; ok && val != nil {
 		data.Cipherheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Cipherheader.IsUnknown() {
 		data.Cipherheader = types.StringNull()
 	}
 	if val, ok := getResponseData["clientauth"]; ok && val != nil {
 		data.Clientauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientauth.IsUnknown() {
 		data.Clientauth = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcert"]; ok && val != nil {
 		data.Clientcert = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcert.IsUnknown() {
 		data.Clientcert = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertfingerprint"]; ok && val != nil {
 		data.Clientcertfingerprint = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertfingerprint.IsUnknown() {
 		data.Clientcertfingerprint = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcerthash"]; ok && val != nil {
 		data.Clientcerthash = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcerthash.IsUnknown() {
 		data.Clientcerthash = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertissuer"]; ok && val != nil {
 		data.Clientcertissuer = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertissuer.IsUnknown() {
 		data.Clientcertissuer = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertnotafter"]; ok && val != nil {
 		data.Clientcertnotafter = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertnotafter.IsUnknown() {
 		data.Clientcertnotafter = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertnotbefore"]; ok && val != nil {
 		data.Clientcertnotbefore = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertnotbefore.IsUnknown() {
 		data.Clientcertnotbefore = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertserialnumber"]; ok && val != nil {
 		data.Clientcertserialnumber = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertserialnumber.IsUnknown() {
 		data.Clientcertserialnumber = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertsubject"]; ok && val != nil {
 		data.Clientcertsubject = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertsubject.IsUnknown() {
 		data.Clientcertsubject = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcertverification"]; ok && val != nil {
 		data.Clientcertverification = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcertverification.IsUnknown() {
 		data.Clientcertverification = types.StringNull()
 	}
 	if val, ok := getResponseData["forward"]; ok && val != nil {
 		data.Forward = types.StringValue(val.(string))
-	} else {
+	} else if data.Forward.IsUnknown() {
 		data.Forward = types.StringNull()
 	}
 	if val, ok := getResponseData["inhandshakeclientauth"]; ok && val != nil {
 		data.Inhandshakeclientauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Inhandshakeclientauth.IsUnknown() {
 		data.Inhandshakeclientauth = types.StringNull()
 	}
 	if val, ok := getResponseData["inhandshakeclientcertverification"]; ok && val != nil {
 		data.Inhandshakeclientcertverification = types.StringValue(val.(string))
-	} else {
+	} else if data.Inhandshakeclientcertverification.IsUnknown() {
 		data.Inhandshakeclientcertverification = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspcache"]; ok && val != nil {
 		data.Ocspcache = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspcache.IsUnknown() {
 		data.Ocspcache = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspcertvalidation"]; ok && val != nil {
 		data.Ocspcertvalidation = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspcertvalidation.IsUnknown() {
 		data.Ocspcertvalidation = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspstapling"]; ok && val != nil {
 		data.Ocspstapling = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspstapling.IsUnknown() {
 		data.Ocspstapling = types.StringNull()
 	}
 	if val, ok := getResponseData["owasupport"]; ok && val != nil {
 		data.Owasupport = types.StringValue(val.(string))
-	} else {
+	} else if data.Owasupport.IsUnknown() {
 		data.Owasupport = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionid"]; ok && val != nil {
 		data.Sessionid = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionid.IsUnknown() {
 		data.Sessionid = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionidheader"]; ok && val != nil {
 		data.Sessionidheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionidheader.IsUnknown() {
 		data.Sessionidheader = types.StringNull()
 	}
 	if val, ok := getResponseData["ssllogprofile"]; ok && val != nil {
 		data.Ssllogprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssllogprofile.IsUnknown() {
 		data.Ssllogprofile = types.StringNull()
 	}
 

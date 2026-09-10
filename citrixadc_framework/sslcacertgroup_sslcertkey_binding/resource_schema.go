@@ -99,22 +99,22 @@ func sslcacertgroup_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["cacertgroupname"]; ok && val != nil {
 		data.Cacertgroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertgroupname.IsUnknown() {
 		data.Cacertgroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeyname.IsUnknown() {
 		data.Certkeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["crlcheck"]; ok && val != nil {
 		data.Crlcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Crlcheck.IsUnknown() {
 		data.Crlcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspcheck"]; ok && val != nil {
 		data.Ocspcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspcheck.IsUnknown() {
 		data.Ocspcheck = types.StringNull()
 	}
 

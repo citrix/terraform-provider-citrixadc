@@ -71,12 +71,12 @@ func systemuser_nspartition_bindingSetAttrFromGet(ctx context.Context, data *Sys
 	// Convert API response to model
 	if val, ok := getResponseData["partitionname"]; ok && val != nil {
 		data.Partitionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Partitionname.IsUnknown() {
 		data.Partitionname = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

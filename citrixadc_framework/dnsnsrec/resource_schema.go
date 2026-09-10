@@ -104,12 +104,12 @@ func dnsnsrecSetAttrFromGet(ctx context.Context, data *DnsnsrecResourceModel, ge
 	// Convert API response to model
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
+	} else if data.Domain.IsUnknown() {
 		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["nameserver"]; ok && val != nil {
 		data.Nameserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Nameserver.IsUnknown() {
 		data.Nameserver = types.StringNull()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
@@ -123,16 +123,16 @@ func dnsnsrecSetAttrFromGet(ctx context.Context, data *DnsnsrecResourceModel, ge
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecssubnet.IsUnknown() {
 		data.Ecssubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
-		} else {
+		} else if data.Nodeid.IsUnknown() {
 			data.Nodeid = types.Int64Null()
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
 

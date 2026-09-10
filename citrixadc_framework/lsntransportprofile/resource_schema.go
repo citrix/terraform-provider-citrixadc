@@ -309,6 +309,8 @@ func lsntransportprofileSetAttrFromGet(ctx context.Context, data *Lsntransportpr
 	}
 	if val, ok := getResponseData["transportprofilename"]; ok && val != nil {
 		data.Transportprofilename = types.StringValue(val.(string))
+	} else if data.Transportprofilename.IsUnknown() {
+		data.Transportprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["transportprotocol"]; ok && val != nil {
 		data.Transportprotocol = types.StringValue(val.(string))

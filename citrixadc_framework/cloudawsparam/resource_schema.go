@@ -51,7 +51,7 @@ func cloudawsparamSetAttrFromGet(ctx context.Context, data *CloudawsparamResourc
 	// Convert API response to model
 	if val, ok := getResponseData["rolearn"]; ok && val != nil {
 		data.Rolearn = types.StringValue(val.(string))
-	} else {
+	} else if data.Rolearn.IsUnknown() {
 		data.Rolearn = types.StringNull()
 	}
 

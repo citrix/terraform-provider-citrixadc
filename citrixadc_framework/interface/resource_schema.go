@@ -316,7 +316,7 @@ func interfaceSetAttrFromGet(ctx context.Context, data *InterfaceResourceModel, 
 		// preserve configured/prior value
 	} else if val, ok := getResponseData["actduplex"]; ok && val != nil {
 		data.Duplex = types.StringValue(val.(string))
-	} else {
+	} else if data.Duplex.IsUnknown() {
 		data.Duplex = types.StringNull()
 	}
 	// flowctl: NITRO returns the negotiated value under "actflowctl".
@@ -326,7 +326,7 @@ func interfaceSetAttrFromGet(ctx context.Context, data *InterfaceResourceModel, 
 		// preserve configured/prior value
 	} else if val, ok := getResponseData["actflowctl"]; ok && val != nil {
 		data.Flowctl = types.StringValue(val.(string))
-	} else {
+	} else if data.Flowctl.IsUnknown() {
 		data.Flowctl = types.StringNull()
 	}
 	if val, ok := getResponseData["haheartbeat"]; ok && val != nil {
@@ -341,6 +341,8 @@ func interfaceSetAttrFromGet(ctx context.Context, data *InterfaceResourceModel, 
 	}
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		data.Interfaceid = types.StringValue(val.(string))
+	} else if data.Interfaceid.IsUnknown() {
+		data.Interfaceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ifalias"]; ok && val != nil {
 		data.Ifalias = types.StringValue(val.(string))
@@ -419,7 +421,7 @@ func interfaceSetAttrFromGet(ctx context.Context, data *InterfaceResourceModel, 
 		// preserve configured/prior value
 	} else if val, ok := getResponseData["actspeed"]; ok && val != nil {
 		data.Speed = types.StringValue(val.(string))
-	} else {
+	} else if data.Speed.IsUnknown() {
 		data.Speed = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
@@ -443,7 +445,7 @@ func interfaceSetAttrFromGet(ctx context.Context, data *InterfaceResourceModel, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Throughput = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Throughput.IsUnknown() {
 		data.Throughput = types.Int64Null()
 	}
 	if val, ok := getResponseData["trunk"]; ok && val != nil {

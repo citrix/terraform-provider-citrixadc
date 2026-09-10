@@ -192,17 +192,17 @@ func appfwprofile_jsonblockkeyword_bindingSetAttrFromGet(ctx context.Context, da
 	// so the Computed values become known after apply (Pattern 7 ECHOED branch).
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 
@@ -212,22 +212,22 @@ func appfwprofile_jsonblockkeyword_bindingSetAttrFromGet(ctx context.Context, da
 	// there is no post-apply diff.
 	if val, ok := getResponseData["iskeyregex_json_blockkeyword"]; ok && val != nil {
 		data.IskeyregexJsonBlockkeyword = types.StringValue(val.(string))
-	} else {
+	} else if data.IskeyregexJsonBlockkeyword.IsUnknown() {
 		data.IskeyregexJsonBlockkeyword = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonblockkeywordtype"]; ok && val != nil {
 		data.Jsonblockkeywordtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonblockkeywordtype.IsUnknown() {
 		data.Jsonblockkeywordtype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 

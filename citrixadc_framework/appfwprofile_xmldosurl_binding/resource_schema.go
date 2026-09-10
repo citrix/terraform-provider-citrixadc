@@ -649,7 +649,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattributenamelength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxattributenamelength.IsUnknown() {
 		data.Xmlmaxattributenamelength = types.Int64Null()
 	}
 	data.Xmlmaxattributenamelengthcheck = adopt(data.Xmlmaxattributenamelengthcheck, "xmlmaxattributenamelengthcheck")
@@ -659,7 +659,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattributes = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxattributes.IsUnknown() {
 		data.Xmlmaxattributes = types.Int64Null()
 	}
 	data.Xmlmaxattributescheck = adopt(data.Xmlmaxattributescheck, "xmlmaxattributescheck")
@@ -669,7 +669,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxattributevaluelength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxattributevaluelength.IsUnknown() {
 		data.Xmlmaxattributevaluelength = types.Int64Null()
 	}
 	data.Xmlmaxattributevaluelengthcheck = adopt(data.Xmlmaxattributevaluelengthcheck, "xmlmaxattributevaluelengthcheck")
@@ -679,7 +679,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxchardatalength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxchardatalength.IsUnknown() {
 		data.Xmlmaxchardatalength = types.Int64Null()
 	}
 	data.Xmlmaxchardatalengthcheck = adopt(data.Xmlmaxchardatalengthcheck, "xmlmaxchardatalengthcheck")
@@ -689,7 +689,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelementchildren = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxelementchildren.IsUnknown() {
 		data.Xmlmaxelementchildren = types.Int64Null()
 	}
 	data.Xmlmaxelementchildrencheck = adopt(data.Xmlmaxelementchildrencheck, "xmlmaxelementchildrencheck")
@@ -699,7 +699,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelementdepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxelementdepth.IsUnknown() {
 		data.Xmlmaxelementdepth = types.Int64Null()
 	}
 	data.Xmlmaxelementdepthcheck = adopt(data.Xmlmaxelementdepthcheck, "xmlmaxelementdepthcheck")
@@ -709,7 +709,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelementnamelength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxelementnamelength.IsUnknown() {
 		data.Xmlmaxelementnamelength = types.Int64Null()
 	}
 	data.Xmlmaxelementnamelengthcheck = adopt(data.Xmlmaxelementnamelengthcheck, "xmlmaxelementnamelengthcheck")
@@ -719,7 +719,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxelements = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxelements.IsUnknown() {
 		data.Xmlmaxelements = types.Int64Null()
 	}
 	data.Xmlmaxelementscheck = adopt(data.Xmlmaxelementscheck, "xmlmaxelementscheck")
@@ -729,7 +729,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxentityexpansiondepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxentityexpansiondepth.IsUnknown() {
 		data.Xmlmaxentityexpansiondepth = types.Int64Null()
 	}
 	data.Xmlmaxentityexpansiondepthcheck = adopt(data.Xmlmaxentityexpansiondepthcheck, "xmlmaxentityexpansiondepthcheck")
@@ -739,7 +739,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxentityexpansions = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxentityexpansions.IsUnknown() {
 		data.Xmlmaxentityexpansions = types.Int64Null()
 	}
 	data.Xmlmaxentityexpansionscheck = adopt(data.Xmlmaxentityexpansionscheck, "xmlmaxentityexpansionscheck")
@@ -749,7 +749,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxfilesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxfilesize.IsUnknown() {
 		data.Xmlmaxfilesize = types.Int64Null()
 	}
 	data.Xmlmaxfilesizecheck = adopt(data.Xmlmaxfilesizecheck, "xmlmaxfilesizecheck")
@@ -759,7 +759,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxnamespaces = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxnamespaces.IsUnknown() {
 		data.Xmlmaxnamespaces = types.Int64Null()
 	}
 	data.Xmlmaxnamespacescheck = adopt(data.Xmlmaxnamespacescheck, "xmlmaxnamespacescheck")
@@ -769,7 +769,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxnamespaceurilength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxnamespaceurilength.IsUnknown() {
 		data.Xmlmaxnamespaceurilength = types.Int64Null()
 	}
 	data.Xmlmaxnamespaceurilengthcheck = adopt(data.Xmlmaxnamespaceurilengthcheck, "xmlmaxnamespaceurilengthcheck")
@@ -779,7 +779,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxnodes = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxnodes.IsUnknown() {
 		data.Xmlmaxnodes = types.Int64Null()
 	}
 	data.Xmlmaxnodescheck = adopt(data.Xmlmaxnodescheck, "xmlmaxnodescheck")
@@ -789,7 +789,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxsoaparrayrank = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxsoaparrayrank.IsUnknown() {
 		data.Xmlmaxsoaparrayrank = types.Int64Null()
 	}
 	if !data.Xmlmaxsoaparraysize.IsNull() && !data.Xmlmaxsoaparraysize.IsUnknown() {
@@ -798,7 +798,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlmaxsoaparraysize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlmaxsoaparraysize.IsUnknown() {
 		data.Xmlmaxsoaparraysize = types.Int64Null()
 	}
 	if !data.Xmlminfilesize.IsNull() && !data.Xmlminfilesize.IsUnknown() {
@@ -807,7 +807,7 @@ func appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx context.Context, data *App
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlminfilesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlminfilesize.IsUnknown() {
 		data.Xmlminfilesize = types.Int64Null()
 	}
 	data.Xmlminfilesizecheck = adopt(data.Xmlminfilesizecheck, "xmlminfilesizecheck")

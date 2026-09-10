@@ -120,12 +120,12 @@ func authenticationadfsproxyprofileSetAttrFromGet(ctx context.Context, data *Aut
 	// Convert API response to model
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeyname.IsUnknown() {
 		data.Certkeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -133,12 +133,12 @@ func authenticationadfsproxyprofileSetAttrFromGet(ctx context.Context, data *Aut
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverurl.IsUnknown() {
 		data.Serverurl = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

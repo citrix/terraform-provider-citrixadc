@@ -124,7 +124,7 @@ func mapbmrSetAttrFromGet(ctx context.Context, data *MapbmrResourceModel, getRes
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["psidlength"]; ok && val != nil {
@@ -143,7 +143,7 @@ func mapbmrSetAttrFromGet(ctx context.Context, data *MapbmrResourceModel, getRes
 	}
 	if val, ok := getResponseData["ruleipv6prefix"]; ok && val != nil {
 		data.Ruleipv6prefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruleipv6prefix.IsUnknown() {
 		data.Ruleipv6prefix = types.StringNull()
 	}
 

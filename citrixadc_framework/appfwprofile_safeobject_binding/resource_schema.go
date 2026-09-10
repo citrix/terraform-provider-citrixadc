@@ -222,12 +222,12 @@ func appfwprofile_safeobject_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	}
 	if val, ok := getResponseData["as_expression"]; ok && val != nil {
 		data.AsExpression = types.StringValue(val.(string))
-	} else {
+	} else if data.AsExpression.IsUnknown() {
 		data.AsExpression = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	// isautodeployed: server-overridden, not reliably echoed by GET. Preserve existing value.
@@ -238,32 +238,32 @@ func appfwprofile_safeobject_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxmatchlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxmatchlength.IsUnknown() {
 		data.Maxmatchlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["safeobject"]; ok && val != nil {
 		data.Safeobject = types.StringValue(val.(string))
-	} else {
+	} else if data.Safeobject.IsUnknown() {
 		data.Safeobject = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

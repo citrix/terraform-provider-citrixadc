@@ -191,19 +191,19 @@ func clusterinstanceSetAttrFromGet(ctx context.Context, data *ClusterinstanceRes
 	// Convert API response to model
 	if val, ok := getResponseData["backplanebasedview"]; ok && val != nil {
 		data.Backplanebasedview = types.StringValue(val.(string))
-	} else {
+	} else if data.Backplanebasedview.IsUnknown() {
 		data.Backplanebasedview = types.StringNull()
 	}
 	if val, ok := getResponseData["clid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Clid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Clid.IsUnknown() {
 		data.Clid = types.Int64Null()
 	}
 	if val, ok := getResponseData["clusterproxyarp"]; ok && val != nil {
 		data.Clusterproxyarp = types.StringValue(val.(string))
-	} else {
+	} else if data.Clusterproxyarp.IsUnknown() {
 		data.Clusterproxyarp = types.StringNull()
 	}
 	if val, ok := getResponseData["deadinterval"]; ok && val != nil {
@@ -217,7 +217,7 @@ func clusterinstanceSetAttrFromGet(ctx context.Context, data *ClusterinstanceRes
 	}
 	if val, ok := getResponseData["dfdretainl2params"]; ok && val != nil {
 		data.Dfdretainl2params = types.StringValue(val.(string))
-	} else {
+	} else if data.Dfdretainl2params.IsUnknown() {
 		data.Dfdretainl2params = types.StringNull()
 	}
 	if val, ok := getResponseData["hellointerval"]; ok && val != nil {
@@ -230,42 +230,42 @@ func clusterinstanceSetAttrFromGet(ctx context.Context, data *ClusterinstanceRes
 	}
 	if val, ok := getResponseData["inc"]; ok && val != nil {
 		data.Inc = types.StringValue(val.(string))
-	} else {
+	} else if data.Inc.IsUnknown() {
 		data.Inc = types.StringNull()
 	}
 	if val, ok := getResponseData["nodegroup"]; ok && val != nil {
 		data.Nodegroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Nodegroup.IsUnknown() {
 		data.Nodegroup = types.StringNull()
 	}
 	if val, ok := getResponseData["preemption"]; ok && val != nil {
 		data.Preemption = types.StringValue(val.(string))
-	} else {
+	} else if data.Preemption.IsUnknown() {
 		data.Preemption = types.StringNull()
 	}
 	if val, ok := getResponseData["processlocal"]; ok && val != nil {
 		data.Processlocal = types.StringValue(val.(string))
-	} else {
+	} else if data.Processlocal.IsUnknown() {
 		data.Processlocal = types.StringNull()
 	}
 	if val, ok := getResponseData["quorumtype"]; ok && val != nil {
 		data.Quorumtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Quorumtype.IsUnknown() {
 		data.Quorumtype = types.StringNull()
 	}
 	if val, ok := getResponseData["retainconnectionsoncluster"]; ok && val != nil {
 		data.Retainconnectionsoncluster = types.StringValue(val.(string))
-	} else {
+	} else if data.Retainconnectionsoncluster.IsUnknown() {
 		data.Retainconnectionsoncluster = types.StringNull()
 	}
 	if val, ok := getResponseData["secureheartbeats"]; ok && val != nil {
 		data.Secureheartbeats = types.StringValue(val.(string))
-	} else {
+	} else if data.Secureheartbeats.IsUnknown() {
 		data.Secureheartbeats = types.StringNull()
 	}
 	if val, ok := getResponseData["syncstatusstrictmode"]; ok && val != nil {
 		data.Syncstatusstrictmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Syncstatusstrictmode.IsUnknown() {
 		data.Syncstatusstrictmode = types.StringNull()
 	}
 

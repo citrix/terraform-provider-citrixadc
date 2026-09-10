@@ -66,12 +66,12 @@ func apiprofileSetAttrFromGet(ctx context.Context, data *ApiprofileResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["apivisibility"]; ok && val != nil {
 		data.Apivisibility = types.StringValue(val.(string))
-	} else {
+	} else if data.Apivisibility.IsUnknown() {
 		data.Apivisibility = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

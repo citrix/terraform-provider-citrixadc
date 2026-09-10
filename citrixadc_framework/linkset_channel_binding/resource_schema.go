@@ -76,9 +76,13 @@ func linkset_channel_bindingSetAttrFromGet(ctx context.Context, data *LinksetCha
 	// The NITRO "id" field maps to the user-facing "linkset_id" attribute.
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		data.LinksetId = types.StringValue(val.(string))
+	} else if data.LinksetId.IsUnknown() {
+		data.LinksetId = types.StringNull()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
+	} else if data.Ifnum.IsUnknown() {
+		data.Ifnum = types.StringNull()
 	}
 
 	// Set the synthetic composite ID for the resource.

@@ -147,17 +147,17 @@ func aaaproxyparamSetAttrFromGet(ctx context.Context, data *AaaproxyparamResourc
 	// Convert API response to model
 	if val, ok := getResponseData["proxy"]; ok && val != nil {
 		data.Proxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxy.IsUnknown() {
 		data.Proxy = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyauthorization"]; ok && val != nil {
 		data.Proxyauthorization = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyauthorization.IsUnknown() {
 		data.Proxyauthorization = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyusername"]; ok && val != nil {
 		data.Proxyusername = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyusername.IsUnknown() {
 		data.Proxyusername = types.StringNull()
 	}
 	// proxypassword is not returned by NITRO API in usable form (secret/ephemeral) - retain from config

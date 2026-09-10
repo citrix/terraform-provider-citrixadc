@@ -72,12 +72,12 @@ func lsnappsprofile_port_bindingSetAttrFromGet(ctx context.Context, data *Lsnapp
 	// Convert API response to model
 	if val, ok := getResponseData["appsprofilename"]; ok && val != nil {
 		data.Appsprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Appsprofilename.IsUnknown() {
 		data.Appsprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["lsnport"]; ok && val != nil {
 		data.Lsnport = types.StringValue(val.(string))
-	} else {
+	} else if data.Lsnport.IsUnknown() {
 		data.Lsnport = types.StringNull()
 	}
 

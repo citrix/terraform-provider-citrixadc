@@ -205,37 +205,37 @@ func vpnsecureprivateaccessprofileSetAttrFromGet(ctx context.Context, data *Vpns
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["url"]; ok && val != nil {
 		data.Url = types.StringValue(val.(string))
-	} else {
+	} else if data.Url.IsUnknown() {
 		data.Url = types.StringNull()
 	}
 	if val, ok := getResponseData["customerid"]; ok && val != nil {
 		data.Customerid = types.StringValue(val.(string))
-	} else {
+	} else if data.Customerid.IsUnknown() {
 		data.Customerid = types.StringNull()
 	}
 	if val, ok := getResponseData["chromeenterprisepremiummode"]; ok && val != nil {
 		data.Chromeenterprisepremiummode = types.StringValue(val.(string))
-	} else {
+	} else if data.Chromeenterprisepremiummode.IsUnknown() {
 		data.Chromeenterprisepremiummode = types.StringNull()
 	}
 	if val, ok := getResponseData["googlecustomerid"]; ok && val != nil {
 		data.Googlecustomerid = types.StringValue(val.(string))
-	} else {
+	} else if data.Googlecustomerid.IsUnknown() {
 		data.Googlecustomerid = types.StringNull()
 	}
 	if val, ok := getResponseData["googlesecuritygatewayid"]; ok && val != nil {
 		data.Googlesecuritygatewayid = types.StringValue(val.(string))
-	} else {
+	} else if data.Googlesecuritygatewayid.IsUnknown() {
 		data.Googlesecuritygatewayid = types.StringNull()
 	}
 	if val, ok := getResponseData["forceclienttype"]; ok && val != nil {
 		data.Forceclienttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Forceclienttype.IsUnknown() {
 		data.Forceclienttype = types.StringNull()
 	}
 	// sharedsecret is not returned by NITRO API in usable form (secret/ephemeral) - retain from config

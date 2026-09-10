@@ -138,17 +138,17 @@ func icaactionSetAttrFromGet(ctx context.Context, data *IcaactionResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["accessprofilename"]; ok && val != nil {
 		data.Accessprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Accessprofilename.IsUnknown() {
 		data.Accessprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["latencyprofilename"]; ok && val != nil {
 		data.Latencyprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Latencyprofilename.IsUnknown() {
 		data.Latencyprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// newname is a rename-only parameter and is never returned by the NITRO GET.

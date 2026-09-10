@@ -85,17 +85,17 @@ func mapbmr_bmrv4network_bindingSetAttrFromGet(ctx context.Context, data *Mapbmr
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["network"]; ok && val != nil {
 		data.Network = types.StringValue(val.(string))
-	} else {
+	} else if data.Network.IsUnknown() {
 		data.Network = types.StringNull()
 	}
 

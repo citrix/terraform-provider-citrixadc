@@ -115,6 +115,8 @@ func videooptimizationpacingactionSetAttrFromGet(ctx context.Context, data *Vide
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
@@ -124,6 +126,8 @@ func videooptimizationpacingactionSetAttrFromGet(ctx context.Context, data *Vide
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rate = types.Int64Value(intVal)
 		}
+	} else if data.Rate.IsUnknown() {
+		data.Rate = types.Int64Null()
 	}
 
 	return data

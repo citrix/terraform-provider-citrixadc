@@ -128,17 +128,17 @@ func userprotocolSetAttrFromGet(ctx context.Context, data *UserprotocolResourceM
 	}
 	if val, ok := getResponseData["extension"]; ok && val != nil {
 		data.Extension = types.StringValue(val.(string))
-	} else {
+	} else if data.Extension.IsUnknown() {
 		data.Extension = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["transport"]; ok && val != nil {
 		data.Transport = types.StringValue(val.(string))
-	} else {
+	} else if data.Transport.IsUnknown() {
 		data.Transport = types.StringNull()
 	}
 	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {

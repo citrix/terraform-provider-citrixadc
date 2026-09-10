@@ -70,12 +70,12 @@ func appfwurlencodedformcontenttypeSetAttrFromGet(ctx context.Context, data *App
 	// Convert API response to model
 	if val, ok := getResponseData["isregex"]; ok && val != nil {
 		data.Isregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isregex.IsUnknown() {
 		data.Isregex = types.StringNull()
 	}
 	if val, ok := getResponseData["urlencodedformcontenttypevalue"]; ok && val != nil {
 		data.Urlencodedformcontenttypevalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Urlencodedformcontenttypevalue.IsUnknown() {
 		data.Urlencodedformcontenttypevalue = types.StringNull()
 	}
 

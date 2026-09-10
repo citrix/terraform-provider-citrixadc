@@ -527,117 +527,117 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 	}
 	if val, ok := getResponseData["attribute1"]; ok && val != nil {
 		data.Attribute1 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute1.IsUnknown() {
 		data.Attribute1 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute10"]; ok && val != nil {
 		data.Attribute10 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute10.IsUnknown() {
 		data.Attribute10 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute11"]; ok && val != nil {
 		data.Attribute11 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute11.IsUnknown() {
 		data.Attribute11 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute12"]; ok && val != nil {
 		data.Attribute12 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute12.IsUnknown() {
 		data.Attribute12 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute13"]; ok && val != nil {
 		data.Attribute13 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute13.IsUnknown() {
 		data.Attribute13 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute14"]; ok && val != nil {
 		data.Attribute14 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute14.IsUnknown() {
 		data.Attribute14 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute15"]; ok && val != nil {
 		data.Attribute15 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute15.IsUnknown() {
 		data.Attribute15 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute16"]; ok && val != nil {
 		data.Attribute16 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute16.IsUnknown() {
 		data.Attribute16 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute2"]; ok && val != nil {
 		data.Attribute2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute2.IsUnknown() {
 		data.Attribute2 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute3"]; ok && val != nil {
 		data.Attribute3 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute3.IsUnknown() {
 		data.Attribute3 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute4"]; ok && val != nil {
 		data.Attribute4 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute4.IsUnknown() {
 		data.Attribute4 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute5"]; ok && val != nil {
 		data.Attribute5 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute5.IsUnknown() {
 		data.Attribute5 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute6"]; ok && val != nil {
 		data.Attribute6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute6.IsUnknown() {
 		data.Attribute6 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute7"]; ok && val != nil {
 		data.Attribute7 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute7.IsUnknown() {
 		data.Attribute7 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute8"]; ok && val != nil {
 		data.Attribute8 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute8.IsUnknown() {
 		data.Attribute8 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute9"]; ok && val != nil {
 		data.Attribute9 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute9.IsUnknown() {
 		data.Attribute9 = types.StringNull()
 	}
 	if val, ok := getResponseData["attributes"]; ok && val != nil {
 		data.Attributes = types.StringValue(val.(string))
-	} else {
+	} else if data.Attributes.IsUnknown() {
 		data.Attributes = types.StringNull()
 	}
 	if val, ok := getResponseData["audience"]; ok && val != nil {
 		data.Audience = types.StringValue(val.(string))
-	} else {
+	} else if data.Audience.IsUnknown() {
 		data.Audience = types.StringNull()
 	}
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["authorizationendpoint"]; ok && val != nil {
 		data.Authorizationendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Authorizationendpoint.IsUnknown() {
 		data.Authorizationendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["certendpoint"]; ok && val != nil {
 		data.Certendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Certendpoint.IsUnknown() {
 		data.Certendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["certfilepath"]; ok && val != nil {
 		data.Certfilepath = types.StringValue(val.(string))
-	} else {
+	} else if data.Certfilepath.IsUnknown() {
 		data.Certfilepath = types.StringNull()
 	}
 	if val, ok := getResponseData["clientid"]; ok && val != nil {
 		data.Clientid = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientid.IsUnknown() {
 		data.Clientid = types.StringNull()
 	}
 	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -645,47 +645,47 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 	// clientsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["granttype"]; ok && val != nil {
 		data.Granttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Granttype.IsUnknown() {
 		data.Granttype = types.StringNull()
 	}
 	if val, ok := getResponseData["graphendpoint"]; ok && val != nil {
 		data.Graphendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Graphendpoint.IsUnknown() {
 		data.Graphendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["idtokendecryptendpoint"]; ok && val != nil {
 		data.Idtokendecryptendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Idtokendecryptendpoint.IsUnknown() {
 		data.Idtokendecryptendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["introspecturl"]; ok && val != nil {
 		data.Introspecturl = types.StringValue(val.(string))
-	} else {
+	} else if data.Introspecturl.IsUnknown() {
 		data.Introspecturl = types.StringNull()
 	}
 	if val, ok := getResponseData["intunedeviceidexpression"]; ok && val != nil {
 		data.Intunedeviceidexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Intunedeviceidexpression.IsUnknown() {
 		data.Intunedeviceidexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["issuer"]; ok && val != nil {
 		data.Issuer = types.StringValue(val.(string))
-	} else {
+	} else if data.Issuer.IsUnknown() {
 		data.Issuer = types.StringNull()
 	}
 	if val, ok := getResponseData["metadataurl"]; ok && val != nil {
 		data.Metadataurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Metadataurl.IsUnknown() {
 		data.Metadataurl = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["oauthmiscflags"]; ok && val != nil {
@@ -701,66 +701,66 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 	}
 	if val, ok := getResponseData["oauthtype"]; ok && val != nil {
 		data.Oauthtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Oauthtype.IsUnknown() {
 		data.Oauthtype = types.StringNull()
 	}
 	if val, ok := getResponseData["pkce"]; ok && val != nil {
 		data.Pkce = types.StringValue(val.(string))
-	} else {
+	} else if data.Pkce.IsUnknown() {
 		data.Pkce = types.StringNull()
 	}
 	if val, ok := getResponseData["refreshinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Refreshinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Refreshinterval.IsUnknown() {
 		data.Refreshinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["requestattribute"]; ok && val != nil {
 		data.Requestattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Requestattribute.IsUnknown() {
 		data.Requestattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceuri"]; ok && val != nil {
 		data.Resourceuri = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceuri.IsUnknown() {
 		data.Resourceuri = types.StringNull()
 	}
 	if val, ok := getResponseData["scopes"]; ok && val != nil {
 		data.Scopes = types.StringValue(val.(string))
-	} else {
+	} else if data.Scopes.IsUnknown() {
 		data.Scopes = types.StringNull()
 	}
 	if val, ok := getResponseData["skewtime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Skewtime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Skewtime.IsUnknown() {
 		data.Skewtime = types.Int64Null()
 	}
 	if val, ok := getResponseData["tenantid"]; ok && val != nil {
 		data.Tenantid = types.StringValue(val.(string))
-	} else {
+	} else if data.Tenantid.IsUnknown() {
 		data.Tenantid = types.StringNull()
 	}
 	if val, ok := getResponseData["tokenendpoint"]; ok && val != nil {
 		data.Tokenendpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Tokenendpoint.IsUnknown() {
 		data.Tokenendpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["tokenendpointauthmethod"]; ok && val != nil {
 		data.Tokenendpointauthmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Tokenendpointauthmethod.IsUnknown() {
 		data.Tokenendpointauthmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["userinfourl"]; ok && val != nil {
 		data.Userinfourl = types.StringValue(val.(string))
-	} else {
+	} else if data.Userinfourl.IsUnknown() {
 		data.Userinfourl = types.StringNull()
 	}
 	if val, ok := getResponseData["usernamefield"]; ok && val != nil {
 		data.Usernamefield = types.StringValue(val.(string))
-	} else {
+	} else if data.Usernamefield.IsUnknown() {
 		data.Usernamefield = types.StringNull()
 	}
 

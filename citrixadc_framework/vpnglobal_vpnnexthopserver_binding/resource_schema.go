@@ -71,12 +71,12 @@ func vpnglobal_vpnnexthopserver_bindingSetAttrFromGet(ctx context.Context, data 
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["nexthopserver"]; ok && val != nil {
 		data.Nexthopserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Nexthopserver.IsUnknown() {
 		data.Nexthopserver = types.StringNull()
 	}
 

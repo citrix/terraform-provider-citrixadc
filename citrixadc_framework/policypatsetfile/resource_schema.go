@@ -120,12 +120,18 @@ func policypatsetfileSetAttrFromGet(ctx context.Context, data *PolicypatsetfileR
 	//     plan/state value so the configured src round-trips.
 	if val, ok := getResponseData["charset"]; ok && val != nil {
 		data.Charset = types.StringValue(val.(string))
+	} else if data.Charset.IsUnknown() {
+		data.Charset = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// "delimiter", "src", and "overwrite" are not faithfully echoed by GET;
 	// preserve the existing plan/state values (see note above).

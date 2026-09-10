@@ -85,17 +85,17 @@ func aaagroup_vpnsecureprivateaccessprofile_bindingSetAttrFromGet(ctx context.Co
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["secureprivateaccessprofile"]; ok && val != nil {
 		data.Secureprivateaccessprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Secureprivateaccessprofile.IsUnknown() {
 		data.Secureprivateaccessprofile = types.StringNull()
 	}
 

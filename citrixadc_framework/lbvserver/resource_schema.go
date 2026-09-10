@@ -1825,6 +1825,8 @@ func lbvserverSetAttrFromGet(ctx context.Context, data *LbvserverResourceModel, 
 	// ID for the datasource, which has no Create.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Id = types.StringValue(val.(string))
+	} else if data.Id.IsUnknown() {
+		data.Id = types.StringNull()
 	}
 
 	return data

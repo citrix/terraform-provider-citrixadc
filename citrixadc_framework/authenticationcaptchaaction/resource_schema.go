@@ -191,19 +191,19 @@ func authenticationcaptchaactionSetAttrFromGet(ctx context.Context, data *Authen
 	// Convert API response to model
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["scorethreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Scorethreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Scorethreshold.IsUnknown() {
 		data.Scorethreshold = types.Int64Null()
 	}
 	// secretkey is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -211,7 +211,7 @@ func authenticationcaptchaactionSetAttrFromGet(ctx context.Context, data *Authen
 	// secretkey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverurl.IsUnknown() {
 		data.Serverurl = types.StringNull()
 	}
 	// sitekey is not returned by NITRO API (secret/ephemeral) - retain from config

@@ -168,12 +168,12 @@ func botprofile_tps_bindingSetAttrFromGet(ctx context.Context, data *BotprofileT
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_tps"]; ok && val != nil {
 		data.BotTps = types.BoolValue(val.(bool))
-	} else {
+	} else if data.BotTps.IsUnknown() {
 		data.BotTps = types.BoolNull()
 	}
 	if val, ok := getResponseData["bot_tps_action"]; ok && val != nil {
@@ -189,36 +189,36 @@ func botprofile_tps_bindingSetAttrFromGet(ctx context.Context, data *BotprofileT
 	}
 	if val, ok := getResponseData["bot_tps_enabled"]; ok && val != nil {
 		data.BotTpsEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotTpsEnabled.IsUnknown() {
 		data.BotTpsEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_tps_type"]; ok && val != nil {
 		data.BotTpsType = types.StringValue(val.(string))
-	} else {
+	} else if data.BotTpsType.IsUnknown() {
 		data.BotTpsType = types.StringNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["percentage"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Percentage = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Percentage.IsUnknown() {
 		data.Percentage = types.Int64Null()
 	}
 	if val, ok := getResponseData["threshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Threshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Threshold.IsUnknown() {
 		data.Threshold = types.Int64Null()
 	}
 

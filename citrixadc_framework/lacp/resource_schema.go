@@ -77,11 +77,15 @@ func lacpSetAttrFromGet(ctx context.Context, data *LacpResourceModel, getRespons
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
+	} else if data.Ownernode.IsUnknown() {
+		data.Ownernode = types.Int64Null()
 	}
 	if val, ok := getResponseData["syspriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Syspriority = types.Int64Value(intVal)
 		}
+	} else if data.Syspriority.IsUnknown() {
+		data.Syspriority = types.Int64Null()
 	}
 
 	// Set ID for the resource

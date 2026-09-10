@@ -71,12 +71,12 @@ func sslvserver_ecccurve_bindingSetAttrFromGet(ctx context.Context, data *Sslvse
 	// Convert API response to model
 	if val, ok := getResponseData["ecccurvename"]; ok && val != nil {
 		data.Ecccurvename = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecccurvename.IsUnknown() {
 		data.Ecccurvename = types.StringNull()
 	}
 	if val, ok := getResponseData["vservername"]; ok && val != nil {
 		data.Vservername = types.StringValue(val.(string))
-	} else {
+	} else if data.Vservername.IsUnknown() {
 		data.Vservername = types.StringNull()
 	}
 

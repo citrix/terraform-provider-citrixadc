@@ -191,6 +191,8 @@ func authenticationvserver_authenticationldappolicy_bindingSetAttrFromGet(ctx co
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["secondary"]; ok && val != nil {
 		if b, ok := val.(bool); ok {

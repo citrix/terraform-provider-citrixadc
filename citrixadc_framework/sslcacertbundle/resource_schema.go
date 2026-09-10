@@ -68,12 +68,12 @@ func sslcacertbundleSetAttrFromGet(ctx context.Context, data *SslcacertbundleRes
 	// Convert API response to model
 	if val, ok := getResponseData["bundlefile"]; ok && val != nil {
 		data.Bundlefile = types.StringValue(val.(string))
-	} else {
+	} else if data.Bundlefile.IsUnknown() {
 		data.Bundlefile = types.StringNull()
 	}
 	if val, ok := getResponseData["cacertbundlename"]; ok && val != nil {
 		data.Cacertbundlename = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacertbundlename.IsUnknown() {
 		data.Cacertbundlename = types.StringNull()
 	}
 

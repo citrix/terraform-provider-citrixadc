@@ -205,70 +205,70 @@ func gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hashid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Hashid.IsUnknown() {
 		data.Hashid = types.Int64Null()
 	}
 	if val, ok := getResponseData["monitor_name"]; ok && val != nil {
 		data.MonitorName = types.StringValue(val.(string))
-	} else {
+	} else if data.MonitorName.IsUnknown() {
 		data.MonitorName = types.StringNull()
 	}
 	if val, ok := getResponseData["monstate"]; ok && val != nil {
 		data.Monstate = types.StringValue(val.(string))
-	} else {
+	} else if data.Monstate.IsUnknown() {
 		data.Monstate = types.StringNull()
 	}
 	if val, ok := getResponseData["order"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Order.IsUnknown() {
 		data.Order = types.Int64Null()
 	}
 	if val, ok := getResponseData["passive"]; ok && val != nil {
 		data.Passive = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Passive.IsUnknown() {
 		data.Passive = types.BoolNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["publicip"]; ok && val != nil {
 		data.Publicip = types.StringValue(val.(string))
-	} else {
+	} else if data.Publicip.IsUnknown() {
 		data.Publicip = types.StringNull()
 	}
 	if val, ok := getResponseData["publicport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Publicport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Publicport.IsUnknown() {
 		data.Publicport = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicegroupname.IsUnknown() {
 		data.Servicegroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["siteprefix"]; ok && val != nil {
 		data.Siteprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Siteprefix.IsUnknown() {
 		data.Siteprefix = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Weight.IsUnknown() {
 		data.Weight = types.Int64Null()
 	}
 

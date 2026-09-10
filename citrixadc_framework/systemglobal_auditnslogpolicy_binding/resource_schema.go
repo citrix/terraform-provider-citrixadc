@@ -160,26 +160,38 @@ func systemglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, da
 	// feature: server-assigned (e.g. SYSTEM), echoed by GET.
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
+	} else if data.Feature.IsUnknown() {
+		data.Feature = types.StringNull()
 	}
 	// globalbindtype: server-assigned (e.g. SYSTEM_GLOBAL), echoed by GET.
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
+	} else if data.Globalbindtype.IsUnknown() {
+		data.Globalbindtype = types.StringNull()
 	}
 	// gotopriorityexpression: not echoed by GET - preserve existing value.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	// nextfactor: not echoed by GET - preserve existing value.
 	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
 		data.Nextfactor = types.StringValue(val.(string))
+	} else if data.Nextfactor.IsUnknown() {
+		data.Nextfactor = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

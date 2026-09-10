@@ -86,19 +86,19 @@ func lsnclient_nsacl_bindingSetAttrFromGet(ctx context.Context, data *LsnclientN
 	// Convert API response to model
 	if val, ok := getResponseData["aclname"]; ok && val != nil {
 		data.Aclname = types.StringValue(val.(string))
-	} else {
+	} else if data.Aclname.IsUnknown() {
 		data.Aclname = types.StringNull()
 	}
 	if val, ok := getResponseData["clientname"]; ok && val != nil {
 		data.Clientname = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientname.IsUnknown() {
 		data.Clientname = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 

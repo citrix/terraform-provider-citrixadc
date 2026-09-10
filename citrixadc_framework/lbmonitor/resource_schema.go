@@ -1254,7 +1254,7 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["snmpoid"]; ok && val != nil {
 		data.Snmpoid = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmpoid.IsUnknown() {
 		data.Snmpoid = types.StringNull()
 	}
 	if val, ok := getResponseData["acctapplicationid"]; ok && val != nil {
@@ -1270,24 +1270,24 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	}
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
-	} else {
+	} else if data.Action.IsUnknown() {
 		data.Action = types.StringNull()
 	}
 	if val, ok := getResponseData["alertretries"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Alertretries = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Alertretries.IsUnknown() {
 		data.Alertretries = types.Int64Null()
 	}
 	if val, ok := getResponseData["application"]; ok && val != nil {
 		data.Application = types.StringValue(val.(string))
-	} else {
+	} else if data.Application.IsUnknown() {
 		data.Application = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute"]; ok && val != nil {
 		data.Attribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute.IsUnknown() {
 		data.Attribute = types.StringNull()
 	}
 	if val, ok := getResponseData["authapplicationid"]; ok && val != nil {
@@ -1303,109 +1303,109 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	}
 	if val, ok := getResponseData["basedn"]; ok && val != nil {
 		data.Basedn = types.StringValue(val.(string))
-	} else {
+	} else if data.Basedn.IsUnknown() {
 		data.Basedn = types.StringNull()
 	}
 	if val, ok := getResponseData["binddn"]; ok && val != nil {
 		data.Binddn = types.StringValue(val.(string))
-	} else {
+	} else if data.Binddn.IsUnknown() {
 		data.Binddn = types.StringNull()
 	}
 	if val, ok := getResponseData["customheaders"]; ok && val != nil {
 		data.Customheaders = types.StringValue(val.(string))
-	} else {
+	} else if data.Customheaders.IsUnknown() {
 		data.Customheaders = types.StringNull()
 	}
 	if val, ok := getResponseData["database"]; ok && val != nil {
 		data.Database = types.StringValue(val.(string))
-	} else {
+	} else if data.Database.IsUnknown() {
 		data.Database = types.StringNull()
 	}
 	if val, ok := getResponseData["destip"]; ok && val != nil {
 		data.Destip = types.StringValue(val.(string))
-	} else {
+	} else if data.Destip.IsUnknown() {
 		data.Destip = types.StringNull()
 	}
 	if val, ok := getResponseData["destport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Destport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Destport.IsUnknown() {
 		data.Destport = types.Int64Null()
 	}
 	if val, ok := getResponseData["deviation"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Deviation = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Deviation.IsUnknown() {
 		data.Deviation = types.Int64Null()
 	}
 	if val, ok := getResponseData["dispatcherip"]; ok && val != nil {
 		data.Dispatcherip = types.StringValue(val.(string))
-	} else {
+	} else if data.Dispatcherip.IsUnknown() {
 		data.Dispatcherip = types.StringNull()
 	}
 	if val, ok := getResponseData["dispatcherport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dispatcherport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dispatcherport.IsUnknown() {
 		data.Dispatcherport = types.Int64Null()
 	}
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
+	} else if data.Domain.IsUnknown() {
 		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["downtime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Downtime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Downtime.IsUnknown() {
 		data.Downtime = types.Int64Null()
 	}
 	if val, ok := getResponseData["evalrule"]; ok && val != nil {
 		data.Evalrule = types.StringValue(val.(string))
-	} else {
+	} else if data.Evalrule.IsUnknown() {
 		data.Evalrule = types.StringNull()
 	}
 	if val, ok := getResponseData["failureretries"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Failureretries = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Failureretries.IsUnknown() {
 		data.Failureretries = types.Int64Null()
 	}
 	if val, ok := getResponseData["filename"]; ok && val != nil {
 		data.Filename = types.StringValue(val.(string))
-	} else {
+	} else if data.Filename.IsUnknown() {
 		data.Filename = types.StringNull()
 	}
 	if val, ok := getResponseData["filter"]; ok && val != nil {
 		data.Filter = types.StringValue(val.(string))
-	} else {
+	} else if data.Filter.IsUnknown() {
 		data.Filter = types.StringNull()
 	}
 	if val, ok := getResponseData["firmwarerevision"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Firmwarerevision = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Firmwarerevision.IsUnknown() {
 		data.Firmwarerevision = types.Int64Null()
 	}
 	if val, ok := getResponseData["group"]; ok && val != nil {
 		data.Group = types.StringValue(val.(string))
-	} else {
+	} else if data.Group.IsUnknown() {
 		data.Group = types.StringNull()
 	}
 	if val, ok := getResponseData["grpchealthcheck"]; ok && val != nil {
 		data.Grpchealthcheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Grpchealthcheck.IsUnknown() {
 		data.Grpchealthcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["grpcservicename"]; ok && val != nil {
 		data.Grpcservicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Grpcservicename.IsUnknown() {
 		data.Grpcservicename = types.StringNull()
 	}
 	if val, ok := getResponseData["grpcstatuscode"]; ok && val != nil {
@@ -1421,29 +1421,29 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	}
 	if val, ok := getResponseData["hostipaddress"]; ok && val != nil {
 		data.Hostipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostipaddress.IsUnknown() {
 		data.Hostipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
 		data.Hostname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostname.IsUnknown() {
 		data.Hostname = types.StringNull()
 	}
 	if val, ok := getResponseData["httprequest"]; ok && val != nil {
 		data.Httprequest = types.StringValue(val.(string))
-	} else {
+	} else if data.Httprequest.IsUnknown() {
 		data.Httprequest = types.StringNull()
 	}
 	if val, ok := getResponseData["inbandsecurityid"]; ok && val != nil {
 		data.Inbandsecurityid = types.StringValue(val.(string))
-	} else {
+	} else if data.Inbandsecurityid.IsUnknown() {
 		data.Inbandsecurityid = types.StringNull()
 	}
 	if val, ok := getResponseData["interval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Interval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Interval.IsUnknown() {
 		data.Interval = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
@@ -1459,100 +1459,100 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	}
 	if val, ok := getResponseData["iptunnel"]; ok && val != nil {
 		data.Iptunnel = types.StringValue(val.(string))
-	} else {
+	} else if data.Iptunnel.IsUnknown() {
 		data.Iptunnel = types.StringNull()
 	}
 	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
 		data.Kcdaccount = types.StringValue(val.(string))
-	} else {
+	} else if data.Kcdaccount.IsUnknown() {
 		data.Kcdaccount = types.StringNull()
 	}
 	if val, ok := getResponseData["lasversion"]; ok && val != nil {
 		data.Lasversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Lasversion.IsUnknown() {
 		data.Lasversion = types.StringNull()
 	}
 	if val, ok := getResponseData["logonpointname"]; ok && val != nil {
 		data.Logonpointname = types.StringValue(val.(string))
-	} else {
+	} else if data.Logonpointname.IsUnknown() {
 		data.Logonpointname = types.StringNull()
 	}
 	if val, ok := getResponseData["lrtm"]; ok && val != nil {
 		data.Lrtm = types.StringValue(val.(string))
-	} else {
+	} else if data.Lrtm.IsUnknown() {
 		data.Lrtm = types.StringNull()
 	}
 	if val, ok := getResponseData["maxforwards"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxforwards = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxforwards.IsUnknown() {
 		data.Maxforwards = types.Int64Null()
 	}
 	if val, ok := getResponseData["metric"]; ok && val != nil {
 		data.Metric = types.StringValue(val.(string))
-	} else {
+	} else if data.Metric.IsUnknown() {
 		data.Metric = types.StringNull()
 	}
 	if val, ok := getResponseData["metrictable"]; ok && val != nil {
 		data.Metrictable = types.StringValue(val.(string))
-	} else {
+	} else if data.Metrictable.IsUnknown() {
 		data.Metrictable = types.StringNull()
 	}
 	if val, ok := getResponseData["metricthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Metricthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Metricthreshold.IsUnknown() {
 		data.Metricthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["metricweight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Metricweight = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Metricweight.IsUnknown() {
 		data.Metricweight = types.Int64Null()
 	}
 	if val, ok := getResponseData["monitorname"]; ok && val != nil {
 		data.Monitorname = types.StringValue(val.(string))
-	} else {
+	} else if data.Monitorname.IsUnknown() {
 		data.Monitorname = types.StringNull()
 	}
 	if val, ok := getResponseData["mqttclientidentifier"]; ok && val != nil {
 		data.Mqttclientidentifier = types.StringValue(val.(string))
-	} else {
+	} else if data.Mqttclientidentifier.IsUnknown() {
 		data.Mqttclientidentifier = types.StringNull()
 	}
 	if val, ok := getResponseData["mqttversion"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mqttversion = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mqttversion.IsUnknown() {
 		data.Mqttversion = types.Int64Null()
 	}
 	if val, ok := getResponseData["mssqlprotocolversion"]; ok && val != nil {
 		data.Mssqlprotocolversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Mssqlprotocolversion.IsUnknown() {
 		data.Mssqlprotocolversion = types.StringNull()
 	}
 	if val, ok := getResponseData["netprofile"]; ok && val != nil {
 		data.Netprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Netprofile.IsUnknown() {
 		data.Netprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["oraclesid"]; ok && val != nil {
 		data.Oraclesid = types.StringValue(val.(string))
-	} else {
+	} else if data.Oraclesid.IsUnknown() {
 		data.Oraclesid = types.StringNull()
 	}
 	if val, ok := getResponseData["originhost"]; ok && val != nil {
 		data.Originhost = types.StringValue(val.(string))
-	} else {
+	} else if data.Originhost.IsUnknown() {
 		data.Originhost = types.StringNull()
 	}
 	if val, ok := getResponseData["originrealm"]; ok && val != nil {
 		data.Originrealm = types.StringValue(val.(string))
-	} else {
+	} else if data.Originrealm.IsUnknown() {
 		data.Originrealm = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -1560,39 +1560,39 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["productname"]; ok && val != nil {
 		data.Productname = types.StringValue(val.(string))
-	} else {
+	} else if data.Productname.IsUnknown() {
 		data.Productname = types.StringNull()
 	}
 	if val, ok := getResponseData["query"]; ok && val != nil {
 		data.Query = types.StringValue(val.(string))
-	} else {
+	} else if data.Query.IsUnknown() {
 		data.Query = types.StringNull()
 	}
 	if val, ok := getResponseData["querytype"]; ok && val != nil {
 		data.Querytype = types.StringValue(val.(string))
-	} else {
+	} else if data.Querytype.IsUnknown() {
 		data.Querytype = types.StringNull()
 	}
 	if val, ok := getResponseData["radaccountsession"]; ok && val != nil {
 		data.Radaccountsession = types.StringValue(val.(string))
-	} else {
+	} else if data.Radaccountsession.IsUnknown() {
 		data.Radaccountsession = types.StringNull()
 	}
 	if val, ok := getResponseData["radaccounttype"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Radaccounttype = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Radaccounttype.IsUnknown() {
 		data.Radaccounttype = types.Int64Null()
 	}
 	if val, ok := getResponseData["radapn"]; ok && val != nil {
 		data.Radapn = types.StringValue(val.(string))
-	} else {
+	} else if data.Radapn.IsUnknown() {
 		data.Radapn = types.StringNull()
 	}
 	if val, ok := getResponseData["radframedip"]; ok && val != nil {
 		data.Radframedip = types.StringValue(val.(string))
-	} else {
+	} else if data.Radframedip.IsUnknown() {
 		data.Radframedip = types.StringNull()
 	}
 	// radkey is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -1600,22 +1600,22 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	// radkey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["radmsisdn"]; ok && val != nil {
 		data.Radmsisdn = types.StringValue(val.(string))
-	} else {
+	} else if data.Radmsisdn.IsUnknown() {
 		data.Radmsisdn = types.StringNull()
 	}
 	if val, ok := getResponseData["radnasid"]; ok && val != nil {
 		data.Radnasid = types.StringValue(val.(string))
-	} else {
+	} else if data.Radnasid.IsUnknown() {
 		data.Radnasid = types.StringNull()
 	}
 	if val, ok := getResponseData["radnasip"]; ok && val != nil {
 		data.Radnasip = types.StringValue(val.(string))
-	} else {
+	} else if data.Radnasip.IsUnknown() {
 		data.Radnasip = types.StringNull()
 	}
 	if val, ok := getResponseData["recv"]; ok && val != nil {
 		data.Recv = types.StringValue(val.(string))
-	} else {
+	} else if data.Recv.IsUnknown() {
 		data.Recv = types.StringNull()
 	}
 	if val, ok := getResponseData["respcode"]; ok && val != nil {
@@ -1633,41 +1633,41 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Resptimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Resptimeout.IsUnknown() {
 		data.Resptimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["resptimeoutthresh"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Resptimeoutthresh = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Resptimeoutthresh.IsUnknown() {
 		data.Resptimeoutthresh = types.Int64Null()
 	}
 	if val, ok := getResponseData["retries"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retries = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retries.IsUnknown() {
 		data.Retries = types.Int64Null()
 	}
 	if val, ok := getResponseData["reverse"]; ok && val != nil {
 		data.Reverse = types.StringValue(val.(string))
-	} else {
+	} else if data.Reverse.IsUnknown() {
 		data.Reverse = types.StringNull()
 	}
 	if val, ok := getResponseData["rtsprequest"]; ok && val != nil {
 		data.Rtsprequest = types.StringValue(val.(string))
-	} else {
+	} else if data.Rtsprequest.IsUnknown() {
 		data.Rtsprequest = types.StringNull()
 	}
 	if val, ok := getResponseData["scriptargs"]; ok && val != nil {
 		data.Scriptargs = types.StringValue(val.(string))
-	} else {
+	} else if data.Scriptargs.IsUnknown() {
 		data.Scriptargs = types.StringNull()
 	}
 	if val, ok := getResponseData["scriptname"]; ok && val != nil {
 		data.Scriptname = types.StringValue(val.(string))
-	} else {
+	} else if data.Scriptname.IsUnknown() {
 		data.Scriptname = types.StringNull()
 	}
 	// secondarypassword is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -1675,7 +1675,7 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	// secondarypassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["secure"]; ok && val != nil {
 		data.Secure = types.StringValue(val.(string))
-	} else {
+	} else if data.Secure.IsUnknown() {
 		data.Secure = types.StringNull()
 	}
 	// secureargs is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -1683,94 +1683,94 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	// secureargs_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["send"]; ok && val != nil {
 		data.Send = types.StringValue(val.(string))
-	} else {
+	} else if data.Send.IsUnknown() {
 		data.Send = types.StringNull()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicegroupname.IsUnknown() {
 		data.Servicegroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicename.IsUnknown() {
 		data.Servicename = types.StringNull()
 	}
 	if val, ok := getResponseData["sipmethod"]; ok && val != nil {
 		data.Sipmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Sipmethod.IsUnknown() {
 		data.Sipmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["sipreguri"]; ok && val != nil {
 		data.Sipreguri = types.StringValue(val.(string))
-	} else {
+	} else if data.Sipreguri.IsUnknown() {
 		data.Sipreguri = types.StringNull()
 	}
 	if val, ok := getResponseData["sipuri"]; ok && val != nil {
 		data.Sipuri = types.StringValue(val.(string))
-	} else {
+	} else if data.Sipuri.IsUnknown() {
 		data.Sipuri = types.StringNull()
 	}
 	if val, ok := getResponseData["sitepath"]; ok && val != nil {
 		data.Sitepath = types.StringValue(val.(string))
-	} else {
+	} else if data.Sitepath.IsUnknown() {
 		data.Sitepath = types.StringNull()
 	}
 	if val, ok := getResponseData["snmpcommunity"]; ok && val != nil {
 		data.Snmpcommunity = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmpcommunity.IsUnknown() {
 		data.Snmpcommunity = types.StringNull()
 	}
 	if val, ok := getResponseData["snmpthreshold"]; ok && val != nil {
 		data.Snmpthreshold = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmpthreshold.IsUnknown() {
 		data.Snmpthreshold = types.StringNull()
 	}
 	if val, ok := getResponseData["snmpversion"]; ok && val != nil {
 		data.Snmpversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmpversion.IsUnknown() {
 		data.Snmpversion = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlquery"]; ok && val != nil {
 		data.Sqlquery = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlquery.IsUnknown() {
 		data.Sqlquery = types.StringNull()
 	}
 	if val, ok := getResponseData["sslprofile"]; ok && val != nil {
 		data.Sslprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslprofile.IsUnknown() {
 		data.Sslprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["storedb"]; ok && val != nil {
 		data.Storedb = types.StringValue(val.(string))
-	} else {
+	} else if data.Storedb.IsUnknown() {
 		data.Storedb = types.StringNull()
 	}
 	if val, ok := getResponseData["storefrontacctservice"]; ok && val != nil {
 		data.Storefrontacctservice = types.StringValue(val.(string))
-	} else {
+	} else if data.Storefrontacctservice.IsUnknown() {
 		data.Storefrontacctservice = types.StringNull()
 	}
 	if val, ok := getResponseData["storefrontcheckbackendservices"]; ok && val != nil {
 		data.Storefrontcheckbackendservices = types.StringValue(val.(string))
-	} else {
+	} else if data.Storefrontcheckbackendservices.IsUnknown() {
 		data.Storefrontcheckbackendservices = types.StringNull()
 	}
 	if val, ok := getResponseData["storename"]; ok && val != nil {
 		data.Storename = types.StringValue(val.(string))
-	} else {
+	} else if data.Storename.IsUnknown() {
 		data.Storename = types.StringNull()
 	}
 	if val, ok := getResponseData["successretries"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Successretries = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Successretries.IsUnknown() {
 		data.Successretries = types.Int64Null()
 	}
 	if val, ok := getResponseData["supportedvendorids"]; ok && val != nil {
@@ -1786,73 +1786,73 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	}
 	if val, ok := getResponseData["tos"]; ok && val != nil {
 		data.Tos = types.StringValue(val.(string))
-	} else {
+	} else if data.Tos.IsUnknown() {
 		data.Tos = types.StringNull()
 	}
 	if val, ok := getResponseData["tosid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tosid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tosid.IsUnknown() {
 		data.Tosid = types.Int64Null()
 	}
 	if val, ok := getResponseData["transparent"]; ok && val != nil {
 		data.Transparent = types.StringValue(val.(string))
-	} else {
+	} else if data.Transparent.IsUnknown() {
 		data.Transparent = types.StringNull()
 	}
 	if val, ok := getResponseData["trofscode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Trofscode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Trofscode.IsUnknown() {
 		data.Trofscode = types.Int64Null()
 	}
 	if val, ok := getResponseData["trofsstring"]; ok && val != nil {
 		data.Trofsstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Trofsstring.IsUnknown() {
 		data.Trofsstring = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["units1"]; ok && val != nil {
 		data.Units1 = types.StringValue(val.(string))
-	} else {
+	} else if data.Units1.IsUnknown() {
 		data.Units1 = types.StringNull()
 	}
 	if val, ok := getResponseData["units2"]; ok && val != nil {
 		data.Units2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Units2.IsUnknown() {
 		data.Units2 = types.StringNull()
 	}
 	if val, ok := getResponseData["units3"]; ok && val != nil {
 		data.Units3 = types.StringValue(val.(string))
-	} else {
+	} else if data.Units3.IsUnknown() {
 		data.Units3 = types.StringNull()
 	}
 	if val, ok := getResponseData["units4"]; ok && val != nil {
 		data.Units4 = types.StringValue(val.(string))
-	} else {
+	} else if data.Units4.IsUnknown() {
 		data.Units4 = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 	if val, ok := getResponseData["validatecred"]; ok && val != nil {
 		data.Validatecred = types.StringValue(val.(string))
-	} else {
+	} else if data.Validatecred.IsUnknown() {
 		data.Validatecred = types.StringNull()
 	}
 	if val, ok := getResponseData["vendorid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vendorid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vendorid.IsUnknown() {
 		data.Vendorid = types.Int64Null()
 	}
 	if val, ok := getResponseData["vendorspecificacctapplicationids"]; ok && val != nil {
@@ -1881,7 +1881,7 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vendorspecificvendorid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vendorspecificvendorid.IsUnknown() {
 		data.Vendorspecificvendorid = types.Int64Null()
 	}
 

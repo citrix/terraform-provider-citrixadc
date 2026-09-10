@@ -640,6 +640,8 @@ func crvserverSetAttrFromGet(ctx context.Context, data *CrvserverResourceModel, 
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["netprofile"]; ok && val != nil {
@@ -746,7 +748,7 @@ func crvserverSetAttrFromGet(ctx context.Context, data *CrvserverResourceModel, 
 	if data.State.IsUnknown() {
 		if val, ok := getResponseData["state"]; ok && val != nil {
 			data.State = types.StringValue(val.(string))
-		} else {
+		} else if data.State.IsUnknown() {
 			data.State = types.StringNull()
 		}
 	}

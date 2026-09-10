@@ -116,43 +116,43 @@ func csvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *Csvserver
 	// Convert API response to model
 	if val, ok := getResponseData["backupip"]; ok && val != nil {
 		data.Backupip = types.StringValue(val.(string))
-	} else {
+	} else if data.Backupip.IsUnknown() {
 		data.Backupip = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiedomain"]; ok && val != nil {
 		data.Cookiedomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiedomain.IsUnknown() {
 		data.Cookiedomain = types.StringNull()
 	}
 	if val, ok := getResponseData["cookietimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookietimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cookietimeout.IsUnknown() {
 		data.Cookietimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["domainname"]; ok && val != nil {
 		data.Domainname = types.StringValue(val.(string))
-	} else {
+	} else if data.Domainname.IsUnknown() {
 		data.Domainname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["sitedomainttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sitedomainttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sitedomainttl.IsUnknown() {
 		data.Sitedomainttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 

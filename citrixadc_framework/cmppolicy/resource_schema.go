@@ -96,14 +96,20 @@ func cmppolicySetAttrFromGet(ctx context.Context, data *CmppolicyResourceModel, 
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["resaction"]; ok && val != nil {
 		data.Resaction = types.StringValue(val.(string))
+	} else if data.Resaction.IsUnknown() {
+		data.Resaction = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 
 	// NOTE: do NOT set data.Id here. The ID tracks the CURRENT LIVE name (== name at

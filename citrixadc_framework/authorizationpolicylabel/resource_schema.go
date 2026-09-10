@@ -77,6 +77,8 @@ func authorizationpolicylabelSetAttrFromGet(ctx context.Context, data *Authoriza
 	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
 		if val, ok := getResponseData["labelname"]; ok && val != nil {
 			data.Labelname = types.StringValue(val.(string))
+		} else if data.Labelname.IsUnknown() {
+			data.Labelname = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.

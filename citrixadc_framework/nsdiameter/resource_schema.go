@@ -131,7 +131,7 @@ func nsdiameterSetAttrFromGet(ctx context.Context, data *NsdiameterResourceModel
 	if data.Serverclosepropagation.IsUnknown() {
 		if val, ok := getResponseData["serverclosepropagation"]; ok && val != nil {
 			data.Serverclosepropagation = types.StringValue(val.(string))
-		} else {
+		} else if data.Serverclosepropagation.IsUnknown() {
 			data.Serverclosepropagation = types.StringNull()
 		}
 	}

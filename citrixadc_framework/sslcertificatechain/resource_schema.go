@@ -57,7 +57,7 @@ func sslcertificatechainSetAttrFromGet(ctx context.Context, data *Sslcertificate
 	// Convert API response to model
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeyname.IsUnknown() {
 		data.Certkeyname = types.StringNull()
 	}
 

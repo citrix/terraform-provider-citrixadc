@@ -104,13 +104,15 @@ func botsignatureSetAttrFromGet(ctx context.Context, data *BotsignatureResourceM
 	// name is always returned by GET; it is Required so never nulled.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// src is returned by GET, but preserve the configured value to avoid a spurious
 	// RequiresReplace diff caused by ADC-side normalization; only resolve if unknown.
 	if data.Src.IsUnknown() {
 		if val, ok := getResponseData["src"]; ok && val != nil {
 			data.Src = types.StringValue(val.(string))
-		} else {
+		} else if data.Src.IsUnknown() {
 			data.Src = types.StringNull()
 		}
 	}

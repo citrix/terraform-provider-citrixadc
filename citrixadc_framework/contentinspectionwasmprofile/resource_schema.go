@@ -177,43 +177,43 @@ func contentinspectionwasmprofileSetAttrFromGet(ctx context.Context, data *Conte
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Anomalousdatasize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Anomalousdatasize.IsUnknown() {
 		data.Anomalousdatasize = types.Int64Null()
 	}
 	if val, ok := getResponseData["anomalousttfbtime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Anomalousttfbtime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Anomalousttfbtime.IsUnknown() {
 		data.Anomalousttfbtime = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxbodylen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxbodylen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxbodylen.IsUnknown() {
 		data.Maxbodylen = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
 		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["timeoutaction"]; ok && val != nil {
 		data.Timeoutaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Timeoutaction.IsUnknown() {
 		data.Timeoutaction = types.StringNull()
 	}
 	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
 		data.Wasmmodule = types.StringValue(val.(string))
-	} else {
+	} else if data.Wasmmodule.IsUnknown() {
 		data.Wasmmodule = types.StringNull()
 	}
 

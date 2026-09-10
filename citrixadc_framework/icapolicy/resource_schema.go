@@ -146,6 +146,8 @@ func icapolicySetAttrFromGet(ctx context.Context, data *IcapolicyResourceModel, 
 	// Convert API response to model.
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
+	} else if data.Action.IsUnknown() {
+		data.Action = types.StringNull()
 	}
 	// comment/logaction carry an empty-string Default; represent an absent value as
 	// "" (not null) so the read-back is consistent with the planned default and the
@@ -169,11 +171,15 @@ func icapolicySetAttrFromGet(ctx context.Context, data *IcapolicyResourceModel, 
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 
 	return data

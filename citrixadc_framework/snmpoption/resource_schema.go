@@ -98,32 +98,32 @@ func snmpoptionSetAttrFromGet(ctx context.Context, data *SnmpoptionResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["customtrap"]; ok && val != nil {
 		data.Customtrap = types.StringValue(val.(string))
-	} else {
+	} else if data.Customtrap.IsUnknown() {
 		data.Customtrap = types.StringNull()
 	}
 	if val, ok := getResponseData["partitionnameintrap"]; ok && val != nil {
 		data.Partitionnameintrap = types.StringValue(val.(string))
-	} else {
+	} else if data.Partitionnameintrap.IsUnknown() {
 		data.Partitionnameintrap = types.StringNull()
 	}
 	if val, ok := getResponseData["severityinfointrap"]; ok && val != nil {
 		data.Severityinfointrap = types.StringValue(val.(string))
-	} else {
+	} else if data.Severityinfointrap.IsUnknown() {
 		data.Severityinfointrap = types.StringNull()
 	}
 	if val, ok := getResponseData["snmpset"]; ok && val != nil {
 		data.Snmpset = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmpset.IsUnknown() {
 		data.Snmpset = types.StringNull()
 	}
 	if val, ok := getResponseData["snmptraplogging"]; ok && val != nil {
 		data.Snmptraplogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmptraplogging.IsUnknown() {
 		data.Snmptraplogging = types.StringNull()
 	}
 	if val, ok := getResponseData["snmptraplogginglevel"]; ok && val != nil {
 		data.Snmptraplogginglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Snmptraplogginglevel.IsUnknown() {
 		data.Snmptraplogginglevel = types.StringNull()
 	}
 

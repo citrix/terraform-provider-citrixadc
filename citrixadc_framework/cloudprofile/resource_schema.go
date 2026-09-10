@@ -220,78 +220,78 @@ func cloudprofileSetAttrFromGet(ctx context.Context, data *CloudprofileResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Azurepollperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Azurepollperiod.IsUnknown() {
 		data.Azurepollperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["azuretagname"]; ok && val != nil {
 		data.Azuretagname = types.StringValue(val.(string))
-	} else {
+	} else if data.Azuretagname.IsUnknown() {
 		data.Azuretagname = types.StringNull()
 	}
 	if val, ok := getResponseData["azuretagvalue"]; ok && val != nil {
 		data.Azuretagvalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Azuretagvalue.IsUnknown() {
 		data.Azuretagvalue = types.StringNull()
 	}
 	if val, ok := getResponseData["boundservicegroupsvctype"]; ok && val != nil {
 		data.Boundservicegroupsvctype = types.StringValue(val.(string))
-	} else {
+	} else if data.Boundservicegroupsvctype.IsUnknown() {
 		data.Boundservicegroupsvctype = types.StringNull()
 	}
 	if val, ok := getResponseData["delay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Delay = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Delay.IsUnknown() {
 		data.Delay = types.Int64Null()
 	}
 	if val, ok := getResponseData["graceful"]; ok && val != nil {
 		data.Graceful = types.StringValue(val.(string))
-	} else {
+	} else if data.Graceful.IsUnknown() {
 		data.Graceful = types.StringNull()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicegroupname.IsUnknown() {
 		data.Servicegroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicetype.IsUnknown() {
 		data.Servicetype = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["vservername"]; ok && val != nil {
 		data.Vservername = types.StringValue(val.(string))
-	} else {
+	} else if data.Vservername.IsUnknown() {
 		data.Vservername = types.StringNull()
 	}
 	if val, ok := getResponseData["vsvrbindsvcport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vsvrbindsvcport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vsvrbindsvcport.IsUnknown() {
 		data.Vsvrbindsvcport = types.Int64Null()
 	}
 
