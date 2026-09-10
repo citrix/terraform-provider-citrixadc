@@ -445,3 +445,61 @@ func TestAccCsvserver_cspolicy_binding_selfHealing(t *testing.T) {
 		},
 	})
 }
+
+// TestAccCsvserver_cspolicy_binding_actionPolicy is a regression guard for GH #1458:
+// when the bound cspolicy has an ACTION (not a targetlbvserver), NITRO omits
+// targetlbvserver from the GET, and targetlbvserver is left UNSET in config
+// (Optional+Computed). The getter must resolve it to null so it is not left Unknown
+// after apply (which failed with "invalid result object after apply" pre-fix). A single
+// step also exercises idempotency via terraform-plugin-testing's implicit post-apply plan.
+const testAccCsvserver_cspolicy_binding_actionPolicy = `
+resource "citrixadc_lbvserver" "tf_lb_ap" {
+  name        = "tf_lb_ap"
+  ipv46       = "10.10.10.44"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_csaction" "tf_csact_ap" {
+  name            = "tf_csact_ap"
+  targetlbvserver = citrixadc_lbvserver.tf_lb_ap.name
+}
+
+resource "citrixadc_cspolicy" "tf_cspol_ap" {
+  policyname = "tf_cspol_ap"
+  rule       = "HTTP.REQ.URL.CONTAINS(\"/app\")"
+  action     = citrixadc_csaction.tf_csact_ap.name
+}
+
+resource "citrixadc_csvserver" "tf_cs_ap" {
+  name        = "tf_cs_ap"
+  ipv46       = "10.10.10.45"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_csvserver_cspolicy_binding" "tf_ap_bind" {
+  name       = citrixadc_csvserver.tf_cs_ap.name
+  policyname = citrixadc_cspolicy.tf_cspol_ap.policyname
+  priority   = 100
+  # targetlbvserver deliberately unset (Optional+Computed); the policy has an action.
+}
+`
+
+func TestAccCsvserver_cspolicy_binding_actionPolicy(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_cspolicy_binding_actionPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_cspolicy_bindingExist("citrixadc_csvserver_cspolicy_binding.tf_ap_bind", nil),
+					// action-based binding -> NITRO omits targetlbvserver -> resolved to null.
+					resource.TestCheckNoResourceAttr("citrixadc_csvserver_cspolicy_binding.tf_ap_bind", "targetlbvserver"),
+				),
+			},
+		},
+	})
+}
