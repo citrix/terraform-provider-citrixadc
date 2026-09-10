@@ -77,17 +77,17 @@ func vpnclientlessaccesspolicySetAttrFromGet(ctx context.Context, data *Vpnclien
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["profilename"]; ok && val != nil {
 		data.Profilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Profilename.IsUnknown() {
 		data.Profilename = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
-	} else {
+	} else if data.Rule.IsUnknown() {
 		data.Rule = types.StringNull()
 	}
 

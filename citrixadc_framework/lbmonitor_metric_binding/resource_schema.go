@@ -100,26 +100,26 @@ func lbmonitor_metric_bindingSetAttrFromGet(ctx context.Context, data *Lbmonitor
 	// Convert API response to model
 	if val, ok := getResponseData["metric"]; ok && val != nil {
 		data.Metric = types.StringValue(val.(string))
-	} else {
+	} else if data.Metric.IsUnknown() {
 		data.Metric = types.StringNull()
 	}
 	if val, ok := getResponseData["metricthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Metricthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Metricthreshold.IsUnknown() {
 		data.Metricthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["metricweight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Metricweight = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Metricweight.IsUnknown() {
 		data.Metricweight = types.Int64Null()
 	}
 	if val, ok := getResponseData["monitorname"]; ok && val != nil {
 		data.Monitorname = types.StringValue(val.(string))
-	} else {
+	} else if data.Monitorname.IsUnknown() {
 		data.Monitorname = types.StringNull()
 	}
 

@@ -120,6 +120,8 @@ func responderhtmlpageSetAttrFromGet(ctx context.Context, data *Responderhtmlpag
 	// configured value (omit-on-default trap / ForceNew churn guard).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if data.Cacertfile.IsUnknown() {
 		data.Cacertfile = types.StringNull()

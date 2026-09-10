@@ -67,12 +67,12 @@ func mapdmrSetAttrFromGet(ctx context.Context, data *MapdmrResourceModel, getRes
 	// Convert API response to model
 	if val, ok := getResponseData["bripv6prefix"]; ok && val != nil {
 		data.Bripv6prefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Bripv6prefix.IsUnknown() {
 		data.Bripv6prefix = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

@@ -250,12 +250,12 @@ func sslcertkeySetAttrFromGet(ctx context.Context, data *SslCertKeyResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["cert"]; ok && val != nil {
 		data.Cert = types.StringValue(val.(string))
-	} else {
+	} else if data.Cert.IsUnknown() {
 		data.Cert = types.StringNull()
 	}
 	if val, ok := getResponseData["key"]; ok && val != nil {
 		data.Key = types.StringValue(val.(string))
-	} else {
+	} else if data.Key.IsUnknown() {
 		data.Key = types.StringNull()
 	}
 	// Password and passplain are not returned by NITRO API - keep existing state
@@ -263,34 +263,34 @@ func sslcertkeySetAttrFromGet(ctx context.Context, data *SslCertKeyResourceModel
 	// They will retain their configured values from the plan
 	if val, ok := getResponseData["fipskey"]; ok && val != nil {
 		data.Fipskey = types.StringValue(val.(string))
-	} else {
+	} else if data.Fipskey.IsUnknown() {
 		data.Fipskey = types.StringNull()
 	}
 	if val, ok := getResponseData["hsmkey"]; ok && val != nil {
 		data.Hsmkey = types.StringValue(val.(string))
-	} else {
+	} else if data.Hsmkey.IsUnknown() {
 		data.Hsmkey = types.StringNull()
 	}
 	if val, ok := getResponseData["inform"]; ok && val != nil {
 		data.Inform = types.StringValue(val.(string))
-	} else {
+	} else if data.Inform.IsUnknown() {
 		data.Inform = types.StringNull()
 	}
 	if val, ok := getResponseData["expirymonitor"]; ok && val != nil {
 		data.Expirymonitor = types.StringValue(val.(string))
-	} else {
+	} else if data.Expirymonitor.IsUnknown() {
 		data.Expirymonitor = types.StringNull()
 	}
 	if val, ok := getResponseData["notificationperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.NotificationPeriod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.NotificationPeriod.IsUnknown() {
 		data.NotificationPeriod = types.Int64Null()
 	}
 	if val, ok := getResponseData["linkcertkeyname"]; ok && val != nil {
 		data.LinkCertKeyName = types.StringValue(val.(string))
-	} else {
+	} else if data.LinkCertKeyName.IsUnknown() {
 		data.LinkCertKeyName = types.StringNull()
 	}
 	// if val, ok := getResponseData["nodomaincheck"]; ok && val != nil {
@@ -300,17 +300,17 @@ func sslcertkeySetAttrFromGet(ctx context.Context, data *SslCertKeyResourceModel
 	// }
 	if val, ok := getResponseData["ocspstaplingcache"]; ok && val != nil {
 		data.OcspStaplingCache = types.BoolValue(val.(bool))
-	} else {
+	} else if data.OcspStaplingCache.IsUnknown() {
 		data.OcspStaplingCache = types.BoolNull()
 	}
 	if val, ok := getResponseData["deletecertkeyfilesonremoval"]; ok && val != nil {
 		data.DeleteCertKeyFilesOnRemoval = types.StringValue(val.(string))
-	} else {
+	} else if data.DeleteCertKeyFilesOnRemoval.IsUnknown() {
 		data.DeleteCertKeyFilesOnRemoval = types.StringNull()
 	}
 	if val, ok := getResponseData["deletefromdevice"]; ok && val != nil {
 		data.DeleteFromDevice = types.BoolValue(val.(bool))
-	} else {
+	} else if data.DeleteFromDevice.IsUnknown() {
 		data.DeleteFromDevice = types.BoolNull()
 	}
 

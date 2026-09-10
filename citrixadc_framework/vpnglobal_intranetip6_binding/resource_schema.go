@@ -90,11 +90,15 @@ func vpnglobal_intranetip6_bindingSetAttrFromGet(ctx context.Context, data *Vpng
 
 	if val, ok := getResponseData["intranetip6"]; ok && val != nil {
 		data.Intranetip6 = types.StringValue(val.(string))
+	} else if data.Intranetip6.IsUnknown() {
+		data.Intranetip6 = types.StringNull()
 	}
 	if val, ok := getResponseData["numaddr"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Numaddr = types.Int64Value(intVal)
 		}
+	} else if data.Numaddr.IsUnknown() {
+		data.Numaddr = types.Int64Null()
 	}
 
 	// Set ID for the resource (legacy single-key plain value: intranetip6)

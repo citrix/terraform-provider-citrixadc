@@ -55,6 +55,8 @@ func nschannelparamSetAttrFromGet(ctx context.Context, data *NschannelparamResou
 	// Convert API response to model
 	if val, ok := getResponseData["vfautorecover"]; ok && val != nil {
 		data.Vfautorecover = types.StringValue(val.(string))
+	} else if data.Vfautorecover.IsUnknown() {
+		data.Vfautorecover = types.StringNull()
 	}
 
 	return data

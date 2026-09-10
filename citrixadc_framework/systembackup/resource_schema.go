@@ -120,32 +120,32 @@ func systembackupSetAttrFromGet(ctx context.Context, data *SystembackupResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["filename"]; ok && val != nil {
 		data.Filename = types.StringValue(val.(string))
-	} else {
+	} else if data.Filename.IsUnknown() {
 		data.Filename = types.StringNull()
 	}
 	if val, ok := getResponseData["includekernel"]; ok && val != nil {
 		data.Includekernel = types.StringValue(val.(string))
-	} else {
+	} else if data.Includekernel.IsUnknown() {
 		data.Includekernel = types.StringNull()
 	}
 	if val, ok := getResponseData["level"]; ok && val != nil {
 		data.Level = types.StringValue(val.(string))
-	} else {
+	} else if data.Level.IsUnknown() {
 		data.Level = types.StringNull()
 	}
 	if val, ok := getResponseData["skipbackup"]; ok && val != nil {
 		data.Skipbackup = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Skipbackup.IsUnknown() {
 		data.Skipbackup = types.BoolNull()
 	}
 	if val, ok := getResponseData["uselocaltimezone"]; ok && val != nil {
 		data.Uselocaltimezone = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Uselocaltimezone.IsUnknown() {
 		data.Uselocaltimezone = types.BoolNull()
 	}
 

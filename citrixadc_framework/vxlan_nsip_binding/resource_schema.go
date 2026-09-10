@@ -106,16 +106,22 @@ func vxlan_nsip_bindingSetAttrFromGet(ctx context.Context, data *VxlanNsipBindin
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Vxlanid = types.Int64Value(intVal)
 			}
+		} else if data.Vxlanid.IsUnknown() {
+			data.Vxlanid = types.Int64Null()
 		}
 	}
 	if data.Ipaddress.IsNull() || data.Ipaddress.IsUnknown() {
 		if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 			data.Ipaddress = types.StringValue(val.(string))
+		} else if data.Ipaddress.IsUnknown() {
+			data.Ipaddress = types.StringNull()
 		}
 	}
 	// netmask is server-overridable; adopt the value from GET to reflect actual state.
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
+	} else if data.Netmask.IsUnknown() {
+		data.Netmask = types.StringNull()
 	}
 
 	// Set the composite ID for the resource.

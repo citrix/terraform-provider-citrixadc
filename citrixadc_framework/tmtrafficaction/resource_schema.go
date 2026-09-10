@@ -237,6 +237,8 @@ func tmtrafficactionSetAttrFromGet(ctx context.Context, data *TmtrafficactionRes
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["passwdexpression"]; ok && val != nil {
 		data.Passwdexpression = types.StringValue(val.(string))

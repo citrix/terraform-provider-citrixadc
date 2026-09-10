@@ -52,6 +52,8 @@ func ntpsyncSetAttrFromGet(ctx context.Context, data *NtpsyncResourceModel, getR
 
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 	// else: preserve the existing configured/state value — never clobber the
 	// Required "state" attribute with null if NITRO omits it from GET.

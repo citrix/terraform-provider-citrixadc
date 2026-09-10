@@ -142,37 +142,37 @@ func botprofile_logexpression_bindingSetAttrFromGet(ctx context.Context, data *B
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_log_expression_enabled"]; ok && val != nil {
 		data.BotLogExpressionEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotLogExpressionEnabled.IsUnknown() {
 		data.BotLogExpressionEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_log_expression_name"]; ok && val != nil {
 		data.BotLogExpressionName = types.StringValue(val.(string))
-	} else {
+	} else if data.BotLogExpressionName.IsUnknown() {
 		data.BotLogExpressionName = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_log_expression_value"]; ok && val != nil {
 		data.BotLogExpressionValue = types.StringValue(val.(string))
-	} else {
+	} else if data.BotLogExpressionValue.IsUnknown() {
 		data.BotLogExpressionValue = types.StringNull()
 	}
 	if val, ok := getResponseData["logexpression"]; ok && val != nil {
 		data.Logexpression = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Logexpression.IsUnknown() {
 		data.Logexpression = types.BoolNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

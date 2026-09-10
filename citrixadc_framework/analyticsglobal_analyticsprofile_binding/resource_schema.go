@@ -57,7 +57,7 @@ func analyticsglobal_analyticsprofile_bindingSetAttrFromGet(ctx context.Context,
 	// Convert API response to model
 	if val, ok := getResponseData["analyticsprofile"]; ok && val != nil {
 		data.Analyticsprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Analyticsprofile.IsUnknown() {
 		data.Analyticsprofile = types.StringNull()
 	}
 

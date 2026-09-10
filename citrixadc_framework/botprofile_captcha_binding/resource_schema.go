@@ -212,7 +212,7 @@ func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *Botprof
 
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_captcha_action"]; ok && val != nil {
@@ -228,62 +228,62 @@ func botprofile_captcha_bindingSetAttrFromGet(ctx context.Context, data *Botprof
 	}
 	if val, ok := getResponseData["bot_captcha_enabled"]; ok && val != nil {
 		data.BotCaptchaEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotCaptchaEnabled.IsUnknown() {
 		data.BotCaptchaEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_captcha_url"]; ok && val != nil {
 		data.BotCaptchaUrl = types.StringValue(val.(string))
-	} else {
+	} else if data.BotCaptchaUrl.IsUnknown() {
 		data.BotCaptchaUrl = types.StringNull()
 	}
 	if val, ok := getResponseData["captcharesource"]; ok && val != nil {
 		data.Captcharesource = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Captcharesource.IsUnknown() {
 		data.Captcharesource = types.BoolNull()
 	}
 	if val, ok := getResponseData["graceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Graceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Graceperiod.IsUnknown() {
 		data.Graceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["muteperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Muteperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Muteperiod.IsUnknown() {
 		data.Muteperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["requestsizelimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Requestsizelimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Requestsizelimit.IsUnknown() {
 		data.Requestsizelimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["retryattempts"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retryattempts = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retryattempts.IsUnknown() {
 		data.Retryattempts = types.Int64Null()
 	}
 	if val, ok := getResponseData["waittime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Waittime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Waittime.IsUnknown() {
 		data.Waittime = types.Int64Null()
 	}
 

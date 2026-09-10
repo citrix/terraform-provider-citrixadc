@@ -249,6 +249,8 @@ func transformactionSetAttrFromGet(ctx context.Context, data *TransformactionRes
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

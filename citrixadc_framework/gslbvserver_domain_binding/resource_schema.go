@@ -213,22 +213,32 @@ func gslbvserver_domain_bindingSetAttrFromGet(ctx context.Context, data *Gslbvse
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookietimeout = types.Int64Value(intVal)
 		}
+	} else if data.Cookietimeout.IsUnknown() {
+		data.Cookietimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["domainname"]; ok && val != nil {
 		data.Domainname = types.StringValue(val.(string))
+	} else if data.Domainname.IsUnknown() {
+		data.Domainname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["sitedomainttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sitedomainttl = types.Int64Value(intVal)
 		}
+	} else if data.Sitedomainttl.IsUnknown() {
+		data.Sitedomainttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
+	} else if data.Ttl.IsUnknown() {
+		data.Ttl = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

@@ -236,72 +236,72 @@ func appfwprofile_cmdinjection_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["as_scan_location_cmd"]; ok && val != nil {
 		data.AsScanLocationCmd = types.StringValue(val.(string))
-	} else {
+	} else if data.AsScanLocationCmd.IsUnknown() {
 		data.AsScanLocationCmd = types.StringNull()
 	}
 	if val, ok := getResponseData["as_value_expr_cmd"]; ok && val != nil {
 		data.AsValueExprCmd = types.StringValue(val.(string))
-	} else {
+	} else if data.AsValueExprCmd.IsUnknown() {
 		data.AsValueExprCmd = types.StringNull()
 	}
 	if val, ok := getResponseData["as_value_type_cmd"]; ok && val != nil {
 		data.AsValueTypeCmd = types.StringValue(val.(string))
-	} else {
+	} else if data.AsValueTypeCmd.IsUnknown() {
 		data.AsValueTypeCmd = types.StringNull()
 	}
 	if val, ok := getResponseData["cmdinjection"]; ok && val != nil {
 		data.Cmdinjection = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmdinjection.IsUnknown() {
 		data.Cmdinjection = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["formactionurl_cmd"]; ok && val != nil {
 		data.FormactionurlCmd = types.StringValue(val.(string))
-	} else {
+	} else if data.FormactionurlCmd.IsUnknown() {
 		data.FormactionurlCmd = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex_cmd"]; ok && val != nil {
 		data.IsregexCmd = types.StringValue(val.(string))
-	} else {
+	} else if data.IsregexCmd.IsUnknown() {
 		data.IsregexCmd = types.StringNull()
 	}
 	if val, ok := getResponseData["isvalueregex_cmd"]; ok && val != nil {
 		data.IsvalueregexCmd = types.StringValue(val.(string))
-	} else {
+	} else if data.IsvalueregexCmd.IsUnknown() {
 		data.IsvalueregexCmd = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

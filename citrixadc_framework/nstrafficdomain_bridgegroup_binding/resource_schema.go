@@ -73,14 +73,14 @@ func nstrafficdomain_bridgegroup_bindingSetAttrFromGet(ctx context.Context, data
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bridgegroup = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bridgegroup.IsUnknown() {
 		data.Bridgegroup = types.Int64Null()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 

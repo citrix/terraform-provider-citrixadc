@@ -71,12 +71,12 @@ func lsngroup_lsntransportprofile_bindingSetAttrFromGet(ctx context.Context, dat
 	// Convert API response to model
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["transportprofilename"]; ok && val != nil {
 		data.Transportprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Transportprofilename.IsUnknown() {
 		data.Transportprofilename = types.StringNull()
 	}
 

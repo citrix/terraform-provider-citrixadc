@@ -333,57 +333,57 @@ func sslcertreqSetAttrFromGet(ctx context.Context, data *SslcertreqResourceModel
 	// challengepassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["commonname"]; ok && val != nil {
 		data.Commonname = types.StringValue(val.(string))
-	} else {
+	} else if data.Commonname.IsUnknown() {
 		data.Commonname = types.StringNull()
 	}
 	if val, ok := getResponseData["companyname"]; ok && val != nil {
 		data.Companyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Companyname.IsUnknown() {
 		data.Companyname = types.StringNull()
 	}
 	if val, ok := getResponseData["countryname"]; ok && val != nil {
 		data.Countryname = types.StringValue(val.(string))
-	} else {
+	} else if data.Countryname.IsUnknown() {
 		data.Countryname = types.StringNull()
 	}
 	if val, ok := getResponseData["digestmethod"]; ok && val != nil {
 		data.Digestmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Digestmethod.IsUnknown() {
 		data.Digestmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["emailaddress"]; ok && val != nil {
 		data.Emailaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Emailaddress.IsUnknown() {
 		data.Emailaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["fipskeyname"]; ok && val != nil {
 		data.Fipskeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Fipskeyname.IsUnknown() {
 		data.Fipskeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["keyfile"]; ok && val != nil {
 		data.Keyfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyfile.IsUnknown() {
 		data.Keyfile = types.StringNull()
 	}
 	if val, ok := getResponseData["keyform"]; ok && val != nil {
 		data.Keyform = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyform.IsUnknown() {
 		data.Keyform = types.StringNull()
 	}
 	if val, ok := getResponseData["localityname"]; ok && val != nil {
 		data.Localityname = types.StringValue(val.(string))
-	} else {
+	} else if data.Localityname.IsUnknown() {
 		data.Localityname = types.StringNull()
 	}
 	if val, ok := getResponseData["organizationname"]; ok && val != nil {
 		data.Organizationname = types.StringValue(val.(string))
-	} else {
+	} else if data.Organizationname.IsUnknown() {
 		data.Organizationname = types.StringNull()
 	}
 	if val, ok := getResponseData["organizationunitname"]; ok && val != nil {
 		data.Organizationunitname = types.StringValue(val.(string))
-	} else {
+	} else if data.Organizationunitname.IsUnknown() {
 		data.Organizationunitname = types.StringNull()
 	}
 	// pempassphrase is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -391,17 +391,17 @@ func sslcertreqSetAttrFromGet(ctx context.Context, data *SslcertreqResourceModel
 	// pempassphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["reqfile"]; ok && val != nil {
 		data.Reqfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Reqfile.IsUnknown() {
 		data.Reqfile = types.StringNull()
 	}
 	if val, ok := getResponseData["statename"]; ok && val != nil {
 		data.Statename = types.StringValue(val.(string))
-	} else {
+	} else if data.Statename.IsUnknown() {
 		data.Statename = types.StringNull()
 	}
 	if val, ok := getResponseData["subjectaltname"]; ok && val != nil {
 		data.Subjectaltname = types.StringValue(val.(string))
-	} else {
+	} else if data.Subjectaltname.IsUnknown() {
 		data.Subjectaltname = types.StringNull()
 	}
 

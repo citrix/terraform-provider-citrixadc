@@ -316,46 +316,46 @@ func ipsecprofileSetAttrFromGet(ctx context.Context, data *IpsecprofileResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ikeretryinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ikeretryinterval.IsUnknown() {
 		data.Ikeretryinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["ikeversion"]; ok && val != nil {
 		data.Ikeversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Ikeversion.IsUnknown() {
 		data.Ikeversion = types.StringNull()
 	}
 	if val, ok := getResponseData["lifetime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Lifetime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Lifetime.IsUnknown() {
 		data.Lifetime = types.Int64Null()
 	}
 	if val, ok := getResponseData["livenesscheckinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Livenesscheckinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Livenesscheckinterval.IsUnknown() {
 		data.Livenesscheckinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["peerpublickey"]; ok && val != nil {
 		data.Peerpublickey = types.StringValue(val.(string))
-	} else {
+	} else if data.Peerpublickey.IsUnknown() {
 		data.Peerpublickey = types.StringNull()
 	}
 	if val, ok := getResponseData["perfectforwardsecrecy"]; ok && val != nil {
 		data.Perfectforwardsecrecy = types.StringValue(val.(string))
-	} else {
+	} else if data.Perfectforwardsecrecy.IsUnknown() {
 		data.Perfectforwardsecrecy = types.StringNull()
 	}
 	if val, ok := getResponseData["privatekey"]; ok && val != nil {
 		data.Privatekey = types.StringValue(val.(string))
-	} else {
+	} else if data.Privatekey.IsUnknown() {
 		data.Privatekey = types.StringNull()
 	}
 	// psk is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -363,21 +363,21 @@ func ipsecprofileSetAttrFromGet(ctx context.Context, data *IpsecprofileResourceM
 	// psk_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["publickey"]; ok && val != nil {
 		data.Publickey = types.StringValue(val.(string))
-	} else {
+	} else if data.Publickey.IsUnknown() {
 		data.Publickey = types.StringNull()
 	}
 	if val, ok := getResponseData["replaywindowsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Replaywindowsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Replaywindowsize.IsUnknown() {
 		data.Replaywindowsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["retransmissiontime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retransmissiontime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retransmissiontime.IsUnknown() {
 		data.Retransmissiontime = types.Int64Null()
 	}
 

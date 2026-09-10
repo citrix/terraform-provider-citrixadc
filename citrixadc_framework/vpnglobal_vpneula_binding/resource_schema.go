@@ -73,6 +73,8 @@ func vpnglobal_vpneula_bindingSetAttrFromGet(ctx context.Context, data *Vpngloba
 	// Convert API response to model
 	if val, ok := getResponseData["eula"]; ok && val != nil {
 		data.Eula = types.StringValue(val.(string))
+	} else if data.Eula.IsUnknown() {
+		data.Eula = types.StringNull()
 	}
 	// NOTE: gotopriorityexpression is a write-only / non-echoed input. The NITRO
 	// GET response for this binding never returns it, so preserve the existing

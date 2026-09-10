@@ -116,15 +116,23 @@ func vlan_linkset_bindingSetAttrFromGet(ctx context.Context, data *VlanLinksetBi
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlanid = types.Int64Value(intVal)
 		}
+	} else if data.Vlanid.IsUnknown() {
+		data.Vlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
+	} else if data.Ifnum.IsUnknown() {
+		data.Ifnum = types.StringNull()
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
 		data.Ownergroup = types.StringValue(val.(string))
+	} else if data.Ownergroup.IsUnknown() {
+		data.Ownergroup = types.StringNull()
 	}
 	if val, ok := getResponseData["tagged"]; ok && val != nil {
 		data.Tagged = types.BoolValue(val.(bool))
+	} else if data.Tagged.IsUnknown() {
+		data.Tagged = types.BoolNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.

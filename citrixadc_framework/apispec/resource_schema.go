@@ -111,27 +111,27 @@ func apispecSetAttrFromGet(ctx context.Context, data *ApispecResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["encrypted"]; ok && val != nil {
 		data.Encrypted = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Encrypted.IsUnknown() {
 		data.Encrypted = types.BoolNull()
 	}
 	if val, ok := getResponseData["file"]; ok && val != nil {
 		data.File = types.StringValue(val.(string))
-	} else {
+	} else if data.File.IsUnknown() {
 		data.File = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["skipvalidation"]; ok && val != nil {
 		data.Skipvalidation = types.StringValue(val.(string))
-	} else {
+	} else if data.Skipvalidation.IsUnknown() {
 		data.Skipvalidation = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 

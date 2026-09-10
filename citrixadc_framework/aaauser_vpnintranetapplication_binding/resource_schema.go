@@ -85,17 +85,17 @@ func aaauser_vpnintranetapplication_bindingSetAttrFromGet(ctx context.Context, d
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["intranetapplication"]; ok && val != nil {
 		data.Intranetapplication = types.StringValue(val.(string))
-	} else {
+	} else if data.Intranetapplication.IsUnknown() {
 		data.Intranetapplication = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 

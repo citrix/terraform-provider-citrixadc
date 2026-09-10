@@ -249,7 +249,7 @@ func nscentralmanagementserverSetAttrFromGet(ctx context.Context, data *Nscentra
 	// Convert API response to model
 	if val, ok := getResponseData["activationcode"]; ok && val != nil {
 		data.Activationcode = types.StringValue(val.(string))
-	} else {
+	} else if data.Activationcode.IsUnknown() {
 		data.Activationcode = types.StringNull()
 	}
 	// adcpassword is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -257,17 +257,17 @@ func nscentralmanagementserverSetAttrFromGet(ctx context.Context, data *Nscentra
 	// adcpassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["adcusername"]; ok && val != nil {
 		data.Adcusername = types.StringValue(val.(string))
-	} else {
+	} else if data.Adcusername.IsUnknown() {
 		data.Adcusername = types.StringNull()
 	}
 	if val, ok := getResponseData["deviceprofilename"]; ok && val != nil {
 		data.Deviceprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Deviceprofilename.IsUnknown() {
 		data.Deviceprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -275,22 +275,22 @@ func nscentralmanagementserverSetAttrFromGet(ctx context.Context, data *Nscentra
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
-	} else {
+	} else if data.Username.IsUnknown() {
 		data.Username = types.StringNull()
 	}
 	if val, ok := getResponseData["validatecert"]; ok && val != nil {
 		data.Validatecert = types.StringValue(val.(string))
-	} else {
+	} else if data.Validatecert.IsUnknown() {
 		data.Validatecert = types.StringNull()
 	}
 

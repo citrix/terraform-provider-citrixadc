@@ -131,22 +131,24 @@ func csactionSetAttrFromGet(ctx context.Context, data *CsactionResourceModel, ge
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
 		data.Targetlbvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Targetlbvserver.IsUnknown() {
 		data.Targetlbvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
 		data.Targetvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Targetvserver.IsUnknown() {
 		data.Targetvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["targetvserverexpr"]; ok && val != nil {
 		data.Targetvserverexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Targetvserverexpr.IsUnknown() {
 		data.Targetvserverexpr = types.StringNull()
 	}
 

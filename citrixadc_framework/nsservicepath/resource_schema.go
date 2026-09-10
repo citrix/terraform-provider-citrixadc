@@ -56,7 +56,7 @@ func nsservicepathSetAttrFromGet(ctx context.Context, data *NsservicepathResourc
 	// Convert API response to model
 	if val, ok := getResponseData["servicepathname"]; ok && val != nil {
 		data.Servicepathname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicepathname.IsUnknown() {
 		data.Servicepathname = types.StringNull()
 	}
 

@@ -132,17 +132,25 @@ func tunnelglobal_tunneltrafficpolicy_bindingSetAttrFromGet(ctx context.Context,
 	// Echoed fields - safe to adopt from the GET response.
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
+	} else if data.Feature.IsUnknown() {
+		data.Feature = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 	// gotopriorityexpression and type are non-echoed inputs - preserve
 	// whatever the plan/state already holds (do not overwrite or null them out).

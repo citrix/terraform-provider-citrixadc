@@ -324,96 +324,96 @@ func authenticationradiusactionSetAttrFromGet(ctx context.Context, data *Authent
 	// Convert API response to model
 	if val, ok := getResponseData["accounting"]; ok && val != nil {
 		data.Accounting = types.StringValue(val.(string))
-	} else {
+	} else if data.Accounting.IsUnknown() {
 		data.Accounting = types.StringNull()
 	}
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["authservretry"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Authservretry = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Authservretry.IsUnknown() {
 		data.Authservretry = types.Int64Null()
 	}
 	if val, ok := getResponseData["authtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Authtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Authtimeout.IsUnknown() {
 		data.Authtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["callingstationid"]; ok && val != nil {
 		data.Callingstationid = types.StringValue(val.(string))
-	} else {
+	} else if data.Callingstationid.IsUnknown() {
 		data.Callingstationid = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["ipattributetype"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ipattributetype = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ipattributetype.IsUnknown() {
 		data.Ipattributetype = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipvendorid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ipvendorid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ipvendorid.IsUnknown() {
 		data.Ipvendorid = types.Int64Null()
 	}
 	if val, ok := getResponseData["messageauthenticator"]; ok && val != nil {
 		data.Messageauthenticator = types.StringValue(val.(string))
-	} else {
+	} else if data.Messageauthenticator.IsUnknown() {
 		data.Messageauthenticator = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["passencoding"]; ok && val != nil {
 		data.Passencoding = types.StringValue(val.(string))
-	} else {
+	} else if data.Passencoding.IsUnknown() {
 		data.Passencoding = types.StringNull()
 	}
 	if val, ok := getResponseData["pwdattributetype"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pwdattributetype = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pwdattributetype.IsUnknown() {
 		data.Pwdattributetype = types.Int64Null()
 	}
 	if val, ok := getResponseData["pwdvendorid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pwdvendorid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pwdvendorid.IsUnknown() {
 		data.Pwdvendorid = types.Int64Null()
 	}
 	if val, ok := getResponseData["radattributetype"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Radattributetype = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Radattributetype.IsUnknown() {
 		data.Radattributetype = types.Int64Null()
 	}
 	if val, ok := getResponseData["radgroupseparator"]; ok && val != nil {
 		data.Radgroupseparator = types.StringValue(val.(string))
-	} else {
+	} else if data.Radgroupseparator.IsUnknown() {
 		data.Radgroupseparator = types.StringNull()
 	}
 	if val, ok := getResponseData["radgroupsprefix"]; ok && val != nil {
 		data.Radgroupsprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Radgroupsprefix.IsUnknown() {
 		data.Radgroupsprefix = types.StringNull()
 	}
 	// radkey is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -421,51 +421,51 @@ func authenticationradiusactionSetAttrFromGet(ctx context.Context, data *Authent
 	// radkey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["radnasid"]; ok && val != nil {
 		data.Radnasid = types.StringValue(val.(string))
-	} else {
+	} else if data.Radnasid.IsUnknown() {
 		data.Radnasid = types.StringNull()
 	}
 	if val, ok := getResponseData["radnasip"]; ok && val != nil {
 		data.Radnasip = types.StringValue(val.(string))
-	} else {
+	} else if data.Radnasip.IsUnknown() {
 		data.Radnasip = types.StringNull()
 	}
 	if val, ok := getResponseData["radvendorid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Radvendorid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Radvendorid.IsUnknown() {
 		data.Radvendorid = types.Int64Null()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serverport.IsUnknown() {
 		data.Serverport = types.Int64Null()
 	}
 	if val, ok := getResponseData["targetlbvserver"]; ok && val != nil {
 		data.Targetlbvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Targetlbvserver.IsUnknown() {
 		data.Targetlbvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["transport"]; ok && val != nil {
 		data.Transport = types.StringValue(val.(string))
-	} else {
+	} else if data.Transport.IsUnknown() {
 		data.Transport = types.StringNull()
 	}
 	if val, ok := getResponseData["tunnelendpointclientip"]; ok && val != nil {
 		data.Tunnelendpointclientip = types.StringValue(val.(string))
-	} else {
+	} else if data.Tunnelendpointclientip.IsUnknown() {
 		data.Tunnelendpointclientip = types.StringNull()
 	}
 

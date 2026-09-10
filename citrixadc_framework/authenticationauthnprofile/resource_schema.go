@@ -122,29 +122,29 @@ func authenticationauthnprofileSetAttrFromGet(ctx context.Context, data *Authent
 	// Convert API response to model
 	if val, ok := getResponseData["authenticationdomain"]; ok && val != nil {
 		data.Authenticationdomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Authenticationdomain.IsUnknown() {
 		data.Authenticationdomain = types.StringNull()
 	}
 	if val, ok := getResponseData["authenticationhost"]; ok && val != nil {
 		data.Authenticationhost = types.StringValue(val.(string))
-	} else {
+	} else if data.Authenticationhost.IsUnknown() {
 		data.Authenticationhost = types.StringNull()
 	}
 	if val, ok := getResponseData["authenticationlevel"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Authenticationlevel = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Authenticationlevel.IsUnknown() {
 		data.Authenticationlevel = types.Int64Null()
 	}
 	if val, ok := getResponseData["authnvsname"]; ok && val != nil {
 		data.Authnvsname = types.StringValue(val.(string))
-	} else {
+	} else if data.Authnvsname.IsUnknown() {
 		data.Authnvsname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

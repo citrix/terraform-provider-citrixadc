@@ -67,12 +67,12 @@ func sslpolicylabelSetAttrFromGet(ctx context.Context, data *SslpolicylabelResou
 	// Convert API response to model
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
+	} else if data.Labelname.IsUnknown() {
 		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 

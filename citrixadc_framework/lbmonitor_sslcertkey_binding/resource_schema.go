@@ -118,12 +118,18 @@ func lbmonitor_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Lbmon
 	// ca is Computed and is always echoed by GET (true/false) — adopt it.
 	if val, ok := getResponseData["ca"]; ok && val != nil {
 		data.Ca = types.BoolValue(val.(bool))
+	} else if data.Ca.IsUnknown() {
+		data.Ca = types.BoolNull()
 	}
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
+	} else if data.Certkeyname.IsUnknown() {
+		data.Certkeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["monitorname"]; ok && val != nil {
 		data.Monitorname = types.StringValue(val.(string))
+	} else if data.Monitorname.IsUnknown() {
+		data.Monitorname = types.StringNull()
 	}
 	// crlcheck and ocspcheck are Optional-only inputs. NITRO either omits them or
 	// returns a server default (e.g. ocspcheck="Optional" for CA bindings) that the

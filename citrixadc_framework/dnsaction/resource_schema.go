@@ -167,17 +167,17 @@ func dnsactionSetAttrFromGet(ctx context.Context, data *DnsactionResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["actionname"]; ok && val != nil {
 		data.Actionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Actionname.IsUnknown() {
 		data.Actionname = types.StringNull()
 	}
 	if val, ok := getResponseData["actiontype"]; ok && val != nil {
 		data.Actiontype = types.StringValue(val.(string))
-	} else {
+	} else if data.Actiontype.IsUnknown() {
 		data.Actiontype = types.StringNull()
 	}
 	if val, ok := getResponseData["dnsprofilename"]; ok && val != nil {
 		data.Dnsprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnsprofilename.IsUnknown() {
 		data.Dnsprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
@@ -221,7 +221,7 @@ func dnsactionSetAttrFromGet(ctx context.Context, data *DnsactionResourceModel, 
 	}
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
 		data.Viewname = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewname.IsUnknown() {
 		data.Viewname = types.StringNull()
 	}
 

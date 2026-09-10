@@ -319,61 +319,61 @@ func appfwsettingsSetAttrFromGet(ctx context.Context, data *AppfwsettingsResourc
 	// Convert API response to model
 	if val, ok := getResponseData["ceflogging"]; ok && val != nil {
 		data.Ceflogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Ceflogging.IsUnknown() {
 		data.Ceflogging = types.StringNull()
 	}
 	if val, ok := getResponseData["centralizedlearning"]; ok && val != nil {
 		data.Centralizedlearning = types.StringValue(val.(string))
-	} else {
+	} else if data.Centralizedlearning.IsUnknown() {
 		data.Centralizedlearning = types.StringNull()
 	}
 	if val, ok := getResponseData["clientiploggingheader"]; ok && val != nil {
 		data.Clientiploggingheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientiploggingheader.IsUnknown() {
 		data.Clientiploggingheader = types.StringNull()
 	}
 	if val, ok := getResponseData["cookieflags"]; ok && val != nil {
 		data.Cookieflags = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookieflags.IsUnknown() {
 		data.Cookieflags = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiepostencryptprefix"]; ok && val != nil {
 		data.Cookiepostencryptprefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiepostencryptprefix.IsUnknown() {
 		data.Cookiepostencryptprefix = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultprofile"]; ok && val != nil {
 		data.Defaultprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultprofile.IsUnknown() {
 		data.Defaultprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["entitydecoding"]; ok && val != nil {
 		data.Entitydecoding = types.StringValue(val.(string))
-	} else {
+	} else if data.Entitydecoding.IsUnknown() {
 		data.Entitydecoding = types.StringNull()
 	}
 	if val, ok := getResponseData["geolocationlogging"]; ok && val != nil {
 		data.Geolocationlogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Geolocationlogging.IsUnknown() {
 		data.Geolocationlogging = types.StringNull()
 	}
 	if val, ok := getResponseData["importsizelimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Importsizelimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Importsizelimit.IsUnknown() {
 		data.Importsizelimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["learnratelimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Learnratelimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Learnratelimit.IsUnknown() {
 		data.Learnratelimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["logmalformedreq"]; ok && val != nil {
 		data.Logmalformedreq = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmalformedreq.IsUnknown() {
 		data.Logmalformedreq = types.StringNull()
 	}
 	if val, ok := getResponseData["malformedreqaction"]; ok && val != nil {
@@ -394,63 +394,63 @@ func appfwsettingsSetAttrFromGet(ctx context.Context, data *AppfwsettingsResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Proxyport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Proxyport.IsUnknown() {
 		data.Proxyport = types.Int64Null()
 	}
 	if val, ok := getResponseData["proxyserver"]; ok && val != nil {
 		data.Proxyserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyserver.IsUnknown() {
 		data.Proxyserver = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyusername"]; ok && val != nil {
 		data.Proxyusername = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyusername.IsUnknown() {
 		data.Proxyusername = types.StringNull()
 	}
 	if val, ok := getResponseData["sessioncookiename"]; ok && val != nil {
 		data.Sessioncookiename = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessioncookiename.IsUnknown() {
 		data.Sessioncookiename = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionlifetime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessionlifetime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessionlifetime.IsUnknown() {
 		data.Sessionlifetime = types.Int64Null()
 	}
 	if val, ok := getResponseData["sessionlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessionlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessionlimit.IsUnknown() {
 		data.Sessionlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["sessiontimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessiontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessiontimeout.IsUnknown() {
 		data.Sessiontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["signatureautoupdate"]; ok && val != nil {
 		data.Signatureautoupdate = types.StringValue(val.(string))
-	} else {
+	} else if data.Signatureautoupdate.IsUnknown() {
 		data.Signatureautoupdate = types.StringNull()
 	}
 	if val, ok := getResponseData["signatureurl"]; ok && val != nil {
 		data.Signatureurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Signatureurl.IsUnknown() {
 		data.Signatureurl = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 	if val, ok := getResponseData["useconfigurablesecretkey"]; ok && val != nil {
 		data.Useconfigurablesecretkey = types.StringValue(val.(string))
-	} else {
+	} else if data.Useconfigurablesecretkey.IsUnknown() {
 		data.Useconfigurablesecretkey = types.StringNull()
 	}
 

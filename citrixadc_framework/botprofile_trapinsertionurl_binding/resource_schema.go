@@ -134,32 +134,32 @@ func botprofile_trapinsertionurl_bindingSetAttrFromGet(ctx context.Context, data
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_trap_url"]; ok && val != nil {
 		data.BotTrapUrl = types.StringValue(val.(string))
-	} else {
+	} else if data.BotTrapUrl.IsUnknown() {
 		data.BotTrapUrl = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_trap_url_insertion_enabled"]; ok && val != nil {
 		data.BotTrapUrlInsertionEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotTrapUrlInsertionEnabled.IsUnknown() {
 		data.BotTrapUrlInsertionEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["trapinsertionurl"]; ok && val != nil {
 		data.Trapinsertionurl = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Trapinsertionurl.IsUnknown() {
 		data.Trapinsertionurl = types.BoolNull()
 	}
 

@@ -147,13 +147,19 @@ func vpnvserver_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Vpnvs
 	// Identity keys reliably returned by the GET response.
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
+	} else if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// NITRO returns the policy name under "policyname".
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 
 	// gotopriorityexpression, groupextraction, secondary, priority are either not

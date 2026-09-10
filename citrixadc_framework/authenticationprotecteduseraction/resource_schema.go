@@ -80,17 +80,17 @@ func authenticationprotecteduseractionSetAttrFromGet(ctx context.Context, data *
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxconcurrentusers = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxconcurrentusers.IsUnknown() {
 		data.Maxconcurrentusers = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["realmstr"]; ok && val != nil {
 		data.Realmstr = types.StringValue(val.(string))
-	} else {
+	} else if data.Realmstr.IsUnknown() {
 		data.Realmstr = types.StringNull()
 	}
 

@@ -57,6 +57,8 @@ func systemcpuparamSetAttrFromGet(ctx context.Context, data *SystemcpuparamResou
 	// Convert API response to model
 	if val, ok := getResponseData["pemode"]; ok && val != nil {
 		data.Pemode = types.StringValue(val.(string))
+	} else if data.Pemode.IsUnknown() {
+		data.Pemode = types.StringNull()
 	}
 
 	return data

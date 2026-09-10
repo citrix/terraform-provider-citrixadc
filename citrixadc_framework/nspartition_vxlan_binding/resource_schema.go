@@ -72,14 +72,14 @@ func nspartition_vxlan_bindingSetAttrFromGet(ctx context.Context, data *Nspartit
 	// Convert API response to model
 	if val, ok := getResponseData["partitionname"]; ok && val != nil {
 		data.Partitionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Partitionname.IsUnknown() {
 		data.Partitionname = types.StringNull()
 	}
 	if val, ok := getResponseData["vxlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlan.IsUnknown() {
 		data.Vxlan = types.Int64Null()
 	}
 

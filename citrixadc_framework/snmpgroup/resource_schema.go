@@ -79,12 +79,18 @@ func snmpgroupSetAttrFromGet(ctx context.Context, data *SnmpgroupResourceModel, 
 	// never null a known/configured value that the GET may omit.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["readviewname"]; ok && val != nil {
 		data.Readviewname = types.StringValue(val.(string))
+	} else if data.Readviewname.IsUnknown() {
+		data.Readviewname = types.StringNull()
 	}
 	if val, ok := getResponseData["securitylevel"]; ok && val != nil {
 		data.Securitylevel = types.StringValue(val.(string))
+	} else if data.Securitylevel.IsUnknown() {
+		data.Securitylevel = types.StringNull()
 	}
 
 	// Set ID for the resource.

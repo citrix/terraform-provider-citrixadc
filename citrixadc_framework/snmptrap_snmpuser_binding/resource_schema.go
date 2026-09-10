@@ -136,23 +136,35 @@ func snmptrap_snmpuser_bindingSetAttrFromGet(ctx context.Context, data *Snmptrap
 	// server does not echo back.
 	if val, ok := getResponseData["securitylevel"]; ok && val != nil {
 		data.Securitylevel = types.StringValue(val.(string))
+	} else if data.Securitylevel.IsUnknown() {
+		data.Securitylevel = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["trapclass"]; ok && val != nil {
 		data.Trapclass = types.StringValue(val.(string))
+	} else if data.Trapclass.IsUnknown() {
+		data.Trapclass = types.StringNull()
 	}
 	if val, ok := getResponseData["trapdestination"]; ok && val != nil {
 		data.Trapdestination = types.StringValue(val.(string))
+	} else if data.Trapdestination.IsUnknown() {
+		data.Trapdestination = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))
+	} else if data.Username.IsUnknown() {
+		data.Username = types.StringNull()
 	}
 	if val, ok := getResponseData["version"]; ok && val != nil {
 		data.Version = types.StringValue(val.(string))
+	} else if data.Version.IsUnknown() {
+		data.Version = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

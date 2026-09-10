@@ -113,22 +113,22 @@ func lsnclient_network6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclie
 	// Convert API response to model
 	if val, ok := getResponseData["clientname"]; ok && val != nil {
 		data.Clientname = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientname.IsUnknown() {
 		data.Clientname = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["network"]; ok && val != nil {
 		data.Network = types.StringValue(val.(string))
-	} else {
+	} else if data.Network.IsUnknown() {
 		data.Network = types.StringNull()
 	}
 	if val, ok := getResponseData["network6"]; ok && val != nil {
 		data.Network6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Network6.IsUnknown() {
 		data.Network6 = types.StringNull()
 	}
 	// td is not echoed back by the NITRO GET response for this binding. Only
@@ -139,6 +139,8 @@ func lsnclient_network6_bindingSetAttrFromGet(ctx context.Context, data *Lsnclie
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource

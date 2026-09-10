@@ -187,7 +187,7 @@ func lbactionSetAttrFromGet(ctx context.Context, data *LbactionResourceModel, ge
 	// Convert API response to model (resource path - preserves user-facing key/rename inputs).
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	// name is the user-facing key. Once a rename has happened (via newname), the live
@@ -199,11 +199,15 @@ func lbactionSetAttrFromGet(ctx context.Context, data *LbactionResourceModel, ge
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
 	}
 	data.Value = lbactionValueFromGet(getResponseData)
 

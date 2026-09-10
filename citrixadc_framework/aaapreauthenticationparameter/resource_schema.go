@@ -82,22 +82,22 @@ func aaapreauthenticationparameterSetAttrFromGet(ctx context.Context, data *Aaap
 	// Convert API response to model
 	if val, ok := getResponseData["deletefiles"]; ok && val != nil {
 		data.Deletefiles = types.StringValue(val.(string))
-	} else {
+	} else if data.Deletefiles.IsUnknown() {
 		data.Deletefiles = types.StringNull()
 	}
 	if val, ok := getResponseData["killprocess"]; ok && val != nil {
 		data.Killprocess = types.StringValue(val.(string))
-	} else {
+	} else if data.Killprocess.IsUnknown() {
 		data.Killprocess = types.StringNull()
 	}
 	if val, ok := getResponseData["preauthenticationaction"]; ok && val != nil {
 		data.Preauthenticationaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Preauthenticationaction.IsUnknown() {
 		data.Preauthenticationaction = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
-	} else {
+	} else if data.Rule.IsUnknown() {
 		data.Rule = types.StringNull()
 	}
 

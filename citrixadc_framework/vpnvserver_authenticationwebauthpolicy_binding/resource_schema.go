@@ -152,17 +152,25 @@ func vpnvserver_authenticationwebauthpolicy_bindingSetAttrFromGet(ctx context.Co
 	// name and policy are echoed; keep them in sync with the GET response.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["secondary"]; ok && val != nil {
 		data.Secondary = types.BoolValue(val.(bool))
+	} else if data.Secondary.IsUnknown() {
+		data.Secondary = types.BoolNull()
 	}
 	// bindpoint, gotopriorityexpression, groupextraction are NOT echoed by the GET
 	// response — preserve the plan/state values already in `data`.

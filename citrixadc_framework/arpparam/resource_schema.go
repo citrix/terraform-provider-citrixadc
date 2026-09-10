@@ -67,14 +67,14 @@ func arpparamSetAttrFromGet(ctx context.Context, data *ArpparamResourceModel, ge
 	// Convert API response to model
 	if val, ok := getResponseData["spoofvalidation"]; ok && val != nil {
 		data.Spoofvalidation = types.StringValue(val.(string))
-	} else {
+	} else if data.Spoofvalidation.IsUnknown() {
 		data.Spoofvalidation = types.StringNull()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
 		data.Timeout = types.Int64Null()
 	}
 

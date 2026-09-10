@@ -121,17 +121,17 @@ func authenticationdfaactionSetAttrFromGet(ctx context.Context, data *Authentica
 	// Convert API response to model
 	if val, ok := getResponseData["clientid"]; ok && val != nil {
 		data.Clientid = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientid.IsUnknown() {
 		data.Clientid = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// passphrase is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -139,7 +139,7 @@ func authenticationdfaactionSetAttrFromGet(ctx context.Context, data *Authentica
 	// passphrase_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serverurl"]; ok && val != nil {
 		data.Serverurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverurl.IsUnknown() {
 		data.Serverurl = types.StringNull()
 	}
 

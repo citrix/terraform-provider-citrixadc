@@ -82,19 +82,19 @@ func systemautosaveparamSetAttrFromGet(ctx context.Context, data *Systemautosave
 	// Convert API response to model
 	if val, ok := getResponseData["status"]; ok && val != nil {
 		data.Status = types.StringValue(val.(string))
-	} else {
+	} else if data.Status.IsUnknown() {
 		data.Status = types.StringNull()
 	}
 	if val, ok := getResponseData["periodicsave"]; ok && val != nil {
 		data.Periodicsave = types.StringValue(val.(string))
-	} else {
+	} else if data.Periodicsave.IsUnknown() {
 		data.Periodicsave = types.StringNull()
 	}
 	if val, ok := getResponseData["periodicsavefrequency"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Periodicsavefrequency = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Periodicsavefrequency.IsUnknown() {
 		data.Periodicsavefrequency = types.Int64Null()
 	}
 

@@ -535,7 +535,7 @@ func nsaclSetAttrFromGet(ctx context.Context, data *NsaclResourceModel, getRespo
 	if data.Aclname.IsNull() || data.Aclname.IsUnknown() {
 		if val, ok := getResponseData["aclname"]; ok && val != nil {
 			data.Aclname = types.StringValue(val.(string))
-		} else {
+		} else if data.Aclname.IsUnknown() {
 			data.Aclname = types.StringNull()
 		}
 	}

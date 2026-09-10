@@ -114,31 +114,31 @@ func gslbvserver_gslbservice_bindingSetAttrFromGet(ctx context.Context, data *Gs
 	// Convert API response to model
 	if val, ok := getResponseData["domainname"]; ok && val != nil {
 		data.Domainname = types.StringValue(val.(string))
-	} else {
+	} else if data.Domainname.IsUnknown() {
 		data.Domainname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["order"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Order.IsUnknown() {
 		data.Order = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicename.IsUnknown() {
 		data.Servicename = types.StringNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Weight.IsUnknown() {
 		data.Weight = types.Int64Null()
 	}
 

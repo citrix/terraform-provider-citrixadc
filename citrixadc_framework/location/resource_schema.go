@@ -122,9 +122,13 @@ func locationSetAttrFromGet(ctx context.Context, data *LocationResourceModel, ge
 
 	if val, ok := getResponseData["ipfrom"]; ok && val != nil {
 		data.Ipfrom = types.StringValue(val.(string))
+	} else if data.Ipfrom.IsUnknown() {
+		data.Ipfrom = types.StringNull()
 	}
 	if val, ok := getResponseData["ipto"]; ok && val != nil {
 		data.Ipto = types.StringValue(val.(string))
+	} else if data.Ipto.IsUnknown() {
+		data.Ipto = types.StringNull()
 	}
 	if val, ok := getResponseData["latitude"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

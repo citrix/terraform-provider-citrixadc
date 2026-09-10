@@ -77,17 +77,17 @@ func authenticationcitrixauthactionSetAttrFromGet(ctx context.Context, data *Aut
 	// Convert API response to model
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["authenticationtype"]; ok && val != nil {
 		data.Authenticationtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Authenticationtype.IsUnknown() {
 		data.Authenticationtype = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

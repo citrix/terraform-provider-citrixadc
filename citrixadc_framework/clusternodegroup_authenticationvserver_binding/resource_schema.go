@@ -71,12 +71,12 @@ func clusternodegroup_authenticationvserver_bindingSetAttrFromGet(ctx context.Co
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["vserver"]; ok && val != nil {
 		data.Vserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Vserver.IsUnknown() {
 		data.Vserver = types.StringNull()
 	}
 

@@ -70,12 +70,12 @@ func appfwxmlcontenttypeSetAttrFromGet(ctx context.Context, data *Appfwxmlconten
 	// Convert API response to model
 	if val, ok := getResponseData["isregex"]; ok && val != nil {
 		data.Isregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isregex.IsUnknown() {
 		data.Isregex = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlcontenttypevalue"]; ok && val != nil {
 		data.Xmlcontenttypevalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlcontenttypevalue.IsUnknown() {
 		data.Xmlcontenttypevalue = types.StringNull()
 	}
 

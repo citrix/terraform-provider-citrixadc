@@ -111,9 +111,13 @@ func sslprofile_sslcipher_bindingSetAttrFromGet(ctx context.Context, data *Sslpr
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cipherpriority = types.Int64Value(intVal)
 		}
+	} else if data.Cipherpriority.IsUnknown() {
+		data.Cipherpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 
 	// Set ID for the resource (new key:UrlEncode(value) format).

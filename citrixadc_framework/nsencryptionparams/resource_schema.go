@@ -108,7 +108,7 @@ func nsencryptionparamsSetAttrFromGet(ctx context.Context, data *Nsencryptionpar
 	// keyvalue_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["method"]; ok && val != nil {
 		data.Method = types.StringValue(val.(string))
-	} else {
+	} else if data.Method.IsUnknown() {
 		data.Method = types.StringNull()
 	}
 

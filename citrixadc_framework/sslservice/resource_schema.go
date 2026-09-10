@@ -695,7 +695,7 @@ func sslserviceSetAttrFromGet(ctx context.Context, data *SslserviceResourceModel
 	} else if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sesstimeout = types.Int64Value(intVal)
-		} else {
+		} else if data.Sesstimeout.IsUnknown() {
 			data.Sesstimeout = types.Int64Null()
 		}
 	} else if data.Sesstimeout.IsUnknown() {

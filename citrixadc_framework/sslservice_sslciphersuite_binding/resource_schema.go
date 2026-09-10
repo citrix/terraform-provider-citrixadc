@@ -86,17 +86,17 @@ func sslservice_sslciphersuite_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["ciphername"]; ok && val != nil {
 		data.Ciphername = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciphername.IsUnknown() {
 		data.Ciphername = types.StringNull()
 	}
 	if val, ok := getResponseData["description"]; ok && val != nil {
 		data.Description = types.StringValue(val.(string))
-	} else {
+	} else if data.Description.IsUnknown() {
 		data.Description = types.StringNull()
 	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicename.IsUnknown() {
 		data.Servicename = types.StringNull()
 	}
 

@@ -58,7 +58,7 @@ func quicparamSetAttrFromGet(ctx context.Context, data *QuicparamResourceModel, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Quicsecrettimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Quicsecrettimeout.IsUnknown() {
 		data.Quicsecrettimeout = types.Int64Null()
 	}
 

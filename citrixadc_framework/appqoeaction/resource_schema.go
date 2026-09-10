@@ -253,17 +253,17 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["altcontentpath"]; ok && val != nil {
 		data.Altcontentpath = types.StringValue(val.(string))
-	} else {
+	} else if data.Altcontentpath.IsUnknown() {
 		data.Altcontentpath = types.StringNull()
 	}
 	if val, ok := getResponseData["altcontentsvcname"]; ok && val != nil {
 		data.Altcontentsvcname = types.StringValue(val.(string))
-	} else {
+	} else if data.Altcontentsvcname.IsUnknown() {
 		data.Altcontentsvcname = types.StringNull()
 	}
 	if val, ok := getResponseData["customfile"]; ok && val != nil {
 		data.Customfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Customfile.IsUnknown() {
 		data.Customfile = types.StringNull()
 	}
 	if val, ok := getResponseData["delay"]; ok && val != nil {
@@ -275,12 +275,12 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	}
 	if val, ok := getResponseData["dosaction"]; ok && val != nil {
 		data.Dosaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Dosaction.IsUnknown() {
 		data.Dosaction = types.StringNull()
 	}
 	if val, ok := getResponseData["dostrigexpression"]; ok && val != nil {
 		data.Dostrigexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Dostrigexpression.IsUnknown() {
 		data.Dostrigexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["maxconn"]; ok && val != nil {
@@ -292,7 +292,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["numretries"]; ok && val != nil {
@@ -300,10 +300,10 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 			data.Numretries = types.StringValue(strVal)
 		} else if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Numretries = types.StringValue(strconv.FormatInt(intVal, 10))
-		} else {
+		} else if data.Numretries.IsUnknown() {
 			data.Numretries = types.StringNull()
 		}
-	} else {
+	} else if data.Numretries.IsUnknown() {
 		data.Numretries = types.StringNull()
 	}
 	if val, ok := getResponseData["polqdepth"]; ok && val != nil {
@@ -315,7 +315,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		data.Priority = types.StringValue(val.(string))
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.StringNull()
 	}
 	if val, ok := getResponseData["priqdepth"]; ok && val != nil {
@@ -327,12 +327,12 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	}
 	if val, ok := getResponseData["respondwith"]; ok && val != nil {
 		data.Respondwith = types.StringValue(val.(string))
-	} else {
+	} else if data.Respondwith.IsUnknown() {
 		data.Respondwith = types.StringNull()
 	}
 	if val, ok := getResponseData["retryonreset"]; ok && val != nil {
 		data.Retryonreset = types.StringValue(val.(string))
-	} else {
+	} else if data.Retryonreset.IsUnknown() {
 		data.Retryonreset = types.StringNull()
 	}
 	if val, ok := getResponseData["retryontimeout"]; ok && val != nil {
@@ -344,7 +344,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	}
 	if val, ok := getResponseData["tcpprofile"]; ok && val != nil {
 		data.Tcpprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Tcpprofile.IsUnknown() {
 		data.Tcpprofile = types.StringNull()
 	}
 

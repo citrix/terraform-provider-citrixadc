@@ -85,17 +85,17 @@ func nsservicepath_nsservicefunction_bindingSetAttrFromGet(ctx context.Context, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Index = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Index.IsUnknown() {
 		data.Index = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicefunction"]; ok && val != nil {
 		data.Servicefunction = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicefunction.IsUnknown() {
 		data.Servicefunction = types.StringNull()
 	}
 	if val, ok := getResponseData["servicepathname"]; ok && val != nil {
 		data.Servicepathname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicepathname.IsUnknown() {
 		data.Servicepathname = types.StringNull()
 	}
 

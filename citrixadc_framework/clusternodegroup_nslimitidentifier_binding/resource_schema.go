@@ -71,12 +71,12 @@ func clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx context.Contex
 	// Convert API response to model
 	if val, ok := getResponseData["identifiername"]; ok && val != nil {
 		data.Identifiername = types.StringValue(val.(string))
-	} else {
+	} else if data.Identifiername.IsUnknown() {
 		data.Identifiername = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

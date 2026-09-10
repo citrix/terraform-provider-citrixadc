@@ -85,17 +85,17 @@ func rnat6_nsip6_bindingSetAttrFromGet(ctx context.Context, data *Rnat6Nsip6Bind
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["natip6"]; ok && val != nil {
 		data.Natip6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Natip6.IsUnknown() {
 		data.Natip6 = types.StringNull()
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
 		data.Ownergroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Ownergroup.IsUnknown() {
 		data.Ownergroup = types.StringNull()
 	}
 

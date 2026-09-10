@@ -94,24 +94,24 @@ func sslprofile_sslciphersuite_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["ciphername"]; ok && val != nil {
 		data.Ciphername = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciphername.IsUnknown() {
 		data.Ciphername = types.StringNull()
 	}
 	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cipherpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cipherpriority.IsUnknown() {
 		data.Cipherpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["description"]; ok && val != nil {
 		data.Description = types.StringValue(val.(string))
-	} else {
+	} else if data.Description.IsUnknown() {
 		data.Description = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

@@ -78,7 +78,7 @@ func apispecfileSetAttrFromGet(ctx context.Context, data *ApispecfileResourceMod
 	// Convert API response to model.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// "overwrite" is a write-only Import input. The GET response never echoes it,

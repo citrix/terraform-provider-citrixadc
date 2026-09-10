@@ -332,47 +332,47 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	// Convert API response to model
 	if val, ok := getResponseData["addcookieflags"]; ok && val != nil {
 		data.Addcookieflags = types.StringValue(val.(string))
-	} else {
+	} else if data.Addcookieflags.IsUnknown() {
 		data.Addcookieflags = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_enable_black_list"]; ok && val != nil {
 		data.BotEnableBlackList = types.StringValue(val.(string))
-	} else {
+	} else if data.BotEnableBlackList.IsUnknown() {
 		data.BotEnableBlackList = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_enable_ip_reputation"]; ok && val != nil {
 		data.BotEnableIpReputation = types.StringValue(val.(string))
-	} else {
+	} else if data.BotEnableIpReputation.IsUnknown() {
 		data.BotEnableIpReputation = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_enable_rate_limit"]; ok && val != nil {
 		data.BotEnableRateLimit = types.StringValue(val.(string))
-	} else {
+	} else if data.BotEnableRateLimit.IsUnknown() {
 		data.BotEnableRateLimit = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_enable_tps"]; ok && val != nil {
 		data.BotEnableTps = types.StringValue(val.(string))
-	} else {
+	} else if data.BotEnableTps.IsUnknown() {
 		data.BotEnableTps = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_enable_white_list"]; ok && val != nil {
 		data.BotEnableWhiteList = types.StringValue(val.(string))
-	} else {
+	} else if data.BotEnableWhiteList.IsUnknown() {
 		data.BotEnableWhiteList = types.StringNull()
 	}
 	if val, ok := getResponseData["clientipexpression"]; ok && val != nil {
 		data.Clientipexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientipexpression.IsUnknown() {
 		data.Clientipexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["devicefingerprint"]; ok && val != nil {
 		data.Devicefingerprint = types.StringValue(val.(string))
-	} else {
+	} else if data.Devicefingerprint.IsUnknown() {
 		data.Devicefingerprint = types.StringNull()
 	}
 	if val, ok := getResponseData["devicefingerprintaction"]; ok && val != nil {
@@ -418,17 +418,17 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	}
 	if val, ok := getResponseData["errorurl"]; ok && val != nil {
 		data.Errorurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Errorurl.IsUnknown() {
 		data.Errorurl = types.StringNull()
 	}
 	if val, ok := getResponseData["headlessbrowserdetection"]; ok && val != nil {
 		data.Headlessbrowserdetection = types.StringValue(val.(string))
-	} else {
+	} else if data.Headlessbrowserdetection.IsUnknown() {
 		data.Headlessbrowserdetection = types.StringNull()
 	}
 	if val, ok := getResponseData["kmdetection"]; ok && val != nil {
 		data.Kmdetection = types.StringValue(val.(string))
-	} else {
+	} else if data.Kmdetection.IsUnknown() {
 		data.Kmdetection = types.StringNull()
 	}
 	if val, ok := getResponseData["kmeventspostbodylimit"]; ok && val != nil {
@@ -440,17 +440,17 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	}
 	if val, ok := getResponseData["kmjavascriptname"]; ok && val != nil {
 		data.Kmjavascriptname = types.StringValue(val.(string))
-	} else {
+	} else if data.Kmjavascriptname.IsUnknown() {
 		data.Kmjavascriptname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["sessioncookiename"]; ok && val != nil {
 		data.Sessioncookiename = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessioncookiename.IsUnknown() {
 		data.Sessioncookiename = types.StringNull()
 	}
 	if val, ok := getResponseData["sessiontimeout"]; ok && val != nil {
@@ -462,7 +462,7 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	}
 	if val, ok := getResponseData["signature"]; ok && val != nil {
 		data.Signature = types.StringValue(val.(string))
-	} else {
+	} else if data.Signature.IsUnknown() {
 		data.Signature = types.StringNull()
 	}
 	if val, ok := getResponseData["signaturemultipleuseragentheaderaction"]; ok && val != nil {
@@ -518,7 +518,7 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	}
 	if val, ok := getResponseData["trap"]; ok && val != nil {
 		data.Trap = types.StringValue(val.(string))
-	} else {
+	} else if data.Trap.IsUnknown() {
 		data.Trap = types.StringNull()
 	}
 	if val, ok := getResponseData["trapaction"]; ok && val != nil {
@@ -540,12 +540,12 @@ func botprofileSetAttrFromGet(ctx context.Context, data *BotprofileResourceModel
 	}
 	if val, ok := getResponseData["trapurl"]; ok && val != nil {
 		data.Trapurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Trapurl.IsUnknown() {
 		data.Trapurl = types.StringNull()
 	}
 	if val, ok := getResponseData["verboseloglevel"]; ok && val != nil {
 		data.Verboseloglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Verboseloglevel.IsUnknown() {
 		data.Verboseloglevel = types.StringNull()
 	}
 

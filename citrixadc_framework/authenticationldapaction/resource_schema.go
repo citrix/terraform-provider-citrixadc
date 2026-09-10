@@ -597,164 +597,164 @@ func authenticationldapactionSetAttrFromGet(ctx context.Context, data *Authentic
 	// Convert API response to model
 	if val, ok := getResponseData["alternateemailattr"]; ok && val != nil {
 		data.Alternateemailattr = types.StringValue(val.(string))
-	} else {
+	} else if data.Alternateemailattr.IsUnknown() {
 		data.Alternateemailattr = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute1"]; ok && val != nil {
 		data.Attribute1 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute1.IsUnknown() {
 		data.Attribute1 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute10"]; ok && val != nil {
 		data.Attribute10 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute10.IsUnknown() {
 		data.Attribute10 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute11"]; ok && val != nil {
 		data.Attribute11 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute11.IsUnknown() {
 		data.Attribute11 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute12"]; ok && val != nil {
 		data.Attribute12 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute12.IsUnknown() {
 		data.Attribute12 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute13"]; ok && val != nil {
 		data.Attribute13 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute13.IsUnknown() {
 		data.Attribute13 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute14"]; ok && val != nil {
 		data.Attribute14 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute14.IsUnknown() {
 		data.Attribute14 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute15"]; ok && val != nil {
 		data.Attribute15 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute15.IsUnknown() {
 		data.Attribute15 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute16"]; ok && val != nil {
 		data.Attribute16 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute16.IsUnknown() {
 		data.Attribute16 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute2"]; ok && val != nil {
 		data.Attribute2 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute2.IsUnknown() {
 		data.Attribute2 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute3"]; ok && val != nil {
 		data.Attribute3 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute3.IsUnknown() {
 		data.Attribute3 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute4"]; ok && val != nil {
 		data.Attribute4 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute4.IsUnknown() {
 		data.Attribute4 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute5"]; ok && val != nil {
 		data.Attribute5 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute5.IsUnknown() {
 		data.Attribute5 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute6"]; ok && val != nil {
 		data.Attribute6 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute6.IsUnknown() {
 		data.Attribute6 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute7"]; ok && val != nil {
 		data.Attribute7 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute7.IsUnknown() {
 		data.Attribute7 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute8"]; ok && val != nil {
 		data.Attribute8 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute8.IsUnknown() {
 		data.Attribute8 = types.StringNull()
 	}
 	if val, ok := getResponseData["attribute9"]; ok && val != nil {
 		data.Attribute9 = types.StringValue(val.(string))
-	} else {
+	} else if data.Attribute9.IsUnknown() {
 		data.Attribute9 = types.StringNull()
 	}
 	if val, ok := getResponseData["attributes"]; ok && val != nil {
 		data.Attributes = types.StringValue(val.(string))
-	} else {
+	} else if data.Attributes.IsUnknown() {
 		data.Attributes = types.StringNull()
 	}
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["authtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Authtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Authtimeout.IsUnknown() {
 		data.Authtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["cloudattributes"]; ok && val != nil {
 		data.Cloudattributes = types.StringValue(val.(string))
-	} else {
+	} else if data.Cloudattributes.IsUnknown() {
 		data.Cloudattributes = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["email"]; ok && val != nil {
 		data.Email = types.StringValue(val.(string))
-	} else {
+	} else if data.Email.IsUnknown() {
 		data.Email = types.StringNull()
 	}
 	if val, ok := getResponseData["followreferrals"]; ok && val != nil {
 		data.Followreferrals = types.StringValue(val.(string))
-	} else {
+	} else if data.Followreferrals.IsUnknown() {
 		data.Followreferrals = types.StringNull()
 	}
 	if val, ok := getResponseData["groupattrname"]; ok && val != nil {
 		data.Groupattrname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupattrname.IsUnknown() {
 		data.Groupattrname = types.StringNull()
 	}
 	if val, ok := getResponseData["groupnameidentifier"]; ok && val != nil {
 		data.Groupnameidentifier = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupnameidentifier.IsUnknown() {
 		data.Groupnameidentifier = types.StringNull()
 	}
 	if val, ok := getResponseData["groupsearchattribute"]; ok && val != nil {
 		data.Groupsearchattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupsearchattribute.IsUnknown() {
 		data.Groupsearchattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["groupsearchfilter"]; ok && val != nil {
 		data.Groupsearchfilter = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupsearchfilter.IsUnknown() {
 		data.Groupsearchfilter = types.StringNull()
 	}
 	if val, ok := getResponseData["groupsearchsubattribute"]; ok && val != nil {
 		data.Groupsearchsubattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupsearchsubattribute.IsUnknown() {
 		data.Groupsearchsubattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["kbattribute"]; ok && val != nil {
 		data.Kbattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Kbattribute.IsUnknown() {
 		data.Kbattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["ldapbase"]; ok && val != nil {
 		data.Ldapbase = types.StringValue(val.(string))
-	} else {
+	} else if data.Ldapbase.IsUnknown() {
 		data.Ldapbase = types.StringNull()
 	}
 	if val, ok := getResponseData["ldapbinddn"]; ok && val != nil {
 		data.Ldapbinddn = types.StringValue(val.(string))
-	} else {
+	} else if data.Ldapbinddn.IsUnknown() {
 		data.Ldapbinddn = types.StringNull()
 	}
 	// ldapbinddnpassword is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -762,123 +762,123 @@ func authenticationldapactionSetAttrFromGet(ctx context.Context, data *Authentic
 	// ldapbinddnpassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["ldaphostname"]; ok && val != nil {
 		data.Ldaphostname = types.StringValue(val.(string))
-	} else {
+	} else if data.Ldaphostname.IsUnknown() {
 		data.Ldaphostname = types.StringNull()
 	}
 	if val, ok := getResponseData["ldaploginname"]; ok && val != nil {
 		data.Ldaploginname = types.StringValue(val.(string))
-	} else {
+	} else if data.Ldaploginname.IsUnknown() {
 		data.Ldaploginname = types.StringNull()
 	}
 	if val, ok := getResponseData["maxldapreferrals"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxldapreferrals = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxldapreferrals.IsUnknown() {
 		data.Maxldapreferrals = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxnestinglevel"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxnestinglevel = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxnestinglevel.IsUnknown() {
 		data.Maxnestinglevel = types.Int64Null()
 	}
 	if val, ok := getResponseData["mssrvrecordlocation"]; ok && val != nil {
 		data.Mssrvrecordlocation = types.StringValue(val.(string))
-	} else {
+	} else if data.Mssrvrecordlocation.IsUnknown() {
 		data.Mssrvrecordlocation = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["nestedgroupextraction"]; ok && val != nil {
 		data.Nestedgroupextraction = types.StringValue(val.(string))
-	} else {
+	} else if data.Nestedgroupextraction.IsUnknown() {
 		data.Nestedgroupextraction = types.StringNull()
 	}
 	if val, ok := getResponseData["otpsecret"]; ok && val != nil {
 		data.Otpsecret = types.StringValue(val.(string))
-	} else {
+	} else if data.Otpsecret.IsUnknown() {
 		data.Otpsecret = types.StringNull()
 	}
 	if val, ok := getResponseData["passwdchange"]; ok && val != nil {
 		data.Passwdchange = types.StringValue(val.(string))
-	} else {
+	} else if data.Passwdchange.IsUnknown() {
 		data.Passwdchange = types.StringNull()
 	}
 	if val, ok := getResponseData["passwordlessmgmtaccess"]; ok && val != nil {
 		data.Passwordlessmgmtaccess = types.StringValue(val.(string))
-	} else {
+	} else if data.Passwordlessmgmtaccess.IsUnknown() {
 		data.Passwordlessmgmtaccess = types.StringNull()
 	}
 	if val, ok := getResponseData["pushservice"]; ok && val != nil {
 		data.Pushservice = types.StringValue(val.(string))
-	} else {
+	} else if data.Pushservice.IsUnknown() {
 		data.Pushservice = types.StringNull()
 	}
 	if val, ok := getResponseData["referraldnslookup"]; ok && val != nil {
 		data.Referraldnslookup = types.StringValue(val.(string))
-	} else {
+	} else if data.Referraldnslookup.IsUnknown() {
 		data.Referraldnslookup = types.StringNull()
 	}
 	if val, ok := getResponseData["requireuser"]; ok && val != nil {
 		data.Requireuser = types.StringValue(val.(string))
-	} else {
+	} else if data.Requireuser.IsUnknown() {
 		data.Requireuser = types.StringNull()
 	}
 	if val, ok := getResponseData["searchfilter"]; ok && val != nil {
 		data.Searchfilter = types.StringValue(val.(string))
-	} else {
+	} else if data.Searchfilter.IsUnknown() {
 		data.Searchfilter = types.StringNull()
 	}
 	if val, ok := getResponseData["sectype"]; ok && val != nil {
 		data.Sectype = types.StringValue(val.(string))
-	} else {
+	} else if data.Sectype.IsUnknown() {
 		data.Sectype = types.StringNull()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
-	} else {
+	} else if data.Servername.IsUnknown() {
 		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serverport.IsUnknown() {
 		data.Serverport = types.Int64Null()
 	}
 	if val, ok := getResponseData["sshpublickey"]; ok && val != nil {
 		data.Sshpublickey = types.StringValue(val.(string))
-	} else {
+	} else if data.Sshpublickey.IsUnknown() {
 		data.Sshpublickey = types.StringNull()
 	}
 	if val, ok := getResponseData["ssonameattribute"]; ok && val != nil {
 		data.Ssonameattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssonameattribute.IsUnknown() {
 		data.Ssonameattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["subattributename"]; ok && val != nil {
 		data.Subattributename = types.StringValue(val.(string))
-	} else {
+	} else if data.Subattributename.IsUnknown() {
 		data.Subattributename = types.StringNull()
 	}
 	if val, ok := getResponseData["svrtype"]; ok && val != nil {
 		data.Svrtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Svrtype.IsUnknown() {
 		data.Svrtype = types.StringNull()
 	}
 	if val, ok := getResponseData["validateservercert"]; ok && val != nil {
 		data.Validateservercert = types.StringValue(val.(string))
-	} else {
+	} else if data.Validateservercert.IsUnknown() {
 		data.Validateservercert = types.StringNull()
 	}
 

@@ -55,7 +55,7 @@ func appalgparamSetAttrFromGet(ctx context.Context, data *AppalgparamResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pptpgreidletimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pptpgreidletimeout.IsUnknown() {
 		data.Pptpgreidletimeout = types.Int64Null()
 	}
 

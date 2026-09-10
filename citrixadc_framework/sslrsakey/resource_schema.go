@@ -208,39 +208,39 @@ func sslrsakeySetAttrFromGet(ctx context.Context, data *SslrsakeyResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["aes256"]; ok && val != nil {
 		data.Aes256 = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Aes256.IsUnknown() {
 		data.Aes256 = types.BoolNull()
 	}
 	if val, ok := getResponseData["bits"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bits = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bits.IsUnknown() {
 		data.Bits = types.Int64Null()
 	}
 	if val, ok := getResponseData["des"]; ok && val != nil {
 		data.Des = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Des.IsUnknown() {
 		data.Des = types.BoolNull()
 	}
 	if val, ok := getResponseData["des3"]; ok && val != nil {
 		data.Des3 = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Des3.IsUnknown() {
 		data.Des3 = types.BoolNull()
 	}
 	if val, ok := getResponseData["exponent"]; ok && val != nil {
 		data.Exponent = types.StringValue(val.(string))
-	} else {
+	} else if data.Exponent.IsUnknown() {
 		data.Exponent = types.StringNull()
 	}
 	if val, ok := getResponseData["keyfile"]; ok && val != nil {
 		data.Keyfile = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyfile.IsUnknown() {
 		data.Keyfile = types.StringNull()
 	}
 	if val, ok := getResponseData["keyform"]; ok && val != nil {
 		data.Keyform = types.StringValue(val.(string))
-	} else {
+	} else if data.Keyform.IsUnknown() {
 		data.Keyform = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -248,7 +248,7 @@ func sslrsakeySetAttrFromGet(ctx context.Context, data *SslrsakeyResourceModel, 
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["pkcs8"]; ok && val != nil {
 		data.Pkcs8 = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Pkcs8.IsUnknown() {
 		data.Pkcs8 = types.BoolNull()
 	}
 

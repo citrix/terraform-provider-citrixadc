@@ -106,24 +106,34 @@ func lbvserver_servicegroup_bindingSetAttrFromGet(ctx context.Context, data *Lbv
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// order: GET echoes it only when it was explicitly set; preserve prior value otherwise.
 	if val, ok := getResponseData["order"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
 		}
+	} else if data.Order.IsUnknown() {
+		data.Order = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 		data.Servicegroupname = types.StringValue(val.(string))
+	} else if data.Servicegroupname.IsUnknown() {
+		data.Servicegroupname = types.StringNull()
 	}
 	if val, ok := getResponseData["servicename"]; ok && val != nil {
 		data.Servicename = types.StringValue(val.(string))
+	} else if data.Servicename.IsUnknown() {
+		data.Servicename = types.StringNull()
 	}
 	// weight: not echoed by GET; preserve the prior plan/state value.
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
+	} else if data.Weight.IsUnknown() {
+		data.Weight = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

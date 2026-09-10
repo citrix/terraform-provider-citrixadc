@@ -131,7 +131,7 @@ func clusternodegroupSetAttrFromGet(ctx context.Context, data *ClusternodegroupR
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
@@ -146,17 +146,17 @@ func clusternodegroupSetAttrFromGet(ctx context.Context, data *ClusternodegroupR
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["sticky"]; ok && val != nil {
 		data.Sticky = types.StringValue(val.(string))
-	} else {
+	} else if data.Sticky.IsUnknown() {
 		data.Sticky = types.StringNull()
 	}
 	if val, ok := getResponseData["strict"]; ok && val != nil {
 		data.Strict = types.StringValue(val.(string))
-	} else {
+	} else if data.Strict.IsUnknown() {
 		data.Strict = types.StringNull()
 	}
 

@@ -67,12 +67,12 @@ func videooptimizationparameterSetAttrFromGet(ctx context.Context, data *Videoop
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Quicpacingrate = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Quicpacingrate.IsUnknown() {
 		data.Quicpacingrate = types.Int64Null()
 	}
 	if val, ok := getResponseData["randomsamplingpercentage"]; ok && val != nil {
 		data.Randomsamplingpercentage = types.Float64Value(val.(float64))
-	} else {
+	} else if data.Randomsamplingpercentage.IsUnknown() {
 		data.Randomsamplingpercentage = types.Float64Null()
 	}
 

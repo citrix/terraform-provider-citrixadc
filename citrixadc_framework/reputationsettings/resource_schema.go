@@ -116,17 +116,17 @@ func reputationsettingsSetAttrFromGet(ctx context.Context, data *Reputationsetti
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Proxyport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Proxyport.IsUnknown() {
 		data.Proxyport = types.Int64Null()
 	}
 	if val, ok := getResponseData["proxyserver"]; ok && val != nil {
 		data.Proxyserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyserver.IsUnknown() {
 		data.Proxyserver = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyusername"]; ok && val != nil {
 		data.Proxyusername = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyusername.IsUnknown() {
 		data.Proxyusername = types.StringNull()
 	}
 

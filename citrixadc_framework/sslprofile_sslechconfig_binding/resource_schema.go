@@ -88,17 +88,17 @@ func sslprofile_sslechconfig_bindingSetAttrFromGet(ctx context.Context, data *Ss
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cipherpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cipherpriority.IsUnknown() {
 		data.Cipherpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["echconfigname"]; ok && val != nil {
 		data.Echconfigname = types.StringValue(val.(string))
-	} else {
+	} else if data.Echconfigname.IsUnknown() {
 		data.Echconfigname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

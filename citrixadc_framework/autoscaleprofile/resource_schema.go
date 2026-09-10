@@ -185,7 +185,7 @@ func autoscaleprofileSetAttrFromGet(ctx context.Context, data *AutoscaleprofileR
 	// apikey_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// sharedsecret is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -193,12 +193,12 @@ func autoscaleprofileSetAttrFromGet(ctx context.Context, data *AutoscaleprofileR
 	// sharedsecret_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["url"]; ok && val != nil {
 		data.Url = types.StringValue(val.(string))
-	} else {
+	} else if data.Url.IsUnknown() {
 		data.Url = types.StringNull()
 	}
 

@@ -123,6 +123,8 @@ func vpnglobal_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Vpngl
 	if data.Certkeyname.IsNull() || data.Certkeyname.ValueString() == "" {
 		if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 			data.Certkeyname = types.StringValue(val.(string))
+		} else if data.Certkeyname.IsUnknown() {
+			data.Certkeyname = types.StringNull()
 		}
 	}
 

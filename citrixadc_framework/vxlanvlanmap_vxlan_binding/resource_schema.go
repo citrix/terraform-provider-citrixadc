@@ -90,7 +90,7 @@ func vxlanvlanmap_vxlan_bindingSetAttrFromGet(ctx context.Context, data *Vxlanvl
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
@@ -108,7 +108,7 @@ func vxlanvlanmap_vxlan_bindingSetAttrFromGet(ctx context.Context, data *Vxlanvl
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlan.IsUnknown() {
 		data.Vxlan = types.Int64Null()
 	}
 

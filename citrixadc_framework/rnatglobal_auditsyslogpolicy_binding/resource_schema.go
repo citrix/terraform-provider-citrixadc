@@ -87,19 +87,19 @@ func rnatglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	// Convert API response to model
 	if val, ok := getResponseData["all"]; ok && val != nil {
 		data.All = types.BoolValue(val.(bool))
-	} else {
+	} else if data.All.IsUnknown() {
 		data.All = types.BoolNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
-	} else {
+	} else if data.Policy.IsUnknown() {
 		data.Policy = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 

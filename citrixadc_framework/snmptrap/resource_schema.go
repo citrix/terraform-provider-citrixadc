@@ -201,12 +201,18 @@ func snmptrapSetAttrFromGet(ctx context.Context, data *SnmptrapResourceModel, ge
 	}
 	if val, ok := getResponseData["trapclass"]; ok && val != nil {
 		data.Trapclass = types.StringValue(val.(string))
+	} else if data.Trapclass.IsUnknown() {
+		data.Trapclass = types.StringNull()
 	}
 	if val, ok := getResponseData["trapdestination"]; ok && val != nil {
 		data.Trapdestination = types.StringValue(val.(string))
+	} else if data.Trapdestination.IsUnknown() {
+		data.Trapdestination = types.StringNull()
 	}
 	if val, ok := getResponseData["version"]; ok && val != nil {
 		data.Version = types.StringValue(val.(string))
+	} else if data.Version.IsUnknown() {
+		data.Version = types.StringNull()
 	}
 
 	// Set ID for the resource.

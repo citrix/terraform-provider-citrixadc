@@ -204,17 +204,17 @@ func autoscaleactionSetAttrFromGet(ctx context.Context, data *AutoscaleactionRes
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["parameters"]; ok && val != nil {
 		data.Parameters = types.StringValue(val.(string))
-	} else {
+	} else if data.Parameters.IsUnknown() {
 		data.Parameters = types.StringNull()
 	}
 	if val, ok := getResponseData["profilename"]; ok && val != nil {
 		data.Profilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Profilename.IsUnknown() {
 		data.Profilename = types.StringNull()
 	}
 	if val, ok := getResponseData["quiettime"]; ok && val != nil {
@@ -228,7 +228,7 @@ func autoscaleactionSetAttrFromGet(ctx context.Context, data *AutoscaleactionRes
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["vmdestroygraceperiod"]; ok && val != nil {
@@ -242,7 +242,7 @@ func autoscaleactionSetAttrFromGet(ctx context.Context, data *AutoscaleactionRes
 	}
 	if val, ok := getResponseData["vserver"]; ok && val != nil {
 		data.Vserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Vserver.IsUnknown() {
 		data.Vserver = types.StringNull()
 	}
 

@@ -93,27 +93,27 @@ func cloudngsparameterSetAttrFromGet(ctx context.Context, data *Cloudngsparamete
 	// Convert API response to model
 	if val, ok := getResponseData["allowdtls12"]; ok && val != nil {
 		data.Allowdtls12 = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowdtls12.IsUnknown() {
 		data.Allowdtls12 = types.StringNull()
 	}
 	if val, ok := getResponseData["allowedudtversion"]; ok && val != nil {
 		data.Allowedudtversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowedudtversion.IsUnknown() {
 		data.Allowedudtversion = types.StringNull()
 	}
 	if val, ok := getResponseData["blockonallowedngstktprof"]; ok && val != nil {
 		data.Blockonallowedngstktprof = types.StringValue(val.(string))
-	} else {
+	} else if data.Blockonallowedngstktprof.IsUnknown() {
 		data.Blockonallowedngstktprof = types.StringNull()
 	}
 	if val, ok := getResponseData["csvserverticketingdecouple"]; ok && val != nil {
 		data.Csvserverticketingdecouple = types.StringValue(val.(string))
-	} else {
+	} else if data.Csvserverticketingdecouple.IsUnknown() {
 		data.Csvserverticketingdecouple = types.StringNull()
 	}
 	if val, ok := getResponseData["wafprotection"]; ok && val != nil {
 		data.Wafprotection = types.StringValue(val.(string))
-	} else {
+	} else if data.Wafprotection.IsUnknown() {
 		data.Wafprotection = types.StringNull()
 	}
 

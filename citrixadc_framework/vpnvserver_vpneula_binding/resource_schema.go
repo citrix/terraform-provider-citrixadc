@@ -71,12 +71,12 @@ func vpnvserver_vpneula_bindingSetAttrFromGet(ctx context.Context, data *Vpnvser
 	// Convert API response to model
 	if val, ok := getResponseData["eula"]; ok && val != nil {
 		data.Eula = types.StringValue(val.(string))
-	} else {
+	} else if data.Eula.IsUnknown() {
 		data.Eula = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

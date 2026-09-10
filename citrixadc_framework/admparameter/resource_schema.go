@@ -54,7 +54,7 @@ func admparameterSetAttrFromGet(ctx context.Context, data *AdmparameterResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["admserviceconnect"]; ok && val != nil {
 		data.Admserviceconnect = types.StringValue(val.(string))
-	} else {
+	} else if data.Admserviceconnect.IsUnknown() {
 		data.Admserviceconnect = types.StringNull()
 	}
 

@@ -70,12 +70,12 @@ func appfwgrpccontenttypeSetAttrFromGet(ctx context.Context, data *Appfwgrpccont
 	// Convert API response to model
 	if val, ok := getResponseData["grpccontenttypevalue"]; ok && val != nil {
 		data.Grpccontenttypevalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Grpccontenttypevalue.IsUnknown() {
 		data.Grpccontenttypevalue = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex"]; ok && val != nil {
 		data.Isregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isregex.IsUnknown() {
 		data.Isregex = types.StringNull()
 	}
 

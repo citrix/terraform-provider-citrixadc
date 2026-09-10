@@ -70,12 +70,12 @@ func appfwgrpcwebjsoncontenttypeSetAttrFromGet(ctx context.Context, data *Appfwg
 	// Convert API response to model
 	if val, ok := getResponseData["grpcwebjsoncontenttypevalue"]; ok && val != nil {
 		data.Grpcwebjsoncontenttypevalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Grpcwebjsoncontenttypevalue.IsUnknown() {
 		data.Grpcwebjsoncontenttypevalue = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex"]; ok && val != nil {
 		data.Isregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isregex.IsUnknown() {
 		data.Isregex = types.StringNull()
 	}
 

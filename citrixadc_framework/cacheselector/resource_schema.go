@@ -68,7 +68,7 @@ func cacheselectorSetAttrFromGet(ctx context.Context, data *CacheselectorResourc
 	// Convert API response to model
 	if val, ok := getResponseData["selectorname"]; ok && val != nil {
 		data.Selectorname = types.StringValue(val.(string))
-	} else {
+	} else if data.Selectorname.IsUnknown() {
 		data.Selectorname = types.StringNull()
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {

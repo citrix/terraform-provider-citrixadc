@@ -91,12 +91,18 @@ func hanode_routemonitor6_bindingSetAttrFromGet(ctx context.Context, data *Hanod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.HanodeId = types.Int64Value(intVal)
 		}
+	} else if data.HanodeId.IsUnknown() {
+		data.HanodeId = types.Int64Null()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(fmt.Sprintf("%v", val))
+	} else if data.Netmask.IsUnknown() {
+		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["routemonitor"]; ok && val != nil {
 		data.Routemonitor = types.StringValue(fmt.Sprintf("%v", val))
+	} else if data.Routemonitor.IsUnknown() {
+		data.Routemonitor = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

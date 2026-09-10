@@ -244,17 +244,17 @@ func appflowactionSetAttrFromGet(ctx context.Context, data *AppflowactionResourc
 	// Convert API response to model
 	if val, ok := getResponseData["botinsight"]; ok && val != nil {
 		data.Botinsight = types.StringValue(val.(string))
-	} else {
+	} else if data.Botinsight.IsUnknown() {
 		data.Botinsight = types.StringNull()
 	}
 	if val, ok := getResponseData["ciinsight"]; ok && val != nil {
 		data.Ciinsight = types.StringValue(val.(string))
-	} else {
+	} else if data.Ciinsight.IsUnknown() {
 		data.Ciinsight = types.StringNull()
 	}
 	if val, ok := getResponseData["clientsidemeasurements"]; ok && val != nil {
 		data.Clientsidemeasurements = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientsidemeasurements.IsUnknown() {
 		data.Clientsidemeasurements = types.StringNull()
 	}
 	if val, ok := getResponseData["collectors"]; ok && val != nil {
@@ -274,53 +274,53 @@ func appflowactionSetAttrFromGet(ctx context.Context, data *AppflowactionResourc
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["distributionalgorithm"]; ok && val != nil {
 		data.Distributionalgorithm = types.StringValue(val.(string))
-	} else {
+	} else if data.Distributionalgorithm.IsUnknown() {
 		data.Distributionalgorithm = types.StringNull()
 	}
 	if val, ok := getResponseData["metricslog"]; ok && val != nil {
 		data.Metricslog = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Metricslog.IsUnknown() {
 		data.Metricslog = types.BoolNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// newname is not returned by NITRO API (rename-only parameter) - resolve to null
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
-	} else {
+	} else if data.Newname.IsUnknown() {
 		data.Newname = types.StringNull()
 	}
 	if val, ok := getResponseData["pagetracking"]; ok && val != nil {
 		data.Pagetracking = types.StringValue(val.(string))
-	} else {
+	} else if data.Pagetracking.IsUnknown() {
 		data.Pagetracking = types.StringNull()
 	}
 	if val, ok := getResponseData["securityinsight"]; ok && val != nil {
 		data.Securityinsight = types.StringValue(val.(string))
-	} else {
+	} else if data.Securityinsight.IsUnknown() {
 		data.Securityinsight = types.StringNull()
 	}
 	if val, ok := getResponseData["transactionlog"]; ok && val != nil {
 		data.Transactionlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Transactionlog.IsUnknown() {
 		data.Transactionlog = types.StringNull()
 	}
 	if val, ok := getResponseData["videoanalytics"]; ok && val != nil {
 		data.Videoanalytics = types.StringValue(val.(string))
-	} else {
+	} else if data.Videoanalytics.IsUnknown() {
 		data.Videoanalytics = types.StringNull()
 	}
 	if val, ok := getResponseData["webinsight"]; ok && val != nil {
 		data.Webinsight = types.StringValue(val.(string))
-	} else {
+	} else if data.Webinsight.IsUnknown() {
 		data.Webinsight = types.StringNull()
 	}
 

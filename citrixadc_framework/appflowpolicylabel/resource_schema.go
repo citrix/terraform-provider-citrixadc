@@ -84,17 +84,17 @@ func appflowpolicylabelSetAttrFromGet(ctx context.Context, data *Appflowpolicyla
 	// Convert API response to model
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
+	} else if data.Labelname.IsUnknown() {
 		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
-	} else {
+	} else if data.Newname.IsUnknown() {
 		data.Newname = types.StringNull()
 	}
 	if val, ok := getResponseData["policylabeltype"]; ok && val != nil {
 		data.Policylabeltype = types.StringValue(val.(string))
-	} else {
+	} else if data.Policylabeltype.IsUnknown() {
 		data.Policylabeltype = types.StringNull()
 	}
 

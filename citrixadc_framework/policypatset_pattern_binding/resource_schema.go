@@ -143,26 +143,26 @@ func policypatset_pattern_bindingSetAttrFromGet(ctx context.Context, data *Polic
 	// the binding GET does not echo them) to avoid "unknown value after apply".
 	if val, ok := getResponseData["charset"]; ok && val != nil {
 		data.Charset = types.StringValue(val.(string))
-	} else {
+	} else if data.Charset.IsUnknown() {
 		data.Charset = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["feature"]; ok && val != nil {
 		data.Feature = types.StringValue(val.(string))
-	} else {
+	} else if data.Feature.IsUnknown() {
 		data.Feature = types.StringNull()
 	}
 	if val, ok := getResponseData["index"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Index = types.Int64Value(intVal)
-		} else {
+		} else if data.Index.IsUnknown() {
 			data.Index = types.Int64Null()
 		}
-	} else {
+	} else if data.Index.IsUnknown() {
 		data.Index = types.Int64Null()
 	}
 	// name and string are the identity keys; preserve the configured/state values.

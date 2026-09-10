@@ -72,12 +72,12 @@ func appfwjsoncontenttypeSetAttrFromGet(ctx context.Context, data *Appfwjsoncont
 	// Convert API response to model
 	if val, ok := getResponseData["isregex"]; ok && val != nil {
 		data.Isregex = types.StringValue(val.(string))
-	} else {
+	} else if data.Isregex.IsUnknown() {
 		data.Isregex = types.StringNull()
 	}
 	if val, ok := getResponseData["jsoncontenttypevalue"]; ok && val != nil {
 		data.Jsoncontenttypevalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsoncontenttypevalue.IsUnknown() {
 		data.Jsoncontenttypevalue = types.StringNull()
 	}
 

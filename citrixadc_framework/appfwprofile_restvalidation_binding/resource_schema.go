@@ -151,17 +151,17 @@ func appfwprofile_restvalidation_bindingSetAttrFromGet(ctx context.Context, data
 	// Server-managed read-only attributes - safe to copy from the GET response.
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 
@@ -169,12 +169,12 @@ func appfwprofile_restvalidation_bindingSetAttrFromGet(ctx context.Context, data
 	// normalize them), so populate them here to make `terraform import` round-trip.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

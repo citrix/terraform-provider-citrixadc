@@ -75,6 +75,8 @@ func vpnglobal_appcontroller_bindingSetAttrFromGet(ctx context.Context, data *Vp
 	// Convert API response to model
 	if val, ok := getResponseData["appcontroller"]; ok && val != nil {
 		data.Appcontroller = types.StringValue(val.(string))
+	} else if data.Appcontroller.IsUnknown() {
+		data.Appcontroller = types.StringNull()
 	}
 	// gotopriorityexpression is NOT echoed back by NITRO GET on this binding.
 	// Preserve the existing plan/state value instead of nulling it (Pattern 7).

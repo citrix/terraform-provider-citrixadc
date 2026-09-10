@@ -124,6 +124,8 @@ func vpnglobal_authenticationlocalpolicy_bindingSetAttrFromGet(ctx context.Conte
 	// and only refresh the key (policyname) + ID from the response.
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 
 	// Set ID for the resource

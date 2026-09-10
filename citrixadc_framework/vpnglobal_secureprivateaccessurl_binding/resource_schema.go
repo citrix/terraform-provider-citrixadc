@@ -72,10 +72,12 @@ func vpnglobal_secureprivateaccessurl_bindingSetAttrFromGet(ctx context.Context,
 	// post-apply state matches the user config.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["secureprivateaccessurl"]; ok && val != nil {
 		data.Secureprivateaccessurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Secureprivateaccessurl.IsUnknown() {
 		data.Secureprivateaccessurl = types.StringNull()
 	}
 

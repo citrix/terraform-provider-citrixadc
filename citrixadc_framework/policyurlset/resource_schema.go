@@ -226,36 +226,54 @@ func policyurlsetSetAttrFromGet(ctx context.Context, data *PolicyurlsetResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["canaryurl"]; ok && val != nil {
 		data.Canaryurl = types.StringValue(val.(string))
+	} else if data.Canaryurl.IsUnknown() {
+		data.Canaryurl = types.StringNull()
 	}
 	// comment is not part of the Import action; preserve state value.
 	if val, ok := getResponseData["delimiter"]; ok && val != nil {
 		data.Delimiter = types.StringValue(val.(string))
+	} else if data.Delimiter.IsUnknown() {
+		data.Delimiter = types.StringNull()
 	}
 	// imported is a GET-only filter (Pattern 15); preserve state value.
 	if val, ok := getResponseData["interval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Interval = types.Int64Value(intVal)
 		}
+	} else if data.Interval.IsUnknown() {
+		data.Interval = types.Int64Null()
 	}
 	if val, ok := getResponseData["matchedid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Matchedid = types.Int64Value(intVal)
 		}
+	} else if data.Matchedid.IsUnknown() {
+		data.Matchedid = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["overwrite"]; ok && val != nil {
 		data.Overwrite = types.BoolValue(val.(bool))
+	} else if data.Overwrite.IsUnknown() {
+		data.Overwrite = types.BoolNull()
 	}
 	if val, ok := getResponseData["privateset"]; ok && val != nil {
 		data.Privateset = types.BoolValue(val.(bool))
+	} else if data.Privateset.IsUnknown() {
+		data.Privateset = types.BoolNull()
 	}
 	if val, ok := getResponseData["rowseparator"]; ok && val != nil {
 		data.Rowseparator = types.StringValue(val.(string))
+	} else if data.Rowseparator.IsUnknown() {
+		data.Rowseparator = types.StringNull()
 	}
 	if val, ok := getResponseData["subdomainexactmatch"]; ok && val != nil {
 		data.Subdomainexactmatch = types.BoolValue(val.(bool))
+	} else if data.Subdomainexactmatch.IsUnknown() {
+		data.Subdomainexactmatch = types.BoolNull()
 	}
 	// url is not returned by NITRO API (secret/ephemeral) - retain from config
 	// url_wo is not returned by NITRO API (secret/ephemeral) - retain from config

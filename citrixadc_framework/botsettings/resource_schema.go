@@ -218,24 +218,24 @@ func botsettingsSetAttrFromGet(ctx context.Context, data *BotsettingsResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["defaultnonintrusiveprofile"]; ok && val != nil {
 		data.Defaultnonintrusiveprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultnonintrusiveprofile.IsUnknown() {
 		data.Defaultnonintrusiveprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultprofile"]; ok && val != nil {
 		data.Defaultprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultprofile.IsUnknown() {
 		data.Defaultprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["dfprequestlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dfprequestlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dfprequestlimit.IsUnknown() {
 		data.Dfprequestlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["javascriptname"]; ok && val != nil {
 		data.Javascriptname = types.StringValue(val.(string))
-	} else {
+	} else if data.Javascriptname.IsUnknown() {
 		data.Javascriptname = types.StringNull()
 	}
 	// proxypassword is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -245,58 +245,58 @@ func botsettingsSetAttrFromGet(ctx context.Context, data *BotsettingsResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Proxyport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Proxyport.IsUnknown() {
 		data.Proxyport = types.Int64Null()
 	}
 	if val, ok := getResponseData["proxyserver"]; ok && val != nil {
 		data.Proxyserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyserver.IsUnknown() {
 		data.Proxyserver = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyusername"]; ok && val != nil {
 		data.Proxyusername = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyusername.IsUnknown() {
 		data.Proxyusername = types.StringNull()
 	}
 	if val, ok := getResponseData["sessioncookiename"]; ok && val != nil {
 		data.Sessioncookiename = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessioncookiename.IsUnknown() {
 		data.Sessioncookiename = types.StringNull()
 	}
 	if val, ok := getResponseData["sessiontimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessiontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessiontimeout.IsUnknown() {
 		data.Sessiontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["signatureautoupdate"]; ok && val != nil {
 		data.Signatureautoupdate = types.StringValue(val.(string))
-	} else {
+	} else if data.Signatureautoupdate.IsUnknown() {
 		data.Signatureautoupdate = types.StringNull()
 	}
 	if val, ok := getResponseData["signatureurl"]; ok && val != nil {
 		data.Signatureurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Signatureurl.IsUnknown() {
 		data.Signatureurl = types.StringNull()
 	}
 	if val, ok := getResponseData["trapurlautogenerate"]; ok && val != nil {
 		data.Trapurlautogenerate = types.StringValue(val.(string))
-	} else {
+	} else if data.Trapurlautogenerate.IsUnknown() {
 		data.Trapurlautogenerate = types.StringNull()
 	}
 	if val, ok := getResponseData["trapurlinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Trapurlinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Trapurlinterval.IsUnknown() {
 		data.Trapurlinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["trapurllength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Trapurllength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Trapurllength.IsUnknown() {
 		data.Trapurllength = types.Int64Null()
 	}
 

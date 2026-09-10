@@ -230,42 +230,42 @@ func inatSetAttrFromGet(ctx context.Context, data *InatResourceModel, getRespons
 	// Convert API response to model
 	if val, ok := getResponseData["connfailover"]; ok && val != nil {
 		data.Connfailover = types.StringValue(val.(string))
-	} else {
+	} else if data.Connfailover.IsUnknown() {
 		data.Connfailover = types.StringNull()
 	}
 	if val, ok := getResponseData["ftp"]; ok && val != nil {
 		data.Ftp = types.StringValue(val.(string))
-	} else {
+	} else if data.Ftp.IsUnknown() {
 		data.Ftp = types.StringNull()
 	}
 	if val, ok := getResponseData["mode"]; ok && val != nil {
 		data.Mode = types.StringValue(val.(string))
-	} else {
+	} else if data.Mode.IsUnknown() {
 		data.Mode = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["privateip"]; ok && val != nil {
 		data.Privateip = types.StringValue(val.(string))
-	} else {
+	} else if data.Privateip.IsUnknown() {
 		data.Privateip = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyip"]; ok && val != nil {
 		data.Proxyip = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyip.IsUnknown() {
 		data.Proxyip = types.StringNull()
 	}
 	if val, ok := getResponseData["publicip"]; ok && val != nil {
 		data.Publicip = types.StringValue(val.(string))
-	} else {
+	} else if data.Publicip.IsUnknown() {
 		data.Publicip = types.StringNull()
 	}
 	if val, ok := getResponseData["tcpproxy"]; ok && val != nil {
 		data.Tcpproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Tcpproxy.IsUnknown() {
 		data.Tcpproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
@@ -280,22 +280,22 @@ func inatSetAttrFromGet(ctx context.Context, data *InatResourceModel, getRespons
 	}
 	if val, ok := getResponseData["tftp"]; ok && val != nil {
 		data.Tftp = types.StringValue(val.(string))
-	} else {
+	} else if data.Tftp.IsUnknown() {
 		data.Tftp = types.StringNull()
 	}
 	if val, ok := getResponseData["useproxyport"]; ok && val != nil {
 		data.Useproxyport = types.StringValue(val.(string))
-	} else {
+	} else if data.Useproxyport.IsUnknown() {
 		data.Useproxyport = types.StringNull()
 	}
 	if val, ok := getResponseData["usip"]; ok && val != nil {
 		data.Usip = types.StringValue(val.(string))
-	} else {
+	} else if data.Usip.IsUnknown() {
 		data.Usip = types.StringNull()
 	}
 	if val, ok := getResponseData["usnip"]; ok && val != nil {
 		data.Usnip = types.StringValue(val.(string))
-	} else {
+	} else if data.Usnip.IsUnknown() {
 		data.Usnip = types.StringNull()
 	}
 

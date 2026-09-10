@@ -217,57 +217,57 @@ func appfwprofile_jsonxssurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	// value (do not copy from getResponseData), matching SDK v2 backward-compat behavior.
 	if val, ok := getResponseData["as_value_expr_json_xss"]; ok && val != nil {
 		data.AsValueExprJsonXss = types.StringValue(val.(string))
-	} else {
+	} else if data.AsValueExprJsonXss.IsUnknown() {
 		data.AsValueExprJsonXss = types.StringNull()
 	}
 	if val, ok := getResponseData["as_value_type_json_xss"]; ok && val != nil {
 		data.AsValueTypeJsonXss = types.StringValue(val.(string))
-	} else {
+	} else if data.AsValueTypeJsonXss.IsUnknown() {
 		data.AsValueTypeJsonXss = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["iskeyregex_json_xss"]; ok && val != nil {
 		data.IskeyregexJsonXss = types.StringValue(val.(string))
-	} else {
+	} else if data.IskeyregexJsonXss.IsUnknown() {
 		data.IskeyregexJsonXss = types.StringNull()
 	}
 	if val, ok := getResponseData["isvalueregex_json_xss"]; ok && val != nil {
 		data.IsvalueregexJsonXss = types.StringValue(val.(string))
-	} else {
+	} else if data.IsvalueregexJsonXss.IsUnknown() {
 		data.IsvalueregexJsonXss = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonxssurl"]; ok && val != nil {
 		data.Jsonxssurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonxssurl.IsUnknown() {
 		data.Jsonxssurl = types.StringNull()
 	}
 	if val, ok := getResponseData["keyname_json_xss"]; ok && val != nil {
 		data.KeynameJsonXss = types.StringValue(val.(string))
-	} else {
+	} else if data.KeynameJsonXss.IsUnknown() {
 		data.KeynameJsonXss = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

@@ -108,36 +108,36 @@ func vlanSetAttrFromGet(ctx context.Context, data *VlanResourceModel, getRespons
 	// Convert API response to model
 	if val, ok := getResponseData["aliasname"]; ok && val != nil {
 		data.Aliasname = types.StringValue(val.(string))
-	} else {
+	} else if data.Aliasname.IsUnknown() {
 		data.Aliasname = types.StringNull()
 	}
 	if val, ok := getResponseData["dynamicrouting"]; ok && val != nil {
 		data.Dynamicrouting = types.StringValue(val.(string))
-	} else {
+	} else if data.Dynamicrouting.IsUnknown() {
 		data.Dynamicrouting = types.StringNull()
 	}
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlanid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlanid.IsUnknown() {
 		data.Vlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipv6dynamicrouting"]; ok && val != nil {
 		data.Ipv6dynamicrouting = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv6dynamicrouting.IsUnknown() {
 		data.Ipv6dynamicrouting = types.StringNull()
 	}
 	if val, ok := getResponseData["mtu"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mtu = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mtu.IsUnknown() {
 		data.Mtu = types.Int64Null()
 	}
 	if val, ok := getResponseData["sharing"]; ok && val != nil {
 		data.Sharing = types.StringValue(val.(string))
-	} else {
+	} else if data.Sharing.IsUnknown() {
 		data.Sharing = types.StringNull()
 	}
 

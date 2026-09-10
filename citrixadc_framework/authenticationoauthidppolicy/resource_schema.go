@@ -151,6 +151,8 @@ func authenticationoauthidppolicySetAttrFromGet(ctx context.Context, data *Authe
 	// action is Required and always echoed by GET.
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
+	} else if data.Action.IsUnknown() {
+		data.Action = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
@@ -170,12 +172,16 @@ func authenticationoauthidppolicySetAttrFromGet(ctx context.Context, data *Authe
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	// rule is Required and always echoed by GET.
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))

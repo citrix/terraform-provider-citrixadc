@@ -102,17 +102,17 @@ func lbrouteSetAttrFromGet(ctx context.Context, data *LbrouteResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["gatewayname"]; ok && val != nil {
 		data.Gatewayname = types.StringValue(val.(string))
-	} else {
+	} else if data.Gatewayname.IsUnknown() {
 		data.Gatewayname = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["network"]; ok && val != nil {
 		data.Network = types.StringValue(val.(string))
-	} else {
+	} else if data.Network.IsUnknown() {
 		data.Network = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {

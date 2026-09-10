@@ -157,17 +157,17 @@ func snmpuserSetAttrFromGet(ctx context.Context, data *SnmpuserResourceModel, ge
 	// authpasswd_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["authtype"]; ok && val != nil {
 		data.Authtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Authtype.IsUnknown() {
 		data.Authtype = types.StringNull()
 	}
 	if val, ok := getResponseData["group"]; ok && val != nil {
 		data.Group = types.StringValue(val.(string))
-	} else {
+	} else if data.Group.IsUnknown() {
 		data.Group = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// privpasswd is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -175,7 +175,7 @@ func snmpuserSetAttrFromGet(ctx context.Context, data *SnmpuserResourceModel, ge
 	// privpasswd_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["privtype"]; ok && val != nil {
 		data.Privtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Privtype.IsUnknown() {
 		data.Privtype = types.StringNull()
 	}
 

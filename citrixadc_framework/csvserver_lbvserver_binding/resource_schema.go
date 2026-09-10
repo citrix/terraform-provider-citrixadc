@@ -82,17 +82,17 @@ func csvserver_lbvserver_bindingSetAttrFromGet(ctx context.Context, data *Csvser
 	// Convert API response to model
 	if val, ok := getResponseData["lbvserver"]; ok && val != nil {
 		data.Lbvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Lbvserver.IsUnknown() {
 		data.Lbvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["targetvserver"]; ok && val != nil {
 		data.Targetvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Targetvserver.IsUnknown() {
 		data.Targetvserver = types.StringNull()
 	}
 

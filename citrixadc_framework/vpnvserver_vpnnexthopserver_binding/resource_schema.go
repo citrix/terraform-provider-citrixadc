@@ -71,12 +71,12 @@ func vpnvserver_vpnnexthopserver_bindingSetAttrFromGet(ctx context.Context, data
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["nexthopserver"]; ok && val != nil {
 		data.Nexthopserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Nexthopserver.IsUnknown() {
 		data.Nexthopserver = types.StringNull()
 	}
 

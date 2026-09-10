@@ -188,51 +188,51 @@ func lbvserver_tmtrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 	// Convert API response to model
 	if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 		data.Bindpoint = types.StringValue(val.(string))
-	} else {
+	} else if data.Bindpoint.IsUnknown() {
 		data.Bindpoint = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(boolFromGet(val))
-	} else {
+	} else if data.Invoke.IsUnknown() {
 		data.Invoke = types.BoolNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
+	} else if data.Labelname.IsUnknown() {
 		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
-	} else {
+	} else if data.Labeltype.IsUnknown() {
 		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["order"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Order = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Order.IsUnknown() {
 		data.Order = types.Int64Null()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Policyname.IsUnknown() {
 		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 

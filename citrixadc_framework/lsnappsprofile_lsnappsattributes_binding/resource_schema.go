@@ -71,12 +71,12 @@ func lsnappsprofile_lsnappsattributes_bindingSetAttrFromGet(ctx context.Context,
 	// Convert API response to model
 	if val, ok := getResponseData["appsattributesname"]; ok && val != nil {
 		data.Appsattributesname = types.StringValue(val.(string))
-	} else {
+	} else if data.Appsattributesname.IsUnknown() {
 		data.Appsattributesname = types.StringNull()
 	}
 	if val, ok := getResponseData["appsprofilename"]; ok && val != nil {
 		data.Appsprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Appsprofilename.IsUnknown() {
 		data.Appsprofilename = types.StringNull()
 	}
 

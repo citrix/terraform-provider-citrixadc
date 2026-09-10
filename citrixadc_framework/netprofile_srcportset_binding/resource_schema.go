@@ -71,12 +71,12 @@ func netprofile_srcportset_bindingSetAttrFromGet(ctx context.Context, data *Netp
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["srcportrange"]; ok && val != nil {
 		data.Srcportrange = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcportrange.IsUnknown() {
 		data.Srcportrange = types.StringNull()
 	}
 

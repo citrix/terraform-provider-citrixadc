@@ -133,12 +133,12 @@ func nsencryptionkeySetAttrFromGet(ctx context.Context, data *NsencryptionkeyRes
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["iv"]; ok && val != nil {
 		data.Iv = types.StringValue(val.(string))
-	} else {
+	} else if data.Iv.IsUnknown() {
 		data.Iv = types.StringNull()
 	}
 	// keyvalue is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -146,17 +146,17 @@ func nsencryptionkeySetAttrFromGet(ctx context.Context, data *NsencryptionkeyRes
 	// keyvalue_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["method"]; ok && val != nil {
 		data.Method = types.StringValue(val.(string))
-	} else {
+	} else if data.Method.IsUnknown() {
 		data.Method = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["padding"]; ok && val != nil {
 		data.Padding = types.StringValue(val.(string))
-	} else {
+	} else if data.Padding.IsUnknown() {
 		data.Padding = types.StringNull()
 	}
 

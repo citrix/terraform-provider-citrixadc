@@ -914,231 +914,231 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
 		data.Aigwprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Aigwprofilename.IsUnknown() {
 		data.Aigwprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["apiprofile"]; ok && val != nil {
 		data.Apiprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Apiprofile.IsUnknown() {
 		data.Apiprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Appflowlog.IsUnknown() {
 		data.Appflowlog = types.StringNull()
 	}
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["authenticationhost"]; ok && val != nil {
 		data.Authenticationhost = types.StringValue(val.(string))
-	} else {
+	} else if data.Authenticationhost.IsUnknown() {
 		data.Authenticationhost = types.StringNull()
 	}
 	if val, ok := getResponseData["authn401"]; ok && val != nil {
 		data.Authn401 = types.StringValue(val.(string))
-	} else {
+	} else if data.Authn401.IsUnknown() {
 		data.Authn401 = types.StringNull()
 	}
 	if val, ok := getResponseData["authnprofile"]; ok && val != nil {
 		data.Authnprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Authnprofile.IsUnknown() {
 		data.Authnprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["authnvsname"]; ok && val != nil {
 		data.Authnvsname = types.StringValue(val.(string))
-	} else {
+	} else if data.Authnvsname.IsUnknown() {
 		data.Authnvsname = types.StringNull()
 	}
 	if val, ok := getResponseData["backupip"]; ok && val != nil {
 		data.Backupip = types.StringValue(val.(string))
-	} else {
+	} else if data.Backupip.IsUnknown() {
 		data.Backupip = types.StringNull()
 	}
 	if val, ok := getResponseData["backuppersistencetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Backuppersistencetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Backuppersistencetimeout.IsUnknown() {
 		data.Backuppersistencetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["backupvserver"]; ok && val != nil {
 		data.Backupvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Backupvserver.IsUnknown() {
 		data.Backupvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["cacheable"]; ok && val != nil {
 		data.Cacheable = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacheable.IsUnknown() {
 		data.Cacheable = types.StringNull()
 	}
 	if val, ok := getResponseData["casesensitive"]; ok && val != nil {
 		data.Casesensitive = types.StringValue(val.(string))
-	} else {
+	} else if data.Casesensitive.IsUnknown() {
 		data.Casesensitive = types.StringNull()
 	}
 	if val, ok := getResponseData["clttimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Clttimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Clttimeout.IsUnknown() {
 		data.Clttimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiedomain"]; ok && val != nil {
 		data.Cookiedomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiedomain.IsUnknown() {
 		data.Cookiedomain = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiename"]; ok && val != nil {
 		data.Cookiename = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiename.IsUnknown() {
 		data.Cookiename = types.StringNull()
 	}
 	if val, ok := getResponseData["cookietimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookietimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cookietimeout.IsUnknown() {
 		data.Cookietimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["dbprofilename"]; ok && val != nil {
 		data.Dbprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Dbprofilename.IsUnknown() {
 		data.Dbprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["disableprimaryondown"]; ok && val != nil {
 		data.Disableprimaryondown = types.StringValue(val.(string))
-	} else {
+	} else if data.Disableprimaryondown.IsUnknown() {
 		data.Disableprimaryondown = types.StringNull()
 	}
 	if val, ok := getResponseData["dnsoverhttps"]; ok && val != nil {
 		data.Dnsoverhttps = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnsoverhttps.IsUnknown() {
 		data.Dnsoverhttps = types.StringNull()
 	}
 	if val, ok := getResponseData["dnsprofilename"]; ok && val != nil {
 		data.Dnsprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnsprofilename.IsUnknown() {
 		data.Dnsprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["dnsrecordtype"]; ok && val != nil {
 		data.Dnsrecordtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnsrecordtype.IsUnknown() {
 		data.Dnsrecordtype = types.StringNull()
 	}
 	if val, ok := getResponseData["domainname"]; ok && val != nil {
 		data.Domainname = types.StringValue(val.(string))
-	} else {
+	} else if data.Domainname.IsUnknown() {
 		data.Domainname = types.StringNull()
 	}
 	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
 		data.Downstateflush = types.StringValue(val.(string))
-	} else {
+	} else if data.Downstateflush.IsUnknown() {
 		data.Downstateflush = types.StringNull()
 	}
 	if val, ok := getResponseData["dtls"]; ok && val != nil {
 		data.Dtls = types.StringValue(val.(string))
-	} else {
+	} else if data.Dtls.IsUnknown() {
 		data.Dtls = types.StringNull()
 	}
 	if val, ok := getResponseData["httpprofilename"]; ok && val != nil {
 		data.Httpprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpprofilename.IsUnknown() {
 		data.Httpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["httpsredirecturl"]; ok && val != nil {
 		data.Httpsredirecturl = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpsredirecturl.IsUnknown() {
 		data.Httpsredirecturl = types.StringNull()
 	}
 	if val, ok := getResponseData["icmpvsrresponse"]; ok && val != nil {
 		data.Icmpvsrresponse = types.StringValue(val.(string))
-	} else {
+	} else if data.Icmpvsrresponse.IsUnknown() {
 		data.Icmpvsrresponse = types.StringNull()
 	}
 	if val, ok := getResponseData["insertvserveripport"]; ok && val != nil {
 		data.Insertvserveripport = types.StringValue(val.(string))
-	} else {
+	} else if data.Insertvserveripport.IsUnknown() {
 		data.Insertvserveripport = types.StringNull()
 	}
 	if val, ok := getResponseData["ipmask"]; ok && val != nil {
 		data.Ipmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipmask.IsUnknown() {
 		data.Ipmask = types.StringNull()
 	}
 	if val, ok := getResponseData["ippattern"]; ok && val != nil {
 		data.Ippattern = types.StringValue(val.(string))
-	} else {
+	} else if data.Ippattern.IsUnknown() {
 		data.Ippattern = types.StringNull()
 	}
 	if val, ok := getResponseData["ipset"]; ok && val != nil {
 		data.Ipset = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipset.IsUnknown() {
 		data.Ipset = types.StringNull()
 	}
 	if val, ok := getResponseData["ipv46"]; ok && val != nil {
 		data.Ipv46 = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv46.IsUnknown() {
 		data.Ipv46 = types.StringNull()
 	}
 	if val, ok := getResponseData["l2conn"]; ok && val != nil {
 		data.L2conn = types.StringValue(val.(string))
-	} else {
+	} else if data.L2conn.IsUnknown() {
 		data.L2conn = types.StringNull()
 	}
 	if val, ok := getResponseData["listenpolicy"]; ok && val != nil {
 		data.Listenpolicy = types.StringValue(val.(string))
-	} else {
+	} else if data.Listenpolicy.IsUnknown() {
 		data.Listenpolicy = types.StringNull()
 	}
 	if val, ok := getResponseData["listenpriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Listenpriority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Listenpriority.IsUnknown() {
 		data.Listenpriority = types.Int64Null()
 	}
 	if val, ok := getResponseData["mcpprofilename"]; ok && val != nil {
 		data.Mcpprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Mcpprofilename.IsUnknown() {
 		data.Mcpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["mssqlserverversion"]; ok && val != nil {
 		data.Mssqlserverversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Mssqlserverversion.IsUnknown() {
 		data.Mssqlserverversion = types.StringNull()
 	}
 	if val, ok := getResponseData["mysqlcharacterset"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mysqlcharacterset = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mysqlcharacterset.IsUnknown() {
 		data.Mysqlcharacterset = types.Int64Null()
 	}
 	if val, ok := getResponseData["mysqlprotocolversion"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mysqlprotocolversion = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mysqlprotocolversion.IsUnknown() {
 		data.Mysqlprotocolversion = types.Int64Null()
 	}
 	if val, ok := getResponseData["mysqlservercapabilities"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mysqlservercapabilities = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mysqlservercapabilities.IsUnknown() {
 		data.Mysqlservercapabilities = types.Int64Null()
 	}
 	if val, ok := getResponseData["mysqlserverversion"]; ok && val != nil {
 		data.Mysqlserverversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Mysqlserverversion.IsUnknown() {
 		data.Mysqlserverversion = types.StringNull()
 	}
 	// Preserve the configured name. Only adopt the name from the GET response
@@ -1149,169 +1149,171 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	if data.Name.IsNull() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["netprofile"]; ok && val != nil {
 		data.Netprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Netprofile.IsUnknown() {
 		data.Netprofile = types.StringNull()
 	}
 	// newname is rename-only and never returned by GET; preserve the plan/state
 	// value so it does not flap to null on read.
 	if val, ok := getResponseData["oracleserverversion"]; ok && val != nil {
 		data.Oracleserverversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Oracleserverversion.IsUnknown() {
 		data.Oracleserverversion = types.StringNull()
 	}
 	if val, ok := getResponseData["persistencebackup"]; ok && val != nil {
 		data.Persistencebackup = types.StringValue(val.(string))
-	} else {
+	} else if data.Persistencebackup.IsUnknown() {
 		data.Persistencebackup = types.StringNull()
 	}
 	if val, ok := getResponseData["persistenceid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Persistenceid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Persistenceid.IsUnknown() {
 		data.Persistenceid = types.Int64Null()
 	}
 	if val, ok := getResponseData["persistencetype"]; ok && val != nil {
 		data.Persistencetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Persistencetype.IsUnknown() {
 		data.Persistencetype = types.StringNull()
 	}
 	if val, ok := getResponseData["persistmask"]; ok && val != nil {
 		data.Persistmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Persistmask.IsUnknown() {
 		data.Persistmask = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["precedence"]; ok && val != nil {
 		data.Precedence = types.StringValue(val.(string))
-	} else {
+	} else if data.Precedence.IsUnknown() {
 		data.Precedence = types.StringNull()
 	}
 	if val, ok := getResponseData["probeport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Probeport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Probeport.IsUnknown() {
 		data.Probeport = types.Int64Null()
 	}
 	if val, ok := getResponseData["probeprotocol"]; ok && val != nil {
 		data.Probeprotocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Probeprotocol.IsUnknown() {
 		data.Probeprotocol = types.StringNull()
 	}
 	if val, ok := getResponseData["probesuccessresponsecode"]; ok && val != nil {
 		data.Probesuccessresponsecode = types.StringValue(val.(string))
-	} else {
+	} else if data.Probesuccessresponsecode.IsUnknown() {
 		data.Probesuccessresponsecode = types.StringNull()
 	}
 	if val, ok := getResponseData["push"]; ok && val != nil {
 		data.Push = types.StringValue(val.(string))
-	} else {
+	} else if data.Push.IsUnknown() {
 		data.Push = types.StringNull()
 	}
 	if val, ok := getResponseData["pushlabel"]; ok && val != nil {
 		data.Pushlabel = types.StringValue(val.(string))
-	} else {
+	} else if data.Pushlabel.IsUnknown() {
 		data.Pushlabel = types.StringNull()
 	}
 	if val, ok := getResponseData["pushmulticlients"]; ok && val != nil {
 		data.Pushmulticlients = types.StringValue(val.(string))
-	} else {
+	} else if data.Pushmulticlients.IsUnknown() {
 		data.Pushmulticlients = types.StringNull()
 	}
 	if val, ok := getResponseData["pushvserver"]; ok && val != nil {
 		data.Pushvserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Pushvserver.IsUnknown() {
 		data.Pushvserver = types.StringNull()
 	}
 	if val, ok := getResponseData["quicprofilename"]; ok && val != nil {
 		data.Quicprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Quicprofilename.IsUnknown() {
 		data.Quicprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["range"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Range = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Range.IsUnknown() {
 		data.Range = types.Int64Null()
 	}
 	if val, ok := getResponseData["redirectfromport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Redirectfromport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Redirectfromport.IsUnknown() {
 		data.Redirectfromport = types.Int64Null()
 	}
 	if val, ok := getResponseData["redirectportrewrite"]; ok && val != nil {
 		data.Redirectportrewrite = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirectportrewrite.IsUnknown() {
 		data.Redirectportrewrite = types.StringNull()
 	}
 	if val, ok := getResponseData["redirecturl"]; ok && val != nil {
 		data.Redirecturl = types.StringValue(val.(string))
-	} else {
+	} else if data.Redirecturl.IsUnknown() {
 		data.Redirecturl = types.StringNull()
 	}
 	if val, ok := getResponseData["rhistate"]; ok && val != nil {
 		data.Rhistate = types.StringValue(val.(string))
-	} else {
+	} else if data.Rhistate.IsUnknown() {
 		data.Rhistate = types.StringNull()
 	}
 	if val, ok := getResponseData["rtspnat"]; ok && val != nil {
 		data.Rtspnat = types.StringValue(val.(string))
-	} else {
+	} else if data.Rtspnat.IsUnknown() {
 		data.Rtspnat = types.StringNull()
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicetype.IsUnknown() {
 		data.Servicetype = types.StringNull()
 	}
 	if val, ok := getResponseData["sitedomainttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sitedomainttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sitedomainttl.IsUnknown() {
 		data.Sitedomainttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["sobackupaction"]; ok && val != nil {
 		data.Sobackupaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Sobackupaction.IsUnknown() {
 		data.Sobackupaction = types.StringNull()
 	}
 	if val, ok := getResponseData["somethod"]; ok && val != nil {
 		data.Somethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Somethod.IsUnknown() {
 		data.Somethod = types.StringNull()
 	}
 	if val, ok := getResponseData["sopersistence"]; ok && val != nil {
 		data.Sopersistence = types.StringValue(val.(string))
-	} else {
+	} else if data.Sopersistence.IsUnknown() {
 		data.Sopersistence = types.StringNull()
 	}
 	if val, ok := getResponseData["sopersistencetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sopersistencetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sopersistencetimeout.IsUnknown() {
 		data.Sopersistencetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["sothreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sothreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sothreshold.IsUnknown() {
 		data.Sothreshold = types.Int64Null()
 	}
 	// The csvserver GET returns the operational status as "curstate" and does
@@ -1325,62 +1327,62 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	}
 	if val, ok := getResponseData["stateupdate"]; ok && val != nil {
 		data.Stateupdate = types.StringValue(val.(string))
-	} else {
+	} else if data.Stateupdate.IsUnknown() {
 		data.Stateupdate = types.StringNull()
 	}
 	if val, ok := getResponseData["targettype"]; ok && val != nil {
 		data.Targettype = types.StringValue(val.(string))
-	} else {
+	} else if data.Targettype.IsUnknown() {
 		data.Targettype = types.StringNull()
 	}
 	if val, ok := getResponseData["tcpprobeport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcpprobeport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcpprobeport.IsUnknown() {
 		data.Tcpprobeport = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcpprofilename"]; ok && val != nil {
 		data.Tcpprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Tcpprofilename.IsUnknown() {
 		data.Tcpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
 		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["v6persistmasklen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.V6persistmasklen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.V6persistmasklen.IsUnknown() {
 		data.V6persistmasklen = types.Int64Null()
 	}
 	if val, ok := getResponseData["vipheader"]; ok && val != nil {
 		data.Vipheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Vipheader.IsUnknown() {
 		data.Vipheader = types.StringNull()
 	}
 	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
 		data.Wasmmodule = types.StringValue(val.(string))
-	} else {
+	} else if data.Wasmmodule.IsUnknown() {
 		data.Wasmmodule = types.StringNull()
 	}
 
@@ -1390,6 +1392,8 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	// It also sets the ID for the datasource, which has no Create.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Id = types.StringValue(val.(string))
+	} else if data.Id.IsUnknown() {
+		data.Id = types.StringNull()
 	}
 
 	return data

@@ -2131,32 +2131,32 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["addcookieflags"]; ok && val != nil {
 		data.Addcookieflags = types.StringValue(val.(string))
-	} else {
+	} else if data.Addcookieflags.IsUnknown() {
 		data.Addcookieflags = types.StringNull()
 	}
 	if val, ok := getResponseData["apispec"]; ok && val != nil {
 		data.Apispec = types.StringValue(val.(string))
-	} else {
+	} else if data.Apispec.IsUnknown() {
 		data.Apispec = types.StringNull()
 	}
 	if val, ok := getResponseData["archivename"]; ok && val != nil {
 		data.Archivename = types.StringValue(val.(string))
-	} else {
+	} else if data.Archivename.IsUnknown() {
 		data.Archivename = types.StringNull()
 	}
 	if val, ok := getResponseData["as_prof_bypass_list_enable"]; ok && val != nil {
 		data.AsProfBypassListEnable = types.StringValue(val.(string))
-	} else {
+	} else if data.AsProfBypassListEnable.IsUnknown() {
 		data.AsProfBypassListEnable = types.StringNull()
 	}
 	if val, ok := getResponseData["as_prof_deny_list_enable"]; ok && val != nil {
 		data.AsProfDenyListEnable = types.StringValue(val.(string))
-	} else {
+	} else if data.AsProfDenyListEnable.IsUnknown() {
 		data.AsProfDenyListEnable = types.StringNull()
 	}
 	if val, ok := getResponseData["augment"]; ok && val != nil {
 		data.Augment = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Augment.IsUnknown() {
 		data.Augment = types.BoolNull()
 	}
 	if val, ok := getResponseData["blockkeywordaction"]; ok && val != nil {
@@ -2193,55 +2193,55 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bufferoverflowmaxcookielength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bufferoverflowmaxcookielength.IsUnknown() {
 		data.Bufferoverflowmaxcookielength = types.Int64Null()
 	}
 	if val, ok := getResponseData["bufferoverflowmaxheaderlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bufferoverflowmaxheaderlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bufferoverflowmaxheaderlength.IsUnknown() {
 		data.Bufferoverflowmaxheaderlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["bufferoverflowmaxquerylength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bufferoverflowmaxquerylength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bufferoverflowmaxquerylength.IsUnknown() {
 		data.Bufferoverflowmaxquerylength = types.Int64Null()
 	}
 	if val, ok := getResponseData["bufferoverflowmaxtotalheaderlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bufferoverflowmaxtotalheaderlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bufferoverflowmaxtotalheaderlength.IsUnknown() {
 		data.Bufferoverflowmaxtotalheaderlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["bufferoverflowmaxurllength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bufferoverflowmaxurllength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bufferoverflowmaxurllength.IsUnknown() {
 		data.Bufferoverflowmaxurllength = types.Int64Null()
 	}
 	if val, ok := getResponseData["canonicalizehtmlresponse"]; ok && val != nil {
 		data.Canonicalizehtmlresponse = types.StringValue(val.(string))
-	} else {
+	} else if data.Canonicalizehtmlresponse.IsUnknown() {
 		data.Canonicalizehtmlresponse = types.StringNull()
 	}
 	if val, ok := getResponseData["ceflogging"]; ok && val != nil {
 		data.Ceflogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Ceflogging.IsUnknown() {
 		data.Ceflogging = types.StringNull()
 	}
 	if val, ok := getResponseData["checkrequestheaders"]; ok && val != nil {
 		data.Checkrequestheaders = types.StringValue(val.(string))
-	} else {
+	} else if data.Checkrequestheaders.IsUnknown() {
 		data.Checkrequestheaders = types.StringNull()
 	}
 	if val, ok := getResponseData["clientipexpression"]; ok && val != nil {
 		data.Clientipexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientipexpression.IsUnknown() {
 		data.Clientipexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["cmdinjectionaction"]; ok && val != nil {
@@ -2261,17 +2261,17 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["cmdinjectiongrammar"]; ok && val != nil {
 		data.Cmdinjectiongrammar = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmdinjectiongrammar.IsUnknown() {
 		data.Cmdinjectiongrammar = types.StringNull()
 	}
 	if val, ok := getResponseData["cmdinjectiontype"]; ok && val != nil {
 		data.Cmdinjectiontype = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmdinjectiontype.IsUnknown() {
 		data.Cmdinjectiontype = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["contenttypeaction"]; ok && val != nil {
@@ -2306,7 +2306,7 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["cookieencryption"]; ok && val != nil {
 		data.Cookieencryption = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookieencryption.IsUnknown() {
 		data.Cookieencryption = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiehijackingaction"]; ok && val != nil {
@@ -2326,17 +2326,17 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["cookieproxying"]; ok && val != nil {
 		data.Cookieproxying = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookieproxying.IsUnknown() {
 		data.Cookieproxying = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiesamesiteattribute"]; ok && val != nil {
 		data.Cookiesamesiteattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiesamesiteattribute.IsUnknown() {
 		data.Cookiesamesiteattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["cookietransforms"]; ok && val != nil {
 		data.Cookietransforms = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookietransforms.IsUnknown() {
 		data.Cookietransforms = types.StringNull()
 	}
 	if val, ok := getResponseData["creditcard"]; ok && val != nil {
@@ -2373,12 +2373,12 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Creditcardmaxallowed = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Creditcardmaxallowed.IsUnknown() {
 		data.Creditcardmaxallowed = types.Int64Null()
 	}
 	if val, ok := getResponseData["creditcardxout"]; ok && val != nil {
 		data.Creditcardxout = types.StringValue(val.(string))
-	} else {
+	} else if data.Creditcardxout.IsUnknown() {
 		data.Creditcardxout = types.StringNull()
 	}
 	if val, ok := getResponseData["crosssitescriptingaction"]; ok && val != nil {
@@ -2398,12 +2398,12 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["crosssitescriptingcheckcompleteurls"]; ok && val != nil {
 		data.Crosssitescriptingcheckcompleteurls = types.StringValue(val.(string))
-	} else {
+	} else if data.Crosssitescriptingcheckcompleteurls.IsUnknown() {
 		data.Crosssitescriptingcheckcompleteurls = types.StringNull()
 	}
 	if val, ok := getResponseData["crosssitescriptingtransformunsafehtml"]; ok && val != nil {
 		data.Crosssitescriptingtransformunsafehtml = types.StringValue(val.(string))
-	} else {
+	} else if data.Crosssitescriptingtransformunsafehtml.IsUnknown() {
 		data.Crosssitescriptingtransformunsafehtml = types.StringNull()
 	}
 	if val, ok := getResponseData["csrftagaction"]; ok && val != nil {
@@ -2423,43 +2423,43 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["customsettings"]; ok && val != nil {
 		data.Customsettings = types.StringValue(val.(string))
-	} else {
+	} else if data.Customsettings.IsUnknown() {
 		data.Customsettings = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultcharset"]; ok && val != nil {
 		data.Defaultcharset = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultcharset.IsUnknown() {
 		data.Defaultcharset = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultfieldformatmaxlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Defaultfieldformatmaxlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Defaultfieldformatmaxlength.IsUnknown() {
 		data.Defaultfieldformatmaxlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["defaultfieldformatmaxoccurrences"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Defaultfieldformatmaxoccurrences = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Defaultfieldformatmaxoccurrences.IsUnknown() {
 		data.Defaultfieldformatmaxoccurrences = types.Int64Null()
 	}
 	if val, ok := getResponseData["defaultfieldformatminlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Defaultfieldformatminlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Defaultfieldformatminlength.IsUnknown() {
 		data.Defaultfieldformatminlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["defaultfieldformattype"]; ok && val != nil {
 		data.Defaultfieldformattype = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultfieldformattype.IsUnknown() {
 		data.Defaultfieldformattype = types.StringNull()
 	}
 	if val, ok := getResponseData["defaults"]; ok && val != nil {
 		data.Defaults = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaults.IsUnknown() {
 		data.Defaults = types.StringNull()
 	}
 	if val, ok := getResponseData["denyurlaction"]; ok && val != nil {
@@ -2479,7 +2479,7 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["dosecurecreditcardlogging"]; ok && val != nil {
 		data.Dosecurecreditcardlogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Dosecurecreditcardlogging.IsUnknown() {
 		data.Dosecurecreditcardlogging = types.StringNull()
 	}
 	if val, ok := getResponseData["dynamiclearning"]; ok && val != nil {
@@ -2499,27 +2499,27 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["enableformtagging"]; ok && val != nil {
 		data.Enableformtagging = types.StringValue(val.(string))
-	} else {
+	} else if data.Enableformtagging.IsUnknown() {
 		data.Enableformtagging = types.StringNull()
 	}
 	if val, ok := getResponseData["errorurl"]; ok && val != nil {
 		data.Errorurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Errorurl.IsUnknown() {
 		data.Errorurl = types.StringNull()
 	}
 	if val, ok := getResponseData["excludefileuploadfromchecks"]; ok && val != nil {
 		data.Excludefileuploadfromchecks = types.StringValue(val.(string))
-	} else {
+	} else if data.Excludefileuploadfromchecks.IsUnknown() {
 		data.Excludefileuploadfromchecks = types.StringNull()
 	}
 	if val, ok := getResponseData["exemptclosureurlsfromsecuritychecks"]; ok && val != nil {
 		data.Exemptclosureurlsfromsecuritychecks = types.StringValue(val.(string))
-	} else {
+	} else if data.Exemptclosureurlsfromsecuritychecks.IsUnknown() {
 		data.Exemptclosureurlsfromsecuritychecks = types.StringNull()
 	}
 	if val, ok := getResponseData["fakeaccountdetection"]; ok && val != nil {
 		data.Fakeaccountdetection = types.StringValue(val.(string))
-	} else {
+	} else if data.Fakeaccountdetection.IsUnknown() {
 		data.Fakeaccountdetection = types.StringNull()
 	}
 	if val, ok := getResponseData["fieldconsistencyaction"]; ok && val != nil {
@@ -2554,21 +2554,21 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["fieldscan"]; ok && val != nil {
 		data.Fieldscan = types.StringValue(val.(string))
-	} else {
+	} else if data.Fieldscan.IsUnknown() {
 		data.Fieldscan = types.StringNull()
 	}
 	if val, ok := getResponseData["fieldscanlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldscanlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldscanlimit.IsUnknown() {
 		data.Fieldscanlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["fileuploadmaxnum"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fileuploadmaxnum = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fileuploadmaxnum.IsUnknown() {
 		data.Fileuploadmaxnum = types.Int64Null()
 	}
 	if val, ok := getResponseData["fileuploadtypesaction"]; ok && val != nil {
@@ -2588,7 +2588,7 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["geolocationlogging"]; ok && val != nil {
 		data.Geolocationlogging = types.StringValue(val.(string))
-	} else {
+	} else if data.Geolocationlogging.IsUnknown() {
 		data.Geolocationlogging = types.StringNull()
 	}
 	if val, ok := getResponseData["grpcaction"]; ok && val != nil {
@@ -2608,24 +2608,24 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["htmlerrorobject"]; ok && val != nil {
 		data.Htmlerrorobject = types.StringValue(val.(string))
-	} else {
+	} else if data.Htmlerrorobject.IsUnknown() {
 		data.Htmlerrorobject = types.StringNull()
 	}
 	if val, ok := getResponseData["htmlerrorstatuscode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Htmlerrorstatuscode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Htmlerrorstatuscode.IsUnknown() {
 		data.Htmlerrorstatuscode = types.Int64Null()
 	}
 	if val, ok := getResponseData["htmlerrorstatusmessage"]; ok && val != nil {
 		data.Htmlerrorstatusmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Htmlerrorstatusmessage.IsUnknown() {
 		data.Htmlerrorstatusmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["importprofilename"]; ok && val != nil {
 		data.Importprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Importprofilename.IsUnknown() {
 		data.Importprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["infercontenttypexmlpayloadaction"]; ok && val != nil {
@@ -2645,7 +2645,7 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["insertcookiesamesiteattribute"]; ok && val != nil {
 		data.Insertcookiesamesiteattribute = types.StringValue(val.(string))
-	} else {
+	} else if data.Insertcookiesamesiteattribute.IsUnknown() {
 		data.Insertcookiesamesiteattribute = types.StringNull()
 	}
 	if val, ok := getResponseData["inspectcontenttypes"]; ok && val != nil {
@@ -2680,7 +2680,7 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["invalidpercenthandling"]; ok && val != nil {
 		data.Invalidpercenthandling = types.StringValue(val.(string))
-	} else {
+	} else if data.Invalidpercenthandling.IsUnknown() {
 		data.Invalidpercenthandling = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonblockkeywordaction"]; ok && val != nil {
@@ -2715,12 +2715,12 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["jsoncmdinjectiongrammar"]; ok && val != nil {
 		data.Jsoncmdinjectiongrammar = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsoncmdinjectiongrammar.IsUnknown() {
 		data.Jsoncmdinjectiongrammar = types.StringNull()
 	}
 	if val, ok := getResponseData["jsoncmdinjectiontype"]; ok && val != nil {
 		data.Jsoncmdinjectiontype = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsoncmdinjectiontype.IsUnknown() {
 		data.Jsoncmdinjectiontype = types.StringNull()
 	}
 	if val, ok := getResponseData["jsondosaction"]; ok && val != nil {
@@ -2740,43 +2740,43 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["jsonerrorobject"]; ok && val != nil {
 		data.Jsonerrorobject = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonerrorobject.IsUnknown() {
 		data.Jsonerrorobject = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonerrorstatuscode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonerrorstatuscode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonerrorstatuscode.IsUnknown() {
 		data.Jsonerrorstatuscode = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonerrorstatusmessage"]; ok && val != nil {
 		data.Jsonerrorstatusmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonerrorstatusmessage.IsUnknown() {
 		data.Jsonerrorstatusmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonfieldscan"]; ok && val != nil {
 		data.Jsonfieldscan = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonfieldscan.IsUnknown() {
 		data.Jsonfieldscan = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonfieldscanlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonfieldscanlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonfieldscanlimit.IsUnknown() {
 		data.Jsonfieldscanlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonmessagescan"]; ok && val != nil {
 		data.Jsonmessagescan = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonmessagescan.IsUnknown() {
 		data.Jsonmessagescan = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonmessagescanlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsonmessagescanlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsonmessagescanlimit.IsUnknown() {
 		data.Jsonmessagescanlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsonsqlinjectionaction"]; ok && val != nil {
@@ -2796,12 +2796,12 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["jsonsqlinjectiongrammar"]; ok && val != nil {
 		data.Jsonsqlinjectiongrammar = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonsqlinjectiongrammar.IsUnknown() {
 		data.Jsonsqlinjectiongrammar = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonsqlinjectiontype"]; ok && val != nil {
 		data.Jsonsqlinjectiontype = types.StringValue(val.(string))
-	} else {
+	} else if data.Jsonsqlinjectiontype.IsUnknown() {
 		data.Jsonsqlinjectiontype = types.StringNull()
 	}
 	if val, ok := getResponseData["jsonxssaction"]; ok && val != nil {
@@ -2821,24 +2821,24 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["logeverypolicyhit"]; ok && val != nil {
 		data.Logeverypolicyhit = types.StringValue(val.(string))
-	} else {
+	} else if data.Logeverypolicyhit.IsUnknown() {
 		data.Logeverypolicyhit = types.StringNull()
 	}
 	if val, ok := getResponseData["matchurlstring"]; ok && val != nil {
 		data.Matchurlstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Matchurlstring.IsUnknown() {
 		data.Matchurlstring = types.StringNull()
 	}
 	if val, ok := getResponseData["messagescan"]; ok && val != nil {
 		data.Messagescan = types.StringValue(val.(string))
-	} else {
+	} else if data.Messagescan.IsUnknown() {
 		data.Messagescan = types.StringNull()
 	}
 	if val, ok := getResponseData["messagescanlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Messagescanlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Messagescanlimit.IsUnknown() {
 		data.Messagescanlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["messagescanlimitcontenttypes"]; ok && val != nil {
@@ -2873,29 +2873,29 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["optimizepartialreqs"]; ok && val != nil {
 		data.Optimizepartialreqs = types.StringValue(val.(string))
-	} else {
+	} else if data.Optimizepartialreqs.IsUnknown() {
 		data.Optimizepartialreqs = types.StringNull()
 	}
 	if val, ok := getResponseData["overwrite"]; ok && val != nil {
 		data.Overwrite = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Overwrite.IsUnknown() {
 		data.Overwrite = types.BoolNull()
 	}
 	if val, ok := getResponseData["percentdecoderecursively"]; ok && val != nil {
 		data.Percentdecoderecursively = types.StringValue(val.(string))
-	} else {
+	} else if data.Percentdecoderecursively.IsUnknown() {
 		data.Percentdecoderecursively = types.StringNull()
 	}
 	if val, ok := getResponseData["postbodylimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Postbodylimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Postbodylimit.IsUnknown() {
 		data.Postbodylimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["postbodylimitaction"]; ok && val != nil {
@@ -2917,37 +2917,37 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Postbodylimitsignature = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Postbodylimitsignature.IsUnknown() {
 		data.Postbodylimitsignature = types.Int64Null()
 	}
 	if val, ok := getResponseData["protofileobject"]; ok && val != nil {
 		data.Protofileobject = types.StringValue(val.(string))
-	} else {
+	} else if data.Protofileobject.IsUnknown() {
 		data.Protofileobject = types.StringNull()
 	}
 	if val, ok := getResponseData["refererheadercheck"]; ok && val != nil {
 		data.Refererheadercheck = types.StringValue(val.(string))
-	} else {
+	} else if data.Refererheadercheck.IsUnknown() {
 		data.Refererheadercheck = types.StringNull()
 	}
 	if val, ok := getResponseData["relaxationrules"]; ok && val != nil {
 		data.Relaxationrules = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Relaxationrules.IsUnknown() {
 		data.Relaxationrules = types.BoolNull()
 	}
 	if val, ok := getResponseData["replaceurlstring"]; ok && val != nil {
 		data.Replaceurlstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Replaceurlstring.IsUnknown() {
 		data.Replaceurlstring = types.StringNull()
 	}
 	if val, ok := getResponseData["requestcontenttype"]; ok && val != nil {
 		data.Requestcontenttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Requestcontenttype.IsUnknown() {
 		data.Requestcontenttype = types.StringNull()
 	}
 	if val, ok := getResponseData["responsecontenttype"]; ok && val != nil {
 		data.Responsecontenttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Responsecontenttype.IsUnknown() {
 		data.Responsecontenttype = types.StringNull()
 	}
 	if val, ok := getResponseData["restaction"]; ok && val != nil {
@@ -2967,32 +2967,32 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["rfcprofile"]; ok && val != nil {
 		data.Rfcprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Rfcprofile.IsUnknown() {
 		data.Rfcprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["semicolonfieldseparator"]; ok && val != nil {
 		data.Semicolonfieldseparator = types.StringValue(val.(string))
-	} else {
+	} else if data.Semicolonfieldseparator.IsUnknown() {
 		data.Semicolonfieldseparator = types.StringNull()
 	}
 	if val, ok := getResponseData["sessioncookiename"]; ok && val != nil {
 		data.Sessioncookiename = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessioncookiename.IsUnknown() {
 		data.Sessioncookiename = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionlessfieldconsistency"]; ok && val != nil {
 		data.Sessionlessfieldconsistency = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionlessfieldconsistency.IsUnknown() {
 		data.Sessionlessfieldconsistency = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionlessurlclosure"]; ok && val != nil {
 		data.Sessionlessurlclosure = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionlessurlclosure.IsUnknown() {
 		data.Sessionlessurlclosure = types.StringNull()
 	}
 	if val, ok := getResponseData["signatures"]; ok && val != nil {
 		data.Signatures = types.StringValue(val.(string))
-	} else {
+	} else if data.Signatures.IsUnknown() {
 		data.Signatures = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectionaction"]; ok && val != nil {
@@ -3012,37 +3012,37 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["sqlinjectionchecksqlwildchars"]; ok && val != nil {
 		data.Sqlinjectionchecksqlwildchars = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectionchecksqlwildchars.IsUnknown() {
 		data.Sqlinjectionchecksqlwildchars = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectiongrammar"]; ok && val != nil {
 		data.Sqlinjectiongrammar = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectiongrammar.IsUnknown() {
 		data.Sqlinjectiongrammar = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectiononlycheckfieldswithsqlchars"]; ok && val != nil {
 		data.Sqlinjectiononlycheckfieldswithsqlchars = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectiononlycheckfieldswithsqlchars.IsUnknown() {
 		data.Sqlinjectiononlycheckfieldswithsqlchars = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectionparsecomments"]; ok && val != nil {
 		data.Sqlinjectionparsecomments = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectionparsecomments.IsUnknown() {
 		data.Sqlinjectionparsecomments = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectionruletype"]; ok && val != nil {
 		data.Sqlinjectionruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectionruletype.IsUnknown() {
 		data.Sqlinjectionruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectiontransformspecialchars"]; ok && val != nil {
 		data.Sqlinjectiontransformspecialchars = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectiontransformspecialchars.IsUnknown() {
 		data.Sqlinjectiontransformspecialchars = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectiontype"]; ok && val != nil {
 		data.Sqlinjectiontype = types.StringValue(val.(string))
-	} else {
+	} else if data.Sqlinjectiontype.IsUnknown() {
 		data.Sqlinjectiontype = types.StringNull()
 	}
 	if val, ok := getResponseData["starturlaction"]; ok && val != nil {
@@ -3062,32 +3062,32 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["starturlclosure"]; ok && val != nil {
 		data.Starturlclosure = types.StringValue(val.(string))
-	} else {
+	} else if data.Starturlclosure.IsUnknown() {
 		data.Starturlclosure = types.StringNull()
 	}
 	if val, ok := getResponseData["streaming"]; ok && val != nil {
 		data.Streaming = types.StringValue(val.(string))
-	} else {
+	} else if data.Streaming.IsUnknown() {
 		data.Streaming = types.StringNull()
 	}
 	if val, ok := getResponseData["stripcomments"]; ok && val != nil {
 		data.Stripcomments = types.StringValue(val.(string))
-	} else {
+	} else if data.Stripcomments.IsUnknown() {
 		data.Stripcomments = types.StringNull()
 	}
 	if val, ok := getResponseData["striphtmlcomments"]; ok && val != nil {
 		data.Striphtmlcomments = types.StringValue(val.(string))
-	} else {
+	} else if data.Striphtmlcomments.IsUnknown() {
 		data.Striphtmlcomments = types.StringNull()
 	}
 	if val, ok := getResponseData["stripxmlcomments"]; ok && val != nil {
 		data.Stripxmlcomments = types.StringValue(val.(string))
-	} else {
+	} else if data.Stripxmlcomments.IsUnknown() {
 		data.Stripxmlcomments = types.StringNull()
 	}
 	if val, ok := getResponseData["trace"]; ok && val != nil {
 		data.Trace = types.StringValue(val.(string))
-	} else {
+	} else if data.Trace.IsUnknown() {
 		data.Trace = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
@@ -3107,17 +3107,17 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["urldecoderequestcookies"]; ok && val != nil {
 		data.Urldecoderequestcookies = types.StringValue(val.(string))
-	} else {
+	} else if data.Urldecoderequestcookies.IsUnknown() {
 		data.Urldecoderequestcookies = types.StringNull()
 	}
 	if val, ok := getResponseData["usehtmlerrorobject"]; ok && val != nil {
 		data.Usehtmlerrorobject = types.StringValue(val.(string))
-	} else {
+	} else if data.Usehtmlerrorobject.IsUnknown() {
 		data.Usehtmlerrorobject = types.StringNull()
 	}
 	if val, ok := getResponseData["verboseloglevel"]; ok && val != nil {
 		data.Verboseloglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Verboseloglevel.IsUnknown() {
 		data.Verboseloglevel = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlattachmentaction"]; ok && val != nil {
@@ -3152,19 +3152,19 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["xmlerrorobject"]; ok && val != nil {
 		data.Xmlerrorobject = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlerrorobject.IsUnknown() {
 		data.Xmlerrorobject = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlerrorstatuscode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlerrorstatuscode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlerrorstatuscode.IsUnknown() {
 		data.Xmlerrorstatuscode = types.Int64Null()
 	}
 	if val, ok := getResponseData["xmlerrorstatusmessage"]; ok && val != nil {
 		data.Xmlerrorstatusmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlerrorstatusmessage.IsUnknown() {
 		data.Xmlerrorstatusmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlformataction"]; ok && val != nil {
@@ -3214,22 +3214,22 @@ func appfwprofileSetAttrFromGet(ctx context.Context, data *AppfwprofileResourceM
 	}
 	if val, ok := getResponseData["xmlsqlinjectionchecksqlwildchars"]; ok && val != nil {
 		data.Xmlsqlinjectionchecksqlwildchars = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlsqlinjectionchecksqlwildchars.IsUnknown() {
 		data.Xmlsqlinjectionchecksqlwildchars = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlsqlinjectiononlycheckfieldswithsqlchars"]; ok && val != nil {
 		data.Xmlsqlinjectiononlycheckfieldswithsqlchars = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlsqlinjectiononlycheckfieldswithsqlchars.IsUnknown() {
 		data.Xmlsqlinjectiononlycheckfieldswithsqlchars = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlsqlinjectionparsecomments"]; ok && val != nil {
 		data.Xmlsqlinjectionparsecomments = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlsqlinjectionparsecomments.IsUnknown() {
 		data.Xmlsqlinjectionparsecomments = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlsqlinjectiontype"]; ok && val != nil {
 		data.Xmlsqlinjectiontype = types.StringValue(val.(string))
-	} else {
+	} else if data.Xmlsqlinjectiontype.IsUnknown() {
 		data.Xmlsqlinjectiontype = types.StringNull()
 	}
 	if val, ok := getResponseData["xmlvalidationaction"]; ok && val != nil {

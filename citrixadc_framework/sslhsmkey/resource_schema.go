@@ -170,22 +170,22 @@ func sslhsmkeySetAttrFromGet(ctx context.Context, data *SslhsmkeyResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["hsmkeyname"]; ok && val != nil {
 		data.Hsmkeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hsmkeyname.IsUnknown() {
 		data.Hsmkeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["hsmtype"]; ok && val != nil {
 		data.Hsmtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Hsmtype.IsUnknown() {
 		data.Hsmtype = types.StringNull()
 	}
 	if val, ok := getResponseData["key"]; ok && val != nil {
 		data.Key = types.StringValue(val.(string))
-	} else {
+	} else if data.Key.IsUnknown() {
 		data.Key = types.StringNull()
 	}
 	if val, ok := getResponseData["keystore"]; ok && val != nil {
 		data.Keystore = types.StringValue(val.(string))
-	} else {
+	} else if data.Keystore.IsUnknown() {
 		data.Keystore = types.StringNull()
 	}
 	// password is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -193,7 +193,7 @@ func sslhsmkeySetAttrFromGet(ctx context.Context, data *SslhsmkeyResourceModel, 
 	// password_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["serialnum"]; ok && val != nil {
 		data.Serialnum = types.StringValue(val.(string))
-	} else {
+	} else if data.Serialnum.IsUnknown() {
 		data.Serialnum = types.StringNull()
 	}
 

@@ -285,27 +285,27 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 	// Convert API response to model
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
-	} else {
+	} else if data.Appflowlog.IsUnknown() {
 		data.Appflowlog = types.StringNull()
 	}
 	if val, ok := getResponseData["authentication"]; ok && val != nil {
 		data.Authentication = types.StringValue(val.(string))
-	} else {
+	} else if data.Authentication.IsUnknown() {
 		data.Authentication = types.StringNull()
 	}
 	if val, ok := getResponseData["authenticationdomain"]; ok && val != nil {
 		data.Authenticationdomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Authenticationdomain.IsUnknown() {
 		data.Authenticationdomain = types.StringNull()
 	}
 	if val, ok := getResponseData["certkeynames"]; ok && val != nil {
 		data.Certkeynames = types.StringValue(val.(string))
-	} else {
+	} else if data.Certkeynames.IsUnknown() {
 		data.Certkeynames = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["failedlogintimeout"]; ok && val != nil {
@@ -320,7 +320,7 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 	}
 	if val, ok := getResponseData["ipv46"]; ok && val != nil {
 		data.Ipv46 = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv46.IsUnknown() {
 		data.Ipv46 = types.StringNull()
 	}
 	if val, ok := getResponseData["maxloginattempts"]; ok && val != nil {
@@ -337,6 +337,8 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 	if data.Name.IsNull() || data.Name.IsUnknown() {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never returned by GET; leave it untouched.
@@ -356,12 +358,12 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 	}
 	if val, ok := getResponseData["samesite"]; ok && val != nil {
 		data.Samesite = types.StringValue(val.(string))
-	} else {
+	} else if data.Samesite.IsUnknown() {
 		data.Samesite = types.StringNull()
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicetype.IsUnknown() {
 		data.Servicetype = types.StringNull()
 	}
 	// state: NITRO GET reports the operational state, not the admin (ENABLED/DISABLED)
@@ -372,7 +374,7 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 		// preserve configured/planned value
 	} else if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
@@ -384,7 +386,7 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 	}
 	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
 		data.Wasmmodule = types.StringValue(val.(string))
-	} else {
+	} else if data.Wasmmodule.IsUnknown() {
 		data.Wasmmodule = types.StringNull()
 	}
 

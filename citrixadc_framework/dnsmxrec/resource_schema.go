@@ -147,6 +147,8 @@ func dnsmxrecSetAttrFromGet(ctx context.Context, data *DnsmxrecResourceModel, ge
 	// Convert API response to model
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
+	} else if data.Domain.IsUnknown() {
+		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
@@ -157,6 +159,8 @@ func dnsmxrecSetAttrFromGet(ctx context.Context, data *DnsmxrecResourceModel, ge
 	}
 	if val, ok := getResponseData["mx"]; ok && val != nil {
 		data.Mx = types.StringValue(val.(string))
+	} else if data.Mx.IsUnknown() {
+		data.Mx = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -171,6 +175,8 @@ func dnsmxrecSetAttrFromGet(ctx context.Context, data *DnsmxrecResourceModel, ge
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pref = types.Int64Value(intVal)
 		}
+	} else if data.Pref.IsUnknown() {
+		data.Pref = types.Int64Null()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

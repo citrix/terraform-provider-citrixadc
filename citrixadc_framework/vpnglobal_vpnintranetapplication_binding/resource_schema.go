@@ -81,11 +81,13 @@ func vpnglobal_vpnintranetapplication_bindingSetAttrFromGet(ctx context.Context,
 	// existing plan/state value instead of nulling it.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 
 	if val, ok := getResponseData["intranetapplication"]; ok && val != nil {
 		data.Intranetapplication = types.StringValue(val.(string))
-	} else {
+	} else if data.Intranetapplication.IsUnknown() {
 		data.Intranetapplication = types.StringNull()
 	}
 

@@ -71,12 +71,12 @@ func mapdomain_mapbmr_bindingSetAttrFromGet(ctx context.Context, data *Mapdomain
 	// Convert API response to model
 	if val, ok := getResponseData["mapbmrname"]; ok && val != nil {
 		data.Mapbmrname = types.StringValue(val.(string))
-	} else {
+	} else if data.Mapbmrname.IsUnknown() {
 		data.Mapbmrname = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

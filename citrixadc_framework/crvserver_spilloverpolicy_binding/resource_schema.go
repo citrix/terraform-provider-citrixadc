@@ -171,60 +171,64 @@ func crvserver_spilloverpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 	if data.Bindpoint.IsNull() || data.Bindpoint.IsUnknown() {
 		if val, ok := getResponseData["bindpoint"]; ok && val != nil {
 			data.Bindpoint = types.StringValue(val.(string))
-		} else {
+		} else if data.Bindpoint.IsUnknown() {
 			data.Bindpoint = types.StringNull()
 		}
 	}
 	if data.Gotopriorityexpression.IsNull() || data.Gotopriorityexpression.IsUnknown() {
 		if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 			data.Gotopriorityexpression = types.StringValue(val.(string))
-		} else {
+		} else if data.Gotopriorityexpression.IsUnknown() {
 			data.Gotopriorityexpression = types.StringNull()
 		}
 	}
 	if data.Invoke.IsNull() || data.Invoke.IsUnknown() {
 		if val, ok := getResponseData["invoke"]; ok && val != nil {
 			data.Invoke = types.BoolValue(val.(bool))
-		} else {
+		} else if data.Invoke.IsUnknown() {
 			data.Invoke = types.BoolNull()
 		}
 	}
 	if data.Labelname.IsNull() || data.Labelname.IsUnknown() {
 		if val, ok := getResponseData["labelname"]; ok && val != nil {
 			data.Labelname = types.StringValue(val.(string))
-		} else {
+		} else if data.Labelname.IsUnknown() {
 			data.Labelname = types.StringNull()
 		}
 	}
 	if data.Labeltype.IsNull() || data.Labeltype.IsUnknown() {
 		if val, ok := getResponseData["labeltype"]; ok && val != nil {
 			data.Labeltype = types.StringValue(val.(string))
-		} else {
+		} else if data.Labeltype.IsUnknown() {
 			data.Labeltype = types.StringNull()
 		}
 	}
 	// name and policyname are the identity keys; RequiresReplace and always present.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	if data.Priority.IsNull() || data.Priority.IsUnknown() {
 		if val, ok := getResponseData["priority"]; ok && val != nil {
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Priority = types.Int64Value(intVal)
-			} else {
+			} else if data.Priority.IsUnknown() {
 				data.Priority = types.Int64Null()
 			}
-		} else {
+		} else if data.Priority.IsUnknown() {
 			data.Priority = types.Int64Null()
 		}
 	}
 	if data.Targetvserver.IsNull() || data.Targetvserver.IsUnknown() {
 		if val, ok := getResponseData["targetvserver"]; ok && val != nil {
 			data.Targetvserver = types.StringValue(val.(string))
-		} else {
+		} else if data.Targetvserver.IsUnknown() {
 			data.Targetvserver = types.StringNull()
 		}
 	}

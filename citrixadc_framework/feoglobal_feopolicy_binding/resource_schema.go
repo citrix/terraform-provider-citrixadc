@@ -119,9 +119,13 @@ func feoglobal_feopolicy_bindingSetAttrFromGet(ctx context.Context, data *Feoglo
 	// Computed read-back fields - take from the GET response.
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
+	} else if data.Globalbindtype.IsUnknown() {
+		data.Globalbindtype = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 
 	// policyname, priority and type are RequiresReplace identity inputs - preserved

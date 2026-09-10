@@ -144,57 +144,57 @@ func sslzerotouchparamSetAttrFromGet(ctx context.Context, data *Sslzerotouchpara
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspcachetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspcachetimeout.IsUnknown() {
 		data.Ocspcachetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ocspbatchingdepth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspbatchingdepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspbatchingdepth.IsUnknown() {
 		data.Ocspbatchingdepth = types.Int64Null()
 	}
 	if val, ok := getResponseData["ocspbatchingdelay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspbatchingdelay = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspbatchingdelay.IsUnknown() {
 		data.Ocspbatchingdelay = types.Int64Null()
 	}
 	if val, ok := getResponseData["ocspresptimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspresptimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspresptimeout.IsUnknown() {
 		data.Ocspresptimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ocspurlresolvetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspurlresolvetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspurlresolvetimeout.IsUnknown() {
 		data.Ocspurlresolvetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ocsptrustresponder"]; ok && val != nil {
 		data.Ocsptrustresponder = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocsptrustresponder.IsUnknown() {
 		data.Ocsptrustresponder = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspproducedattimeskew"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspproducedattimeskew = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspproducedattimeskew.IsUnknown() {
 		data.Ocspproducedattimeskew = types.Int64Null()
 	}
 	if val, ok := getResponseData["ocspusenonce"]; ok && val != nil {
 		data.Ocspusenonce = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocspusenonce.IsUnknown() {
 		data.Ocspusenonce = types.StringNull()
 	}
 	if val, ok := getResponseData["ocsphttpmethod"]; ok && val != nil {
 		data.Ocsphttpmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Ocsphttpmethod.IsUnknown() {
 		data.Ocsphttpmethod = types.StringNull()
 	}
 

@@ -220,71 +220,71 @@ func appfwprofile_fieldformat_bindingSetAttrFromGet(ctx context.Context, data *A
 	// Convert API response to model
 	if val, ok := getResponseData["alertonly"]; ok && val != nil {
 		data.Alertonly = types.StringValue(val.(string))
-	} else {
+	} else if data.Alertonly.IsUnknown() {
 		data.Alertonly = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["fieldformat"]; ok && val != nil {
 		data.Fieldformat = types.StringValue(val.(string))
-	} else {
+	} else if data.Fieldformat.IsUnknown() {
 		data.Fieldformat = types.StringNull()
 	}
 	if val, ok := getResponseData["fieldformatmaxlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldformatmaxlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldformatmaxlength.IsUnknown() {
 		data.Fieldformatmaxlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldformatminlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldformatminlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldformatminlength.IsUnknown() {
 		data.Fieldformatminlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldtype"]; ok && val != nil {
 		data.Fieldtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Fieldtype.IsUnknown() {
 		data.Fieldtype = types.StringNull()
 	}
 	if val, ok := getResponseData["formactionurl_ff"]; ok && val != nil {
 		data.FormactionurlFf = types.StringValue(val.(string))
-	} else {
+	} else if data.FormactionurlFf.IsUnknown() {
 		data.FormactionurlFf = types.StringNull()
 	}
 	if val, ok := getResponseData["isautodeployed"]; ok && val != nil {
 		data.Isautodeployed = types.StringValue(val.(string))
-	} else {
+	} else if data.Isautodeployed.IsUnknown() {
 		data.Isautodeployed = types.StringNull()
 	}
 	if val, ok := getResponseData["isregex_ff"]; ok && val != nil {
 		data.IsregexFf = types.StringValue(val.(string))
-	} else {
+	} else if data.IsregexFf.IsUnknown() {
 		data.IsregexFf = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["resourceid"]; ok && val != nil {
 		data.Resourceid = types.StringValue(val.(string))
-	} else {
+	} else if data.Resourceid.IsUnknown() {
 		data.Resourceid = types.StringNull()
 	}
 	if val, ok := getResponseData["ruletype"]; ok && val != nil {
 		data.Ruletype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ruletype.IsUnknown() {
 		data.Ruletype = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

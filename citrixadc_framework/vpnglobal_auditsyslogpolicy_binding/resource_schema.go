@@ -119,11 +119,15 @@ func vpnglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, data
 	// with "inconsistent result after apply" (Pattern 7 / Pattern 13).
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	// gotopriorityexpression, groupextraction, secondary: not returned by NITRO,
 	// preserve the value already in data (from the plan/state).

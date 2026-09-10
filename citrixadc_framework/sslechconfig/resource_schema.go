@@ -120,36 +120,36 @@ func sslechconfigSetAttrFromGet(ctx context.Context, data *SslechconfigResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["echcipher"]; ok && val != nil {
 		data.Echcipher = types.StringValue(val.(string))
-	} else {
+	} else if data.Echcipher.IsUnknown() {
 		data.Echcipher = types.StringNull()
 	}
 	if val, ok := getResponseData["echconfigid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Echconfigid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Echconfigid.IsUnknown() {
 		data.Echconfigid = types.Int64Null()
 	}
 	if val, ok := getResponseData["echconfigname"]; ok && val != nil {
 		data.Echconfigname = types.StringValue(val.(string))
-	} else {
+	} else if data.Echconfigname.IsUnknown() {
 		data.Echconfigname = types.StringNull()
 	}
 	if val, ok := getResponseData["echpublicname"]; ok && val != nil {
 		data.Echpublicname = types.StringValue(val.(string))
-	} else {
+	} else if data.Echpublicname.IsUnknown() {
 		data.Echpublicname = types.StringNull()
 	}
 	if val, ok := getResponseData["hpkekeyname"]; ok && val != nil {
 		data.Hpkekeyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hpkekeyname.IsUnknown() {
 		data.Hpkekeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["version"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Version = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Version.IsUnknown() {
 		data.Version = types.Int64Null()
 	}
 

@@ -57,6 +57,8 @@ func extendedmemoryparamSetAttrFromGet(ctx context.Context, data *Extendedmemory
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Memlimit = types.Int64Value(intVal)
 		}
+	} else if data.Memlimit.IsUnknown() {
+		data.Memlimit = types.Int64Null()
 	}
 
 	// Set ID for the resource

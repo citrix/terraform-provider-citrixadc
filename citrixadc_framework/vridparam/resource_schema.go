@@ -84,14 +84,20 @@ func vridparamSetAttrFromGet(ctx context.Context, data *VridparamResourceModel, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Deadinterval = types.Int64Value(intVal)
 		}
+	} else if data.Deadinterval.IsUnknown() {
+		data.Deadinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["hellointerval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hellointerval = types.Int64Value(intVal)
 		}
+	} else if data.Hellointerval.IsUnknown() {
+		data.Hellointerval = types.Int64Null()
 	}
 	if val, ok := getResponseData["sendtomaster"]; ok && val != nil {
 		data.Sendtomaster = types.StringValue(val.(string))
+	} else if data.Sendtomaster.IsUnknown() {
+		data.Sendtomaster = types.StringNull()
 	}
 
 	return data

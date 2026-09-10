@@ -111,29 +111,29 @@ func authenticationpolicylabel_authenticationpolicy_bindingSetAttrFromGet(ctx co
 	// Convert API response to model
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Gotopriorityexpression.IsUnknown() {
 		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
-	} else {
+	} else if data.Labelname.IsUnknown() {
 		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["nextfactor"]; ok && val != nil {
 		data.Nextfactor = types.StringValue(val.(string))
-	} else {
+	} else if data.Nextfactor.IsUnknown() {
 		data.Nextfactor = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
-	} else {
+	} else if data.Policyname.IsUnknown() {
 		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 

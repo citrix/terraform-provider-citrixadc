@@ -105,6 +105,8 @@ func authorizationpolicySetAttrFromGet(ctx context.Context, data *Authorizationp
 	// Convert API response to model.
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
+	} else if data.Action.IsUnknown() {
+		data.Action = types.StringNull()
 	}
 	// name is the user-facing key. Once a rename has happened (via newname), the live
 	// object name (tracked by data.Id) diverges from the configured name, and GET
@@ -115,11 +117,15 @@ func authorizationpolicySetAttrFromGet(ctx context.Context, data *Authorizationp
 	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 
 	return data

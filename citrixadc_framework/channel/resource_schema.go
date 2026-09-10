@@ -247,6 +247,8 @@ func channelSetAttrFromGet(ctx context.Context, data *ChannelResourceModel, getR
 	// id maps to the channel_id (NITRO primary key) attribute
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		data.ChannelId = types.StringValue(val.(string))
+	} else if data.ChannelId.IsUnknown() {
+		data.ChannelId = types.StringNull()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		switch v := val.(type) {

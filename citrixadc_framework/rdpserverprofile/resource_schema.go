@@ -152,7 +152,7 @@ func rdpserverprofileSetAttrFromGet(ctx context.Context, data *RdpserverprofileR
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	// psk is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -160,19 +160,19 @@ func rdpserverprofileSetAttrFromGet(ctx context.Context, data *RdpserverprofileR
 	// psk_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["rdpip"]; ok && val != nil {
 		data.Rdpip = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpip.IsUnknown() {
 		data.Rdpip = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rdpport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rdpport.IsUnknown() {
 		data.Rdpport = types.Int64Null()
 	}
 	if val, ok := getResponseData["rdpredirection"]; ok && val != nil {
 		data.Rdpredirection = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpredirection.IsUnknown() {
 		data.Rdpredirection = types.StringNull()
 	}
 

@@ -77,11 +77,15 @@ func bridgegroup_vlan_bindingSetAttrFromGet(ctx context.Context, data *Bridgegro
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.BridgegroupId = types.Int64Value(intVal)
 		}
+	} else if data.BridgegroupId.IsUnknown() {
+		data.BridgegroupId = types.Int64Null()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
+	} else if data.Vlan.IsUnknown() {
+		data.Vlan = types.Int64Null()
 	}
 
 	// Set ID for the resource

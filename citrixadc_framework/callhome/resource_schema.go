@@ -122,48 +122,48 @@ func callhomeSetAttrFromGet(ctx context.Context, data *CallhomeResourceModel, ge
 	// Convert API response to model
 	if val, ok := getResponseData["emailaddress"]; ok && val != nil {
 		data.Emailaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Emailaddress.IsUnknown() {
 		data.Emailaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["hbcustominterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hbcustominterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Hbcustominterval.IsUnknown() {
 		data.Hbcustominterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["mode"]; ok && val != nil {
 		data.Mode = types.StringValue(val.(string))
-	} else {
+	} else if data.Mode.IsUnknown() {
 		data.Mode = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["proxyauthservice"]; ok && val != nil {
 		data.Proxyauthservice = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyauthservice.IsUnknown() {
 		data.Proxyauthservice = types.StringNull()
 	}
 	if val, ok := getResponseData["proxymode"]; ok && val != nil {
 		data.Proxymode = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxymode.IsUnknown() {
 		data.Proxymode = types.StringNull()
 	}
 

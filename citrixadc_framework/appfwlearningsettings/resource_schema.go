@@ -361,215 +361,215 @@ func appfwlearningsettingsSetAttrFromGet(ctx context.Context, data *Appfwlearnin
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Contenttypeautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Contenttypeautodeploygraceperiod.IsUnknown() {
 		data.Contenttypeautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["contenttypeminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Contenttypeminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Contenttypeminthreshold.IsUnknown() {
 		data.Contenttypeminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["contenttypepercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Contenttypepercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Contenttypepercentthreshold.IsUnknown() {
 		data.Contenttypepercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["cookieconsistencyautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookieconsistencyautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cookieconsistencyautodeploygraceperiod.IsUnknown() {
 		data.Cookieconsistencyautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["cookieconsistencyminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookieconsistencyminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cookieconsistencyminthreshold.IsUnknown() {
 		data.Cookieconsistencyminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["cookieconsistencypercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cookieconsistencypercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cookieconsistencypercentthreshold.IsUnknown() {
 		data.Cookieconsistencypercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["creditcardnumberminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Creditcardnumberminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Creditcardnumberminthreshold.IsUnknown() {
 		data.Creditcardnumberminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["creditcardnumberpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Creditcardnumberpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Creditcardnumberpercentthreshold.IsUnknown() {
 		data.Creditcardnumberpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["crosssitescriptingautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Crosssitescriptingautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Crosssitescriptingautodeploygraceperiod.IsUnknown() {
 		data.Crosssitescriptingautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["crosssitescriptingminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Crosssitescriptingminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Crosssitescriptingminthreshold.IsUnknown() {
 		data.Crosssitescriptingminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["crosssitescriptingpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Crosssitescriptingpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Crosssitescriptingpercentthreshold.IsUnknown() {
 		data.Crosssitescriptingpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["csrftagautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Csrftagautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Csrftagautodeploygraceperiod.IsUnknown() {
 		data.Csrftagautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["csrftagminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Csrftagminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Csrftagminthreshold.IsUnknown() {
 		data.Csrftagminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["csrftagpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Csrftagpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Csrftagpercentthreshold.IsUnknown() {
 		data.Csrftagpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldconsistencyautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldconsistencyautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldconsistencyautodeploygraceperiod.IsUnknown() {
 		data.Fieldconsistencyautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldconsistencyminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldconsistencyminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldconsistencyminthreshold.IsUnknown() {
 		data.Fieldconsistencyminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldconsistencypercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldconsistencypercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldconsistencypercentthreshold.IsUnknown() {
 		data.Fieldconsistencypercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldformatautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldformatautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldformatautodeploygraceperiod.IsUnknown() {
 		data.Fieldformatautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldformatminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldformatminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldformatminthreshold.IsUnknown() {
 		data.Fieldformatminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["fieldformatpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Fieldformatpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Fieldformatpercentthreshold.IsUnknown() {
 		data.Fieldformatpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["profilename"]; ok && val != nil {
 		data.Profilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Profilename.IsUnknown() {
 		data.Profilename = types.StringNull()
 	}
 	if val, ok := getResponseData["sqlinjectionautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sqlinjectionautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sqlinjectionautodeploygraceperiod.IsUnknown() {
 		data.Sqlinjectionautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["sqlinjectionminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sqlinjectionminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sqlinjectionminthreshold.IsUnknown() {
 		data.Sqlinjectionminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["sqlinjectionpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sqlinjectionpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sqlinjectionpercentthreshold.IsUnknown() {
 		data.Sqlinjectionpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["starturlautodeploygraceperiod"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Starturlautodeploygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Starturlautodeploygraceperiod.IsUnknown() {
 		data.Starturlautodeploygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["starturlminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Starturlminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Starturlminthreshold.IsUnknown() {
 		data.Starturlminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["starturlpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Starturlpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Starturlpercentthreshold.IsUnknown() {
 		data.Starturlpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["xmlattachmentminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlattachmentminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlattachmentminthreshold.IsUnknown() {
 		data.Xmlattachmentminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["xmlattachmentpercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlattachmentpercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlattachmentpercentthreshold.IsUnknown() {
 		data.Xmlattachmentpercentthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["xmlwsiminthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlwsiminthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlwsiminthreshold.IsUnknown() {
 		data.Xmlwsiminthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["xmlwsipercentthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Xmlwsipercentthreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Xmlwsipercentthreshold.IsUnknown() {
 		data.Xmlwsipercentthreshold = types.Int64Null()
 	}
 

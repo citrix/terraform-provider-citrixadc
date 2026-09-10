@@ -71,12 +71,12 @@ func ipset_nsip_bindingSetAttrFromGet(ctx context.Context, data *IpsetNsipBindin
 	// Convert API response to model
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

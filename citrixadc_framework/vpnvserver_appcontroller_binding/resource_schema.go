@@ -71,12 +71,12 @@ func vpnvserver_appcontroller_bindingSetAttrFromGet(ctx context.Context, data *V
 	// Convert API response to model
 	if val, ok := getResponseData["appcontroller"]; ok && val != nil {
 		data.Appcontroller = types.StringValue(val.(string))
-	} else {
+	} else if data.Appcontroller.IsUnknown() {
 		data.Appcontroller = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

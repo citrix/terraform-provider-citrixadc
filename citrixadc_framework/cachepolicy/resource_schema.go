@@ -149,7 +149,7 @@ func cachepolicySetAttrFromGet(ctx context.Context, data *CachepolicyResourceMod
 
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
-	} else {
+	} else if data.Action.IsUnknown() {
 		data.Action = types.StringNull()
 	}
 	if val, ok := getResponseData["invalgroups"]; ok && val != nil {
@@ -180,21 +180,23 @@ func cachepolicySetAttrFromGet(ctx context.Context, data *CachepolicyResourceMod
 	if data.Policyname.IsNull() || data.Policyname.IsUnknown() || data.Policyname.ValueString() == "" {
 		if val, ok := getResponseData["policyname"]; ok && val != nil {
 			data.Policyname = types.StringValue(val.(string))
+		} else if data.Policyname.IsUnknown() {
+			data.Policyname = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
-	} else {
+	} else if data.Rule.IsUnknown() {
 		data.Rule = types.StringNull()
 	}
 	if val, ok := getResponseData["storeingroup"]; ok && val != nil {
 		data.Storeingroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Storeingroup.IsUnknown() {
 		data.Storeingroup = types.StringNull()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Undefaction.IsUnknown() {
 		data.Undefaction = types.StringNull()
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.

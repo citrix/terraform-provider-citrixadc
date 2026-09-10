@@ -147,9 +147,13 @@ func vpnvserver_vpntrafficpolicy_bindingSetAttrFromGet(ctx context.Context, data
 	// model from the live object.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["policy"]; ok && val != nil {
 		data.Policy = types.StringValue(val.(string))
+	} else if data.Policy.IsUnknown() {
+		data.Policy = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

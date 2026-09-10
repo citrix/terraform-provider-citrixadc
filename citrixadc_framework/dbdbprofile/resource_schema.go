@@ -107,32 +107,32 @@ func dbdbprofileSetAttrFromGet(ctx context.Context, data *DbdbprofileResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["conmultiplex"]; ok && val != nil {
 		data.Conmultiplex = types.StringValue(val.(string))
-	} else {
+	} else if data.Conmultiplex.IsUnknown() {
 		data.Conmultiplex = types.StringNull()
 	}
 	if val, ok := getResponseData["enablecachingconmuxoff"]; ok && val != nil {
 		data.Enablecachingconmuxoff = types.StringValue(val.(string))
-	} else {
+	} else if data.Enablecachingconmuxoff.IsUnknown() {
 		data.Enablecachingconmuxoff = types.StringNull()
 	}
 	if val, ok := getResponseData["interpretquery"]; ok && val != nil {
 		data.Interpretquery = types.StringValue(val.(string))
-	} else {
+	} else if data.Interpretquery.IsUnknown() {
 		data.Interpretquery = types.StringNull()
 	}
 	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
 		data.Kcdaccount = types.StringValue(val.(string))
-	} else {
+	} else if data.Kcdaccount.IsUnknown() {
 		data.Kcdaccount = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["stickiness"]; ok && val != nil {
 		data.Stickiness = types.StringValue(val.(string))
-	} else {
+	} else if data.Stickiness.IsUnknown() {
 		data.Stickiness = types.StringNull()
 	}
 

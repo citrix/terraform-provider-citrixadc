@@ -185,9 +185,13 @@ func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx context.C
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
+	} else if data.Weight.IsUnknown() {
+		data.Weight = types.Int64Null()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 
 	return data

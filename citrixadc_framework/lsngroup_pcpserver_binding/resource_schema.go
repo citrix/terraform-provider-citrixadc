@@ -71,12 +71,12 @@ func lsngroup_pcpserver_bindingSetAttrFromGet(ctx context.Context, data *Lsngrou
 	// Convert API response to model
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupname.IsUnknown() {
 		data.Groupname = types.StringNull()
 	}
 	if val, ok := getResponseData["pcpserver"]; ok && val != nil {
 		data.Pcpserver = types.StringValue(val.(string))
-	} else {
+	} else if data.Pcpserver.IsUnknown() {
 		data.Pcpserver = types.StringNull()
 	}
 

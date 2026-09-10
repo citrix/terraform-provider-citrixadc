@@ -80,19 +80,19 @@ func bridgegroupSetAttrFromGet(ctx context.Context, data *BridgegroupResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["dynamicrouting"]; ok && val != nil {
 		data.Dynamicrouting = types.StringValue(val.(string))
-	} else {
+	} else if data.Dynamicrouting.IsUnknown() {
 		data.Dynamicrouting = types.StringNull()
 	}
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bridgegroupid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bridgegroupid.IsUnknown() {
 		data.Bridgegroupid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ipv6dynamicrouting"]; ok && val != nil {
 		data.Ipv6dynamicrouting = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv6dynamicrouting.IsUnknown() {
 		data.Ipv6dynamicrouting = types.StringNull()
 	}
 

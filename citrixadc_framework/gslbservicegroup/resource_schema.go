@@ -464,6 +464,8 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
+	} else if data.Appflowlog.IsUnknown() {
+		data.Appflowlog = types.StringNull()
 	}
 	// autodelayedtrofs is Optional-only (not Computed) and create-only
 	// (RequiresReplace). NITRO echoes it in GET with its default ("NO"). Adopting
@@ -473,13 +475,19 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 	if !data.Autodelayedtrofs.IsNull() && !data.Autodelayedtrofs.IsUnknown() {
 		if val, ok := getResponseData["autodelayedtrofs"]; ok && val != nil {
 			data.Autodelayedtrofs = types.StringValue(val.(string))
+		} else if data.Autodelayedtrofs.IsUnknown() {
+			data.Autodelayedtrofs = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["autoscale"]; ok && val != nil {
 		data.Autoscale = types.StringValue(val.(string))
+	} else if data.Autoscale.IsUnknown() {
+		data.Autoscale = types.StringNull()
 	}
 	if val, ok := getResponseData["cip"]; ok && val != nil {
 		data.Cip = types.StringValue(val.(string))
+	} else if data.Cip.IsUnknown() {
+		data.Cip = types.StringNull()
 	}
 	// cipheader is Optional-only and not always echoed (the server auto-populates it
 	// to a default like "client-ip" once cip is ENABLED). Only adopt the GET value
@@ -488,12 +496,16 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 	if !data.Cipheader.IsNull() && !data.Cipheader.IsUnknown() {
 		if val, ok := getResponseData["cipheader"]; ok && val != nil {
 			data.Cipheader = types.StringValue(val.(string))
+		} else if data.Cipheader.IsUnknown() {
+			data.Cipheader = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["clttimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Clttimeout = types.Int64Value(intVal)
 		}
+	} else if data.Clttimeout.IsUnknown() {
+		data.Clttimeout = types.Int64Null()
 	}
 	// comment is Optional-only (not Computed). If NITRO echoes an empty/default
 	// comment in GET, adopting it when the user did not configure the attribute
@@ -502,31 +514,45 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		if val, ok := getResponseData["comment"]; ok && val != nil {
 			data.Comment = types.StringValue(val.(string))
+		} else if data.Comment.IsUnknown() {
+			data.Comment = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
 		data.Downstateflush = types.StringValue(val.(string))
+	} else if data.Downstateflush.IsUnknown() {
+		data.Downstateflush = types.StringNull()
 	}
 	if val, ok := getResponseData["healthmonitor"]; ok && val != nil {
 		data.Healthmonitor = types.StringValue(val.(string))
+	} else if data.Healthmonitor.IsUnknown() {
+		data.Healthmonitor = types.StringNull()
 	}
 	if val, ok := getResponseData["maxbandwidth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxbandwidth = types.Int64Value(intVal)
 		}
+	} else if data.Maxbandwidth.IsUnknown() {
+		data.Maxbandwidth = types.Int64Null()
 	}
 	if val, ok := getResponseData["maxclient"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxclient = types.Int64Value(intVal)
 		}
+	} else if data.Maxclient.IsUnknown() {
+		data.Maxclient = types.Int64Null()
 	}
 	if val, ok := getResponseData["monthreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Monthreshold = types.Int64Value(intVal)
 		}
+	} else if data.Monthreshold.IsUnknown() {
+		data.Monthreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["publicip"]; ok && val != nil {
 		data.Publicip = types.StringValue(val.(string))
+	} else if data.Publicip.IsUnknown() {
+		data.Publicip = types.StringNull()
 	}
 	// servicegroupname: preserve the configured value; only adopt the GET value
 	// when the model key is empty (import). This prevents a rename from clobbering
@@ -534,24 +560,36 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 	if data.Servicegroupname.IsNull() || data.Servicegroupname.ValueString() == "" {
 		if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
 			data.Servicegroupname = types.StringValue(val.(string))
+		} else if data.Servicegroupname.IsUnknown() {
+			data.Servicegroupname = types.StringNull()
 		}
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
+	} else if data.Servicetype.IsUnknown() {
+		data.Servicetype = types.StringNull()
 	}
 	if val, ok := getResponseData["sitename"]; ok && val != nil {
 		data.Sitename = types.StringValue(val.(string))
+	} else if data.Sitename.IsUnknown() {
+		data.Sitename = types.StringNull()
 	}
 	if val, ok := getResponseData["sitepersistence"]; ok && val != nil {
 		data.Sitepersistence = types.StringValue(val.(string))
+	} else if data.Sitepersistence.IsUnknown() {
+		data.Sitepersistence = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["svrtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Svrtimeout = types.Int64Value(intVal)
 		}
+	} else if data.Svrtimeout.IsUnknown() {
+		data.Svrtimeout = types.Int64Null()
 	}
 
 	return data

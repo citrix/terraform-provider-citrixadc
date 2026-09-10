@@ -130,27 +130,27 @@ func cloudroutesSetAttrFromGet(ctx context.Context, data *CloudroutesResourceMod
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["routesvpcnetwork"]; ok && val != nil {
 		data.Routesvpcnetwork = types.StringValue(val.(string))
-	} else {
+	} else if data.Routesvpcnetwork.IsUnknown() {
 		data.Routesvpcnetwork = types.StringNull()
 	}
 	if val, ok := getResponseData["vipsubnet"]; ok && val != nil {
 		data.Vipsubnet = types.StringValue(val.(string))
-	} else {
+	} else if data.Vipsubnet.IsUnknown() {
 		data.Vipsubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["vipvpcnetwork"]; ok && val != nil {
 		data.Vipvpcnetwork = types.StringValue(val.(string))
-	} else {
+	} else if data.Vipvpcnetwork.IsUnknown() {
 		data.Vipvpcnetwork = types.StringNull()
 	}
 	if val, ok := getResponseData["clientipaddress"]; ok && val != nil {
 		data.Clientipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientipaddress.IsUnknown() {
 		data.Clientipaddress = types.StringNull()
 	}
 

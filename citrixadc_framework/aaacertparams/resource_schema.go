@@ -108,17 +108,17 @@ func aaacertparamsSetAttrFromGet(ctx context.Context, data *AaacertparamsResourc
 	// Convert API response to model
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthenticationgroup.IsUnknown() {
 		data.Defaultauthenticationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["groupnamefield"]; ok && val != nil {
 		data.Groupnamefield = types.StringValue(val.(string))
-	} else {
+	} else if data.Groupnamefield.IsUnknown() {
 		data.Groupnamefield = types.StringNull()
 	}
 	if val, ok := getResponseData["usernamefield"]; ok && val != nil {
 		data.Usernamefield = types.StringValue(val.(string))
-	} else {
+	} else if data.Usernamefield.IsUnknown() {
 		data.Usernamefield = types.StringNull()
 	}
 

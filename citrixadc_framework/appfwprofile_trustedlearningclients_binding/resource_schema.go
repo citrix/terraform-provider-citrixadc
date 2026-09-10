@@ -160,15 +160,23 @@ func appfwprofile_trustedlearningclients_bindingSetAttrFromGet(ctx context.Conte
 
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["trustedlearningclients"]; ok && val != nil {
 		data.Trustedlearningclients = types.StringValue(val.(string))
+	} else if data.Trustedlearningclients.IsUnknown() {
+		data.Trustedlearningclients = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

@@ -76,7 +76,7 @@ func nsservicefunctionSetAttrFromGet(ctx context.Context, data *Nsservicefunctio
 	}
 	if val, ok := getResponseData["servicefunctionname"]; ok && val != nil {
 		data.Servicefunctionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicefunctionname.IsUnknown() {
 		data.Servicefunctionname = types.StringNull()
 	}
 

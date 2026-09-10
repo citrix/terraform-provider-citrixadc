@@ -86,12 +86,14 @@ func dnspolicylabelSetAttrFromGet(ctx context.Context, data *DnspolicylabelResou
 	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
 		if val, ok := getResponseData["labelname"]; ok && val != nil {
 			data.Labelname = types.StringValue(val.(string))
+		} else if data.Labelname.IsUnknown() {
+			data.Labelname = types.StringNull()
 		}
 	}
 	// newname is rename-only and never echoed by GET; preserve plan/state value.
 	if val, ok := getResponseData["transform"]; ok && val != nil {
 		data.Transform = types.StringValue(val.(string))
-	} else {
+	} else if data.Transform.IsUnknown() {
 		data.Transform = types.StringNull()
 	}
 

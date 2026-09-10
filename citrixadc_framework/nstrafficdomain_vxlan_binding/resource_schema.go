@@ -73,14 +73,14 @@ func nstrafficdomain_vxlan_bindingSetAttrFromGet(ctx context.Context, data *Nstr
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["vxlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlan.IsUnknown() {
 		data.Vxlan = types.Int64Null()
 	}
 

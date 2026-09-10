@@ -132,12 +132,12 @@ func dnsaddrecSetAttrFromGet(ctx context.Context, data *DnsaddrecResourceModel, 
 	}
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
 		data.Hostname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostname.IsUnknown() {
 		data.Hostname = types.StringNull()
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	// nodeid: NITRO omits the zero/default value from GET. Only null it when the

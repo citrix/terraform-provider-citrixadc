@@ -192,10 +192,10 @@ func bridgetableSetAttrFromGet(ctx context.Context, data *BridgetableResourceMod
 		if val, ok := getResponseData["bridgeage"]; ok && val != nil {
 			if intVal, err := utils.ConvertToInt64(val); err == nil {
 				data.Bridgeage = types.Int64Value(intVal)
-			} else {
+			} else if data.Bridgeage.IsUnknown() {
 				data.Bridgeage = types.Int64Null()
 			}
-		} else {
+		} else if data.Bridgeage.IsUnknown() {
 			data.Bridgeage = types.Int64Null()
 		}
 	}

@@ -240,7 +240,7 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 	// Convert API response to model
 	if val, ok := getResponseData["bot_bind_comment"]; ok && val != nil {
 		data.BotBindComment = types.StringValue(val.(string))
-	} else {
+	} else if data.BotBindComment.IsUnknown() {
 		data.BotBindComment = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_rate_limit_action"]; ok && val != nil {
@@ -256,66 +256,66 @@ func botprofile_ratelimit_bindingSetAttrFromGet(ctx context.Context, data *Botpr
 	}
 	if val, ok := getResponseData["bot_rate_limit_enabled"]; ok && val != nil {
 		data.BotRateLimitEnabled = types.StringValue(val.(string))
-	} else {
+	} else if data.BotRateLimitEnabled.IsUnknown() {
 		data.BotRateLimitEnabled = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_rate_limit_type"]; ok && val != nil {
 		data.BotRateLimitType = types.StringValue(val.(string))
-	} else {
+	} else if data.BotRateLimitType.IsUnknown() {
 		data.BotRateLimitType = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_rate_limit_url"]; ok && val != nil {
 		data.BotRateLimitUrl = types.StringValue(val.(string))
-	} else {
+	} else if data.BotRateLimitUrl.IsUnknown() {
 		data.BotRateLimitUrl = types.StringNull()
 	}
 	if val, ok := getResponseData["bot_ratelimit"]; ok && val != nil {
 		data.BotRatelimit = types.BoolValue(val.(bool))
-	} else {
+	} else if data.BotRatelimit.IsUnknown() {
 		data.BotRatelimit = types.BoolNull()
 	}
 	if val, ok := getResponseData["condition"]; ok && val != nil {
 		data.Condition = types.StringValue(val.(string))
-	} else {
+	} else if data.Condition.IsUnknown() {
 		data.Condition = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiename"]; ok && val != nil {
 		data.Cookiename = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiename.IsUnknown() {
 		data.Cookiename = types.StringNull()
 	}
 	if val, ok := getResponseData["countrycode"]; ok && val != nil {
 		data.Countrycode = types.StringValue(val.(string))
-	} else {
+	} else if data.Countrycode.IsUnknown() {
 		data.Countrycode = types.StringNull()
 	}
 	if val, ok := getResponseData["limittype"]; ok && val != nil {
 		data.Limittype = types.StringValue(val.(string))
-	} else {
+	} else if data.Limittype.IsUnknown() {
 		data.Limittype = types.StringNull()
 	}
 	if val, ok := getResponseData["logmessage"]; ok && val != nil {
 		data.Logmessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmessage.IsUnknown() {
 		data.Logmessage = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["rate"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rate = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rate.IsUnknown() {
 		data.Rate = types.Int64Null()
 	}
 	if val, ok := getResponseData["timeslice"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeslice = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeslice.IsUnknown() {
 		data.Timeslice = types.Int64Null()
 	}
 

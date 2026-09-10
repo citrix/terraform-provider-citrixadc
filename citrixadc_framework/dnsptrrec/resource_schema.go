@@ -114,6 +114,8 @@ func dnsptrrecSetAttrFromGet(ctx context.Context, data *DnsptrrecResourceModel, 
 	// GET actually returns them so a configured value is never nulled.
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
+	} else if data.Domain.IsUnknown() {
+		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
@@ -133,6 +135,8 @@ func dnsptrrecSetAttrFromGet(ctx context.Context, data *DnsptrrecResourceModel, 
 	}
 	if val, ok := getResponseData["reversedomain"]; ok && val != nil {
 		data.Reversedomain = types.StringValue(val.(string))
+	} else if data.Reversedomain.IsUnknown() {
+		data.Reversedomain = types.StringNull()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

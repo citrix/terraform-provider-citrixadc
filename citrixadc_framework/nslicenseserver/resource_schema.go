@@ -212,6 +212,8 @@ func nslicenseserverSetAttrFromGet(ctx context.Context, data *NslicenseserverRes
 	}
 	if val, ok := getResponseData["servername"]; ok && val != nil {
 		data.Servername = types.StringValue(val.(string))
+	} else if data.Servername.IsUnknown() {
+		data.Servername = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))

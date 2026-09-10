@@ -134,12 +134,12 @@ func nshmackeySetAttrFromGet(ctx context.Context, data *NshmackeyResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["digest"]; ok && val != nil {
 		data.Digest = types.StringValue(val.(string))
-	} else {
+	} else if data.Digest.IsUnknown() {
 		data.Digest = types.StringNull()
 	}
 	// keyvalue is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -147,7 +147,7 @@ func nshmackeySetAttrFromGet(ctx context.Context, data *NshmackeyResourceModel, 
 	// keyvalue_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 

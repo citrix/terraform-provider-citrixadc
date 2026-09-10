@@ -80,6 +80,8 @@ func appqoecustomrespSetAttrFromGet(ctx context.Context, data *AppqoecustomrespR
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	// src is intentionally NOT set from the API response (preserved from config/state).
 

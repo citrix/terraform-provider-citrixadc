@@ -162,24 +162,38 @@ func sslvserver_sslcertkey_bindingSetAttrFromGet(ctx context.Context, data *Sslv
 	// API does not echo the field back.
 	if val, ok := getResponseData["ca"]; ok && val != nil {
 		data.Ca = types.BoolValue(val.(bool))
+	} else if data.Ca.IsUnknown() {
+		data.Ca = types.BoolNull()
 	}
 	if val, ok := getResponseData["certkeyname"]; ok && val != nil {
 		data.Certkeyname = types.StringValue(val.(string))
+	} else if data.Certkeyname.IsUnknown() {
+		data.Certkeyname = types.StringNull()
 	}
 	if val, ok := getResponseData["crlcheck"]; ok && val != nil {
 		data.Crlcheck = types.StringValue(val.(string))
+	} else if data.Crlcheck.IsUnknown() {
+		data.Crlcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspcheck"]; ok && val != nil {
 		data.Ocspcheck = types.StringValue(val.(string))
+	} else if data.Ocspcheck.IsUnknown() {
+		data.Ocspcheck = types.StringNull()
 	}
 	if val, ok := getResponseData["skipcaname"]; ok && val != nil {
 		data.Skipcaname = types.BoolValue(val.(bool))
+	} else if data.Skipcaname.IsUnknown() {
+		data.Skipcaname = types.BoolNull()
 	}
 	if val, ok := getResponseData["snicert"]; ok && val != nil {
 		data.Snicert = types.BoolValue(val.(bool))
+	} else if data.Snicert.IsUnknown() {
+		data.Snicert = types.BoolNull()
 	}
 	if val, ok := getResponseData["vservername"]; ok && val != nil {
 		data.Vservername = types.StringValue(val.(string))
+	} else if data.Vservername.IsUnknown() {
+		data.Vservername = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

@@ -96,12 +96,12 @@ func ip6tunnelSetAttrFromGet(ctx context.Context, data *Ip6tunnelResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["local"]; ok && val != nil {
 		data.Local = types.StringValue(val.(string))
-	} else {
+	} else if data.Local.IsUnknown() {
 		data.Local = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
@@ -119,7 +119,7 @@ func ip6tunnelSetAttrFromGet(ctx context.Context, data *Ip6tunnelResourceModel, 
 		data.Remote = types.StringValue(val.(string))
 	} else if val, ok := getResponseData["remote"]; ok && val != nil {
 		data.Remote = types.StringValue(val.(string))
-	} else {
+	} else if data.Remote.IsUnknown() {
 		data.Remote = types.StringNull()
 	}
 

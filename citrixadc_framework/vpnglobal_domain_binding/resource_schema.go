@@ -85,6 +85,8 @@ func vpnglobal_domain_bindingSetAttrFromGet(ctx context.Context, data *Vpnglobal
 
 	if val, ok := getResponseData["intranetdomain"]; ok && val != nil {
 		data.Intranetdomain = types.StringValue(val.(string))
+	} else if data.Intranetdomain.IsUnknown() {
+		data.Intranetdomain = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

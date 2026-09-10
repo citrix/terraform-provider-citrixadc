@@ -110,15 +110,21 @@ func sslcertkey_sslocspresponder_bindingSetAttrFromGet(ctx context.Context, data
 	// preserve the configured/state value rather than nulling it.
 	if val, ok := getResponseData["certkey"]; ok && val != nil {
 		data.Certkey = types.StringValue(val.(string))
+	} else if data.Certkey.IsUnknown() {
+		data.Certkey = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspresponder"]; ok && val != nil {
 		data.Ocspresponder = types.StringValue(val.(string))
+	} else if data.Ocspresponder.IsUnknown() {
+		data.Ocspresponder = types.StringNull()
 	}
 	// priority is server-echoed (returned as a string) - copy it back.
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

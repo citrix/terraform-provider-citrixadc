@@ -73,14 +73,14 @@ func nstrafficdomain_vlan_bindingSetAttrFromGet(ctx context.Context, data *Nstra
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlan.IsUnknown() {
 		data.Vlan = types.Int64Null()
 	}
 

@@ -222,22 +222,22 @@ func aaakcdaccountSetAttrFromGet(ctx context.Context, data *AaakcdaccountResourc
 	// Convert API response to model
 	if val, ok := getResponseData["cacert"]; ok && val != nil {
 		data.Cacert = types.StringValue(val.(string))
-	} else {
+	} else if data.Cacert.IsUnknown() {
 		data.Cacert = types.StringNull()
 	}
 	if val, ok := getResponseData["delegateduser"]; ok && val != nil {
 		data.Delegateduser = types.StringValue(val.(string))
-	} else {
+	} else if data.Delegateduser.IsUnknown() {
 		data.Delegateduser = types.StringNull()
 	}
 	if val, ok := getResponseData["enterpriserealm"]; ok && val != nil {
 		data.Enterpriserealm = types.StringValue(val.(string))
-	} else {
+	} else if data.Enterpriserealm.IsUnknown() {
 		data.Enterpriserealm = types.StringNull()
 	}
 	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
 		data.Kcdaccount = types.StringValue(val.(string))
-	} else {
+	} else if data.Kcdaccount.IsUnknown() {
 		data.Kcdaccount = types.StringNull()
 	}
 	// kcdpassword is not returned by NITRO API (secret/ephemeral) - retain from config
@@ -245,32 +245,32 @@ func aaakcdaccountSetAttrFromGet(ctx context.Context, data *AaakcdaccountResourc
 	// kcdpassword_wo_version is not returned by NITRO API (secret/ephemeral) - retain from config
 	if val, ok := getResponseData["keytab"]; ok && val != nil {
 		data.Keytab = types.StringValue(val.(string))
-	} else {
+	} else if data.Keytab.IsUnknown() {
 		data.Keytab = types.StringNull()
 	}
 	if val, ok := getResponseData["realmstr"]; ok && val != nil {
 		data.Realmstr = types.StringValue(strings.ToLower(val.(string)))
-	} else {
+	} else if data.Realmstr.IsUnknown() {
 		data.Realmstr = types.StringNull()
 	}
 	if val, ok := getResponseData["saltexpression"]; ok && val != nil {
 		data.Saltexpression = types.StringValue(val.(string))
-	} else {
+	} else if data.Saltexpression.IsUnknown() {
 		data.Saltexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["servicespn"]; ok && val != nil {
 		data.Servicespn = types.StringValue(val.(string))
-	} else {
+	} else if data.Servicespn.IsUnknown() {
 		data.Servicespn = types.StringNull()
 	}
 	if val, ok := getResponseData["usercert"]; ok && val != nil {
 		data.Usercert = types.StringValue(val.(string))
-	} else {
+	} else if data.Usercert.IsUnknown() {
 		data.Usercert = types.StringNull()
 	}
 	if val, ok := getResponseData["userrealm"]; ok && val != nil {
 		data.Userrealm = types.StringValue(val.(string))
-	} else {
+	} else if data.Userrealm.IsUnknown() {
 		data.Userrealm = types.StringNull()
 	}
 

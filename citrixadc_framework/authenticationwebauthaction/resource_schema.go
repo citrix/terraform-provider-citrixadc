@@ -355,34 +355,34 @@ func authenticationwebauthactionSetAttrFromGet(ctx context.Context, data *Authen
 	}
 	if val, ok := getResponseData["fullreqexpr"]; ok && val != nil {
 		data.Fullreqexpr = types.StringValue(val.(string))
-	} else {
+	} else if data.Fullreqexpr.IsUnknown() {
 		data.Fullreqexpr = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["scheme"]; ok && val != nil {
 		data.Scheme = types.StringValue(val.(string))
-	} else {
+	} else if data.Scheme.IsUnknown() {
 		data.Scheme = types.StringNull()
 	}
 	if val, ok := getResponseData["serverip"]; ok && val != nil {
 		data.Serverip = types.StringValue(val.(string))
-	} else {
+	} else if data.Serverip.IsUnknown() {
 		data.Serverip = types.StringNull()
 	}
 	if val, ok := getResponseData["serverport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serverport.IsUnknown() {
 		data.Serverport = types.Int64Null()
 	}
 	if val, ok := getResponseData["successrule"]; ok && val != nil {
 		data.Successrule = types.StringValue(val.(string))
-	} else {
+	} else if data.Successrule.IsUnknown() {
 		data.Successrule = types.StringNull()
 	}
 

@@ -153,29 +153,45 @@ func videooptimizationglobalpacing_videooptimizationpacingpolicy_bindingSetAttrF
 	// globalbindtype is a Computed read-only field ("SYSTEM_GLOBAL"), always read.
 	if val, ok := getResponseData["globalbindtype"]; ok && val != nil {
 		data.Globalbindtype = types.StringValue(val.(string))
+	} else if data.Globalbindtype.IsUnknown() {
+		data.Globalbindtype = types.StringNull()
 	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["invoke"]; ok && val != nil {
 		data.Invoke = types.BoolValue(val.(bool))
+	} else if data.Invoke.IsUnknown() {
+		data.Invoke = types.BoolNull()
 	}
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
+	} else if data.Labelname.IsUnknown() {
+		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
+	} else if data.Labeltype.IsUnknown() {
+		data.Labeltype = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
 	}
 
 	// NOTE: ID is set once in Create; it is intentionally not recomputed here to avoid

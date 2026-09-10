@@ -168,12 +168,12 @@ func ntpserverSetAttrFromGet(ctx context.Context, data *NtpserverResourceModel, 
 	if serveripEmpty && servernameEmpty {
 		if serveripVal != "" {
 			data.Serverip = types.StringValue(serveripVal)
-		} else {
+		} else if data.Serverip.IsUnknown() {
 			data.Serverip = types.StringNull()
 		}
 		if servernameVal != "" {
 			data.Servername = types.StringValue(servernameVal)
-		} else {
+		} else if data.Servername.IsUnknown() {
 			data.Servername = types.StringNull()
 		}
 	} else {

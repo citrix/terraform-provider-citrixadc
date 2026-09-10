@@ -134,39 +134,41 @@ func dnscaarecSetAttrFromGet(ctx context.Context, data *DnscaarecResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
-	} else {
+	} else if data.Domain.IsUnknown() {
 		data.Domain = types.StringNull()
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
+	} else if data.Ecssubnet.IsUnknown() {
+		data.Ecssubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["flag"]; ok && val != nil {
 		data.Flag = types.StringValue(val.(string))
-	} else {
+	} else if data.Flag.IsUnknown() {
 		data.Flag = types.StringNull()
 	}
 	if val, ok := getResponseData["recordid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Recordid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Recordid.IsUnknown() {
 		data.Recordid = types.Int64Null()
 	}
 	if val, ok := getResponseData["tag"]; ok && val != nil {
 		data.Tag = types.StringValue(val.(string))
-	} else {
+	} else if data.Tag.IsUnknown() {
 		data.Tag = types.StringNull()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["valuestring"]; ok && val != nil {
 		data.Valuestring = types.StringValue(val.(string))
-	} else {
+	} else if data.Valuestring.IsUnknown() {
 		data.Valuestring = types.StringNull()
 	}
 

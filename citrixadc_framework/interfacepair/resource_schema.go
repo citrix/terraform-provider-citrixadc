@@ -86,6 +86,8 @@ func interfacepairSetAttrFromGet(ctx context.Context, data *InterfacepairResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Interfaceid = types.Int64Value(intVal)
 		}
+	} else if data.Interfaceid.IsUnknown() {
+		data.Interfaceid = types.Int64Null()
 	}
 
 	// Set ID for the resource

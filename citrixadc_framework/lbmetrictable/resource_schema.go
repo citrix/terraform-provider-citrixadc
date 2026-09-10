@@ -64,6 +64,8 @@ func lbmetrictableSetAttrFromGet(ctx context.Context, data *LbmetrictableResourc
 	// configured/state value is never clobbered.
 	if val, ok := getResponseData["metrictable"]; ok && val != nil {
 		data.Metrictable = types.StringValue(val.(string))
+	} else if data.Metrictable.IsUnknown() {
+		data.Metrictable = types.StringNull()
 	}
 
 	// Set ID for the resource.

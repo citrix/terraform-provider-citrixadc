@@ -93,12 +93,18 @@ func vpnglobal_intranetip_bindingSetAttrFromGet(ctx context.Context, data *Vpngl
 	// the existing plan/state value instead of nulling it (Pattern 7).
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
 	}
 	if val, ok := getResponseData["intranetip"]; ok && val != nil {
 		data.Intranetip = types.StringValue(val.(string))
+	} else if data.Intranetip.IsUnknown() {
+		data.Intranetip = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
+	} else if data.Netmask.IsUnknown() {
+		data.Netmask = types.StringNull()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

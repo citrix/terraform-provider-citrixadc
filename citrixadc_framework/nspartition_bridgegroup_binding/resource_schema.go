@@ -74,12 +74,12 @@ func nspartition_bridgegroup_bindingSetAttrFromGet(ctx context.Context, data *Ns
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Bridgegroup = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Bridgegroup.IsUnknown() {
 		data.Bridgegroup = types.Int64Null()
 	}
 	if val, ok := getResponseData["partitionname"]; ok && val != nil {
 		data.Partitionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Partitionname.IsUnknown() {
 		data.Partitionname = types.StringNull()
 	}
 

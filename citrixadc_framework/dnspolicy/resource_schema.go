@@ -188,6 +188,8 @@ func dnspolicySetAttrFromGet(ctx context.Context, data *DnspolicyResourceModel, 
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["preferredlocation"]; ok && val != nil {
 		data.Preferredlocation = types.StringValue(val.(string))
@@ -211,6 +213,8 @@ func dnspolicySetAttrFromGet(ctx context.Context, data *DnspolicyResourceModel, 
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
 	}
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
 		data.Viewname = types.StringValue(val.(string))

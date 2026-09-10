@@ -96,6 +96,8 @@ func locationfileSetAttrFromGet(ctx context.Context, data *LocationfileResourceM
 	if data.Locationfile.IsNull() || data.Locationfile.IsUnknown() || data.Locationfile.ValueString() == "" {
 		if val, ok := getResponseData["Locationfile"]; ok && val != nil {
 			data.Locationfile = types.StringValue(val.(string))
+		} else if data.Locationfile.IsUnknown() {
+			data.Locationfile = types.StringNull()
 		}
 	}
 

@@ -146,9 +146,13 @@ func responderpolicylabel_responderpolicy_bindingSetAttrFromGet(ctx context.Cont
 	// Identity keys: safe to adopt from the GET response.
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
+	} else if data.Labelname.IsUnknown() {
+		data.Labelname = types.StringNull()
 	}
 	if val, ok := getResponseData["policyname"]; ok && val != nil {
 		data.Policyname = types.StringValue(val.(string))
+	} else if data.Policyname.IsUnknown() {
+		data.Policyname = types.StringNull()
 	}
 
 	// invokelabelname / labeltype are Optional+Computed server-assigned values (the
@@ -157,12 +161,12 @@ func responderpolicylabel_responderpolicy_bindingSetAttrFromGet(ctx context.Cont
 	// leaving them unknown).
 	if val, ok := getResponseData["invoke_labelname"]; ok && val != nil {
 		data.InvokeLabelname = types.StringValue(val.(string))
-	} else {
+	} else if data.InvokeLabelname.IsUnknown() {
 		data.InvokeLabelname = types.StringNull()
 	}
 	if val, ok := getResponseData["labeltype"]; ok && val != nil {
 		data.Labeltype = types.StringValue(val.(string))
-	} else {
+	} else if data.Labeltype.IsUnknown() {
 		data.Labeltype = types.StringNull()
 	}
 

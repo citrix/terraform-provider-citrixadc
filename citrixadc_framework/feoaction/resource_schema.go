@@ -436,6 +436,8 @@ func feoactionSetAttrFromGet(ctx context.Context, data *FeoactionResourceModel, 
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["pageextendcache"]; ok && val != nil {
 		data.Pageextendcache = types.BoolValue(val.(bool))

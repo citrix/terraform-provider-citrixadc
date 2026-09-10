@@ -137,11 +137,15 @@ func vpnvserver_authenticationsamlpolicy_bindingSetAttrFromGet(ctx context.Conte
 	if data.Name.IsNull() || data.Name.ValueString() == "" {
 		if val, ok := getResponseData["name"]; ok && val != nil {
 			data.Name = types.StringValue(val.(string))
+		} else if data.Name.IsUnknown() {
+			data.Name = types.StringNull()
 		}
 	}
 	if data.Policy.IsNull() || data.Policy.ValueString() == "" {
 		if val, ok := getResponseData["policy"]; ok && val != nil {
 			data.Policy = types.StringValue(val.(string))
+		} else if data.Policy.IsUnknown() {
+			data.Policy = types.StringNull()
 		}
 	}
 

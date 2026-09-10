@@ -79,9 +79,13 @@ func vrid6_channel_bindingSetAttrFromGet(ctx context.Context, data *Vrid6Channel
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.VridId = types.Int64Value(intVal)
 		}
+	} else if data.VridId.IsUnknown() {
+		data.VridId = types.Int64Null()
 	}
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
+	} else if data.Ifnum.IsUnknown() {
+		data.Ifnum = types.StringNull()
 	}
 
 	return data
