@@ -39,26 +39,21 @@ jobs:
           cache: true
 
       - name: Download and install Mend CLI
-        env:
-          # Pin the self-contained Mend CLI to a specific, immutable version and verify
-          # its SHA-256. This is the path-versioned artifact documented at
-          # https://docs.mend.io/platform/latest/product-downloads (Download Self-Contained CLI).
-          # Unlike the rolling "latest" download, a version-pinned artifact never goes
-          # stale, so CI does not break every time Mend ships a new CLI; it only changes
-          # when MEND_CLI_VERSION (and the matching SHA-256) is deliberately bumped.
-          # Note: Mend keeps each self-contained version available for ~6 months after release.
-          MEND_CLI_VERSION: "26.8.2-hf1"
-          MEND_CLI_SHA256: "399907c14b8fc5a5aa23e42e7214bae1b82a91a41160a2d444f132e25223f6ee"
         run: |
           set -euo pipefail
-          url="https://downloads.mend.io/cli-standalone/${MEND_CLI_VERSION}/mend_linux_amd64_${MEND_CLI_VERSION}.tgz"
-          # Download over HTTPS to a file (never pipe a remote script into a shell), then
-          # verify the pinned SHA-256 BEFORE extracting or executing. sha256sum -c exits
-          # non-zero on mismatch and, with `set -e`, fails the job closed.
-          curl -fsSL --retry 3 --retry-delay 5 --retry-connrefused "${url}" -o /tmp/mend.tgz
-          echo "${MEND_CLI_SHA256}  /tmp/mend.tgz" | sha256sum -c -
-          tar -xzf /tmp/mend.tgz -C /tmp
-          install -m 0755 /tmp/mend-linux-amd64/mend /usr/local/bin/mend
+          # Mend CLI Integrity Check (vendor-documented procedure):
+          # https://docs.mend.io/legacy-sca/latest/download-the-mend-cli#Mend-CLI-Integrity-Check
+          # Download the CLI to a file (never pipe a remote script into a shell) plus its
+          # published checksum (the CLI URL + ".sha256"), then verify the binary against that
+          # checksum BEFORE making it executable. Both are fetched together from the same
+          # release path, so the checksum always matches the binary served at fetch time.
+          # `sha256sum -c` exits non-zero on mismatch and, with `set -e`, fails the job closed.
+          base="https://downloads.mend.io/cli/linux_amd64/mend"
+          curl -fsSL --retry 3 --retry-delay 5 --retry-connrefused "${base}" -o /tmp/mend
+          curl -fsSL --retry 3 --retry-delay 5 --retry-connrefused "${base}.sha256" -o /tmp/mend.sha256
+          # The checksum file lists the hash against the filename "mend"; verify from /tmp.
+          ( cd /tmp && sha256sum -c mend.sha256 )
+          install -m 0755 /tmp/mend /usr/local/bin/mend
           mend version
 
       - name: Run Mend dependency scan
