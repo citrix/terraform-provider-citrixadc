@@ -47,8 +47,8 @@ jobs:
           # stale, so CI does not break every time Mend ships a new CLI; it only changes
           # when MEND_CLI_VERSION (and the matching SHA-256) is deliberately bumped.
           # Note: Mend keeps each self-contained version available for ~6 months after release.
-          MEND_CLI_VERSION: "26.6.1"
-          MEND_CLI_SHA256: "eebb0f6187e4d5f418c78ca0502bc36112264b45e091924732c721ceed001238"
+          MEND_CLI_VERSION: "26.8.2-hf1"
+          MEND_CLI_SHA256: "399907c14b8fc5a5aa23e42e7214bae1b82a91a41160a2d444f132e25223f6ee"
         run: |
           set -euo pipefail
           url="https://downloads.mend.io/cli-standalone/${MEND_CLI_VERSION}/mend_linux_amd64_${MEND_CLI_VERSION}.tgz"
