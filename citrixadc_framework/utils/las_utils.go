@@ -92,26 +92,22 @@ type LASTokenGenerator struct {
 	BearerCache   string
 	BearerToken   string
 	HTTPClient    *http.Client
-	InsecureHTTPS bool
 }
 
-// NewLASTokenGenerator creates a new LAS token generator
+// NewLASTokenGenerator creates a new LAS token generator.
+// TLS verification stays enabled: the HTTP client carries Citrix Cloud secrets to public endpoints with valid certificates.
 func NewLASTokenGenerator(endpoint, lsguid, ccid, client, password, baseURL, ccTokenURL string) *LASTokenGenerator {
 	return &LASTokenGenerator{
-		Endpoint:      endpoint,
-		LSGUID:        lsguid,
-		CCID:          ccid,
-		SecretClient:  client,
-		SecretPwd:     password,
-		BaseURL:       baseURL,
-		CCTokenURL:    ccTokenURL,
-		BearerCache:   "/tmp/las_bearer_cache",
-		InsecureHTTPS: true,
+		Endpoint:     endpoint,
+		LSGUID:       lsguid,
+		CCID:         ccid,
+		SecretClient: client,
+		SecretPwd:    password,
+		BaseURL:      baseURL,
+		CCTokenURL:   ccTokenURL,
+		BearerCache:  "/tmp/las_bearer_cache",
 		HTTPClient: &http.Client{
 			Timeout: 60 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
 		},
 	}
 }
