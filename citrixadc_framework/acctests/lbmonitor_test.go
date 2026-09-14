@@ -1186,3 +1186,115 @@ func TestAccLbmonitor_diameter_type_gating(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLbmonitor_respcode_ranges is a regression guard for GH #1462. NetScaler
+// range-compresses adjacent response codes on GET (301,302 -> "301-302";
+// 301,302,303 -> "301-303"), so a configured [200,301,302,401] previously failed with
+// "Provider produced inconsistent result after apply" (the applied list had 3 elements,
+// the plan had 4). The respcode custom type's ListSemanticEquals now treats equivalent
+// representations as the same set of codes, so the apply is consistent and the state
+// keeps the configured form; terraform-plugin-testing's implicit post-apply plan then
+// enforces idempotency. Step 2 extends the run to 301-303 to exercise the update path.
+const testAccLbmonitor_respcode_ranges_step1 = `
+resource "citrixadc_lbmonitor" "tf_lbmonitor_respcode_ranges" {
+	monitorname = "tf_test_lbmonitor_respcode_ranges"
+	type        = "HTTP"
+	interval    = 5
+	resptimeout = 2
+	respcode    = ["200", "301", "302", "401"]
+}
+`
+
+const testAccLbmonitor_respcode_ranges_step2 = `
+resource "citrixadc_lbmonitor" "tf_lbmonitor_respcode_ranges" {
+	monitorname = "tf_test_lbmonitor_respcode_ranges"
+	type        = "HTTP"
+	interval    = 5
+	resptimeout = 2
+	respcode    = ["200", "301", "302", "303", "401"]
+}
+`
+
+func TestAccLbmonitor_respcode_ranges(t *testing.T) {
+	const addr = "citrixadc_lbmonitor.tf_lbmonitor_respcode_ranges"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				// GH #1462 repro: adjacent codes 301,302 are range-compressed by NITRO.
+				Config: testAccLbmonitor_respcode_ranges_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "respcode.#", "4"),
+					resource.TestCheckResourceAttr(addr, "respcode.0", "200"),
+					resource.TestCheckResourceAttr(addr, "respcode.1", "301"),
+					resource.TestCheckResourceAttr(addr, "respcode.2", "302"),
+					resource.TestCheckResourceAttr(addr, "respcode.3", "401"),
+				),
+			},
+			{
+				// Genuine update extending the run to 301-303 (NITRO returns "301-303").
+				Config: testAccLbmonitor_respcode_ranges_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "respcode.#", "5"),
+					resource.TestCheckResourceAttr(addr, "respcode.2", "302"),
+					resource.TestCheckResourceAttr(addr, "respcode.3", "303"),
+					resource.TestCheckResourceAttr(addr, "respcode.4", "401"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLbmonitor_interval_no_units is a regression guard for GH #1461. When
+// interval/resptimeout/downtime are set as bare numbers with NO explicit unit and the
+// value is an exact multiple of 60, NetScaler silently normalizes seconds to minutes
+// (240 SEC -> 4 MIN, units3=MIN). Previously the read-back MIN value clobbered the
+// configured seconds value and the apply failed with "Provider produced inconsistent
+// result after apply" (.interval was 240 but now 4). lbmonitorRetainEquivalentDuration
+// now assumes SEC for an unset unit, so the configured value is retained (unit recorded
+// as SEC), the apply is consistent, and there is no perpetual diff. This complements
+// TestAccLbmonitor_interval_units_normalization, which covers the EXPLICIT-unit case.
+const testAccLbmonitor_interval_no_units = `
+resource "citrixadc_lbmonitor" "nounits" {
+	monitorname = "tf_acc_mon_nounits"
+	type        = "HTTP"
+	httprequest = "GET /"
+	interval    = 240
+	resptimeout = 120
+	downtime    = 120
+}
+`
+
+func TestAccLbmonitor_interval_no_units(t *testing.T) {
+	const addr = "citrixadc_lbmonitor.nounits"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				// GH #1461: bare seconds that NITRO normalizes to MIN must apply cleanly
+				// and retain the configured seconds value (unit computed as SEC).
+				Config: testAccLbmonitor_interval_no_units,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "interval", "240"),
+					resource.TestCheckResourceAttr(addr, "units3", "SEC"),
+					resource.TestCheckResourceAttr(addr, "resptimeout", "120"),
+					resource.TestCheckResourceAttr(addr, "units4", "SEC"),
+					resource.TestCheckResourceAttr(addr, "downtime", "120"),
+					resource.TestCheckResourceAttr(addr, "units2", "SEC"),
+				),
+			},
+			{
+				// No perpetual diff on re-plan with the same unit-less config.
+				Config:   testAccLbmonitor_interval_no_units,
+				PlanOnly: true,
+			},
+		},
+	})
+}

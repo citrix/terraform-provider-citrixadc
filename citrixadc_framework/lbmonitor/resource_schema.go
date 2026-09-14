@@ -21,125 +21,125 @@ import (
 
 // LbmonitorResourceModel describes the resource data model.
 type LbmonitorResourceModel struct {
-	Id                               types.String `tfsdk:"id"`
-	Snmpoid                          types.String `tfsdk:"snmpoid"`
-	Acctapplicationid                types.List   `tfsdk:"acctapplicationid"`
-	Action                           types.String `tfsdk:"action"`
-	Alertretries                     types.Int64  `tfsdk:"alertretries"`
-	Application                      types.String `tfsdk:"application"`
-	Attribute                        types.String `tfsdk:"attribute"`
-	Authapplicationid                types.List   `tfsdk:"authapplicationid"`
-	Basedn                           types.String `tfsdk:"basedn"`
-	Binddn                           types.String `tfsdk:"binddn"`
-	Customheaders                    types.String `tfsdk:"customheaders"`
-	Database                         types.String `tfsdk:"database"`
-	Destip                           types.String `tfsdk:"destip"`
-	Destport                         types.Int64  `tfsdk:"destport"`
-	Deviation                        types.Int64  `tfsdk:"deviation"`
-	Dispatcherip                     types.String `tfsdk:"dispatcherip"`
-	Dispatcherport                   types.Int64  `tfsdk:"dispatcherport"`
-	Domain                           types.String `tfsdk:"domain"`
-	Downtime                         types.Int64  `tfsdk:"downtime"`
-	Evalrule                         types.String `tfsdk:"evalrule"`
-	Failureretries                   types.Int64  `tfsdk:"failureretries"`
-	Filename                         types.String `tfsdk:"filename"`
-	Filter                           types.String `tfsdk:"filter"`
-	Firmwarerevision                 types.Int64  `tfsdk:"firmwarerevision"`
-	Group                            types.String `tfsdk:"group"`
-	Grpchealthcheck                  types.String `tfsdk:"grpchealthcheck"`
-	Grpcservicename                  types.String `tfsdk:"grpcservicename"`
-	Grpcstatuscode                   types.List   `tfsdk:"grpcstatuscode"`
-	Hostipaddress                    types.String `tfsdk:"hostipaddress"`
-	Hostname                         types.String `tfsdk:"hostname"`
-	Httprequest                      types.String `tfsdk:"httprequest"`
-	Inbandsecurityid                 types.String `tfsdk:"inbandsecurityid"`
-	Interval                         types.Int64  `tfsdk:"interval"`
-	Ipaddress                        types.List   `tfsdk:"ipaddress"`
-	Iptunnel                         types.String `tfsdk:"iptunnel"`
-	Kcdaccount                       types.String `tfsdk:"kcdaccount"`
-	Lasversion                       types.String `tfsdk:"lasversion"`
-	Logonpointname                   types.String `tfsdk:"logonpointname"`
-	Lrtm                             types.String `tfsdk:"lrtm"`
-	Maxforwards                      types.Int64  `tfsdk:"maxforwards"`
-	Metric                           types.String `tfsdk:"metric"`
-	Metrictable                      types.String `tfsdk:"metrictable"`
-	Metricthreshold                  types.Int64  `tfsdk:"metricthreshold"`
-	Metricweight                     types.Int64  `tfsdk:"metricweight"`
-	Monitorname                      types.String `tfsdk:"monitorname"`
-	Mqttclientidentifier             types.String `tfsdk:"mqttclientidentifier"`
-	Mqttversion                      types.Int64  `tfsdk:"mqttversion"`
-	Mssqlprotocolversion             types.String `tfsdk:"mssqlprotocolversion"`
-	Netprofile                       types.String `tfsdk:"netprofile"`
-	Oraclesid                        types.String `tfsdk:"oraclesid"`
-	Originhost                       types.String `tfsdk:"originhost"`
-	Originrealm                      types.String `tfsdk:"originrealm"`
-	Password                         types.String `tfsdk:"password"`
-	PasswordWo                       types.String `tfsdk:"password_wo"`
-	PasswordWoVersion                types.Int64  `tfsdk:"password_wo_version"`
-	Productname                      types.String `tfsdk:"productname"`
-	Query                            types.String `tfsdk:"query"`
-	Querytype                        types.String `tfsdk:"querytype"`
-	Radaccountsession                types.String `tfsdk:"radaccountsession"`
-	Radaccounttype                   types.Int64  `tfsdk:"radaccounttype"`
-	Radapn                           types.String `tfsdk:"radapn"`
-	Radframedip                      types.String `tfsdk:"radframedip"`
-	Radkey                           types.String `tfsdk:"radkey"`
-	RadkeyWo                         types.String `tfsdk:"radkey_wo"`
-	RadkeyWoVersion                  types.Int64  `tfsdk:"radkey_wo_version"`
-	Radmsisdn                        types.String `tfsdk:"radmsisdn"`
-	Radnasid                         types.String `tfsdk:"radnasid"`
-	Radnasip                         types.String `tfsdk:"radnasip"`
-	Recv                             types.String `tfsdk:"recv"`
-	Respcode                         types.List   `tfsdk:"respcode"`
-	Resptimeout                      types.Int64  `tfsdk:"resptimeout"`
-	Resptimeoutthresh                types.Int64  `tfsdk:"resptimeoutthresh"`
-	Retries                          types.Int64  `tfsdk:"retries"`
-	Reverse                          types.String `tfsdk:"reverse"`
-	Rtsprequest                      types.String `tfsdk:"rtsprequest"`
-	Scriptargs                       types.String `tfsdk:"scriptargs"`
-	Scriptname                       types.String `tfsdk:"scriptname"`
-	Secondarypassword                types.String `tfsdk:"secondarypassword"`
-	SecondarypasswordWo              types.String `tfsdk:"secondarypassword_wo"`
-	SecondarypasswordWoVersion       types.Int64  `tfsdk:"secondarypassword_wo_version"`
-	Secure                           types.String `tfsdk:"secure"`
-	Secureargs                       types.String `tfsdk:"secureargs"`
-	SecureargsWo                     types.String `tfsdk:"secureargs_wo"`
-	SecureargsWoVersion              types.Int64  `tfsdk:"secureargs_wo_version"`
-	Send                             types.String `tfsdk:"send"`
-	Servicegroupname                 types.String `tfsdk:"servicegroupname"`
-	Servicename                      types.String `tfsdk:"servicename"`
-	Sipmethod                        types.String `tfsdk:"sipmethod"`
-	Sipreguri                        types.String `tfsdk:"sipreguri"`
-	Sipuri                           types.String `tfsdk:"sipuri"`
-	Sitepath                         types.String `tfsdk:"sitepath"`
-	Snmpcommunity                    types.String `tfsdk:"snmpcommunity"`
-	Snmpthreshold                    types.String `tfsdk:"snmpthreshold"`
-	Snmpversion                      types.String `tfsdk:"snmpversion"`
-	Sqlquery                         types.String `tfsdk:"sqlquery"`
-	Sslprofile                       types.String `tfsdk:"sslprofile"`
-	State                            types.String `tfsdk:"state"`
-	Storedb                          types.String `tfsdk:"storedb"`
-	Storefrontacctservice            types.String `tfsdk:"storefrontacctservice"`
-	Storefrontcheckbackendservices   types.String `tfsdk:"storefrontcheckbackendservices"`
-	Storename                        types.String `tfsdk:"storename"`
-	Successretries                   types.Int64  `tfsdk:"successretries"`
-	Supportedvendorids               types.List   `tfsdk:"supportedvendorids"`
-	Tos                              types.String `tfsdk:"tos"`
-	Tosid                            types.Int64  `tfsdk:"tosid"`
-	Transparent                      types.String `tfsdk:"transparent"`
-	Trofscode                        types.Int64  `tfsdk:"trofscode"`
-	Trofsstring                      types.String `tfsdk:"trofsstring"`
-	Type                             types.String `tfsdk:"type"`
-	Units1                           types.String `tfsdk:"units1"`
-	Units2                           types.String `tfsdk:"units2"`
-	Units3                           types.String `tfsdk:"units3"`
-	Units4                           types.String `tfsdk:"units4"`
-	Username                         types.String `tfsdk:"username"`
-	Validatecred                     types.String `tfsdk:"validatecred"`
-	Vendorid                         types.Int64  `tfsdk:"vendorid"`
-	Vendorspecificacctapplicationids types.List   `tfsdk:"vendorspecificacctapplicationids"`
-	Vendorspecificauthapplicationids types.List   `tfsdk:"vendorspecificauthapplicationids"`
-	Vendorspecificvendorid           types.Int64  `tfsdk:"vendorspecificvendorid"`
+	Id                               types.String      `tfsdk:"id"`
+	Snmpoid                          types.String      `tfsdk:"snmpoid"`
+	Acctapplicationid                types.List        `tfsdk:"acctapplicationid"`
+	Action                           types.String      `tfsdk:"action"`
+	Alertretries                     types.Int64       `tfsdk:"alertretries"`
+	Application                      types.String      `tfsdk:"application"`
+	Attribute                        types.String      `tfsdk:"attribute"`
+	Authapplicationid                types.List        `tfsdk:"authapplicationid"`
+	Basedn                           types.String      `tfsdk:"basedn"`
+	Binddn                           types.String      `tfsdk:"binddn"`
+	Customheaders                    types.String      `tfsdk:"customheaders"`
+	Database                         types.String      `tfsdk:"database"`
+	Destip                           types.String      `tfsdk:"destip"`
+	Destport                         types.Int64       `tfsdk:"destport"`
+	Deviation                        types.Int64       `tfsdk:"deviation"`
+	Dispatcherip                     types.String      `tfsdk:"dispatcherip"`
+	Dispatcherport                   types.Int64       `tfsdk:"dispatcherport"`
+	Domain                           types.String      `tfsdk:"domain"`
+	Downtime                         types.Int64       `tfsdk:"downtime"`
+	Evalrule                         types.String      `tfsdk:"evalrule"`
+	Failureretries                   types.Int64       `tfsdk:"failureretries"`
+	Filename                         types.String      `tfsdk:"filename"`
+	Filter                           types.String      `tfsdk:"filter"`
+	Firmwarerevision                 types.Int64       `tfsdk:"firmwarerevision"`
+	Group                            types.String      `tfsdk:"group"`
+	Grpchealthcheck                  types.String      `tfsdk:"grpchealthcheck"`
+	Grpcservicename                  types.String      `tfsdk:"grpcservicename"`
+	Grpcstatuscode                   types.List        `tfsdk:"grpcstatuscode"`
+	Hostipaddress                    types.String      `tfsdk:"hostipaddress"`
+	Hostname                         types.String      `tfsdk:"hostname"`
+	Httprequest                      types.String      `tfsdk:"httprequest"`
+	Inbandsecurityid                 types.String      `tfsdk:"inbandsecurityid"`
+	Interval                         types.Int64       `tfsdk:"interval"`
+	Ipaddress                        types.List        `tfsdk:"ipaddress"`
+	Iptunnel                         types.String      `tfsdk:"iptunnel"`
+	Kcdaccount                       types.String      `tfsdk:"kcdaccount"`
+	Lasversion                       types.String      `tfsdk:"lasversion"`
+	Logonpointname                   types.String      `tfsdk:"logonpointname"`
+	Lrtm                             types.String      `tfsdk:"lrtm"`
+	Maxforwards                      types.Int64       `tfsdk:"maxforwards"`
+	Metric                           types.String      `tfsdk:"metric"`
+	Metrictable                      types.String      `tfsdk:"metrictable"`
+	Metricthreshold                  types.Int64       `tfsdk:"metricthreshold"`
+	Metricweight                     types.Int64       `tfsdk:"metricweight"`
+	Monitorname                      types.String      `tfsdk:"monitorname"`
+	Mqttclientidentifier             types.String      `tfsdk:"mqttclientidentifier"`
+	Mqttversion                      types.Int64       `tfsdk:"mqttversion"`
+	Mssqlprotocolversion             types.String      `tfsdk:"mssqlprotocolversion"`
+	Netprofile                       types.String      `tfsdk:"netprofile"`
+	Oraclesid                        types.String      `tfsdk:"oraclesid"`
+	Originhost                       types.String      `tfsdk:"originhost"`
+	Originrealm                      types.String      `tfsdk:"originrealm"`
+	Password                         types.String      `tfsdk:"password"`
+	PasswordWo                       types.String      `tfsdk:"password_wo"`
+	PasswordWoVersion                types.Int64       `tfsdk:"password_wo_version"`
+	Productname                      types.String      `tfsdk:"productname"`
+	Query                            types.String      `tfsdk:"query"`
+	Querytype                        types.String      `tfsdk:"querytype"`
+	Radaccountsession                types.String      `tfsdk:"radaccountsession"`
+	Radaccounttype                   types.Int64       `tfsdk:"radaccounttype"`
+	Radapn                           types.String      `tfsdk:"radapn"`
+	Radframedip                      types.String      `tfsdk:"radframedip"`
+	Radkey                           types.String      `tfsdk:"radkey"`
+	RadkeyWo                         types.String      `tfsdk:"radkey_wo"`
+	RadkeyWoVersion                  types.Int64       `tfsdk:"radkey_wo_version"`
+	Radmsisdn                        types.String      `tfsdk:"radmsisdn"`
+	Radnasid                         types.String      `tfsdk:"radnasid"`
+	Radnasip                         types.String      `tfsdk:"radnasip"`
+	Recv                             types.String      `tfsdk:"recv"`
+	Respcode                         respcodeListValue `tfsdk:"respcode"`
+	Resptimeout                      types.Int64       `tfsdk:"resptimeout"`
+	Resptimeoutthresh                types.Int64       `tfsdk:"resptimeoutthresh"`
+	Retries                          types.Int64       `tfsdk:"retries"`
+	Reverse                          types.String      `tfsdk:"reverse"`
+	Rtsprequest                      types.String      `tfsdk:"rtsprequest"`
+	Scriptargs                       types.String      `tfsdk:"scriptargs"`
+	Scriptname                       types.String      `tfsdk:"scriptname"`
+	Secondarypassword                types.String      `tfsdk:"secondarypassword"`
+	SecondarypasswordWo              types.String      `tfsdk:"secondarypassword_wo"`
+	SecondarypasswordWoVersion       types.Int64       `tfsdk:"secondarypassword_wo_version"`
+	Secure                           types.String      `tfsdk:"secure"`
+	Secureargs                       types.String      `tfsdk:"secureargs"`
+	SecureargsWo                     types.String      `tfsdk:"secureargs_wo"`
+	SecureargsWoVersion              types.Int64       `tfsdk:"secureargs_wo_version"`
+	Send                             types.String      `tfsdk:"send"`
+	Servicegroupname                 types.String      `tfsdk:"servicegroupname"`
+	Servicename                      types.String      `tfsdk:"servicename"`
+	Sipmethod                        types.String      `tfsdk:"sipmethod"`
+	Sipreguri                        types.String      `tfsdk:"sipreguri"`
+	Sipuri                           types.String      `tfsdk:"sipuri"`
+	Sitepath                         types.String      `tfsdk:"sitepath"`
+	Snmpcommunity                    types.String      `tfsdk:"snmpcommunity"`
+	Snmpthreshold                    types.String      `tfsdk:"snmpthreshold"`
+	Snmpversion                      types.String      `tfsdk:"snmpversion"`
+	Sqlquery                         types.String      `tfsdk:"sqlquery"`
+	Sslprofile                       types.String      `tfsdk:"sslprofile"`
+	State                            types.String      `tfsdk:"state"`
+	Storedb                          types.String      `tfsdk:"storedb"`
+	Storefrontacctservice            types.String      `tfsdk:"storefrontacctservice"`
+	Storefrontcheckbackendservices   types.String      `tfsdk:"storefrontcheckbackendservices"`
+	Storename                        types.String      `tfsdk:"storename"`
+	Successretries                   types.Int64       `tfsdk:"successretries"`
+	Supportedvendorids               types.List        `tfsdk:"supportedvendorids"`
+	Tos                              types.String      `tfsdk:"tos"`
+	Tosid                            types.Int64       `tfsdk:"tosid"`
+	Transparent                      types.String      `tfsdk:"transparent"`
+	Trofscode                        types.Int64       `tfsdk:"trofscode"`
+	Trofsstring                      types.String      `tfsdk:"trofsstring"`
+	Type                             types.String      `tfsdk:"type"`
+	Units1                           types.String      `tfsdk:"units1"`
+	Units2                           types.String      `tfsdk:"units2"`
+	Units3                           types.String      `tfsdk:"units3"`
+	Units4                           types.String      `tfsdk:"units4"`
+	Username                         types.String      `tfsdk:"username"`
+	Validatecred                     types.String      `tfsdk:"validatecred"`
+	Vendorid                         types.Int64       `tfsdk:"vendorid"`
+	Vendorspecificacctapplicationids types.List        `tfsdk:"vendorspecificacctapplicationids"`
+	Vendorspecificauthapplicationids types.List        `tfsdk:"vendorspecificauthapplicationids"`
+	Vendorspecificvendorid           types.Int64       `tfsdk:"vendorspecificvendorid"`
 }
 
 func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -516,7 +516,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "String expected from the server for the service to be marked as UP. Applicable to TCP-ECV, HTTP-ECV, and UDP-ECV monitors.",
 			},
 			"respcode": schema.ListAttribute{
-				ElementType: types.StringType,
+				// GH #1462: NetScaler range-compresses adjacent codes on GET
+				// (301,302 -> "301-302"); the custom type's ListSemanticEquals treats
+				// equivalent representations as equal so apply is consistent + idempotent.
+				CustomType:  newRespcodeListType(),
 				Optional:    true,
 				Computed:    true,
 				Description: "Response codes for which to mark the service as UP. For any other response code, the action performed depends on the monitor type. HTTP monitors and RADIUS monitors mark the service as DOWN, while HTTP-INLINE monitors perform the action indicated by the Action parameter.",
@@ -1229,16 +1232,34 @@ func lbmonitorDurationMillis(v int64, unit string) int64 {
 // no perpetual diff appears on refresh. A genuine change (different duration) is
 // still adopted from the API, preserving drift detection.
 func lbmonitorRetainEquivalentDuration(curVal *types.Int64, curUnit *types.String, priorVal types.Int64, priorUnit types.String) {
-	if priorVal.IsNull() || priorVal.IsUnknown() || priorUnit.IsNull() || priorUnit.IsUnknown() {
+	// A known prior value is required to compare against. The prior UNIT may be unset:
+	// a bare number in config (e.g. `interval = 240`) carries no unit, and NITRO
+	// interprets it as SEC — then silently normalizes exact minute multiples to MIN
+	// (240 SEC -> 4 MIN). So when priorUnit is null/unknown, assume SEC (GH #1461);
+	// otherwise the read-back MIN value would clobber the configured seconds value and
+	// fail with "inconsistent result after apply".
+	if priorVal.IsNull() || priorVal.IsUnknown() {
 		return
 	}
 	if curVal.IsNull() || curVal.IsUnknown() || curUnit.IsNull() || curUnit.IsUnknown() {
 		return
 	}
-	if lbmonitorDurationMillis(priorVal.ValueInt64(), priorUnit.ValueString()) ==
+	priorUnitSet := !priorUnit.IsNull() && !priorUnit.IsUnknown()
+	priorUnitStr := "SEC"
+	if priorUnitSet {
+		priorUnitStr = priorUnit.ValueString()
+	}
+	if lbmonitorDurationMillis(priorVal.ValueInt64(), priorUnitStr) ==
 		lbmonitorDurationMillis(curVal.ValueInt64(), curUnit.ValueString()) {
 		*curVal = priorVal
-		*curUnit = priorUnit
+		if priorUnitSet {
+			*curUnit = priorUnit
+		} else {
+			// The user did not set the unit; record SEC (the assumed prior unit) so the
+			// retained (value, unit) pair stays a self-consistent duration that still
+			// matches the ADC's normalized value on the next refresh.
+			*curUnit = types.StringValue("SEC")
+		}
 	}
 }
 
@@ -1622,12 +1643,12 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 		if sliceVal, ok := val.([]interface{}); ok {
 			stringList := utils.ToStringList(sliceVal)
 			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
-			data.Respcode = listValue
+			data.Respcode = respcodeListValue{ListValue: listValue}
 		} else {
-			data.Respcode = types.ListNull(types.StringType)
+			data.Respcode = respcodeListValue{ListValue: types.ListNull(types.StringType)}
 		}
 	} else {
-		data.Respcode = types.ListNull(types.StringType)
+		data.Respcode = respcodeListValue{ListValue: types.ListNull(types.StringType)}
 	}
 	if val, ok := getResponseData["resptimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
