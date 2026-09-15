@@ -1,3 +1,24 @@
+## 3.0.1 (September 14, 2026)
+
+BUG FIXES
+
+* **provider**: Fixed "Provider produced inconsistent result after apply" and "invalid result object after apply" errors across resources, where a Computed attribute that NetScaler omits from its GET response (typically one left at its default) was cleared to null after being set, or left unknown after apply.
+* **citrixadc_csvserver_cspolicy_binding**: Fixed `targetlbvserver` being left unknown after apply for action-based content-switching policies (where NetScaler omits it from the response), which failed with "invalid result object after apply". [#1458]
+* **citrixadc_lbmonitor**: Fixed "inconsistent result after apply" when `interval`, `resptimeout`, or `downtime` is set as a bare value that NetScaler normalizes to minutes (for example `interval = 240` becoming `4`) [#1461]
+* **citrixadc_lbmonitor**: Fixed "inconsistent result after apply" when `respcode` lists adjacent codes that NetScaler range-compresses (for example `["301","302"]` becoming `"301-302"`). [#1462]
+* **citrixadc_hanode**: Fixed adding a peer node (`hanode_id` 1-64) failing with NITRO errorcode 362 and orphaning the node. [#1463]
+* **citrixadc_hanode**: Fixed `terraform import` of a hanode forcing a spurious destroy/recreate on the next plan. [#1463]
+
+UPDATES
+
+* **google.golang.org/grpc**: Version upgrade from 1.83.1 to 1.83.2.
+
+[#1458]: https://github.com/citrix/terraform-provider-citrixadc/issues/1458
+[#1461]: https://github.com/citrix/terraform-provider-citrixadc/issues/1461
+[#1462]: https://github.com/citrix/terraform-provider-citrixadc/issues/1462
+[#1463]: https://github.com/citrix/terraform-provider-citrixadc/issues/1463
+
+
 ## 3.0.0 (September 07, 2026)
 
 FEATURES
