@@ -302,9 +302,10 @@ func hanodeGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *HanodeRe
 	if !data.Hellointerval.IsNull() && !data.Hellointerval.IsUnknown() {
 		hanode.Hellointerval = utils.IntPtr(int(data.Hellointerval.ValueInt64()))
 	}
-	if !data.Inc.IsNull() && !data.Inc.IsUnknown() {
-		hanode.Inc = data.Inc.ValueString()
-	}
+	// inc is intentionally NOT part of the self-node set payload: it is an add-only (peer)
+	// attribute and NITRO rejects it on a `set`/update with errorcode 278. (The peer path
+	// supplies inc via the restricted add payload, not this builder; a peer update is a no-op,
+	// so this builder is only ever used for the self node.)
 	if !data.Maxflips.IsNull() && !data.Maxflips.IsUnknown() {
 		hanode.Maxflips = utils.IntPtr(int(data.Maxflips.ValueInt64()))
 	}
@@ -337,29 +338,52 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 		data.Hanodeid = types.Int64Null()
 	}
 
+	// GH #1463: a peer node (id != 0) is a fundamentally different NITRO object from the self
+	// node (id 0). Per the NITRO hanode schema the `add` op accepts only id/ipaddress/inc/
+	// rpcnodepassword, while every HA-config/tuning field belongs to the self node's
+	// `set`/`update` op; a GET on a peer returns those tuning fields as the literal "UNKNOWN"
+	// or stale values. So for a peer we keep the planned (Default/config) values for those
+	// fields instead of reading them back — this prevents both a perpetual diff and the
+	// illegal peer `set` (errorcode 362) it would otherwise drive. The self node reads them
+	// from the GET response normally. Note the id block above has already set data.Hanodeid.
+	isPeer := data.Hanodeid.ValueInt64() != 0
+
+	// ipaddress: populate from the GET response only for a PEER node (id != 0). This is
+	// required for `terraform import`, whose state starts with only the id — without it
+	// ipaddress stays null and, because ipaddress is RequiresReplace, the first post-import
+	// plan forces a spurious destroy/recreate (GH #1463). The SELF node (id 0) leaves
+	// ipaddress to the (usually unset) config value: the appliance returns its own NSIP,
+	// which must NOT overwrite an unconfigured (null) ipaddress or apply would be
+	// inconsistent.
+	if isPeer {
+		if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+			data.Ipaddress = types.StringValue(val.(string))
+		}
+	}
+
 	// ---- Optional+Computed numeric attributes ----
-	if val, ok := getResponseData["deadinterval"]; ok && val != nil {
+	if val, ok := getResponseData["deadinterval"]; ok && val != nil && !isPeer {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Deadinterval = types.Int64Value(intVal)
 		}
 	} else if data.Deadinterval.IsUnknown() {
 		data.Deadinterval = types.Int64Null()
 	}
-	if val, ok := getResponseData["hellointerval"]; ok && val != nil {
+	if val, ok := getResponseData["hellointerval"]; ok && val != nil && !isPeer {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hellointerval = types.Int64Value(intVal)
 		}
 	} else if data.Hellointerval.IsUnknown() {
 		data.Hellointerval = types.Int64Null()
 	}
-	if val, ok := getResponseData["maxflips"]; ok && val != nil {
+	if val, ok := getResponseData["maxflips"]; ok && val != nil && !isPeer {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxflips = types.Int64Value(intVal)
 		}
 	} else if data.Maxflips.IsUnknown() {
 		data.Maxflips = types.Int64Null()
 	}
-	if val, ok := getResponseData["maxfliptime"]; ok && val != nil {
+	if val, ok := getResponseData["maxfliptime"]; ok && val != nil && !isPeer {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxfliptime = types.Int64Value(intVal)
 		}
@@ -375,27 +399,35 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 	}
 
 	// ---- Optional+Computed string attributes ----
-	if val, ok := getResponseData["failsafe"]; ok && val != nil {
+	if val, ok := getResponseData["failsafe"]; ok && val != nil && !isPeer {
 		data.Failsafe = types.StringValue(val.(string))
 	} else if data.Failsafe.IsUnknown() {
 		data.Failsafe = types.StringNull()
 	}
-	if val, ok := getResponseData["haprop"]; ok && val != nil {
+	// GH #1463: haprop/hasync (like the other HA-config/tuning fields) are self-node settings.
+	// A GET on a peer node returns them as the literal "UNKNOWN" or a transient status such as
+	// "FAILED"/"IN PROGRESS"; reading any of those back would clobber the planned default and
+	// force either an "inconsistent result after apply" or a perpetual diff that drives an
+	// illegal peer `set` (errorcode 362). For a peer we therefore keep the planned value and
+	// never read these back (isPeer guard). The self node returns the real ENABLED/DISABLED.
+	if val, ok := getResponseData["haprop"]; ok && val != nil && !isPeer {
 		data.Haprop = types.StringValue(val.(string))
 	} else if data.Haprop.IsUnknown() {
 		data.Haprop = types.StringNull()
 	}
-	if val, ok := getResponseData["hasync"]; ok && val != nil {
+	if val, ok := getResponseData["hasync"]; ok && val != nil && !isPeer {
 		data.Hasync = types.StringValue(val.(string))
 	} else if data.Hasync.IsUnknown() {
 		data.Hasync = types.StringNull()
 	}
-	if val, ok := getResponseData["inc"]; ok && val != nil {
-		data.Inc = types.StringValue(val.(string))
-	} else if data.Inc.IsUnknown() {
+	// inc is an add-only (peer) attribute: a peer GET returns it as the literal "UNKNOWN" and the
+	// self node never accepts it (errorcode 278). Keep the planned value rather than reading it
+	// back, so it neither clobbers the configured value (peer add) nor produces an inconsistent
+	// result on the self node. Only resolve a still-unknown Computed value to null.
+	if data.Inc.IsUnknown() {
 		data.Inc = types.StringNull()
 	}
-	if val, ok := getResponseData["syncstatusstrictmode"]; ok && val != nil {
+	if val, ok := getResponseData["syncstatusstrictmode"]; ok && val != nil && !isPeer {
 		data.Syncstatusstrictmode = types.StringValue(val.(string))
 	} else if data.Syncstatusstrictmode.IsUnknown() {
 		data.Syncstatusstrictmode = types.StringNull()
