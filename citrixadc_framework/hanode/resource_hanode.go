@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ha"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -31,6 +32,29 @@ type HanodeResource struct {
 
 func (r *HanodeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// GH #1463: an import starts with only the id in state. The write-only version tracker
+	// and the self-node HA-config attributes are never populated by the read of a PEER node
+	// (GET returns them as null/"UNKNOWN"), so without seeding them the first post-import
+	// plan would apply their schema Defaults (null -> default) as an in-place update — which
+	// a peer node cannot accept (errorcode 362), leaving the resource stuck. Seed them to
+	// their schema Default values so the imported state matches a freshly-created resource
+	// and the post-import plan is empty. The subsequent Read does not overwrite these for a
+	// peer (the getters keep a known value when GET omits it or returns "UNKNOWN").
+	seed := func(attr string, v interface{}) {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(attr), v)...)
+	}
+	seed("rpcnodepassword_wo_version", types.Int64Value(1))
+	seed("deadinterval", types.Int64Value(3))
+	seed("failsafe", types.StringValue("OFF"))
+	seed("haprop", types.StringValue("ENABLED"))
+	seed("hasync", types.StringValue("ENABLED"))
+	seed("hellointerval", types.Int64Value(200))
+	seed("maxflips", types.Int64Value(0))
+	seed("maxfliptime", types.Int64Value(0))
+	seed("syncstatusstrictmode", types.StringValue("DISABLED"))
 }
 
 func (r *HanodeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -93,8 +117,28 @@ func (r *HanodeResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	var err error
 	if data.Hanodeid.ValueInt64() != 0 {
-		_, err = r.client.AddResource(service.Hanode.Type(), hanodeName, &hanode)
+		// GH #1463: NITRO `add ha node` (peer, id != 0) accepts ONLY id/ipaddress/inc/
+		// rpcnodepassword. The self-node HA-config fields (deadinterval, failsafe, haprop,
+		// hasync, hellointerval, maxflips, maxfliptime, syncstatusstrictmode) — which the
+		// schema populates into the plan — are rejected for a peer (errorcode 362/278), and
+		// on some firmware the node is created BEFORE the rejection, orphaning it and leaving
+		// empty state. Send only the add-valid fields, mirroring the SDK v2 minimal payload.
+		peer := ha.Hanode{
+			Id:              hanode.Id,
+			Ipaddress:       hanode.Ipaddress,
+			Inc:             hanode.Inc,
+			Rpcnodepassword: hanode.Rpcnodepassword,
+		}
+		_, err = r.client.AddResource(service.Hanode.Type(), hanodeName, &peer)
 	} else {
+		// GH #1463 follow-up: the self node (id 0) always exists and is configured via `set`
+		// (PUT). NITRO rejects the add-only fields ipaddress/inc/rpcnodepassword on a self-node
+		// set with errorcode 278 ("Invalid argument"); they are peer-add-only and never valid for
+		// the self node. Drop them from the payload (symmetric with the restricted peer add
+		// above). The getter keeps the planned values for these, so state stays consistent.
+		hanode.Ipaddress = ""
+		hanode.Inc = ""
+		hanode.Rpcnodepassword = ""
 		err = r.client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
 	}
 	if err != nil {
@@ -162,6 +206,24 @@ func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating hanode resource")
+
+	// GH #1463: a peer node (id != 0) has no valid in-place update. Per the NITRO hanode
+	// schema, the `set`/`update` op accepts only the self-node HA-config fields and rejects
+	// them for a peer id (errorcode 362); a peer's own attributes (ipaddress/inc/
+	// rpcnodepassword) are all RequiresReplace, so any genuine change is handled by
+	// create/replace, never by update. Skip the PUT and the unset entirely for a peer and
+	// just refresh state from the appliance (the getter keeps the planned tuning values).
+	if data.Hanodeid.ValueInt64() != 0 {
+		tflog.Debug(ctx, "hanode is a peer node (id != 0); skipping in-place update")
+		if !r.readHanodeFromApi(ctx, &data, &resp.Diagnostics) {
+			if !resp.Diagnostics.HasError() {
+				resp.Diagnostics.AddError("Client Error", "hanode not found immediately after update")
+			}
+			return
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+		return
+	}
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false

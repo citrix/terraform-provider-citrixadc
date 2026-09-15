@@ -72,14 +72,79 @@ func TestAccHanodeLocal_basic(t *testing.T) {
 	})
 }
 
+// TestAccHanodeLocal_incRestricted_gh1463 guards the self-node (id 0) payload restriction. inc
+// is an add-only (peer) attribute; NITRO rejects it on a self-node `set` with errorcode 278.
+// Before the fix, configuring inc on hanode_id=0 sent it on both the create PUT and every update
+// PUT (it is re-sent whenever known, not only on change), so create failed with ec278 and any
+// later tuning change failed too. The provider now drops the add-only fields (ipaddress/inc/
+// rpcnodepassword) from the self-node payload and keeps the planned inc in state, so create and
+// update both succeed and stay idempotent. Self node always exists, so this is NOT HA-gated.
+const testAccHanodeLocal_incRestricted_step1 = `
+resource "citrixadc_hanode" "local_node" {
+	hanode_id    = 0
+	inc          = "ENABLED"
+	deadinterval = 5
+}
+`
+
+const testAccHanodeLocal_incRestricted_step2 = `
+resource "citrixadc_hanode" "local_node" {
+	hanode_id    = 0
+	inc          = "ENABLED"
+	deadinterval = 6
+}
+`
+
+func TestAccHanodeLocal_incRestricted_gh1463(t *testing.T) {
+	const addr = "citrixadc_hanode.local_node"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Create with inc set on the self node must succeed (no errorcode 278) and keep
+				// the planned inc in state.
+				Config: testAccHanodeLocal_incRestricted_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "hanode_id", "0"),
+					resource.TestCheckResourceAttr(addr, "inc", "ENABLED"),
+					resource.TestCheckResourceAttr(addr, "deadinterval", "5"),
+				),
+			},
+			{
+				// No perpetual diff / no inconsistent result.
+				Config:   testAccHanodeLocal_incRestricted_step1,
+				PlanOnly: true,
+			},
+			{
+				// A tuning change while inc stays configured must still apply (pre-fix: inc was
+				// re-sent on the update PUT -> ec278).
+				Config: testAccHanodeLocal_incRestricted_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "inc", "ENABLED"),
+					resource.TestCheckResourceAttr(addr, "deadinterval", "6"),
+				),
+			},
+			{
+				// ...and remains idempotent.
+				Config:   testAccHanodeLocal_incRestricted_step2,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 const testAccHanodeRemote_basic = `
-  
+
 resource "citrixadc_hanode" "remote_node" {
 	hanode_id = 2
 	ipaddress = "10.222.74.145"
 	}
-  
-   
+
+
 `
 const testAccHanodeRemote_update = `
 	resource "citrixadc_hanode" "remote_node" {
@@ -495,6 +560,129 @@ func TestAccHanodeRemote_rpcnodepassword_wo_ephemeral(t *testing.T) {
 					testAccCheckHanodeExist("citrixadc_hanode.remote_node", nil),
 					resource.TestCheckResourceAttr("citrixadc_hanode.remote_node", "rpcnodepassword_wo_version", "2"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccHanodeRemote_bareCreate_gh1463 is a regression guard for GH #1463. A bare peer
+// node create (only hanode_id + ipaddress, no HA-config fields) must succeed and be
+// recorded in state, then be idempotent and cleanly importable. Before the fix the
+// provider sent the self-node HA-config defaults (deadinterval/failsafe/haprop/hasync/
+// hellointerval/maxflips/maxfliptime/syncstatusstrictmode) in the `add ha node` payload;
+// NITRO rejects those for a peer (errorcode 362/278) AFTER creating the node, so the apply
+// failed with empty state and an orphaned node that broke every retry. The provider now
+// sends only the add-valid fields (id/ipaddress/inc/rpcnodepassword) for a peer, ImportState
+// seeds the write-only version tracker + HA-config defaults, and the read populates
+// ipaddress for a peer — so create is consistent/idempotent and import does not force a
+// spurious replace. Requires an HA testbed with a free peer NSIP (like the other
+// TestAccHanodeRemote_* tests); it is gated on ADC_TESTBED=HA.
+const testAccHanode_gh1463_bareCreate = `
+resource "citrixadc_hanode" "gh1463" {
+	hanode_id = 2
+	ipaddress = "10.222.74.145"
+}
+`
+
+func TestAccHanodeRemote_bareCreate_gh1463(t *testing.T) {
+	if adcTestbed != "HA" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const addr = "citrixadc_hanode.gh1463"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create must succeed (no errorcode 362, no orphan) and be recorded.
+				Config: testAccHanode_gh1463_bareCreate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "hanode_id", "2"),
+					resource.TestCheckResourceAttr(addr, "ipaddress", "10.222.74.145"),
+				),
+			},
+			{
+				// No "inconsistent result after apply" and no perpetual diff.
+				Config:   testAccHanode_gh1463_bareCreate,
+				PlanOnly: true,
+			},
+			{
+				// Import must not force a spurious destroy/recreate (ipaddress +
+				// rpcnodepassword_wo_version populated/seeded).
+				Config:                  testAccHanode_gh1463_bareCreate,
+				ResourceName:            addr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"masterstatetime", "rpcnodepassword_wo_version"},
+			},
+		},
+	})
+}
+
+// TestAccHanodeRemote_peerUpdateNoop_gh1463 guards the peer UPDATE path for GH #1463. A peer
+// node (id != 0) cannot accept an in-place `set` of any HA-config/tuning field: per the NITRO
+// hanode schema those fields belong to the self node's `set`/`update` op, and setting them
+// with a peer id returns errorcode 362. The provider now treats an update of a peer as a
+// no-op (it never issues the PUT) and the read keeps the planned tuning values, so both a
+// bare peer and a peer that carries a tuning field apply cleanly and stay idempotent instead
+// of failing with 362 / churning a perpetual diff. Requires an HA testbed with a free peer
+// NSIP; gated on ADC_TESTBED=HA like the other TestAccHanodeRemote_* tests.
+const testAccHanode_gh1463_peerUpdate_step1 = `
+resource "citrixadc_hanode" "gh1463u" {
+	hanode_id    = 2
+	ipaddress    = "10.222.74.145"
+	deadinterval = 5
+}
+`
+
+const testAccHanode_gh1463_peerUpdate_step2 = `
+resource "citrixadc_hanode" "gh1463u" {
+	hanode_id    = 2
+	ipaddress    = "10.222.74.145"
+	deadinterval = 6
+}
+`
+
+func TestAccHanodeRemote_peerUpdateNoop_gh1463(t *testing.T) {
+	if adcTestbed != "HA" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const addr = "citrixadc_hanode.gh1463u"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create a peer that also carries a tuning field.
+				Config: testAccHanode_gh1463_peerUpdate_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "hanode_id", "2"),
+					resource.TestCheckResourceAttr(addr, "deadinterval", "5"),
+				),
+			},
+			{
+				// Peer create is idempotent (no perpetual diff, no errorcode 362).
+				Config:   testAccHanode_gh1463_peerUpdate_step1,
+				PlanOnly: true,
+			},
+			{
+				// Changing a tuning field on a peer routes to Update. It must apply cleanly
+				// (peer Update is a no-op — no illegal `set`, no errorcode 362) and record the
+				// planned value.
+				Config: testAccHanode_gh1463_peerUpdate_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "deadinterval", "6"),
+				),
+			},
+			{
+				// ...and the post-update state is idempotent.
+				Config:   testAccHanode_gh1463_peerUpdate_step2,
+				PlanOnly: true,
 			},
 		},
 	})
