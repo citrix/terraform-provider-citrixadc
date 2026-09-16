@@ -687,3 +687,48 @@ func TestAccHanodeRemote_peerUpdateNoop_gh1463(t *testing.T) {
 		},
 	})
 }
+
+// TestAccHanodeLocal_hasyncStatus_gh1467 guards GH #1467: on a node that is part of a formed
+// HA pair, GET hanode/0 returns hasync as a runtime HA sync STATUS (for example "SUCCESS" on
+// the secondary) rather than the configured ENABLED/DISABLED. The self-node getter must keep
+// the planned/config value for hasync (and haprop) in that case, otherwise apply fails with
+// "Provider produced inconsistent result after apply" (.hasync was "ENABLED", but now
+// "SUCCESS"). Requires an HA testbed; gated on ADC_TESTBED=HA. Point NS_URL at the SECONDARY
+// node to exercise the hasync="SUCCESS" read-back. This mutates the local node's HA config, so
+// run it against a provisioned/refreshable HA testbed.
+const testAccHanodeLocal_hasyncStatus_gh1467 = `
+resource "citrixadc_hanode" "local_node" {
+	hanode_id = 0
+	hasync    = "ENABLED"
+}
+`
+
+func TestAccHanodeLocal_hasyncStatus_gh1467(t *testing.T) {
+	if adcTestbed != "HA" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const addr = "citrixadc_hanode.local_node"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Apply must succeed even when the box reports hasync as a live status
+				// (e.g. "SUCCESS" on the secondary) — no "inconsistent result after apply".
+				Config: testAccHanodeLocal_hasyncStatus_gh1467,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist(addr, nil),
+					resource.TestCheckResourceAttr(addr, "hanode_id", "0"),
+					// The configured value is retained, not overwritten by the read-back status.
+					resource.TestCheckResourceAttr(addr, "hasync", "ENABLED"),
+				),
+			},
+			{
+				// ...and the result is idempotent.
+				Config:   testAccHanodeLocal_hasyncStatus_gh1467,
+				PlanOnly: true,
+			},
+		},
+	})
+}
