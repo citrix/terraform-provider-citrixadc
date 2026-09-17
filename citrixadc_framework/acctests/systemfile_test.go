@@ -16,6 +16,7 @@ limitations under the License.
 package citrixadc
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"testing"
@@ -79,14 +80,50 @@ func TestAccSystemfile_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccSystemfile_basic_step1},
 			{
-				Config:                  testAccSystemfile_basic_step1,
-				ResourceName:            resAddr,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				Config:            testAccSystemfile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// filecontent_wo is write-only (never in state); filecontent_wo_version is a
+				// Computed version tracker not populated by the import Read (its Default is
+				// applied at plan time, so it reads back null right after import).
+				ImportStateVerifyIgnore: []string{"filecontent_wo", "filecontent_wo_version"},
 			},
 		},
 	})
+}
+
+// testAccCheckSystemfileContent verifies the file content on the appliance matches
+// the expected plaintext. Used by the write-only (filecontent_wo) test where the
+// content is intentionally absent from Terraform state, so the only way to assert
+// the content flowed through is to read it back from the box and decode it.
+func testAccCheckSystemfileContent(location, name, expectedPlain string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		argsMap := make(map[string]string)
+		argsMap["filelocation"] = url.QueryEscape(location)
+		argsMap["filename"] = url.QueryEscape(name)
+		findParams := service.FindParams{ResourceType: "systemfile", ArgsMap: argsMap}
+		arr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		if len(arr) == 0 {
+			return fmt.Errorf("systemfile %s/%s not found", location, name)
+		}
+		raw, _ := arr[0]["filecontent"].(string)
+		decoded, err := base64.StdEncoding.DecodeString(raw)
+		if err != nil {
+			return fmt.Errorf("systemfile %s/%s content is not valid base64: %v", location, name, err)
+		}
+		if string(decoded) != expectedPlain {
+			return fmt.Errorf("systemfile %s/%s content mismatch: got %q, want %q", location, name, string(decoded), expectedPlain)
+		}
+		return nil
+	}
 }
 
 func testAccCheckSystemfileExist(n string, id *string, pathData []string) resource.TestCheckFunc {
@@ -197,6 +234,74 @@ resource "citrixadc_systemfile" "tf_file_encoded" {
     fileencoding = "BASE64"
 }
 `
+
+const testAccSystemfile_filecontent_wo_step1 = `
+
+variable "systemfile_filecontent_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_systemfile" "tf_file_wo" {
+    filename               = "wo_secret.txt"
+    filelocation           = "/var/tmp"
+    filecontent_wo         = var.systemfile_filecontent_wo
+    filecontent_wo_version = 1
+}
+`
+
+const testAccSystemfile_filecontent_wo_step2 = `
+
+variable "systemfile_filecontent_wo_2" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_systemfile" "tf_file_wo" {
+    filename               = "wo_secret.txt"
+    filelocation           = "/var/tmp"
+    filecontent_wo         = var.systemfile_filecontent_wo_2
+    filecontent_wo_version = 2
+}
+`
+
+// TestAccSystemfile_filecontent_wo_ephemeral exercises the write-only content path:
+// the file content is supplied via filecontent_wo (never stored in state) and a
+// filecontent_wo_version bump rotates it (destroy+recreate, since systemfile has no
+// NITRO 'set'). It asserts the content actually reached the appliance while neither
+// filecontent_wo nor the plaintext filecontent leaks into Terraform state.
+func TestAccSystemfile_filecontent_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_systemfile_filecontent_wo", "write-only secret content v1")
+	t.Setenv("TF_VAR_systemfile_filecontent_wo_2", "write-only secret content v2 rotated")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemfile_filecontent_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file_wo", nil, []string{"/var/tmp", "wo_secret.txt"}),
+					// The content reached the box even though it is absent from state.
+					testAccCheckSystemfileContent("/var/tmp", "wo_secret.txt", "write-only secret content v1"),
+					resource.TestCheckResourceAttr("citrixadc_systemfile.tf_file_wo", "filecontent_wo_version", "1"),
+					// The secret and its write-only sibling are never persisted to state.
+					resource.TestCheckNoResourceAttr("citrixadc_systemfile.tf_file_wo", "filecontent"),
+					resource.TestCheckNoResourceAttr("citrixadc_systemfile.tf_file_wo", "filecontent_wo"),
+				),
+			},
+			{
+				Config: testAccSystemfile_filecontent_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file_wo", nil, []string{"/var/tmp", "wo_secret.txt"}),
+					testAccCheckSystemfileContent("/var/tmp", "wo_secret.txt", "write-only secret content v2 rotated"),
+					resource.TestCheckResourceAttr("citrixadc_systemfile.tf_file_wo", "filecontent_wo_version", "2"),
+					resource.TestCheckNoResourceAttr("citrixadc_systemfile.tf_file_wo", "filecontent"),
+				),
+			},
+		},
+	})
+}
 
 const testAccSystemfileDataSource_basic = `
 resource "citrixadc_systemfile" "tf_file_ds" {

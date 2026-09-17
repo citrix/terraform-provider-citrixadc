@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -22,17 +24,22 @@ import (
 // client-side-only is_base64_encoded flag) so existing state and configs keep
 // working after the migration.
 type SystemfileResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Filecontent     types.String `tfsdk:"filecontent"`
-	Fileencoding    types.String `tfsdk:"fileencoding"`
-	Filelocation    types.String `tfsdk:"filelocation"`
-	Filename        types.String `tfsdk:"filename"`
-	IsBase64Encoded types.Bool   `tfsdk:"is_base64_encoded"`
+	Id                   types.String `tfsdk:"id"`
+	Filecontent          types.String `tfsdk:"filecontent"`
+	FilecontentWo        types.String `tfsdk:"filecontent_wo"`
+	FilecontentWoVersion types.Int64  `tfsdk:"filecontent_wo_version"`
+	Fileencoding         types.String `tfsdk:"fileencoding"`
+	Filelocation         types.String `tfsdk:"filelocation"`
+	Filename             types.String `tfsdk:"filename"`
+	IsBase64Encoded      types.Bool   `tfsdk:"is_base64_encoded"`
 }
 
 func (r *SystemfileResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Version: 1,
+		// Version bumped 1 -> 2 for the write-only filecontent_wo migration (GH #1441
+		// pattern): paired with UpgradeState so pre-write-only state seeds
+		// filecontent_wo_version = 1 and does not plan a spurious null -> 1 replace.
+		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -41,14 +48,49 @@ func (r *SystemfileResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// SDK v2: Required, ForceNew, Sensitive
+			// SDK v2 was Required; relaxed to Optional so filecontent_wo can be used
+			// instead. Exactly one of filecontent / filecontent_wo must be set (enforced
+			// in Create/Update). Still ForceNew (RequiresReplace) + Sensitive.
 			"filecontent": schema.StringAttribute{
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "file content in Base64 format.",
+				Description: "File content (plaintext, or base64 when is_base64_encoded is true). Stored in Terraform state; use filecontent_wo to keep the content out of state.",
+			},
+			// Write-only sibling of filecontent (GH #1441 pattern, mirrors
+			// sslcertkey.passplain_wo / ipsecprofile.psk_wo). The content is supplied via
+			// req.Config at apply time and is NEVER persisted to Terraform state/plan.
+			// systemfile has no NITRO "set" (ec1088), so content changes are signalled by
+			// bumping filecontent_wo_version, which forces a destroy+recreate (re-upload).
+			"filecontent_wo": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				WriteOnly: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Write-only file content (plaintext, or base64 when is_base64_encoded is true). Not stored in Terraform state. Increment filecontent_wo_version to signal a change. Mutually exclusive with filecontent.",
+			},
+			"filecontent_wo_version": schema.Int64Attribute{
+				Optional: true,
+				// Optional+Computed+Default(1) is the canonical _wo_version shape (used by
+				// ~62 sibling write-only resources). The Default supplies 1 when config omits
+				// the attribute, matching the value UpgradeState seeds on migration — so an
+				// upgraded systemfile plans 1 -> 1 (no diff) instead of 1 -> null (spurious
+				// destroy+recreate). Without Computed+Default the seeded value collapses to
+				// null and the RequiresReplace below forces replacement on upgrade.
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					// systemfile is add+delete-only (no NITRO 'set' command, ec1088), so the
+					// filecontent_wo_version bump must force replace; RequiresReplaceIfConfigured
+					// would turn the upgrade null->default transition into an unsupported in-place
+					// update.
+					int64planmodifier.RequiresReplace(),
+				},
+				Description: "Increment this version to signal a filecontent_wo update (forces the file to be re-uploaded).",
 			},
 			// SDK v2: Optional, ForceNew, Default "BASE64"
 			"fileencoding": schema.StringAttribute{
@@ -99,18 +141,26 @@ func (r *SystemfileResource) Schema(ctx context.Context, req resource.SchemaRequ
 func systemfileSetAttrFromGet(ctx context.Context, data *SystemfileResourceModel, getResponseData map[string]interface{}) *SystemfileResourceModel {
 	tflog.Debug(ctx, "In systemfileSetAttrFromGet Function")
 
-	if val, ok := getResponseData["filecontent"]; ok && val != nil {
-		raw := val.(string)
-		if data.IsBase64Encoded.ValueBool() {
-			// Original content was supplied already base64-encoded; keep it base64.
-			data.Filecontent = types.StringValue(raw)
-		} else {
-			// Original content was plain text; decode the base64 back to plain text.
-			if decoded, err := base64.StdEncoding.DecodeString(raw); err == nil {
-				data.Filecontent = types.StringValue(string(decoded))
-			} else {
-				// Fall back to the raw value if it is not valid base64.
+	// NITRO returns filecontent (base64) on GET. Refresh it into state ONLY on the
+	// plaintext path — i.e. when filecontent is already tracked in state (non-null),
+	// or on an import where the write-only version tracker is unset. On the write-only
+	// path (filecontent null AND filecontent_wo_version set) the content is a secret
+	// supplied via filecontent_wo, so it must NEVER be written to state; leave
+	// filecontent null. (filecontent_wo is WriteOnly and is always null in state.)
+	if !data.Filecontent.IsNull() || data.FilecontentWoVersion.IsNull() {
+		if val, ok := getResponseData["filecontent"]; ok && val != nil {
+			raw := val.(string)
+			if data.IsBase64Encoded.ValueBool() {
+				// Original content was supplied already base64-encoded; keep it base64.
 				data.Filecontent = types.StringValue(raw)
+			} else {
+				// Original content was plain text; decode the base64 back to plain text.
+				if decoded, err := base64.StdEncoding.DecodeString(raw); err == nil {
+					data.Filecontent = types.StringValue(string(decoded))
+				} else {
+					// Fall back to the raw value if it is not valid base64.
+					data.Filecontent = types.StringValue(raw)
+				}
 			}
 		}
 	}
