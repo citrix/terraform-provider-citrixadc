@@ -1,0 +1,25 @@
+# Copy this file to terraform.tfvars and fill in, or supply values via env vars
+# (TF_VAR_<name>). Do NOT commit real secrets.
+
+adc_endpoint = "http://10.0.0.1"
+adc_username = "nsroot"
+
+# Prefer env for secrets:
+#   export TF_VAR_adc_password='...'
+#   export TF_VAR_cert_pem="$(cat server.crt)"
+#   export TF_VAR_key_pem="$(cat server.key)"
+#   export TF_VAR_key_passphrase='...'      # only if the key is encrypted
+
+# For a quick local test, generate a self-signed pair first:
+#   openssl req -x509 -newkey rsa:2048 -nodes \
+#     -keyout server.key -out server.crt -days 365 -subj "/CN=example.test"
+#
+# Note: .tfvars values are literals (no file() function). To read the PEM from a
+# file inside Terraform, either use the env vars above, or add a *_path variable
+# and call file() from a .tf file.
+
+# cert_pem = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
+# key_pem  = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Bump this (with new cert_pem/key_pem) to rotate the certificate.
+cert_material_version = 1

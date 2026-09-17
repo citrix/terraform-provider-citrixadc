@@ -9,6 +9,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,6 +21,7 @@ import (
 var _ resource.Resource = &SystemfileResource{}
 var _ resource.ResourceWithConfigure = (*SystemfileResource)(nil)
 var _ resource.ResourceWithImportState = (*SystemfileResource)(nil)
+var _ resource.ResourceWithUpgradeState = &SystemfileResource{}
 
 func NewSystemfileResource() resource.Resource {
 	return &SystemfileResource{}
@@ -53,10 +55,12 @@ func (r *SystemfileResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *SystemfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data SystemfileResourceModel
+	var data, config SystemfileResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Write-only attributes (filecontent_wo) are nullified in the plan; read them from config.
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -64,10 +68,26 @@ func (r *SystemfileResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating systemfile resource")
 
-	filecontent := data.Filecontent.ValueString()
 	fileencoding := data.Fileencoding.ValueString()
 	filelocation := data.Filelocation.ValueString()
 	filename := data.Filename.ValueString()
+
+	// Resolve the file content from either the plaintext filecontent (in the plan)
+	// or the write-only filecontent_wo (in the config). Prefer filecontent when both
+	// are set (mirrors the sslcertkey passplain/passplain_wo precedence).
+	var filecontent string
+	switch {
+	case !data.Filecontent.IsNull() && !config.FilecontentWo.IsNull():
+		resp.Diagnostics.AddError("Configuration Error", "only one of `filecontent` or `filecontent_wo` may be set")
+		return
+	case !data.Filecontent.IsNull():
+		filecontent = data.Filecontent.ValueString()
+	case !config.FilecontentWo.IsNull():
+		filecontent = config.FilecontentWo.ValueString()
+	default:
+		resp.Diagnostics.AddError("Configuration Error", "one of `filecontent` or `filecontent_wo` must be set")
+		return
+	}
 
 	if fileencoding != "BASE64" {
 		resp.Diagnostics.AddError("Configuration Error", fmt.Sprintf("file encoding %s is not supported", fileencoding))
@@ -222,4 +242,25 @@ func (r *SystemfileResource) readSystemfileFromApi(ctx context.Context, data *Sy
 	systemfileSetAttrFromGet(ctx, data, dataArray[0])
 
 	return true
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// filecontent_wo_version tracker to 1 when the stored state has no value for it,
+// so the schema Default does not plan a spurious "null -> 1" replace after
+// upgrading the provider. Paired with the schema Version bump (1 -> 2) so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *SystemfileResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data SystemfileResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.FilecontentWoVersion.IsNull() {
+			data.FilecontentWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }
