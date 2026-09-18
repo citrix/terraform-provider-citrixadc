@@ -326,6 +326,14 @@ func hanodeGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *HanodeRe
 // user-configured values for attributes that NITRO does not (reliably) echo back
 // (ipaddress, rpcnodepassword) and guards Optional+Computed attributes so a configured
 // value is not clobbered when NITRO omits the attribute from the response.
+// isEnabledOrDisabled reports whether s is one of the two configurable values for the
+// haprop/hasync attributes. A NITRO GET can instead return a runtime HA status
+// ("SUCCESS"/"FAILED"/"IN PROGRESS"/"AUTO DISABLED"/"UNKNOWN"); those must not overwrite the
+// planned/config value (GH #1463 / GH #1467).
+func isEnabledOrDisabled(s string) bool {
+	return s == "ENABLED" || s == "DISABLED"
+}
+
 func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getResponseData map[string]interface{}) *HanodeResourceModel {
 	tflog.Debug(ctx, "In hanodeSetAttrFromGet Function")
 
@@ -404,18 +412,20 @@ func hanodeSetAttrFromGet(ctx context.Context, data *HanodeResourceModel, getRes
 	} else if data.Failsafe.IsUnknown() {
 		data.Failsafe = types.StringNull()
 	}
-	// GH #1463: haprop/hasync (like the other HA-config/tuning fields) are self-node settings.
-	// A GET on a peer node returns them as the literal "UNKNOWN" or a transient status such as
-	// "FAILED"/"IN PROGRESS"; reading any of those back would clobber the planned default and
-	// force either an "inconsistent result after apply" or a perpetual diff that drives an
-	// illegal peer `set` (errorcode 362). For a peer we therefore keep the planned value and
-	// never read these back (isPeer guard). The self node returns the real ENABLED/DISABLED.
-	if val, ok := getResponseData["haprop"]; ok && val != nil && !isPeer {
+	// GH #1463 + GH #1467: haprop/hasync are configured as ENABLED/DISABLED, but a GET can return
+	// a runtime STATUS instead of the configured value — a peer node reports the literal "UNKNOWN",
+	// and a node in a formed HA pair (typically the secondary) reports the live HA sync status
+	// ("SUCCESS"/"FAILED"/"IN PROGRESS"/"AUTO DISABLED"/...). Reading any of those back would
+	// clobber the planned/config value and cause "inconsistent result after apply" (GH #1467) or,
+	// on a peer, a perpetual diff that drives an illegal peer `set` (errorcode 362, GH #1463). So
+	// accept a value from GET only when it is an actual config value (ENABLED/DISABLED); otherwise
+	// keep the planned value. Applies to both self and peer nodes.
+	if val, ok := getResponseData["haprop"]; ok && val != nil && isEnabledOrDisabled(val.(string)) {
 		data.Haprop = types.StringValue(val.(string))
 	} else if data.Haprop.IsUnknown() {
 		data.Haprop = types.StringNull()
 	}
-	if val, ok := getResponseData["hasync"]; ok && val != nil && !isPeer {
+	if val, ok := getResponseData["hasync"]; ok && val != nil && isEnabledOrDisabled(val.(string)) {
 		data.Hasync = types.StringValue(val.(string))
 	} else if data.Hasync.IsUnknown() {
 		data.Hasync = types.StringNull()
