@@ -75,6 +75,11 @@ func (r *CloudprofileResource) Create(ctx context.Context, req resource.CreateRe
 	// Read the updated state back
 	r.readCloudprofileFromApi(ctx, &data, &resp.Diagnostics)
 
+	// GH #1470: if the post-create GET failed (SetAttrFromGet skipped), null out any
+	// still-unknown Optional+Computed attr so State.Set cannot produce unknowns
+	// ("invalid result object after apply") and drop the just-created profile.
+	cloudprofileCoalesceUnknownComputed(&data)
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -132,6 +137,10 @@ func (r *CloudprofileResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Read the updated state back
 	r.readCloudprofileFromApi(ctx, &data, &resp.Diagnostics)
+
+	// GH #1470: same safety net as Create — never leave Optional+Computed attrs
+	// unknown in the persisted state if the post-update GET was skipped on error.
+	cloudprofileCoalesceUnknownComputed(&data)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

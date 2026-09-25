@@ -3,6 +3,7 @@ package cloudprofile
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cloud"
 
@@ -212,6 +213,54 @@ func cloudprofileGetThePayloadFromthePlan(ctx context.Context, data *Cloudprofil
 	return cloudprofile
 }
 
+// denormalizeServicegroupname reverses the appliance's "_<name>_<vsvrbindsvcport>"
+// service-group rename to recover the configured form (GH #1470, import path). It
+// only strips when the value has the exact leading "_" + trailing "_<vsvrbindsvcport>"
+// shape (using the vsvrbindsvcport from the same GET response); any other value is
+// returned unchanged, so a non-normalized name is never corrupted.
+func denormalizeServicegroupname(sg string, getResponseData map[string]interface{}) string {
+	port, ok := getResponseData["vsvrbindsvcport"]
+	if !ok || port == nil {
+		return sg
+	}
+	portInt, err := utils.ConvertToInt64(port)
+	if err != nil {
+		return sg
+	}
+	suffix := fmt.Sprintf("_%d", portInt)
+	// len(sg) > len(suffix)+1 guarantees a non-empty inner name after stripping.
+	if strings.HasPrefix(sg, "_") && strings.HasSuffix(sg, suffix) && len(sg) > len(suffix)+1 {
+		return strings.TrimSuffix(strings.TrimPrefix(sg, "_"), suffix)
+	}
+	return sg
+}
+
+// cloudprofileCoalesceUnknownComputed forces any still-unknown Optional+Computed
+// attribute to null. It is a safety net for the create/update paths (GH #1470): if
+// the post-create NITRO GET fails (e.g. a transient cloud-connectivity error), the
+// resource's cloudprofileSetAttrFromGet is skipped, so the plan's unknown values
+// would otherwise survive into State.Set and trigger "Provider returned invalid
+// result object after apply", dropping the just-created profile from state. Nulling
+// them keeps the object persistable so the create is recorded and recoverable, while
+// the underlying read error is still surfaced as a diagnostic.
+func cloudprofileCoalesceUnknownComputed(data *CloudprofileResourceModel) {
+	if data.Azurepollperiod.IsUnknown() {
+		data.Azurepollperiod = types.Int64Null()
+	}
+	if data.Azuretagname.IsUnknown() {
+		data.Azuretagname = types.StringNull()
+	}
+	if data.Azuretagvalue.IsUnknown() {
+		data.Azuretagvalue = types.StringNull()
+	}
+	if data.Delay.IsUnknown() {
+		data.Delay = types.Int64Null()
+	}
+	if data.Graceful.IsUnknown() {
+		data.Graceful = types.StringNull()
+	}
+}
+
 func cloudprofileSetAttrFromGet(ctx context.Context, data *CloudprofileResourceModel, getResponseData map[string]interface{}) *CloudprofileResourceModel {
 	tflog.Debug(ctx, "In cloudprofileSetAttrFromGet Function")
 
@@ -267,10 +316,25 @@ func cloudprofileSetAttrFromGet(ctx context.Context, data *CloudprofileResourceM
 	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
-	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
-		data.Servicegroupname = types.StringValue(val.(string))
-	} else if data.Servicegroupname.IsUnknown() {
-		data.Servicegroupname = types.StringNull()
+	// GH #1470: keep the configured servicegroupname. The appliance normalizes it to
+	// "_<name>_<vsvrbindsvcport>" and returns that form from GET. servicegroupname is
+	// Required (RequiresReplace), so writing the normalized value back produces
+	// "Provider produced inconsistent result after apply" (config value != applied
+	// value) and then a perpetual destroy/recreate that never converges. So preserve
+	// the planned/prior value and only adopt the GET value when we have none yet —
+	// e.g. terraform import, where the appliance form is the only source of truth.
+	if data.Servicegroupname.IsNull() || data.Servicegroupname.IsUnknown() || data.Servicegroupname.ValueString() == "" {
+		if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+			// GH #1470 (import): we have no configured value to preserve here (this
+			// branch is reached on terraform import), so reverse the appliance's
+			// "_<name>_<vsvrbindsvcport>" normalization to recover the natural
+			// configured form — otherwise the first plan after import would show a
+			// spurious replacement. Only strip when the value exactly matches that
+			// pattern; any other (non-normalized) value is kept verbatim.
+			data.Servicegroupname = types.StringValue(denormalizeServicegroupname(val.(string), getResponseData))
+		} else {
+			data.Servicegroupname = types.StringNull()
+		}
 	}
 	if val, ok := getResponseData["servicetype"]; ok && val != nil {
 		data.Servicetype = types.StringValue(val.(string))
