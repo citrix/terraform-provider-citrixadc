@@ -25,6 +25,21 @@ provider "citrixadc" {
 }
 
 
+# Use https with FULL certificate verification against a private CA
+# Preferred over insecure_skip_verify: trust the ADC certificate via a CA
+# bundle instead of disabling verification.
+provider "citrixadc" {
+  endpoint     = "https://myadc.example.com"
+  username     = "nsroot"
+  password     = "secret"
+  root_ca_path = "/etc/ssl/certs/my-internal-ca.pem"
+
+  # Optional. Only when you connect by IP but the certificate is issued for a
+  # DNS name; overrides the name used for SNI and certificate/SAN matching.
+  # server_name = "myadc.example.com"
+}
+
+
 # Proxy calls through NetScaler Console
 # Login credentials refer to NetScaler Console
 # Target ADC is referred by its ip address
@@ -80,6 +95,8 @@ The following arguments are supported.
 * `username` - (Required) Defines the username that will be used by the NITRO API for authentication. Can be sourced from the `NS_LOGIN` environment variable. Defaults to `nsroot`.
 * `password` - (Required) Defines the password that will be used by the NITRO API for authentication. Can be sourced from the `NS_PASSWORD` environment variable. Defaults to `nsroot`.
 * `insecure_skip_verify` - (Optional) Boolean variable that defines if an error should be thrown if the target ADC's TLS certificate is not trusted. When `true` the error will be ignored. When `false` such an error will cause the failure of any provider operation. Defaults to `false`.
+* `root_ca_path` - (Optional) Path to a PEM file containing one or more CA certificates used to verify the ADC endpoint's TLS certificate. Use this to trust an ADC whose certificate is signed by a private/internal CA without setting `insecure_skip_verify`. Only takes effect when `insecure_skip_verify` is `false`. Can be sourced from the `NS_ROOT_CA_PATH` environment variable.
+* `server_name` - (Optional) Overrides the server name used for TLS verification (SNI and certificate hostname/SAN match). Set this only when the name you connect to differs from the certificate's subject/SAN — for example, connecting by IP to an ADC whose certificate is issued for a DNS name. When empty, the host parsed from `endpoint` is used automatically. Only takes effect when `insecure_skip_verify` is `false` and `root_ca_path` is set. Can be sourced from the `NS_SERVER_NAME` environment variable.
 * `proxied_ns` - (Optional) When defined use NetScaler Console as a proxy for the NITRO API calls. All credentials refer to the NetScaler Console. The value of this attribute is the target ADC's ip address. Can be sourced from the `_MPS_API_PROXY_MANAGED_INSTANCE_IP` environment variable.
 * `do_login` - (Optional) When set to true the NITRO client will perform the login operation and acquire a session token which will be used for all subsequent operations. This is required when targeting a non default admin partition.
 * `is_cloud` - (Optional) Boolean variable that defines whether NetScaler Console Service is used for proxied calls. When `true`, `username`, `password` and `endpoint` must refer to the Console Service. Defaults to `false`.

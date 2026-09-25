@@ -18,6 +18,7 @@ type NSLASLicenseOfflineResourceModel struct {
 	RestrictedMode  types.Bool   `tfsdk:"restricted_mode"`
 	IsFIPS          types.Bool   `tfsdk:"is_fips"`
 	LASSecretsJson  types.String `tfsdk:"las_secrets_json"`
+	SshHostPubkey   types.String `tfsdk:"ssh_host_pubkey"`
 	LSGUID          types.String `tfsdk:"lsguid"`
 	Version         types.String `tfsdk:"version"`
 	Build           types.String `tfsdk:"build"`
@@ -56,6 +57,10 @@ func (r *NSLASLicenseOfflineResource) Schema(ctx context.Context, req resource.S
 			},
 			"las_secrets_json": schema.StringAttribute{
 				MarkdownDescription: "File path containing LAS secrets (ccid, client, password, las_endpoint, cc_endpoint)",
+				Required:            true,
+			},
+			"ssh_host_pubkey": schema.StringAttribute{
+				MarkdownDescription: "SSH host public key (authorized_keys format, e.g. \"ssh-rsa AAAA...\") used to verify the ADC host key for the SCP license transfer. Obtain it once via `ssh-keyscan -t rsa <adc-mgmt-ip>`. Required: the SCP connection is refused if it is empty or does not match the ADC host key, preventing man-in-the-middle disclosure of the nsroot credentials.",
 				Required:            true,
 			},
 			"lsguid": schema.StringAttribute{

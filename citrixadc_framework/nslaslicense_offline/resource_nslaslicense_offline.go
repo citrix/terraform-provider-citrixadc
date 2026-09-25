@@ -84,6 +84,11 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 	// Extract device IP from provider endpoint
 	deviceIP := extractIPFromEndpoint(endpoint)
 
+	// Pinned ADC SSH host public key used to verify the host identity for the
+	// SCP license transfer (CTXMYT-2537). Threaded into the SCP helpers so they
+	// use ssh.FixedHostKey instead of accepting any presented host key.
+	hostPubKey := data.SshHostPubkey.ValueString()
+
 	// Validate username
 	if username != "nsroot" {
 		resp.Diagnostics.AddError(
@@ -196,7 +201,7 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 	var version, build string
 	var compat *lasutils.VersionCompatibility
 
-	compat, err = lasutils.CheckNSVersion(ctx, deviceIP, username, password, data.IsFIPS.ValueBool())
+	compat, err = lasutils.CheckNSVersion(ctx, r.client, data.IsFIPS.ValueBool())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Version Check Failed",
@@ -236,7 +241,7 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 	})
 
 	// Step 4: Generate offline request package for NS
-	filename, packageData, err := lasutils.GetOfflineRequestPackageNS(ctx, deviceIP, hostname, username, password, useHostname)
+	filename, packageData, err := lasutils.GetOfflineRequestPackageNS(ctx, r.client, deviceIP, hostname, hostPubKey, useHostname)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Request Package Generation Failed",
@@ -419,7 +424,7 @@ func (r *NSLASLicenseOfflineResource) Create(ctx context.Context, req resource.C
 	tflog.Info(ctx, "License blob saved", map[string]interface{}{"path": blobPath})
 
 	// Step 14: Apply license blob to NetScaler device
-	err = lasutils.ApplyLicenseBlobNS(ctx, deviceIP, username, password, licenseBlob)
+	err = lasutils.ApplyLicenseBlobNS(ctx, r.client, deviceIP, hostPubKey, licenseBlob)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"License Application Failed",

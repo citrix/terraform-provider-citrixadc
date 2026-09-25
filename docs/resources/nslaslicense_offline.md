@@ -17,6 +17,8 @@ resource "citrixadc_nslaslicense_offline" "license_vpx" {
   entitlement_name = "VPX 10000 Premium"
   is_fips          = false
   las_secrets_json = "${path.module}/las_secrets.json"
+  # Pinned ADC SSH host key. Capture it once with: ssh-keyscan -t rsa <adc-mgmt-ip>
+  ssh_host_pubkey = "ssh-rsa AAAAB3NzaC1yc2E..."
 }
 
 output "license_status" {
@@ -40,6 +42,7 @@ resource "citrixadc_nslaslicense_offline" "license_vpx_restricted" {
   is_fips          = false
   restricted_mode  = true
   las_secrets_json = "${path.module}/las_secrets.json"
+  ssh_host_pubkey  = "ssh-rsa AAAAB3NzaC1yc2E..."
 }
 ```
 
@@ -62,6 +65,7 @@ The `las_secrets_json` file must contain the following JSON structure with your 
 
 * `entitlement_name` - (Required) Entitlement name for the VPX/MPX license as listed in LAS customer entitlements (e.g., `VPX 10000 Premium`)
 * `las_secrets_json` - (Required) File path containing LAS authentication secrets and endpoints (ccid, client, password, las_endpoint, cc_endpoint).
+* `ssh_host_pubkey` - (Required) SSH host public key (authorized_keys format, e.g. `ssh-rsa AAAA...`) used to verify the ADC host key for the SCP license transfer. Capture it once with `ssh-keyscan -t rsa <adc-mgmt-ip>`. The SCP connection is refused if this value is empty or does not match the appliance's actual host key, which prevents a man-in-the-middle on the management network from capturing the `nsroot` credentials.
 * `is_fips` - (Optional) Whether this is a FIPS-enabled device. Default: `false`.
 * `restricted_mode` - (Optional) When `true`, uses a JSON-based restricted activation API instead of uploading the request package as a file. Use this in environments where file uploads to the Citrix LAS Service are blocked. Default: `false`.
 
@@ -81,8 +85,9 @@ In addition to the arguments, the following attributes are available:
 
 ## Notes
 
-* This resource requires SSH/SFTP access to the NetScaler device for license application.
+* This resource requires SSH/SFTP access to the NetScaler device for license application. The ADC host key is verified against the required `ssh_host_pubkey`; there is no insecure fallback that accepts an unknown host key.
 * The provider's `username` must be "nsroot" for offline licensing operations.
 * License blobs are saved locally in `/tmp/offline_token_<device_ip>_ns_activation.blob.tgz`.
 * The resource performs a complete offline licensing workflow: version check, request generation, LAS server interaction, and license application.
+* The NITRO calls this resource makes to the ADC (version check, request-package generation, license apply and reboot) use the provider's configured connection: they follow the `endpoint` scheme and honor the provider's `insecure_skip_verify` / `root_ca_path` / `server_name` TLS settings, and never fall back to plaintext HTTP. Use `https` and a trusted certificate (or `root_ca_path`) to keep the `nsroot` credentials off the wire in cleartext.
 * On resource deletion, the license remains active on the device; only the Terraform state is removed.

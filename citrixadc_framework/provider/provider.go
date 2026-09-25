@@ -1019,6 +1019,8 @@ type CitrixAdcFrameworkProviderModel struct {
 	Password           types.String `tfsdk:"password"`
 	Endpoint           types.String `tfsdk:"endpoint"`
 	InsecureSkipVerify types.Bool   `tfsdk:"insecure_skip_verify"`
+	RootCaPath         types.String `tfsdk:"root_ca_path"`
+	ServerName         types.String `tfsdk:"server_name"`
 	ProxiedNs          types.String `tfsdk:"proxied_ns"`
 	Partition          types.String `tfsdk:"partition"`
 	DoLogin            types.Bool   `tfsdk:"do_login"`
@@ -1058,6 +1060,14 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 			},
 			"insecure_skip_verify": schema.BoolAttribute{
 				Description: "Ignore validity of endpoint TLS certificate if true",
+				Optional:    true,
+			},
+			"root_ca_path": schema.StringAttribute{
+				Description: "Path to a PEM file containing one or more CA certificates used to verify the ADC endpoint's TLS certificate. Use this to trust an ADC whose certificate is signed by a private/internal CA without disabling verification. Only takes effect when 'insecure_skip_verify' is false. Can be sourced from the NS_ROOT_CA_PATH environment variable.",
+				Optional:    true,
+			},
+			"server_name": schema.StringAttribute{
+				Description: "Overrides the server name used for TLS verification (SNI and certificate hostname/SAN match). Set this only when the name you connect to differs from the certificate's subject/SAN — for example, connecting by IP to an ADC whose certificate is issued for a DNS name. When empty, the host parsed from 'endpoint' is used automatically. Only takes effect when 'insecure_skip_verify' is false and 'root_ca_path' is set. Can be sourced from the NS_SERVER_NAME environment variable.",
 				Optional:    true,
 			},
 			"proxied_ns": schema.StringAttribute{
@@ -1196,6 +1206,16 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		nsTimeout = n
 	}
 
+	rootCaPath := os.Getenv("NS_ROOT_CA_PATH")
+	if !data.RootCaPath.IsNull() {
+		rootCaPath = data.RootCaPath.ValueString()
+	}
+
+	serverName := os.Getenv("NS_SERVER_NAME")
+	if !data.ServerName.IsNull() {
+		serverName = data.ServerName.ValueString()
+	}
+
 	userHeaders := map[string]string{
 		"User-Agent": "terraform-ctxadc",
 	}
@@ -1206,6 +1226,8 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		Password:    password,
 		ProxiedNs:   proxiedNs,
 		SslVerify:   !insecureSkipVerify,
+		RootCAPath:  rootCaPath,
+		ServerName:  serverName,
 		Headers:     userHeaders,
 		IsCloud:     isCloud,
 		HttpTimeout: httpTimeout,
