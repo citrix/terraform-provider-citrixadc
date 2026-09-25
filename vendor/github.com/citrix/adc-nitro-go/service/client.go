@@ -89,6 +89,14 @@ func (c *NitroClient) GetURL() string {
 	return baseURL
 }
 
+// GetHTTPClient returns the HTTP client configured for this NitroClient,
+// including its TLS settings (verification, RootCAs, ServerName), proxy and
+// timeout. It lets helpers that must issue custom NITRO requests reuse the
+// securely-configured transport instead of building their own http.Client.
+func (c *NitroClient) GetHTTPClient() *http.Client {
+	return c.client
+}
+
 // NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
 // This is for backwards compatibility.
 // Please use NewNitroClientFromParams
