@@ -220,11 +220,69 @@ func maskHeaders(headers http.Header) http.Header {
 	return maskedHeaders
 }
 
+// argsToBeMasked lists NITRO arg / query-parameter keys whose VALUES must not
+// appear in logs. Keys are matched case-insensitively; only the value is masked,
+// the key stays visible (mirrors headersToBeMasked / maskHeaders for headers).
+var argsToBeMasked = []string{"password"}
+
+func isSensitiveArgKey(key string) bool {
+	return contains(argsToBeMasked, strings.ToLower(key))
+}
+
+// maskArg masks the value of a single "key:value" NITRO arg when the key is
+// sensitive, keeping the key visible: "password:secret" -> "password:*********".
+func maskArg(arg string) string {
+	if i := strings.Index(arg, ":"); i != -1 && isSensitiveArgKey(arg[:i]) {
+		return arg[:i] + ":*********"
+	}
+	return arg
+}
+
+// maskArgs masks sensitive values in a slice of "key:value" args for logging.
+func maskArgs(args []string) []string {
+	masked := make([]string, len(args))
+	for i, a := range args {
+		masked[i] = maskArg(a)
+	}
+	return masked
+}
+
+// maskURL masks sensitive values in a NITRO request URL for logging while keeping
+// keys and structure intact. It handles the delete "args=k:v,k:v" form (masking
+// each sensitive value) and ordinary "key=value" query parameters. Without this,
+// a secret carried in the query string (e.g. an HSM partition password in the
+// sslhsmkey delete args) would leak into the trace logs.
+func maskURL(url string) string {
+	q := strings.Index(url, "?")
+	if q == -1 {
+		return url
+	}
+	base, query := url[:q+1], url[q+1:]
+	params := strings.Split(query, "&")
+	for pi, p := range params {
+		eq := strings.Index(p, "=")
+		if eq == -1 {
+			continue
+		}
+		key, val := p[:eq], p[eq+1:]
+		if strings.EqualFold(key, "args") {
+			items := strings.Split(val, ",")
+			for ii, it := range items {
+				items[ii] = maskArg(it)
+			}
+			params[pi] = key + "=" + strings.Join(items, ",")
+		} else if isSensitiveArgKey(key) {
+			params[pi] = key + "=*********"
+		}
+	}
+	return base + strings.Join(params, "&")
+}
+
 func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.Buffer, respHandler responseHandlerFunc) ([]byte, error) {
 	req, err := c.createHTTPRequest(method, urlstr, bytes)
 
 	maskedHeaders := maskHeaders(req.Header)
-	c.logger.Trace("doHTTPRequest HTTP method", "method", method, "url", urlstr, "headers", maskedHeaders)
+	c.logger.Trace("doHTTPRequest HTTP method", "method", method, "url", maskURL(urlstr), "headers", maskedHeaders)
 
 	resp, err := c.client.Do(req)
 	if resp != nil {
@@ -339,7 +397,7 @@ func (c *NitroClient) deleteResource(resourceType string, resourceName string) (
 }
 
 func (c *NitroClient) deleteResourceWithArgs(resourceType string, resourceName string, args []string) ([]byte, error) {
-	c.logger.Trace("Deleting resource with args", "resourceType", resourceType, "args ", args)
+	c.logger.Trace("Deleting resource with args", "resourceType", resourceType, "args ", maskArgs(args))
 	var url string
 	if resourceName != "" {
 		resourceNameEscaped := neturl.QueryEscape(neturl.QueryEscape(resourceName))
@@ -348,7 +406,7 @@ func (c *NitroClient) deleteResourceWithArgs(resourceType string, resourceName s
 		url = c.url + fmt.Sprintf("%s?args=", resourceType)
 	}
 	url = url + strings.Join(args, ",")
-	c.logger.Trace("deleteResourceWithArgs ", "url", url)
+	c.logger.Trace("deleteResourceWithArgs ", "url", maskURL(url))
 
 	return c.doHTTPRequest("DELETE", url, bytes.NewBuffer([]byte{}), deleteResponseHandler)
 
