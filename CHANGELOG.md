@@ -1,3 +1,20 @@
+## 3.0.2 (September 25, 2026)
+
+BUG FIXES
+
+* **citrixadc_cloudprofile**: Fixed cloud profiles failing with "inconsistent result after apply" and not being saved to state, and fixed `terraform import` planning a spurious recreate on the next apply. [#1470]
+* **citrixadc_hanode**: Fixed "inconsistent result after apply" caused by NetScaler returning a runtime HA status instead of the configured `haprop`/`hasync` value. [#1467]
+
+ENHANCEMENTS
+
+* **citrixadc_systemfile**: Added ephemeral (write-only) support for `filecontent`, so file contents are no longer persisted in Terraform state.
+* **citrixadc_nslaslicense_offline**: Hardening the offline licensing flow — enabled the ADC host key verification, and TLS verification for the Citrix Cloud activation calls.
+* **provider**: Strengthening TLS verification for the ADC API calls to verify certificates signed by private/internal CA.
+
+[#1467]: https://github.com/citrix/terraform-provider-citrixadc/issues/1467
+[#1470]: https://github.com/citrix/terraform-provider-citrixadc/issues/1470
+
+
 ## 3.0.1 (September 14, 2026)
 
 BUG FIXES
