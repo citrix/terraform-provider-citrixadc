@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -82,61 +82,57 @@ type VersionCompatibility struct {
 
 // LASTokenGenerator handles LAS token generation
 type LASTokenGenerator struct {
-	Endpoint      string
-	LSGUID        string
-	CCID          string
-	SecretClient  string
-	SecretPwd     string
-	BaseURL       string
-	CCTokenURL    string
-	BearerCache   string
-	BearerToken   string
-	HTTPClient    *http.Client
-	InsecureHTTPS bool
+	Endpoint     string
+	LSGUID       string
+	CCID         string
+	SecretClient string
+	SecretPwd    string
+	BaseURL      string
+	CCTokenURL   string
+	BearerCache  string
+	BearerToken  string
+	HTTPClient   *http.Client
+	// InsecureHTTPS bool // CTXMYT-2533: unused insecure-TLS toggle — commented out
 }
 
 // NewLASTokenGenerator creates a new LAS token generator
 func NewLASTokenGenerator(endpoint, lsguid, ccid, client, password, baseURL, ccTokenURL string) *LASTokenGenerator {
 	return &LASTokenGenerator{
-		Endpoint:      endpoint,
-		LSGUID:        lsguid,
-		CCID:          ccid,
-		SecretClient:  client,
-		SecretPwd:     password,
-		BaseURL:       baseURL,
-		CCTokenURL:    ccTokenURL,
-		BearerCache:   "/tmp/las_bearer_cache",
-		InsecureHTTPS: true,
+		Endpoint:     endpoint,
+		LSGUID:       lsguid,
+		CCID:         ccid,
+		SecretClient: client,
+		SecretPwd:    password,
+		BaseURL:      baseURL,
+		CCTokenURL:   ccTokenURL,
+		BearerCache:  "/tmp/las_bearer_cache",
+		// CTXMYT-2533: do not disable TLS verification for the Citrix Cloud calls
+		// (they carry clientId/clientSecret and the bearer token). The Cloud
+		// endpoints use publicly trusted certs, so the default verifying transport
+		// works — no InsecureSkipVerify needed.
+		// InsecureHTTPS: true,
 		HTTPClient: &http.Client{
-			Timeout: 60 * time.Second,
+			Timeout:   60 * time.Second,
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},
 	}
 }
 
-// RunCurlHTTPSFallback tries HTTPS first, falls back to HTTP
-func RunCurlHTTPSFallback(ctx context.Context, url, method string, auth *BasicAuth, body []byte, headers map[string]string) ([]byte, error) {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-
-	// Try HTTPS first
-	httpsURL := strings.Replace(url, "http://", "https://", 1)
-	resp, err := makeHTTPRequest(ctx, client, httpsURL, method, auth, body, headers)
-	if err == nil {
-		return resp, nil
-	}
-
-	tflog.Debug(ctx, "HTTPS request failed, falling back to HTTP", map[string]interface{}{"error": err.Error()})
-
-	// Fallback to HTTP
-	httpURL := strings.Replace(httpsURL, "https://", "http://", 1)
-	return makeHTTPRequest(ctx, client, httpURL, method, auth, body, headers)
+// nitroHTTP issues a NITRO request against the ADC using the provider's
+// already-configured NitroClient transport. This reuses the endpoint scheme
+// from NS_URL and the provider's TLS settings (insecure_skip_verify /
+// root_ca_path / server_name), the same client every other resource uses.
+//
+// It deliberately replaces the former RunCurlHTTPSFallback helper, which built
+// its own http.Client with TLS verification hardcoded off and then silently
+// downgraded to plaintext HTTP on any failure — re-sending the nsroot Basic
+// Auth in cleartext (CTXMYT-2535). There is no cleartext fallback here.
+func nitroHTTP(ctx context.Context, client *service.NitroClient, path, method string, body []byte, headers map[string]string) ([]byte, error) {
+	url := strings.TrimRight(client.GetURL(), "/") + path
+	auth := &BasicAuth{Username: client.GetUsername(), Password: client.GetPassword()}
+	return makeHTTPRequest(ctx, client.GetHTTPClient(), url, method, auth, body, headers)
 }
 
 // BasicAuth holds basic authentication credentials
@@ -206,11 +202,8 @@ func makeHTTPRequest(ctx context.Context, client *http.Client, url, method strin
 }
 
 // CheckNSVersion checks NetScaler version and LAS compatibility
-func CheckNSVersion(ctx context.Context, ip, username, password string, isFIPS bool) (*VersionCompatibility, error) {
-	url := fmt.Sprintf("http://%s/nitro/v1/config/nsversion", ip)
-	auth := &BasicAuth{Username: username, Password: password}
-
-	respBody, err := RunCurlHTTPSFallback(ctx, url, "GET", auth, nil, nil)
+func CheckNSVersion(ctx context.Context, client *service.NitroClient, isFIPS bool) (*VersionCompatibility, error) {
+	respBody, err := nitroHTTP(ctx, client, "/nitro/v1/config/nsversion", "GET", nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get NS version: %w", err)
 	}
@@ -230,7 +223,7 @@ func CheckNSVersion(ctx context.Context, ip, username, password string, isFIPS b
 		return nil, fmt.Errorf("missing 'version' field")
 	}
 
-	tflog.Info(ctx, "NetScaler version", map[string]interface{}{"ip": ip, "version": versionStr})
+	tflog.Info(ctx, "NetScaler version", map[string]interface{}{"endpoint": client.GetURL(), "version": versionStr})
 
 	// Extract version (e.g., "NetScaler NS14.1: Build 4.3401.a.nc")
 	versionRegex := regexp.MustCompile(`NS(\d+\.\d+)`)
@@ -293,18 +286,14 @@ func isBuildGE(aMajor, aMinor, bMajor, bMinor int) bool {
 }
 
 // GetOfflineRequestPackageNS generates offline activation request package for NetScaler
-func GetOfflineRequestPackageNS(ctx context.Context, ip, hostname, username, password string, useHostname bool) (string, []byte, error) {
-	auth := &BasicAuth{Username: username, Password: password}
-	var url string
-
+func GetOfflineRequestPackageNS(ctx context.Context, client *service.NitroClient, ip, hostname, hostPubKey string, useHostname bool) (string, []byte, error) {
+	path := "/nitro/v1/config/nslicenseactivationdata"
 	if useHostname {
-		url = fmt.Sprintf("http://%s/nitro/v1/config/nslicenseactivationdata?args=usehostname:true", ip)
-	} else {
-		url = fmt.Sprintf("http://%s/nitro/v1/config/nslicenseactivationdata", ip)
+		path += "?args=usehostname:true"
 	}
 
 	// Make API call to generate request package
-	respBody, err := RunCurlHTTPSFallback(ctx, url, "GET", auth, nil, nil)
+	respBody, err := nitroHTTP(ctx, client, path, "GET", nil, nil)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to generate request package: %w", err)
 	}
@@ -326,7 +315,7 @@ func GetOfflineRequestPackageNS(ctx context.Context, ip, hostname, username, pas
 
 	// Download the file via SCP
 	remotePath := "/nsconfig/license/" + filename
-	fileContent, err := SCPDownload(ctx, ip, username, password, remotePath)
+	fileContent, err := SCPDownload(ctx, ip, client.GetUsername(), client.GetPassword(), hostPubKey, remotePath)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to download request package: %w", err)
 	}
@@ -335,23 +324,58 @@ func GetOfflineRequestPackageNS(ctx context.Context, ip, hostname, username, pas
 	return filename, fileContent, nil
 }
 
+// hostKeyCallbackFromPubKey builds a verifying ssh.HostKeyCallback from an
+// authorized_keys-format host public key. It is fail-closed: an empty or
+// unparseable key is an error, never a fallback to ssh.InsecureIgnoreHostKey.
+// This mirrors the pinned-host-key pattern used by the nslicense resource
+// (citrixadc_framework/nslicense.getSshConnection), which was restored by the
+// 2021 fix (commit 932c3dcab) after the insecure fallback was removed there.
+func hostKeyCallbackFromPubKey(hostPubKey string) (ssh.HostKeyCallback, []string, error) {
+	if strings.TrimSpace(hostPubKey) == "" {
+		return nil, nil, fmt.Errorf("ssh_host_pubkey is required for host-key verification; refusing to connect without a pinned ADC host key")
+	}
+	publickey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(hostPubKey))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse ssh_host_pubkey (expected authorized_keys format, e.g. \"ssh-rsa AAAA...\"): %w", err)
+	}
+	// Constrain host-key negotiation to the pinned key's algorithm so the ADC
+	// presents the key we pinned. Without this, Go negotiates its default-preferred
+	// host-key type (e.g. ecdsa-sha2-nistp256) and FixedHostKey rejects it as a
+	// mismatch whenever the operator pinned a different type (e.g. an RSA key).
+	algos := []string{publickey.Type()}
+	if publickey.Type() == ssh.KeyAlgoRSA {
+		// An "ssh-rsa" key also authenticates with the modern rsa-sha2-256/512
+		// signature algorithms; offer those first since many servers no longer
+		// accept the legacy ssh-rsa (SHA-1) algorithm.
+		algos = []string{ssh.KeyAlgoRSASHA256, ssh.KeyAlgoRSASHA512, ssh.KeyAlgoRSA}
+	}
+	return ssh.FixedHostKey(publickey), algos, nil
+}
+
 // SCPDownload downloads a file via SCP
-func SCPDownload(ctx context.Context, ip, username, password, remotePath string) ([]byte, error) {
+func SCPDownload(ctx context.Context, ip, username, password, hostPubKey, remotePath string) ([]byte, error) {
 	tflog.Debug(ctx, "Starting SFTP download", map[string]interface{}{
 		"ip":         ip,
 		"remotePath": remotePath,
 	})
+
+	hostKeyCallBack, hostKeyAlgos, err := hostKeyCallbackFromPubKey(hostPubKey)
+	if err != nil {
+		return nil, err
+	}
 
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
+		HostKeyCallback:   hostKeyCallBack,
+		HostKeyAlgorithms: hostKeyAlgos,
+		Timeout:           30 * time.Second,
 	}
 
-	client, err := ssh.Dial("tcp", ip+":22", config)
+	var client *ssh.Client
+	client, err = ssh.Dial("tcp", ip+":22", config)
 	if err != nil {
 		tflog.Error(ctx, "Failed to dial SSH", map[string]interface{}{"error": err.Error()})
 		return nil, fmt.Errorf("failed to dial: %w", err)
@@ -394,23 +418,30 @@ func SCPDownload(ctx context.Context, ip, username, password, remotePath string)
 }
 
 // SCPUpload uploads a file via SFTP
-func SCPUpload(ctx context.Context, ip, username, password, remotePath string, content []byte) error {
+func SCPUpload(ctx context.Context, ip, username, password, hostPubKey, remotePath string, content []byte) error {
 	tflog.Debug(ctx, "Starting SFTP upload", map[string]interface{}{
 		"ip":         ip,
 		"remotePath": remotePath,
 		"size":       len(content),
 	})
 
+	hostKeyCallBack, hostKeyAlgos, err := hostKeyCallbackFromPubKey(hostPubKey)
+	if err != nil {
+		return err
+	}
+
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         30 * time.Second,
+		HostKeyCallback:   hostKeyCallBack,
+		HostKeyAlgorithms: hostKeyAlgos,
+		Timeout:           30 * time.Second,
 	}
 
-	client, err := ssh.Dial("tcp", ip+":22", config)
+	var client *ssh.Client
+	client, err = ssh.Dial("tcp", ip+":22", config)
 	if err != nil {
 		tflog.Error(ctx, "Failed to dial SSH", map[string]interface{}{"error": err.Error()})
 		return fmt.Errorf("failed to dial: %w", err)
@@ -1032,20 +1063,17 @@ func (ltg *LASTokenGenerator) ExportOfflineActivationResponse(ctx context.Contex
 }
 
 // ApplyLicenseBlobNS applies license blob to NetScaler
-func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blobContent []byte) error {
+func ApplyLicenseBlobNS(ctx context.Context, client *service.NitroClient, ip, hostPubKey string, blobContent []byte) error {
 	// Create temp filename
 	filename := fmt.Sprintf("offline_token_%s_activation.blob.tgz", ip)
 
 	// Upload blob to device
 	remotePath := "/nsconfig/license/" + filename
-	if err := SCPUpload(ctx, ip, username, password, remotePath, blobContent); err != nil {
+	if err := SCPUpload(ctx, ip, client.GetUsername(), client.GetPassword(), hostPubKey, remotePath, blobContent); err != nil {
 		return fmt.Errorf("failed to upload license blob: %w", err)
 	}
 
 	// Apply license - NITRO API expects form-encoded data with "object" key containing JSON
-	auth := &BasicAuth{Username: username, Password: password}
-	url := fmt.Sprintf("http://%s/nitro/v1/config/nslaslicense", ip)
-
 	payload := map[string]interface{}{
 		"params": map[string]string{
 			"action":  "apply",
@@ -1066,7 +1094,7 @@ func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blob
 
 	// Log request
 	tflog.Debug(ctx, "API Call: ApplyLicenseBlobNS", map[string]interface{}{
-		"url":      url,
+		"path":     "/nitro/v1/config/nslaslicense",
 		"method":   "POST",
 		"ip":       ip,
 		"filename": filename,
@@ -1075,7 +1103,7 @@ func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blob
 		"body": formData,
 	})
 
-	respBody, err := RunCurlHTTPSFallback(ctx, url, "POST", auth, body, headers)
+	respBody, err := nitroHTTP(ctx, client, "/nitro/v1/config/nslaslicense", "POST", body, headers)
 	if err != nil {
 		return fmt.Errorf("failed to apply license: %w", err)
 	}
@@ -1094,7 +1122,6 @@ func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blob
 	if strings.Contains(string(respBody), "\"errorcode\": 1125") {
 		tflog.Info(ctx, "Rebooting device after license application", map[string]interface{}{"ip": ip})
 		// Trigger reboot
-		rebootURL := fmt.Sprintf("http://%s/nitro/v1/config/reboot", ip)
 		rebootPayload := map[string]interface{}{
 			"params": map[string]string{
 				"warning": "YES",
@@ -1106,7 +1133,11 @@ func ApplyLicenseBlobNS(ctx context.Context, ip, username, password string, blob
 		rebootJSON, _ := json.Marshal(rebootPayload)
 		rebootFormData := fmt.Sprintf("object=%s", string(rebootJSON))
 		rebootBody := []byte(rebootFormData)
-		RunCurlHTTPSFallback(ctx, rebootURL, "POST", auth, rebootBody, headers)
+		// Fire-and-forget: the ADC may reboot before responding. Bound this call
+		// so it cannot hang when the shared provider client has no http_timeout set.
+		rebootCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		nitroHTTP(rebootCtx, client, "/nitro/v1/config/reboot", "POST", rebootBody, headers)
+		cancel()
 	} else if !strings.Contains(string(respBody), "\"errorcode\": 0") {
 		// If we don't get error code 0 (success) or 1125 (reboot required), something went wrong
 		tflog.Warn(ctx, "Unexpected response from license application", map[string]interface{}{

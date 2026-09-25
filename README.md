@@ -78,7 +78,9 @@ provider "citrixadc" {
 We can use a `https` URL and accept the untrusted authority certificate on the Citrix ADC by specifying `insecure_skip_verify = true`
 
 To use `https` without the need to set `insecure_skip_verify = true` follow this [guide](https://support.citrix.com/article/CTX122521) on
-how to replace the default TLS certificate with one from a trusted Certifcate Authority.
+how to replace the default TLS certificate with one from a trusted Certifcate Authority. If that Certificate Authority is a
+private/internal one, point `root_ca_path` at its PEM bundle so the provider can verify the ADC certificate without trusting it
+system-wide; use `server_name` to override the verified name when you connect by IP but the certificate is issued for a DNS name.
 
 Use of `https` is preferred. Using `http` will result in all provider configuration variables as well as resource variables
 to be transmitted in cleartext. Anyone observing the HTTP data stream will be able to parse sensitive values such as the provider password.
@@ -94,6 +96,8 @@ The following arguments are supported.
 - `password` - This is the password to access to Citrix ADC. Defaults to `nsroot` unless environment variable `NS_PASSWORD` has been set
 - `endpoint` - (Required) Nitro API endpoint in the form `http://<NS_IP>/` or `http://<NS_IP>:<PORT>/`. Can be specified in environment variable `NS_URL`
 * `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the Citrix ADC when the Citrix ADC endpoint is `https`
+- `root_ca_path` - (Optional) Path to a PEM file of CA certificate(s) used to verify the ADC's `https` certificate. Lets you trust an ADC whose certificate is signed by a private/internal CA without setting `insecure_skip_verify`. Only applies when `insecure_skip_verify` is `false`. Can be specified in environment variable `NS_ROOT_CA_PATH`.
+- `server_name` - (Optional) Overrides the name used for TLS verification (SNI and certificate SAN match); use it when you connect by IP but the certificate is issued for a DNS name. Defaults to the host from `endpoint`. Only applies when `insecure_skip_verify` is `false` and `root_ca_path` is set. Can be specified in environment variable `NS_SERVER_NAME`.
 - `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
 - `is_cloud` - (Optional, true/false) Whether using Console Service for proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the Console Service.
 - `http_timeout` - (Optional, integer seconds) Timeout for the underlying NITRO HTTP client (Go `http.Client.Timeout`). Bounds the total duration of each API request so that unreachable endpoints fail fast instead of hanging on the operating system's TCP connection timeout. Can be specified in environment variable `NS_HTTP_TIMEOUT`. Defaults to `0` (no client-side timeout). Set it high enough to accommodate long-running operations such as large `systemfile` uploads.
