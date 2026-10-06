@@ -278,6 +278,18 @@ func maskURL(url string) string {
 	return base + strings.Join(params, "&")
 }
 
+// sanitizeURLError masks sensitive values in the URL carried by a *url.Error, so a
+// transport-level failure (dial/timeout/TLS) does not leak a secret embedded in the
+// request URL (for example the password arg on an sslhsmkey delete) into the error
+// that is surfaced in provider output. Non-url.Error values are returned unchanged.
+func sanitizeURLError(err error) error {
+	if ue, ok := err.(*neturl.Error); ok {
+		ue.URL = maskURL(ue.URL)
+		return ue
+	}
+	return err
+}
+
 func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.Buffer, respHandler responseHandlerFunc) ([]byte, error) {
 	req, err := c.createHTTPRequest(method, urlstr, bytes)
 
@@ -289,7 +301,7 @@ func (c *NitroClient) doHTTPRequest(method string, urlstr string, bytes *bytes.B
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		return []byte{}, err
+		return []byte{}, sanitizeURLError(err)
 	}
 	c.logger.Trace("response Status:", "status", resp.Status)
 	body, err := respHandler(resp, c.logger)
