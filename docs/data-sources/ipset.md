@@ -32,3 +32,5 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the ipset. It has the same value as the `name` attribute.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
+* `nsipbinding` - The IPv4 addresses (nsip) bound to the IP set.
+* `nsip6binding` - The IPv6 addresses (nsip6) bound to the IP set.

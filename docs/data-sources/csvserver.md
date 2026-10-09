@@ -118,6 +118,9 @@ In addition to the arguments, the following attributes are available:
 * `ttl` - TTL value.
 * `v6persistmasklen` - Persistence mask for IP based persistence types, for IPv6 virtual servers.
 * `vipheader` - Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.
+* `aigwprofilename` - Name of the AIGW frontend profile. For the content switching vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add cs vserver, it cannot be unset. Minimum length =  1 Maximum length =  255
+* `mcpprofilename` - Name of the MCP profile to attach to this cs vserver. Enables MCP protocol processing.
+* `wasmmodule` - Name of the WASM module to assign to this virtual server.
 
 ### Read-only csvserver metadata
 

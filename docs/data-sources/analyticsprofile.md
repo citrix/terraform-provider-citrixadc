@@ -73,6 +73,7 @@ In addition to the arguments, the following attributes are available:
 * `type` - This option indicates what information needs to be collected and exported.
 * `urlcategory` - On enabling this option, the Citrix ADC will send the URL category record.
 * `id` - The id of the analyticsprofile. It has the same value as the `name` attribute.
+* `mcpsummary` - Enable/disable appflow logging for MCP (Model Context Protocol) traffic.
 
 ### Read-only analyticsprofile metadata
 

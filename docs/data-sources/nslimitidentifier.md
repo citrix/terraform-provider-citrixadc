@@ -45,6 +45,8 @@ In addition to the arguments above, the following attributes are exported:
 * `threshold` - Maximum number of requests that are allowed in the given timeslice when requests (mode is set as `REQUEST_RATE`) are tracked per timeslice. When connections (mode is set as `CONNECTION`) are tracked, it is the total number of connections that would be let through.
 * `timeslice` - Time interval, in milliseconds, specified in multiples of 10, during which requests are tracked to check if they cross the threshold. This argument is needed only when the mode is set to `REQUEST_RATE`.
 * `trapsintimeslice` - Number of traps to be sent in the timeslice configured. A value of 0 indicates that traps are disabled.
+* `alertsintimeslice` - Number of appflow alerts to be sent in the timeslice configured. A value of 0 indicates that alerts are disabled. A value of 65535 indicates no limit on number of appflow alerts.
+* `timealign` - Value MINUTE will align the time windows for a configured timeslice to Minute boundary. TimeSlice values should be integrals of 60000ms when value MINUTE is choosen. Default : NONE, timeslice alignments will happen with next 10ms.
 
 ### Read-only nslimitidentifier metadata
 

@@ -38,6 +38,10 @@ In addition to the arguments, the following attributes are available:
 * `password` - Password for the system user. Can include any ASCII character.
 * `promptstring` - String to display at the command-line prompt.
 * `timeout` - CLI session inactivity timeout, in seconds.
+* `hashedpassword` - Hashed password for the system user, as returned by the NITRO API.
+* `cmdpolicybinding` - Inline command policy bindings for the system user.
+* `policyname` - The name of command policy.
+* `priority` - The priority of the policy.
 
 ### Read-only systemuser metadata
 

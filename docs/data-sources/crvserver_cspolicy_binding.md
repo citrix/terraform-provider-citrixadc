@@ -43,6 +43,7 @@ In addition to the arguments, the following attributes are available:
 * `priority` - The priority for the policy.
 * `labeltype` - The invocation type.
 * `targetvserver` - The CSW target server names.
+* `bindpoint` - The bindpoint to which the policy is bound.
 
 ### Read-only crvserver_cspolicy_binding metadata
 

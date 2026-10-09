@@ -105,6 +105,8 @@ In addition to the argument above, the following attributes are exported:
 
 * `userdefinedauditlog` - Log user-configurable log messages to nslog. Setting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria. Possible values: `YES`, `NO`.
 
+* `denylistviolations` - Log denylist violations.
+
 ### Read-only auditnslogaction metadata
 
 These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_auditnslogaction` resource). They are Computed/GET-only and are `null` when the appliance does not return them.

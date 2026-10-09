@@ -40,6 +40,7 @@ In addition to the arguments above, the following attributes are exported:
 * `state` - Current state of the SNMP alarm. The Citrix ADC generates trap messages only for SNMP alarms that are enabled. Some alarms are enabled by default, but you can disable them.
 * `thresholdvalue` - Value for the high threshold. The Citrix ADC generates an SNMP trap message when the value of the attribute associated with the alarm is greater than or equal to the specified high threshold value.
 * `time` - Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met. Can be specified for various alarms like SYNFLOOD, HA-VERSION-MISMATCH, CLUSTER-NODE-HEALTH, etc.
+* `holdtime` - Hold time Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met recursively for a given period of time. It is recommended to have the hold time interval period in multiple of 7 seconds as the ADC tries to validate the alarms every 7 seconds. Can only be specified for the MGMT-CPU-USAGE alarm.
 
 ### Read-only snmpalarm metadata
 

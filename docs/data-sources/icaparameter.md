@@ -40,6 +40,7 @@ The following attributes are available:
 * `hdxinsightnonnsap` - Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes.
 * `l7latencyfrequency` - Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0.
 * `id` - The id of the icaparameter. It is a system-generated identifier.
+* `insightonlytodirector` - Enable/Disable HDX Insight data to Director even if HDX Insight policy is not configured on Gateway and Network Telemtry policy is enabled on VDA. Default value: ENABLED Possible values = ENABLED, DISABLED
 
 ### Read-only icaparameter metadata
 

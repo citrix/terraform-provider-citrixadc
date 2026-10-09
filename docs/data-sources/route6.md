@@ -46,6 +46,8 @@ In addition to the above arguments, the following attributes are exported:
 * `vxlan` - Integer value that uniquely identifies a VXLAN through which the Citrix ADC forwards the packets for this route.
 * `weight` - Positive integer used by the routing algorithms to determine preference for this route over others of equal cost.
 * `id` - The id of the route6 resource.
+* `detail` - To get a detailed view.
+* `mgmt` - Route in management plane.
 
 ### Read-only route6 metadata
 

@@ -43,6 +43,8 @@ In addition to the argument, the following attributes are exported:
 * `redirectpnpdevices` - This setting corresponds to the selections for pnpdevices under More on the Local Resources tab under Options in RDC.
 * `redirectprinters` - This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC.
 * `videoplaybackmode` - This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback.
+* `rdpurlmaxlen` - Indicates the permissible max length of the RDP URL. Set to 256 by default.
+* `rdpurlmaxlencheck` - This setting determines whether the RDP URL max length check is enforced during RDP file generation.
 
 ### Read-only rdpclientprofile metadata
 

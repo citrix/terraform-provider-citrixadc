@@ -27,3 +27,4 @@ The following attributes are exported:
 * `snmpset` - Accept SNMP SET requests sent to the Citrix ADC, and allow SNMP managers to write values to MIB objects that are configured for write access.
 * `snmptraplogging` - Log any SNMP trap events (for SNMP alarms in which logging is enabled) even if no trap listeners are configured. With the default setting, SNMP trap events are logged if at least one trap listener is configured on the appliance.
 * `snmptraplogginglevel` - Audit log level of SNMP trap logs. The default value is INFORMATIONAL.
+* `customtrap` - By default, Customtrap will be disabled, set to enabled when using the feature.

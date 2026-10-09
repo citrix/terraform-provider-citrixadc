@@ -27,3 +27,5 @@ The following attributes are available:
 
 * `id` - The id of the policyparam resource.
 * `timeout` - Maximum time in milliseconds to allow for processing expressions and policies without interruption. If the timeout is reached then the evaluation causes an UNDEF to be raised and no further processing is performed.
+* `maxeventsize` - Maximum event size in kilobytes that the policy engine will process. When event data exceeds this limit, the action specified by maxEventSizeExceedAction is taken. This parameter helps prevent resource exhaustion from processing extremely large events.
+* `maxeventsizeexceedaction` - Action to take when event data exceeds maxEventSize:
