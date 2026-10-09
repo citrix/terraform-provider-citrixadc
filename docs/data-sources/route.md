@@ -49,6 +49,8 @@ In addition to the above arguments, the following attributes are exported:
 * `vlan` - VLAN as the gateway for this route.
 * `weight` - Positive integer used by the routing algorithms to determine preference for this route over others of equal cost.
 * `id` - The id of the route resource.
+* `detail` - Display a detailed view.
+* `mgmt` - Route in management plane.
 
 ### Read-only route metadata
 

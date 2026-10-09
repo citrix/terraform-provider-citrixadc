@@ -59,6 +59,23 @@ In addition to the arguments, the following attributes are available:
 * `logoutonsmartcardremoval` - Option to VPN plugin behavior when smartcard or its reader is removed.
 * `macepapluginupgrade` - Option to set plugin upgrade behaviour for Mac.
 * `secureprivateaccess` - Enable secure private access for this virtual server.
+* `gslbsitefqdn` - Fully qualified domain name of the SPA site. This is used for Secure Private Access configuration.
+* `maxaaausers` - Maximum number of concurrent user sessions allowed on this virtual server. The actual number of users allowed to log on to this virtual server depends on the total number of user licenses.
+* `maxloginattempts` - Maximum number of logon attempts
+* `netprofile` - The name of the network profile.
+* `newname` - New name for the Citrix Gateway virtual server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my server" or 'my server').
+* `pcoipvserverprofilename` - Name of the PCoIP vserver profile associated with the vserver.
+* `port` - TCP port on which the virtual server listens.
+* `quicprofilename` - Name of the QUIC profile to assign to this virtual server.
+* `range` - Range of Citrix Gateway virtual server IP addresses. The consecutively numbered range of IP addresses begins with the address specified by the IP Address parameter. In the configuration utility, select Network VServer to enter a range.
+* `rdpserverprofilename` - Name of the RDP server profile associated with the vserver.
+* `rhistate` - A host route is injected according to the setting on the virtual servers. * If set to PASSIVE on all the virtual servers that share the IP address, the appliance always injects the hostroute. * If set to ACTIVE on all the virtual servers that share the IP address, the appliance injects even if one virtual server is UP. * If set to ACTIVE on some virtual servers and PASSIVE on the others, the appliance injects even if one virtual server set to ACTIVE is UP.
+* `samesite` - SameSite attribute value for Cookies generated in VPN context. This attribute value will be appended only for the cookies which are specified in the builtin patset ns_cookies_samesite
+* `tcpprofilename` - Name of the TCP profile to assign to this virtual server.
+* `userdomains` - List of user domains specified as comma seperated value
+* `vserverfqdn` - Fully qualified domain name for a VPN virtual server. This is used during StoreFront configuration generation.
+* `wasmmodule` - Name of the WASM module to assign to this virtual server.
+* `windowsepapluginupgrade` - Option to set plugin upgrade behaviour for Win
 
 ### Read-only vpnvserver metadata
 

@@ -69,6 +69,7 @@ In addition to the arguments, the following attributes are available:
 * `tls11` - State of TLSv1.1 protocol support for the SSL service.
 * `tls12` - State of TLSv1.2 protocol support for the SSL service.
 * `tls13` - State of TLSv1.3 protocol support for the SSL service.
+* `strictclientekucheck` - Enable strict EKU extension check during client authentication. This can be set to DISABLED only for SSL service types Internal and Transparent.
 
 ### Read-only sslservice metadata
 

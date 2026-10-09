@@ -49,6 +49,7 @@ In addition to the arguments, the following attributes are available:
 * `serverid` - The identifier for the service. This is used when the persistency type is set to Custom Server ID.
 * `state` - Initial state of the service group.
 * `weight` - Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+* `aigwprofilename` - Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.
 
 ### Read-only servicegroup_servicegroupmember_binding metadata
 

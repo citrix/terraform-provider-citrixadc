@@ -121,6 +121,7 @@ In addition to the arguments, the following attributes are available:
 * `winsip` - WINS server IP address to add to Citrix Gateway for name resolution.
 * `wiportalmode` - Layout on the Access Interface. The COMPACT value indicates the use of small icons.
 * `id` - The id of the vpnparameter resource. It is a system-generated identifier.
+* `secureprivateaccessprofile` - Clears Secure Private Access profile that may be set.
 
 ### Read-only vpnparameter metadata
 

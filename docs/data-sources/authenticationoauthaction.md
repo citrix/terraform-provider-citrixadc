@@ -78,6 +78,7 @@ In addition to the arguments, the following attributes are available:
 * `userinfourl` - URL to which OAuth access token will be posted to obtain user information.
 * `usernamefield` - Attribute in the token from which username should be extracted.
 * `id` - The id of the authenticationoauthaction. It has the same value as the `name` attribute.
+* `scopes` - OAuth Scopes expected. Please specify scopes in space separated format as per RFC 6749 (OAuth 2.0). Each scope value can contain any printable ASCII character except double-quote (") and backslash (\). Maximum length is 1024.
 
 ### Read-only authenticationoauthaction metadata
 

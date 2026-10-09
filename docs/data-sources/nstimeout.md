@@ -44,3 +44,6 @@ In addition to the arguments, the following attributes are available:
 * `reducedrsttimeout` - Timer interval, in seconds, for abruptly terminated TCP NATPCB connections.
 * `server` - Server idle timeout, in seconds.
 * `zombie` - Interval at which the zombie clean-up process for TCP connections should run.
+* `newconnidletimeout` - Timer interval, in seconds, for new TCP NATPCB connections on which no data was received.
+* `tcpclient` - Global idle timeout, in seconds, for non-HTTP client connections of TCP service type. This value is over ridden by the client timeout that is configured on individual entities.
+* `tcpserver` - Global idle timeout, in seconds, for non-HTTP server connections of TCP service type. This value is over ridden by the server timeout that is configured on entities.

@@ -37,6 +37,9 @@ In addition to the arguments, the following attributes are available:
 * `newname` - The new name of the content switching policy.
 * `rule` - Expression, or name of a named expression, against which traffic is evaluated. The following requirements apply only to the Citrix ADC CLI: If the expression includes one or more spaces, enclose the entire expression in double quotation marks. If the expression itself includes double quotation marks, escape the quotations by using the  character. Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `id` - The id of the cspolicy. It has the same value as the `policyname` attribute.
+* `csvserver` - The content switching vserver to which the cspolicy should be bound.
+* `targetlbvserver` - The target load balancing vserver for the csvserver policy binding.
+* `priority` - Priority for the csvserver policy binding.
 
 ### Read-only cspolicy metadata
 

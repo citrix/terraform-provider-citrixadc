@@ -82,3 +82,42 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `monuserstatusmesg` - User monitor failure reasons.
 * `builtin` - Whether the service is built-in. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
 * `feature` - The feature to be checked while applying this configuration.
+* `internal` - Display only dynamically learned services.
+* `accessdown` - Use Layer 2 mode to bridge the packets sent to this service if it is marked as DOWN. If the service is DOWN, and this parameter is disabled, the packets are dropped.
+* `aigwprofilename` - Name of the AIGW Profile that contains AIGW Endpoint setting for the service.
+* `all` - Display both user-configured and dynamically learned services.
+* `appflowlog` - Enable logging of AppFlow information.
+* `cachetype` - Cache type supported by the cache server.
+* `cipheader` - Name for the HTTP header whose value must be set to the IP address of the client. Used with the Client IP parameter. If you set the Client IP parameter, and you do not specify a name for the header, the appliance uses the header name specified for the global Client IP Header parameter (the cipHeader parameter in the set ns param CLI command or the Client IP Header parameter in the Configure HTTP Parameters dialog box at System > Settings > Change HTTP parameters). If the global Client IP Header parameter is not specified, the appliance inserts a header with the name "client-ip."
+* `cka` - Enable client keep-alive for the service.
+* `cleartextport` - Port to which clear text data must be sent after the appliance decrypts incoming SSL traffic. Applicable to transparent SSL services.
+* `cmp` - Enable compression for the service.
+* `contentinspectionprofilename` - Name of the ContentInspection profile that contains IPS/IDS communication related setting for the service
+* `customserverid` - Unique identifier for the service. Used when the persistency type for the virtual server is set to Custom Server ID.
+* `delay` - Time, in seconds, allocated to the NetScaler for a graceful shutdown of the service. During this period, new requests are sent to the service only for clients who already have persistent sessions on the appliance. Requests from new clients are load balanced among other available services. After the delay time expires, no requests are sent to the service, and the service is marked as unavailable (OUT OF SERVICE).
+* `dnsprofilename` - Name of the DNS profile to be associated with the service. DNS profile properties will applied to the transactions processed by a service. This parameter is valid only for ADNS, ADNS-TCP and ADNS-DOT services.
+* `downstateflush` - Flush all active transactions associated with a service whose state transitions from UP to DOWN. Do not enable this option for applications that must complete their transactions.
+* `graceful` - Shut down gracefully, not accepting any new connections, and disabling the service when all of its connections are closed.
+* `hashid` - A numerical identifier that can be used by hash based load balancing methods. Must be unique for each service.
+* `healthmonitor` - Monitor the health of this service. Available settings function as follows: YES - Send probes to check the health of the service. NO - Do not send probes to check the health of the service. With the NO option, the appliance shows the service as UP at all times.
+* `httpprofilename` - Name of the HTTP profile that contains HTTP configuration settings for the service.
+* `maxbandwidth` - Maximum bandwidth, in Kbps, allocated to the service.
+* `mcpprofilename` - Name of MCP profile which will be attached to the service.
+* `monconnectionclose` - Close monitoring connections by sending the service a connection termination message with the specified bit set.
+* `monitornamesvc` - Name of the monitor bound to the specified service.
+* `monthreshold` - Minimum sum of weights of the monitors that are bound to this service. Used to determine whether to mark a service as UP or DOWN.
+* `netprofile` - Network profile to use for the service.
+* `riseapbrstatsmsgcode` - The code indicating the rise apbr status.
+* `pathmonitor` - Path monitoring for clustering
+* `pathmonitorindv` - Individual Path monitoring decisions
+* `processlocal` - By turning on this option packets destined to a service in a cluster will not under go any steering. Turn this option for single packet request response mode or when the upstream device is performing a proper RSS for connection based distribution.
+* `quicprofilename` - Name of QUIC profile which will be attached to the service.
+* `rtspsessionidremap` - Enable RTSP session ID mapping for the service.
+* `serverid` - The  identifier for the service. This is used when the persistency type is set to Custom Server ID.
+* `tcpb` - Enable TCP buffering for the service.
+* `tcpprofilename` - Name of the TCP profile that contains TCP configuration settings for the service.
+* `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
+* `wasmmodule` - Name of the WASM module to bind to this service.
+* `weight` - Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter.
+* `snienable` - State of the Server Name Indication (SNI) feature on the service (SSL services only).
+* `commonname` - Name to be checked against the CommonName (CN) field in the server certificate bound to the SSL service.

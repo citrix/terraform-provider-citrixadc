@@ -78,6 +78,7 @@ In addition to the arguments, the following attributes are available:
 * `tls13` - State of TLSv1.3 protocol support for the SSL Virtual Server.
 * `tls13sessionticketsperauthcontext` - Number of tickets the SSL Virtual Server will issue anytime TLS 1.3 is negotiated, ticket-based resumption is enabled, and either (1) a handshake completes or (2) post-handhsake client auth completes. This value can be increased to enable clients to open multiple parallel connections using a fresh ticket for each connection. No tickets are sent if resumption is disabled.
 * `zerorttearlydata` - State of TLS 1.3 0-RTT early data support for the SSL Virtual Server. This setting only has an effect if resumption is enabled, as early data cannot be sent along with an initial handshake. Early application data has significantly different security properties - in particular there is no guarantee that the data cannot be replayed.
+* `strictclientekucheck` - Enable strict EKU extension check during client authentication.
 
 ### Read-only sslvserver metadata
 

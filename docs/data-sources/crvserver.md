@@ -82,6 +82,7 @@ In addition to the arguments, the following attributes are available:
 * `useportrange` - Use a port number from the port range as the source port in the requests sent to the origin server.
 * `via` - Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server.
 * `id` - The id of the crvserver. It has the same value as the `name` attribute.
+* `wasmmodule` - Name of the WASM module to assign to this virtual server.
 
 ### Read-only crvserver metadata
 

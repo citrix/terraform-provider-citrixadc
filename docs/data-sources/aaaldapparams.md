@@ -52,6 +52,7 @@ The following attributes are available:
 * `groupsearchfilter` - String to be combined with the default LDAP group search string to form the value to use when executing an LDAP search.
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 * `id` - The id of the aaaldapparams. It is a system-generated identifier.
+* `ldapbinddnpassword` - Password for binding to the LDAP server.
 
 ### Read-only aaaldapparams metadata
 

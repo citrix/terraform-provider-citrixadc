@@ -29,3 +29,4 @@ In addition to the argument, the following attributes are exported:
 * `googlecustomerid` - Your organization's unique ID on Google's Admin console Profile settings.
 * `googlesecuritygatewayid` - The ID of the Google Secure Gateway.
 * `forceclienttype` - Automatically configures the session for Citrix Secure Access client connectivity.
+* `sharedsecret` - Secure Private Access Shared Secret.

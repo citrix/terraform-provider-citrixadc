@@ -37,3 +37,4 @@ In addition to the argument, the following attributes are exported:
 * `reqtimeoutaction` - Name of the action to perform if the Vserver/Server representing the remote service does not respond with any response within the timeout value configured.
 * `uri` - URI representing icap service. It is a mandatory argument while creating an icapprofile.
 * `useragent` - ICAP User Agent Header String.
+* `inspecthttp2` - Enable or Disable ICAP inspection for HTTP/2 traffic.

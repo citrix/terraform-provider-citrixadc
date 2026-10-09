@@ -125,3 +125,5 @@ In addition to the arguments, the following attributes are available:
 * `signassertion` - Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed. Possible values: [ NONE, ASSERTION, RESPONSE, BOTH ]
 * `signaturealg` - Algorithm to be used to sign/verify SAML transactions. Possible values: [ RSA-SHA1, RSA-SHA256 ]
 * `skewtime` - This option specifies the allowed clock skew in number of minutes that Citrix ADC ServiceProvider allows on an incoming assertion. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
+* `samlspcertname` - Name of the SSL certificate of peer/receving party using which Assertion is encrypted.
+* `signatureservice` - Name of the service in cloud used to sign the data
