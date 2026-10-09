@@ -63,6 +63,14 @@ The following attributes are available:
 * `snienable` - State of TLS Server Name Indication (SNI) processing on the virtual server. If SNI is enabled on a virtual server, a domain name (FQDN) can be associated with that virtual server for performing SNI-based certificate selections or to reject requests with an invalid SNI.
 * `ssllogprofile` - The name of the ssllogprofile.
 * `id` - The id of the sslaction. It is a system-generated identifier.
+* `alpnhttp2` - This option is used to enable or disable the HTTP/2 application protocol based on policy evaluation performed during ClientHello handshake message processing.
+* `cipherheader` - Name of the header into which to insert the name of the cipher suite.
+* `inhandshakeclientauth` - This option dynamically enables client authentication for the specific SSL connection based on policy evaluation performed during ClientHello handshake message processing. It overrides the clientAuth setting configured on the SSL virtual server or the SSL frontend profile.
+* `inhandshakeclientcertverification` - Specifies the type of client authentication and is applicable only when inHandshakeClientAuth is ENABLED. If set to MANDATORY, the appliance terminates the SSL handshake when the client fails to present a valid certificate. If set to OPTIONAL, the appliance requests a client certificate but continues the SSL transaction even if the certificate is missing or invalid. Default value is MANDATORY.
+* `ocspcache` - Enable cache of OCSP response. Caching of response received from the OCSP responder enables faster response to the client and reduces the load on the OCSP responder.
+* `ocspcertvalidation` - This option is used to check the revocation status of client/server certificate in SSL handshake using OCSP.
+* `ocspstapling` - This option is used to enable ocspStapling parameter for the SSL connection.
+* `sessionidheader` - Name of the header into which to insert the Session ID.
 
 ### Read-only sslaction metadata
 

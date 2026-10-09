@@ -44,6 +44,7 @@ In addition to the arguments, the following attributes are available:
 * `subscrport` - Port of the LSN subscriber for the LSN mapping entry. * represents all ports being used. Used in case of static wildcard
 * `td` - ID of the traffic domain to which the subscriber belongs. If you do not specify an ID, the subscriber is assumed to be a part of the default traffic domain.
 * `transportprotocol` - Protocol for the LSN mapping entry.
+* `nattype` - Type of sessions to be displayed.
 
 ### Read-only lsnstatic metadata
 

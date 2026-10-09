@@ -37,6 +37,8 @@ In addition to the arguments, the following attributes are available:
 * `deviceprofilename` - Device profile created on ADM that contains the user name and password of the instance(s).
 * `activationcode` - Activation code used to register to the ADM service.
 * `validatecert` - Validate the server certificate for secure SSL connections.
+* `adcpassword` - ADC password used to create device profile on ADM
+* `password` - Password for access to central management server. Required for any user account.
 
 ### Read-only nscentralmanagementserver metadata
 

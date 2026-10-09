@@ -44,6 +44,7 @@ The following attributes are available:
 * `username` - Username to authenticate with ADM Agent for LAS licensing. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `vcpu` - Licensed using vcpu pool.
 * `id` - The id of the nscapacity. It is a system-generated identifier.
+* `ignoreexpiry` - Value to mention if days to expire data needs to be fetched or not.
 
 ### Read-only nscapacity metadata
 

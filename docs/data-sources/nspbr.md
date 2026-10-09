@@ -67,6 +67,10 @@ In addition to the arguments, the following attributes are available:
 * `vxlan` - ID of the VXLAN. The Citrix ADC compares the PBR only to the outgoing packets on the specified VXLAN. If you do not specify any interface ID, the appliance compares the PBR to the outgoing packets on all VXLANs.
 * `vxlanvlanmap` - The vlan to vxlan mapping to be applied for incoming packets over this pbr tunnel.
 * `id` - The id of the nspbr. It has the same value as the `name` attribute.
+* `destipdataset` - Policy dataset which can have multiple IP ranges bound to it.
+* `destportdataset` - Policy dataset which can have multiple port ranges bound to it.
+* `srcipdataset` - Policy dataset which can have multiple IP ranges bound to it.
+* `srcportdataset` - Policy dataset which can have multiple port ranges bound to it.
 
 ### Read-only nspbr metadata
 

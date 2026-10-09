@@ -36,6 +36,7 @@ In addition to the arguments, the following attributes are available:
 * `serverurl` - Fully qualified URL of the ADFS server.
 * `username` - Name of an account in the directory that is used to authenticate the trust request from the Citrix ADC acting as a proxy.
 * `id` - The id of the authenticationadfsproxyprofile. It has the same value as the `name` attribute.
+* `password` - This is the password of an account in directory that would be used to authenticate trust request from ADC acting as a proxy.
 
 ### Read-only authenticationadfsproxyprofile metadata
 

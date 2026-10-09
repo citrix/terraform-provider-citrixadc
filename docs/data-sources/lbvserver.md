@@ -182,3 +182,12 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `backupvserverstatus` - Status of the backup vserver.
 * `nodefaultbindings` - Whether the configuration will have default SSL CIPHER and ECC curve bindings.
 * `currentactiveorder` - Current order that takes the traffic when a service or servicegroup is bound with order.
+* `aigwprofilename` - Name of the AIGW frontend profile. For the LB vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add lb vserver, it cannot be unset.
+* `mcpprofilename` - Name of the MCP profile to attach to this lb vserver. Enables MCP protocol processing.
+* `wasmmodule` - Name of the WASM module to assign to this virtual server.
+* `sslcertkey` - Name of the SSL certificate-key pair bound to the (SSL) load balancing virtual server.
+* `snisslcertkeys` - Names of the SNI SSL certificate-key pairs bound to the (SSL) load balancing virtual server.
+* `sslprofile` - Name of the SSL profile bound to the (SSL) load balancing virtual server.
+* `ciphers` - Cipher alias names bound to the (SSL) load balancing virtual server.
+* `ciphersuites` - Individual cipher suite names bound to the (SSL) load balancing virtual server.
+* `sslpolicybinding` - SSL policies bound to the (SSL) load balancing virtual server.

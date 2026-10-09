@@ -77,6 +77,8 @@ In addition to the arguments, the following attributes are available:
 * `viewname` - Name of the DNS view of the service. A DNS view is used in global server load balancing (GSLB) to return a predetermined IP address to a specific group of clients, which are identified by using a DNS policy.
 * `weight` - Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
 * `id` - The id of the gslbservice. It has the same value as the `servicename` attribute.
+* `delay` - The time, in seconds, after which the GSLB service is disabled when disabling with -delay.
+* `monitornamesvc` - Name of the monitor to bind to the service.
 
 ### Read-only gslbservice metadata
 

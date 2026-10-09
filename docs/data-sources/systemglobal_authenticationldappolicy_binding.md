@@ -36,3 +36,4 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the systemglobal_authenticationldappolicy_binding. It has the same value as the `policyname` attribute.
 * `nextfactor` - On success invoke label. Applicable for advanced authentication policy binding.
 * `priority` - The priority of the command policy.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type.

@@ -80,6 +80,9 @@ In addition to the arguments, the following attributes are available:
 * `tcpmaxretries` - Maximum number of retries for TCP.
 * `ws` - Enable or disable window scaling.
 * `wsval` - Window scaling factor.
+* `maxsynholdperprobe` - Limit the number of client connections (SYN) waiting for status of single probe. Any new SYN packets will be dropped.
+* `recvbuffsize` - TCP Receive buffer size
+* `sendresetreasoncode` - If enabled, NetScaler includes a debug code indicating the reason for the reset in the TCP Window header field of outgoing TCP RST segments.
 
 ### Read-only nstcpparam metadata
 

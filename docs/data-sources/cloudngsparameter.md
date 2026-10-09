@@ -36,3 +36,4 @@ The following attributes are available:
 * `csvserverticketingdecouple` - Whether decoupling the content-switching virtual server (CSVSERVER) state from the ticketing service state is enabled. Possible values: [ YES, NO ]
 * `allowdtls12` - Whether DTLS 1.2 for client connections on CGS is enabled. Possible values: [ YES, NO ]
 * `id` - The id of the cloudngsparameter. It is set to `cloudngsparameter-config`.
+* `wafprotection` - Configure WAF protection for CGS deployment. The available options are:

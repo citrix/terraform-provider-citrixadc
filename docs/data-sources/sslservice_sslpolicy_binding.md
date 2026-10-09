@@ -39,6 +39,7 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - Invoke flag. This attribute is relevant only for ADVANCED policies.
 * `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation.
+* `type` - The phase of the SSL connection in which the policy rule is evaluated.
 
 ### Read-only sslservice_sslpolicy_binding metadata
 

@@ -48,6 +48,7 @@ In addition to the arguments, the following attributes are available:
 * `servicetype` - Protocol type of the authentication virtual server. Always SSL.
 * `state` - Initial state of the new virtual server.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
+* `wasmmodule` - Name of the WASM module to assign to this virtual server.
 
 ### Read-only authenticationvserver metadata
 

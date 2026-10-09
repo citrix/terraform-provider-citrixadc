@@ -111,3 +111,11 @@ These attributes are returned by the appliance on a GET (they are not configurab
 * `feature` - The feature to be checked while applying this config.
 * `sslpfobjecttype` - Internal flag to indicate what type of object binds this profile: monitor or service.
 * `ssliverifyservercertforreuse` - Verify the origin server's certificate before reusing the front-end SSL session.
+* `allowlegacykdf` - FIPS 140-3 certification requires all handshakes without EMS be blocked. Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs when needed. This setting applies to both frontend and backend SSL profiles.
+* `cipherbindings` - Set of cipher bindings bound to the SSL profile.
+* `dynamicclientcert` - Enable or disable Dynamic Client Certificate Generation for SSL sessions.
+* `ecccurvebindings` - Set of ECC curve names bound to the SSL profile.
+* `nodefaultbindings` - Control default bindings for the SSL profile.
+* `nodefaultcipherbindings` - When set to true, removes the default cipher bindings from the SSL profile.
+* `nodefaultecccurvebindings` - When set to true, removes the default ECC curve bindings from the SSL profile.
+* `strictclientekucheck` - Enable strict EKU extension check during client authentication.

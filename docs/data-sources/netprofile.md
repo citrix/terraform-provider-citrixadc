@@ -41,6 +41,7 @@ In addition to the arguments, the following attributes are available:
 * `srcippersistency` - When the net profile is associated with a virtual server or its bound services, this option enables the Citrix ADC to use the same address, specified in the net profile, to communicate to servers for all sessions initiated from a particular client to the virtual server.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 * `id` - The id of the netprofile. It has the same value as the `name` attribute.
+* `badipactionthreshold` - Number of protocol violation from an IP address before taking action. Default value: 0 Minimum value =  0 Maximum value =  100000
 
 ### Read-only netprofile metadata
 

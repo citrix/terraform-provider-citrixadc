@@ -101,6 +101,14 @@ In addition to the arguments, the following attributes are available:
 * `windowspluginupgrade` - Option to set plugin upgrade behaviour for Win
 * `winsip` - WINS server IP address to add to Citrix Gateway for name resolution.
 * `wiportalmode` - Layout on the Access Interface. Possible values: [ NORMAL, COMPACT ]
+* `fqdnspoofedip` - Spoofed IP address range that can be used by client for FQDN based split tunneling
+* `httpproxy` - IP address of the proxy server to be used for HTTP access for all subsequent connections to the internal network.
+* `killconnections` - Specify whether the Citrix Gateway Plug-in should disconnect all preexisting connections, such as the connections existing before the user logged on to Citrix Gateway, and prevent new incoming connections on the Citrix Gateway Plug-in for Windows and MAC when the user is connected to Citrix Gateway and split tunneling is disabled.
+* `securebrowse` - Allow users to connect through Citrix Gateway to network resources from iOS and Android mobile devices with Citrix Receiver. Users do not need to establish a full VPN tunnel to access resources in the secure network.
+* `sfgatewayauthtype` - The authentication type configured for the Citrix Gateway on StoreFront.
+* `socksproxy` - IP address of the proxy server to be used for SOCKS access for all subsequent connections to the internal network.
+* `spoofiip` - IP address that the intranet application uses to route the connection through the virtual adapter.
+* `sslproxy` - IP address of the proxy server to be used for SSL access for all subsequent connections to the internal network.
 
 ### Read-only vpnsessionaction metadata
 
