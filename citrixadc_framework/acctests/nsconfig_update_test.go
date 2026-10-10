@@ -116,6 +116,91 @@ func TestAccNsconfigUpdate_basic(t *testing.T) {
 	})
 }
 
+// Step 1 sets three behavioral params to NON-default values; step 2 removes them
+// so the provider issues ?action=unset and the appliance restores the defaults.
+// ipaddress/netmask are pinned to the box's own values in both steps (safe no-op).
+// The %s placeholders are the NS_URL host and the box's netmask.
+const testAccNsconfigUpdate_unset_step1 = `
+	resource "citrixadc_nsconfig_update" "unset" {
+		ipaddress = "%s"
+		netmask   = "%s"
+
+		pmtutimeout         = 20
+		grantquotamaxclient = 20
+		securecookie        = "DISABLED"
+	}
+`
+
+const testAccNsconfigUpdate_unset_step2 = `
+	resource "citrixadc_nsconfig_update" "unset" {
+		ipaddress = "%s"
+		netmask   = "%s"
+	}
+`
+
+func TestAccNsconfigUpdate_unsetOnRemove(t *testing.T) {
+	ipaddress, netmask := nsconfigSelfIPNetmask(t)
+	step1 := fmt.Sprintf(testAccNsconfigUpdate_unset_step1, ipaddress, netmask)
+	step2 := fmt.Sprintf(testAccNsconfigUpdate_unset_step2, ipaddress, netmask)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Set the three behavioral params to non-default values.
+				Config: step1,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.unset", "pmtutimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.unset", "grantquotamaxclient", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.unset", "securecookie", "DISABLED"),
+					testAccCheckNsconfigAdcValues(map[string]string{
+						"pmtutimeout":         "20",
+						"grantquotamaxclient": "20",
+						"securecookie":        "DISABLED",
+					}),
+				),
+			},
+			{
+				// Remove them from config -> provider unsets them -> appliance
+				// defaults restored.
+				Config: step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsconfigAdcValues(map[string]string{
+						"pmtutimeout":         "10",
+						"grantquotamaxclient": "10",
+						"securecookie":        "ENABLED",
+					}),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsconfigAdcValues reads the live nsconfig and asserts the given
+// attribute -> expected-value pairs.
+func testAccCheckNsconfigAdcValues(want map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Error creating client for nsconfig read-back: %s", err.Error())
+		}
+		data, err := client.FindResource(service.Nsconfig.Type(), "")
+		if err != nil {
+			return fmt.Errorf("Error reading nsconfig from ADC: %s", err.Error())
+		}
+		for attr, exp := range want {
+			got, ok := data[attr]
+			if !ok {
+				return fmt.Errorf("nsconfig %s missing from ADC response", attr)
+			}
+			if fmt.Sprintf("%v", got) != exp {
+				return fmt.Errorf("nsconfig %s: want %s, adc reports %v", attr, exp, got)
+			}
+		}
+		return nil
+	}
+}
+
 func testAccCheckNsconfigUpdateExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
