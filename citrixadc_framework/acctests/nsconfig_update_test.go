@@ -17,6 +17,8 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
+	"os"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -25,30 +27,89 @@ import (
 )
 
 // DANGER: citrixadc_nsconfig_update issues `set ns config`, which changes the
-// appliance NSIP/netmask. This test is SAFE ONLY because ipaddress/netmask are
-// set to the running box's OWN current NSIP/netmask, making the `set ns config`
-// an effective no-op that CANNOT disconnect the box. It must be run ONLY against
-// the designated disposable box whose current NSIP is 10.101.132.152
-// (NS_URL=http://10.101.132.152/). nsvlan/ifnum/tagged are intentionally omitted
-// so the management data path is never disturbed.
+// appliance NSIP/netmask. This test is SAFE ONLY because every settable param is
+// pinned to the running box's OWN current value, making the `set ns config` an
+// effective no-op that CANNOT disconnect the box. `ipaddress` is derived from the
+// NS_URL supplied to the acceptance run and `netmask` is read from the live box,
+// so the test is portable to whichever standalone box NS_URL points at (rather
+// than being hardcoded to one appliance). nsvlan/ifnum/tagged are intentionally
+// omitted so the management data path is never disturbed, and httpport/cipheader/
+// ftpportrange/crportrange are omitted because they are unset on the box (setting
+// them would not be a no-op). The remaining attributes below exercise the new
+// attribute code paths end to end while remaining non-disruptive.
+//
+// The two %s placeholders are filled with the NS_URL host (ipaddress) and the
+// box's current netmask at test time.
 const testAccNsconfigUpdate_basic = `
 	resource "citrixadc_nsconfig_update" "foo" {
-		ipaddress = "10.101.132.152"
-		netmask   = "255.255.255.0"
+		ipaddress = "%s"
+		netmask   = "%s"
+
+		maxconn                 = 0
+		maxreq                  = 0
+		cip                     = "DISABLED"
+		cookieversion           = "0"
+		securecookie            = "ENABLED"
+		pmtumin                 = 576
+		pmtutimeout             = 10
+		timezone                = "CoordinatedUniversalTime"
+		grantquotamaxclient     = 10
+		exclusivequotamaxclient = 80
+		grantquotaspillover     = 10
+		exclusivequotaspillover = 80
+		securemanagementtraffic = "DISABLED"
+		securemanagementtd      = 0
 	}
 `
 
+// nsconfigSelfIPNetmask returns the appliance's own NSIP (parsed from NS_URL) and
+// its current netmask (read from the live box). On non-acceptance/unit runs where
+// NS_URL is unset, it returns placeholders; resource.Test skips the test anyway.
+func nsconfigSelfIPNetmask(t *testing.T) (string, string) {
+	t.Helper()
+	u, err := url.Parse(os.Getenv("NS_URL"))
+	if err != nil || u.Hostname() == "" {
+		return "127.0.0.1", "255.255.255.0"
+	}
+	ipaddress := u.Hostname()
+	netmask := "255.255.255.0"
+	if client, cerr := testAccGetFrameworkClient(); cerr == nil {
+		if data, derr := client.FindResource(service.Nsconfig.Type(), ""); derr == nil {
+			if v, ok := data["netmask"]; ok {
+				netmask = fmt.Sprintf("%v", v)
+			}
+		}
+	}
+	return ipaddress, netmask
+}
+
 func TestAccNsconfigUpdate_basic(t *testing.T) {
+	ipaddress, netmask := nsconfigSelfIPNetmask(t)
+	config := fmt.Sprintf(testAccNsconfigUpdate_basic, ipaddress, netmask)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNsconfigUpdate_basic,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsconfigUpdateExist("citrixadc_nsconfig_update.foo", nil),
-					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "ipaddress", "10.101.132.152"),
-					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "netmask", "255.255.255.0"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "ipaddress", ipaddress),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "netmask", netmask),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "maxconn", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "maxreq", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "cip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "cookieversion", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "securecookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "pmtumin", "576"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "pmtutimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "timezone", "CoordinatedUniversalTime"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "grantquotamaxclient", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "exclusivequotamaxclient", "80"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "grantquotaspillover", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "exclusivequotaspillover", "80"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "securemanagementtraffic", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsconfig_update.foo", "securemanagementtd", "0"),
 				),
 			},
 		},
@@ -95,6 +156,22 @@ func testAccCheckNsconfigUpdateExist(n string, id *string) resource.TestCheckFun
 		if got, ok := data["netmask"]; ok && wantNetmask != "" {
 			if fmt.Sprintf("%v", got) != wantNetmask {
 				return fmt.Errorf("nsconfig netmask mismatch: state=%s adc=%v", wantNetmask, got)
+			}
+		}
+
+		// Cross-check a representative sample of the newly added settable params
+		// against what the appliance reports, confirming they round-trip.
+		for _, attr := range []string{
+			"maxconn", "maxreq", "cip", "cookieversion", "securecookie",
+			"pmtumin", "pmtutimeout", "timezone", "grantquotamaxclient",
+			"exclusivequotamaxclient", "grantquotaspillover",
+			"exclusivequotaspillover", "securemanagementtraffic", "securemanagementtd",
+		} {
+			want := rs.Primary.Attributes[attr]
+			if got, ok := data[attr]; ok && want != "" {
+				if fmt.Sprintf("%v", got) != want {
+					return fmt.Errorf("nsconfig %s mismatch: state=%s adc=%v", attr, want, got)
+				}
 			}
 		}
 		return nil
