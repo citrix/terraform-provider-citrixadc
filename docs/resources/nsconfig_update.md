@@ -44,6 +44,21 @@ resource "citrixadc_nsconfig_update" "tf_nsupdate" {
 * `securemanagementtd` - (Optional) Positive integer that identifies the Management traffic domain. If not specified, defaults to 4094.
 
 
+### Resetting a parameter (unset)
+
+Removing one of the following parameters from the configuration resets it to its
+appliance default on the next apply (NITRO `unset ns config`):
+`maxconn`, `maxreq`, `cip`, `cipheader`, `cookieversion`, `securecookie`,
+`pmtumin`, `pmtutimeout`, `ftpportrange`, `crportrange`, `timezone`,
+`grantquotamaxclient`, `exclusivequotamaxclient`, `grantquotaspillover`,
+`exclusivequotaspillover`, `securemanagementtraffic`.
+
+The addressing/connectivity parameters (`ipaddress`, `netmask`, `nsvlan`, `ifnum`,
+`tagged`), `httpport`, and `securemanagementtd` are **set-only**: removing them from
+the configuration leaves the appliance value unchanged (they are never auto-reset,
+to avoid disrupting management connectivity).
+
+
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:

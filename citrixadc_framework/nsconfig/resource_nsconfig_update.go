@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -106,83 +107,131 @@ func (r *NsconfigUpdateResource) Schema(ctx context.Context, req resource.Schema
 				Description: "The HTTP ports on the Web server. Allows the system to perform connection off-load for any client request whose destination port matches one of these configured ports.",
 			},
 			"maxconn": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 0},
+				},
 				Description: "The maximum number of connections that will be made from the system to the web server(s) attached to it. Applied globally to all attached servers.",
 			},
 			"maxreq": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 0},
+				},
 				Description: "The maximum number of requests that the system can pass on a particular connection between the system and a server. Setting this value to 0 allows an unlimited number of requests.",
 			},
 			"cip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Control (enable or disable) the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers. Possible values: [ ENABLED, DISABLED ]",
 			},
 			"cipheader": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: ""},
+				},
 				Description: "The text that will be used as the client IP header.",
 			},
 			"cookieversion": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "0"},
+				},
 				Description: "The version of the cookie inserted by the system. Possible values: [ 0, 1 ]",
 			},
 			"securecookie": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "ENABLED"},
+				},
 				Description: "Enable or disable the secure flag for the persistence cookie. Possible values: [ ENABLED, DISABLED ]",
 			},
 			"pmtumin": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 576},
+				},
 				Description: "The minimum Path MTU.",
 			},
 			"pmtutimeout": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 10},
+				},
 				Description: "The Path MTU timeout value in minutes.",
 			},
 			"ftpportrange": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: ""},
+				},
 				Description: "Port range configured for FTP services.",
 			},
 			"crportrange": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: ""},
+				},
 				Description: "Port range for cache redirection services.",
 			},
 			"timezone": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "CoordinatedUniversalTime"},
+				},
 				Description: "Name of the timezone.",
 			},
 			"grantquotamaxclient": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 10},
+				},
 				Description: "The percentage of shared quota to be granted at a time for maxClient.",
 			},
 			"exclusivequotamaxclient": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 80},
+				},
 				Description: "The percentage of maxClient to be given to PEs.",
 			},
 			"grantquotaspillover": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 10},
+				},
 				Description: "The percentage of shared quota to be granted at a time for spillover.",
 			},
 			"exclusivequotaspillover": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 80},
+				},
 				Description: "The percentage of spillover threshold to be given to PEs.",
 			},
 			"securemanagementtraffic": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Enable secure management traffic handling. Possible values: [ ENABLED, DISABLED ]",
 			},
 			"securemanagementtd": schema.Int64Attribute{
@@ -320,9 +369,10 @@ func (r *NsconfigUpdateResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *NsconfigUpdateResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsconfigUpdateResourceModel
+	var data, state, config NsconfigUpdateResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -331,6 +381,14 @@ func (r *NsconfigUpdateResource) Update(ctx context.Context, req resource.Update
 	tflog.Debug(ctx, "Updating nsconfig_update resource")
 
 	hasChange := false
+	// Behavioral parameters removed from config are reset to their appliance
+	// default via a single batched ?action=unset (see the UnsetOnRemoveOrKeepDefault
+	// plan modifiers on these attributes). The addressing/connectivity parameters
+	// (ipaddress/netmask/nsvlan/ifnum/tagged), httpport, and securemanagementtd are
+	// set-only: they are never auto-unset.
+	attributesToUnset := []string{}
+
+	// --- set-only parameters ---
 	if !data.Ipaddress.Equal(state.Ipaddress) {
 		hasChange = true
 	}
@@ -349,56 +407,122 @@ func (r *NsconfigUpdateResource) Update(ctx context.Context, req resource.Update
 	if !data.Httpport.Equal(state.Httpport) {
 		hasChange = true
 	}
-	if !data.Maxconn.Equal(state.Maxconn) {
-		hasChange = true
-	}
-	if !data.Maxreq.Equal(state.Maxreq) {
-		hasChange = true
-	}
-	if !data.Cip.Equal(state.Cip) {
-		hasChange = true
-	}
-	if !data.Cipheader.Equal(state.Cipheader) {
-		hasChange = true
-	}
-	if !data.Cookieversion.Equal(state.Cookieversion) {
-		hasChange = true
-	}
-	if !data.Securecookie.Equal(state.Securecookie) {
-		hasChange = true
-	}
-	if !data.Pmtumin.Equal(state.Pmtumin) {
-		hasChange = true
-	}
-	if !data.Pmtutimeout.Equal(state.Pmtutimeout) {
-		hasChange = true
-	}
-	if !data.Ftpportrange.Equal(state.Ftpportrange) {
-		hasChange = true
-	}
-	if !data.Crportrange.Equal(state.Crportrange) {
-		hasChange = true
-	}
-	if !data.Timezone.Equal(state.Timezone) {
-		hasChange = true
-	}
-	if !data.Grantquotamaxclient.Equal(state.Grantquotamaxclient) {
-		hasChange = true
-	}
-	if !data.Exclusivequotamaxclient.Equal(state.Exclusivequotamaxclient) {
-		hasChange = true
-	}
-	if !data.Grantquotaspillover.Equal(state.Grantquotaspillover) {
-		hasChange = true
-	}
-	if !data.Exclusivequotaspillover.Equal(state.Exclusivequotaspillover) {
-		hasChange = true
-	}
-	if !data.Securemanagementtraffic.Equal(state.Securemanagementtraffic) {
-		hasChange = true
-	}
 	if !data.Securemanagementtd.Equal(state.Securemanagementtd) {
 		hasChange = true
+	}
+
+	// --- behavioral parameters (unset on removal) ---
+	if !data.Maxconn.Equal(state.Maxconn) {
+		if config.Maxconn.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxconn")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxreq.Equal(state.Maxreq) {
+		if config.Maxreq.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxreq")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cip.Equal(state.Cip) {
+		if config.Cip.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cip")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cipheader.Equal(state.Cipheader) {
+		if config.Cipheader.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cipheader")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cookieversion.Equal(state.Cookieversion) {
+		if config.Cookieversion.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cookieversion")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Securecookie.Equal(state.Securecookie) {
+		if config.Securecookie.IsNull() {
+			attributesToUnset = append(attributesToUnset, "securecookie")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Pmtumin.Equal(state.Pmtumin) {
+		if config.Pmtumin.IsNull() {
+			attributesToUnset = append(attributesToUnset, "pmtumin")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Pmtutimeout.Equal(state.Pmtutimeout) {
+		if config.Pmtutimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "pmtutimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ftpportrange.Equal(state.Ftpportrange) {
+		if config.Ftpportrange.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ftpportrange")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Crportrange.Equal(state.Crportrange) {
+		if config.Crportrange.IsNull() {
+			attributesToUnset = append(attributesToUnset, "crportrange")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Timezone.Equal(state.Timezone) {
+		if config.Timezone.IsNull() {
+			attributesToUnset = append(attributesToUnset, "timezone")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Grantquotamaxclient.Equal(state.Grantquotamaxclient) {
+		if config.Grantquotamaxclient.IsNull() {
+			attributesToUnset = append(attributesToUnset, "grantquotamaxclient")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Exclusivequotamaxclient.Equal(state.Exclusivequotamaxclient) {
+		if config.Exclusivequotamaxclient.IsNull() {
+			attributesToUnset = append(attributesToUnset, "exclusivequotamaxclient")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Grantquotaspillover.Equal(state.Grantquotaspillover) {
+		if config.Grantquotaspillover.IsNull() {
+			attributesToUnset = append(attributesToUnset, "grantquotaspillover")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Exclusivequotaspillover.Equal(state.Exclusivequotaspillover) {
+		if config.Exclusivequotaspillover.IsNull() {
+			attributesToUnset = append(attributesToUnset, "exclusivequotaspillover")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Securemanagementtraffic.Equal(state.Securemanagementtraffic) {
+		if config.Securemanagementtraffic.IsNull() {
+			attributesToUnset = append(attributesToUnset, "securemanagementtraffic")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -409,6 +533,12 @@ func (r *NsconfigUpdateResource) Update(ctx context.Context, req resource.Update
 		}
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsconfig_update resource, skipping update")
+	}
+
+	// Reset behavioral parameters removed from config to their appliance defaults.
+	if err := utils.ExecuteUnset(r.client, service.Nsconfig.Type(), map[string]interface{}{}, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ns config attributes, got error: %s", err))
+		return
 	}
 
 	r.readFromApi(ctx, &data, &resp.Diagnostics)

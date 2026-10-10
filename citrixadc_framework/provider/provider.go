@@ -2257,7 +2257,6 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		nsconfig.NewNsconfigClearResource,
 		nsconfig.NewNsconfigSaveResource,
 		nsconfig.NewNsconfigUpdateResource,
-		nsconfig.NewNsconfigUnsetResource,
 		rnat.NewRnatClearResource,
 		systembackup.NewSystembackupCreateResource,
 		systembackup.NewSystembackupRestoreResource,
