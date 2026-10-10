@@ -36,12 +36,30 @@ type NsconfigUpdateResource struct {
 // settable nsconfig params via the NITRO `set ns config` (PUT) call and reads them
 // back. The ID is a synthetic constant since nsconfig is an unnamed singleton.
 type NsconfigUpdateResourceModel struct {
-	Id        types.String `tfsdk:"id"`
-	Ipaddress types.String `tfsdk:"ipaddress"`
-	Netmask   types.String `tfsdk:"netmask"`
-	Nsvlan    types.Int64  `tfsdk:"nsvlan"`
-	Ifnum     types.Set    `tfsdk:"ifnum"`
-	Tagged    types.String `tfsdk:"tagged"`
+	Id                      types.String `tfsdk:"id"`
+	Ipaddress               types.String `tfsdk:"ipaddress"`
+	Netmask                 types.String `tfsdk:"netmask"`
+	Nsvlan                  types.Int64  `tfsdk:"nsvlan"`
+	Ifnum                   types.Set    `tfsdk:"ifnum"`
+	Tagged                  types.String `tfsdk:"tagged"`
+	Httpport                types.Set    `tfsdk:"httpport"`
+	Maxconn                 types.Int64  `tfsdk:"maxconn"`
+	Maxreq                  types.Int64  `tfsdk:"maxreq"`
+	Cip                     types.String `tfsdk:"cip"`
+	Cipheader               types.String `tfsdk:"cipheader"`
+	Cookieversion           types.String `tfsdk:"cookieversion"`
+	Securecookie            types.String `tfsdk:"securecookie"`
+	Pmtumin                 types.Int64  `tfsdk:"pmtumin"`
+	Pmtutimeout             types.Int64  `tfsdk:"pmtutimeout"`
+	Ftpportrange            types.String `tfsdk:"ftpportrange"`
+	Crportrange             types.String `tfsdk:"crportrange"`
+	Timezone                types.String `tfsdk:"timezone"`
+	Grantquotamaxclient     types.Int64  `tfsdk:"grantquotamaxclient"`
+	Exclusivequotamaxclient types.Int64  `tfsdk:"exclusivequotamaxclient"`
+	Grantquotaspillover     types.Int64  `tfsdk:"grantquotaspillover"`
+	Exclusivequotaspillover types.Int64  `tfsdk:"exclusivequotaspillover"`
+	Securemanagementtraffic types.String `tfsdk:"securemanagementtraffic"`
+	Securemanagementtd      types.Int64  `tfsdk:"securemanagementtd"`
 }
 
 func (r *NsconfigUpdateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -81,6 +99,97 @@ func (r *NsconfigUpdateResource) Schema(ctx context.Context, req resource.Schema
 				Computed:    true,
 				Description: "Specifies that the interfaces will be added as 802.1q tagged interfaces.",
 			},
+			"httpport": schema.SetAttribute{
+				ElementType: types.Int64Type,
+				Optional:    true,
+				Computed:    true,
+				Description: "The HTTP ports on the Web server. Allows the system to perform connection off-load for any client request whose destination port matches one of these configured ports.",
+			},
+			"maxconn": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The maximum number of connections that will be made from the system to the web server(s) attached to it. Applied globally to all attached servers.",
+			},
+			"maxreq": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The maximum number of requests that the system can pass on a particular connection between the system and a server. Setting this value to 0 allows an unlimited number of requests.",
+			},
+			"cip": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Control (enable or disable) the insertion of the actual client IP address into the HTTP header request passed from the client to one, some, or all servers. Possible values: [ ENABLED, DISABLED ]",
+			},
+			"cipheader": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The text that will be used as the client IP header.",
+			},
+			"cookieversion": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The version of the cookie inserted by the system. Possible values: [ 0, 1 ]",
+			},
+			"securecookie": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable the secure flag for the persistence cookie. Possible values: [ ENABLED, DISABLED ]",
+			},
+			"pmtumin": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The minimum Path MTU.",
+			},
+			"pmtutimeout": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The Path MTU timeout value in minutes.",
+			},
+			"ftpportrange": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Port range configured for FTP services.",
+			},
+			"crportrange": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Port range for cache redirection services.",
+			},
+			"timezone": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the timezone.",
+			},
+			"grantquotamaxclient": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The percentage of shared quota to be granted at a time for maxClient.",
+			},
+			"exclusivequotamaxclient": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The percentage of maxClient to be given to PEs.",
+			},
+			"grantquotaspillover": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The percentage of shared quota to be granted at a time for spillover.",
+			},
+			"exclusivequotaspillover": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The percentage of spillover threshold to be given to PEs.",
+			},
+			"securemanagementtraffic": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable secure management traffic handling. Possible values: [ ENABLED, DISABLED ]",
+			},
+			"securemanagementtd": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Positive integer that identifies the Management traffic domain. If not specified, defaults to 4094.",
+			},
 		},
 	}
 }
@@ -115,6 +224,66 @@ func (r *NsconfigUpdateResource) getPayload(ctx context.Context, data *NsconfigU
 	}
 	if !data.Tagged.IsNull() && !data.Tagged.IsUnknown() {
 		nsconfig.Tagged = data.Tagged.ValueString()
+	}
+	if !data.Httpport.IsNull() && !data.Httpport.IsUnknown() {
+		var httpportList []int64
+		data.Httpport.ElementsAs(ctx, &httpportList, false)
+		httpportInts := make([]int, 0, len(httpportList))
+		for _, v := range httpportList {
+			httpportInts = append(httpportInts, int(v))
+		}
+		nsconfig.Httpport = httpportInts
+	}
+	if !data.Maxconn.IsNull() && !data.Maxconn.IsUnknown() {
+		nsconfig.Maxconn = utils.IntPtr(int(data.Maxconn.ValueInt64()))
+	}
+	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
+		nsconfig.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
+	}
+	if !data.Cip.IsNull() && !data.Cip.IsUnknown() {
+		nsconfig.Cip = data.Cip.ValueString()
+	}
+	if !data.Cipheader.IsNull() && !data.Cipheader.IsUnknown() {
+		nsconfig.Cipheader = data.Cipheader.ValueString()
+	}
+	if !data.Cookieversion.IsNull() && !data.Cookieversion.IsUnknown() {
+		nsconfig.Cookieversion = data.Cookieversion.ValueString()
+	}
+	if !data.Securecookie.IsNull() && !data.Securecookie.IsUnknown() {
+		nsconfig.Securecookie = data.Securecookie.ValueString()
+	}
+	if !data.Pmtumin.IsNull() && !data.Pmtumin.IsUnknown() {
+		nsconfig.Pmtumin = utils.IntPtr(int(data.Pmtumin.ValueInt64()))
+	}
+	if !data.Pmtutimeout.IsNull() && !data.Pmtutimeout.IsUnknown() {
+		nsconfig.Pmtutimeout = utils.IntPtr(int(data.Pmtutimeout.ValueInt64()))
+	}
+	if !data.Ftpportrange.IsNull() && !data.Ftpportrange.IsUnknown() {
+		nsconfig.Ftpportrange = data.Ftpportrange.ValueString()
+	}
+	if !data.Crportrange.IsNull() && !data.Crportrange.IsUnknown() {
+		nsconfig.Crportrange = data.Crportrange.ValueString()
+	}
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
+		nsconfig.Timezone = data.Timezone.ValueString()
+	}
+	if !data.Grantquotamaxclient.IsNull() && !data.Grantquotamaxclient.IsUnknown() {
+		nsconfig.Grantquotamaxclient = utils.IntPtr(int(data.Grantquotamaxclient.ValueInt64()))
+	}
+	if !data.Exclusivequotamaxclient.IsNull() && !data.Exclusivequotamaxclient.IsUnknown() {
+		nsconfig.Exclusivequotamaxclient = utils.IntPtr(int(data.Exclusivequotamaxclient.ValueInt64()))
+	}
+	if !data.Grantquotaspillover.IsNull() && !data.Grantquotaspillover.IsUnknown() {
+		nsconfig.Grantquotaspillover = utils.IntPtr(int(data.Grantquotaspillover.ValueInt64()))
+	}
+	if !data.Exclusivequotaspillover.IsNull() && !data.Exclusivequotaspillover.IsUnknown() {
+		nsconfig.Exclusivequotaspillover = utils.IntPtr(int(data.Exclusivequotaspillover.ValueInt64()))
+	}
+	if !data.Securemanagementtraffic.IsNull() && !data.Securemanagementtraffic.IsUnknown() {
+		nsconfig.Securemanagementtraffic = data.Securemanagementtraffic.ValueString()
+	}
+	if !data.Securemanagementtd.IsNull() && !data.Securemanagementtd.IsUnknown() {
+		nsconfig.Securemanagementtd = utils.IntPtr(int(data.Securemanagementtd.ValueInt64()))
 	}
 	return nsconfig
 }
@@ -175,6 +344,60 @@ func (r *NsconfigUpdateResource) Update(ctx context.Context, req resource.Update
 		hasChange = true
 	}
 	if !data.Tagged.Equal(state.Tagged) {
+		hasChange = true
+	}
+	if !data.Httpport.Equal(state.Httpport) {
+		hasChange = true
+	}
+	if !data.Maxconn.Equal(state.Maxconn) {
+		hasChange = true
+	}
+	if !data.Maxreq.Equal(state.Maxreq) {
+		hasChange = true
+	}
+	if !data.Cip.Equal(state.Cip) {
+		hasChange = true
+	}
+	if !data.Cipheader.Equal(state.Cipheader) {
+		hasChange = true
+	}
+	if !data.Cookieversion.Equal(state.Cookieversion) {
+		hasChange = true
+	}
+	if !data.Securecookie.Equal(state.Securecookie) {
+		hasChange = true
+	}
+	if !data.Pmtumin.Equal(state.Pmtumin) {
+		hasChange = true
+	}
+	if !data.Pmtutimeout.Equal(state.Pmtutimeout) {
+		hasChange = true
+	}
+	if !data.Ftpportrange.Equal(state.Ftpportrange) {
+		hasChange = true
+	}
+	if !data.Crportrange.Equal(state.Crportrange) {
+		hasChange = true
+	}
+	if !data.Timezone.Equal(state.Timezone) {
+		hasChange = true
+	}
+	if !data.Grantquotamaxclient.Equal(state.Grantquotamaxclient) {
+		hasChange = true
+	}
+	if !data.Exclusivequotamaxclient.Equal(state.Exclusivequotamaxclient) {
+		hasChange = true
+	}
+	if !data.Grantquotaspillover.Equal(state.Grantquotaspillover) {
+		hasChange = true
+	}
+	if !data.Exclusivequotaspillover.Equal(state.Exclusivequotaspillover) {
+		hasChange = true
+	}
+	if !data.Securemanagementtraffic.Equal(state.Securemanagementtraffic) {
+		hasChange = true
+	}
+	if !data.Securemanagementtd.Equal(state.Securemanagementtd) {
 		hasChange = true
 	}
 
@@ -239,5 +462,124 @@ func (r *NsconfigUpdateResource) readFromApi(ctx context.Context, data *Nsconfig
 		data.Tagged = types.StringValue(val.(string))
 	} else {
 		data.Tagged = types.StringNull()
+	}
+	if val, ok := getResponseData["httpport"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			var httpportList []int64
+			for _, e := range sliceVal {
+				if iv, cerr := utils.ConvertToInt64(e); cerr == nil {
+					httpportList = append(httpportList, iv)
+				}
+			}
+			setValue, _ := types.SetValueFrom(ctx, types.Int64Type, httpportList)
+			data.Httpport = setValue
+		} else {
+			data.Httpport = types.SetNull(types.Int64Type)
+		}
+	} else {
+		data.Httpport = types.SetNull(types.Int64Type)
+	}
+	if val, ok := getResponseData["maxconn"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Maxconn = types.Int64Value(intVal)
+		}
+	} else {
+		data.Maxconn = types.Int64Null()
+	}
+	if val, ok := getResponseData["maxreq"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Maxreq = types.Int64Value(intVal)
+		}
+	} else {
+		data.Maxreq = types.Int64Null()
+	}
+	if val, ok := getResponseData["cip"]; ok && val != nil {
+		data.Cip = types.StringValue(val.(string))
+	} else {
+		data.Cip = types.StringNull()
+	}
+	if val, ok := getResponseData["cipheader"]; ok && val != nil {
+		data.Cipheader = types.StringValue(val.(string))
+	} else {
+		data.Cipheader = types.StringNull()
+	}
+	if val, ok := getResponseData["cookieversion"]; ok && val != nil {
+		data.Cookieversion = types.StringValue(val.(string))
+	} else {
+		data.Cookieversion = types.StringNull()
+	}
+	if val, ok := getResponseData["securecookie"]; ok && val != nil {
+		data.Securecookie = types.StringValue(val.(string))
+	} else {
+		data.Securecookie = types.StringNull()
+	}
+	if val, ok := getResponseData["pmtumin"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Pmtumin = types.Int64Value(intVal)
+		}
+	} else {
+		data.Pmtumin = types.Int64Null()
+	}
+	if val, ok := getResponseData["pmtutimeout"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Pmtutimeout = types.Int64Value(intVal)
+		}
+	} else {
+		data.Pmtutimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["ftpportrange"]; ok && val != nil {
+		data.Ftpportrange = types.StringValue(val.(string))
+	} else {
+		data.Ftpportrange = types.StringNull()
+	}
+	if val, ok := getResponseData["crportrange"]; ok && val != nil {
+		data.Crportrange = types.StringValue(val.(string))
+	} else {
+		data.Crportrange = types.StringNull()
+	}
+	if val, ok := getResponseData["timezone"]; ok && val != nil {
+		data.Timezone = types.StringValue(val.(string))
+	} else {
+		data.Timezone = types.StringNull()
+	}
+	if val, ok := getResponseData["grantquotamaxclient"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Grantquotamaxclient = types.Int64Value(intVal)
+		}
+	} else {
+		data.Grantquotamaxclient = types.Int64Null()
+	}
+	if val, ok := getResponseData["exclusivequotamaxclient"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Exclusivequotamaxclient = types.Int64Value(intVal)
+		}
+	} else {
+		data.Exclusivequotamaxclient = types.Int64Null()
+	}
+	if val, ok := getResponseData["grantquotaspillover"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Grantquotaspillover = types.Int64Value(intVal)
+		}
+	} else {
+		data.Grantquotaspillover = types.Int64Null()
+	}
+	if val, ok := getResponseData["exclusivequotaspillover"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Exclusivequotaspillover = types.Int64Value(intVal)
+		}
+	} else {
+		data.Exclusivequotaspillover = types.Int64Null()
+	}
+	if val, ok := getResponseData["securemanagementtraffic"]; ok && val != nil {
+		data.Securemanagementtraffic = types.StringValue(val.(string))
+	} else {
+		data.Securemanagementtraffic = types.StringNull()
+	}
+	if val, ok := getResponseData["securemanagementtd"]; ok && val != nil {
+		if intVal, cerr := utils.ConvertToInt64(val); cerr == nil {
+			data.Securemanagementtd = types.Int64Value(intVal)
+		}
+	} else {
+		data.Securemanagementtd = types.Int64Null()
 	}
 }
