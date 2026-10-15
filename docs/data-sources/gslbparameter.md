@@ -48,6 +48,8 @@ The following attributes are available:
 * `undefaction` - Action to perform when policy evaluation creates an UNDEF condition. Possible values: `NOLBACTION`, `RESET`, `DROP`.
 * `v6ldnsmasklen` - Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.
 * `id` - The id of the gslbparameter. It is a system-generated identifier.
+* `sourceipwhitelisting` - If enabled, local gslb site private IP would be used as the source IP while initiating MEP/GSLB sync connection if srcIP is not configured for GSLB site.
+* `usekrpcchannelforsync` - This option is to use Krpc channel for GSLB sync.
 
 ### Read-only gslbparameter metadata
 

@@ -50,6 +50,7 @@ In addition to the arguments, the following attributes are available:
 * `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor
 * `priority` - The priority, if any, of the vpn vserver policy.
 * `secondary` - Bind the authentication policy to the secondary chain. Provides for multifactor authentication in which a user must authenticate via both a primary authentication method and, afterward, via a secondary authentication method. Because user groups are aggregated across authentication systems, usernames must be the same on all authentication servers. Passwords can be different.
+* `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 
 ### Read-only authenticationvserver_authenticationcertpolicy_binding metadata
 

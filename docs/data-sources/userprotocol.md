@@ -38,3 +38,4 @@ In addition to the argument above, the following attributes are exported:
 * `comment` - Any comments associated with the protocol.
 * `extension` - Name of the extension to add parsing and runtime handling of the protocol packets.
 * `transport` - Transport layer's protocol.
+* `wasmmodule` - Wasm module needs to attach with the user protocol.

@@ -61,6 +61,7 @@ In addition to the above arguments, the following attributes are exported:
 * `useportforhashlb` - Include the port number of the service when creating a hash for hash based load balancing methods. With the NO setting, only the IP address of the service is considered when creating a hash. Possible values: `YES`, `NO`.
 * `usesecuredpersistencecookie` - Encode persistence cookie values using SHA2 hash. Possible values: `ENABLED`, `DISABLED`.
 * `vserverspecificmac` - Allow a MAC-mode virtual server to accept traffic returned by an intermediary device, such as a firewall, to which the traffic was previously forwarded by another MAC-mode virtual server. The second virtual server can then distribute that traffic across the destination server farm. Also useful when load balancing Branch Repeater appliances. Possible values: `ENABLED`, `DISABLED`.
+* `radiusmessageauthenticator` - If enabled, NetScaler will verify the message authenticator and also generate message authenticator if not present.
 
 ### Read-only lbparameter metadata
 

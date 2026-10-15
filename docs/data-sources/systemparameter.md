@@ -54,6 +54,9 @@ In addition to the arguments, the following attributes are available:
 * `totalauthtimeout` - Total time a request can take for authentication/authorization.
 * `wafprotection` - Configure WAF protection for endpoints used by NetScaler management interfaces. Possible values: [ DEFAULT, GUI, DISABLED ]
 * `warnpriorndays` - Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
+* `denylist` - Enable or disable denylist protection.
+* `denylistlogging` - Enable or disable denylist protection logging.
+* `maxclient` - Maximum number of client connection allowed per user. Exposed for backward compatibility with the SDK v2 resource; this is a read-only NITRO parameter.
 
 ### Read-only systemparameter metadata
 

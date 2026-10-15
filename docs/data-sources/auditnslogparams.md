@@ -89,6 +89,8 @@ The following attributes are exported:
 
 * `userdefinedauditlog` - Log user-configurable log messages to nslog. Setting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria.
 
+* `denylistviolations` - Log denylist violations
+
 ### AppFlow Integration
 
 * `appflowexport` - Export log messages to AppFlow collectors. AppFlow collectors are entities to which log messages can be sent so that some action can be performed on them.

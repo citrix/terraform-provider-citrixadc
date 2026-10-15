@@ -90,6 +90,9 @@ In addition to the arguments, the following attributes are available:
 * `timestamp` - Enable or disable TCP timestamps.
 * `ws` - Enable or disable window scaling.
 * `wsval` - Window scaling factor.
+* `dropestconnontimeout` - Silently drop tcp established connections on idle timeout
+* `rfc5961compliance` - Enable or disable RFC 5961 compliance to protect against tcp spoofing(RST/SYN/Data). When enabled, will be compliant with RFC 5961.
+* `slowstartthreshold` - TCP Slow Start Threhsold Value.
 
 ### Read-only nstcpprofile metadata
 

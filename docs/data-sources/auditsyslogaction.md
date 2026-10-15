@@ -67,6 +67,8 @@ In addition to the arguments, the following attributes are available:
 * `transport` - Transport type used to send auditlogs to syslog server. Default type is UDP.
 * `urlfiltering` - Log URL filtering event information.
 * `userdefinedauditlog` - Log user-configurable log messages to syslog.
+* `denylistviolations` - Log denylist violations.
+* `httpschemafile` - HTTP Schema file to input tokens to be sent in log message to log server.
 
 ### Read-only auditsyslogaction metadata
 

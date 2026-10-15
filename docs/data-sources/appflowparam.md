@@ -83,6 +83,7 @@ The following attributes are available:
 * `videoinsight` - Enable/disable the feature individually on appflow action.
 * `websaasappusagereporting` - On enabling this option, NGS will send data used by Web/saas app at the end of every HTTP transaction to configured collectors.
 * `id` - The id of the appflowparam. It is a system-generated identifier.
+* `logalljsonfields` - Overrides the field filtering for all analytics profiles, and sends all the fields for the configured insights.
 
 ### Read-only appflowparam metadata
 

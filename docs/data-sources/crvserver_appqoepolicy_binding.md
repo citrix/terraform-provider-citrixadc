@@ -43,3 +43,4 @@ In addition to the arguments, the following attributes are available:
 * `priority` - The priority for the policy.
 * `labeltype` - The invocation type.
 * `targetvserver` - Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
+* `bindpoint` - The bindpoint to which the policy is bound.

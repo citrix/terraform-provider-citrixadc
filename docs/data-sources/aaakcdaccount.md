@@ -42,6 +42,7 @@ In addition to the arguments, the following attributes are available:
 * `keytab` - Keytab file to use for the KCD account.
 * `cacert` - CA certificate to verify the KDC.
 * `id` - The id of the aaakcdaccount. It has the same value as the `kcdaccount` attribute.
+* `saltexpression` - Salt expression used by Kerberos impersonation. When configured, this expression will be used for key derivation with AES-128 or AES-256 encryption types. For RC4 encryption, the salt is not used. If the salt expression is not set, the default behavior is to derive the salt value from the Kerberos principal.
 
 ### Read-only aaakcdaccount metadata
 

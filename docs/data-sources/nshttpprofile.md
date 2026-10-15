@@ -90,6 +90,9 @@ In addition to the argument, the following attributes are available:
 * `rtsptunnel` - Enable or disable RTSP tunneling.
 * `weblog` - Enable or disable web logging.
 * `websocket` - Enable or disable WebSocket support.
+* `http2smallwndtimeout` - Timeout (in seconds) for HTTP/2 small-window stalled streams. Required to mitigate CVE-2026-13474.
+* `normalizeurl` - Enable or disable RFC 3986 normalization of incoming URL before validation or consumption.
+* `normalizeurltoorigin` - Enable or disable RFC 3986 URL normalization for request sent to the origin server.
 
 ### Read-only nshttpprofile metadata
 

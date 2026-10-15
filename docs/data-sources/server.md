@@ -40,6 +40,13 @@ The following attributes are available:
 * `td` - Traffic Domain ID.
 * `translationip` - IP address used to transform the server's IP address.
 * `translationmask` - The netmask of the translation IP.
+* `internal` - Display names of the servers that have been created for internal use.
+* `delay` - Time, in seconds, after which all the services configured on the server are disabled.
+* `domainresolvenow` - Immediately send a DNS query to resolve the server's domain name.
+* `domainresolveretry` - Time, in seconds, for which the NetScaler must wait, after DNS resolution fails, before sending the next DNS query to resolve the domain name.
+* `graceful` - Shut down gracefully, without accepting any new connections, and disabling each service when all of its connections are closed.
+* `newname` - New name for the server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
+* `querytype` - Specify the type of DNS resolution to be done on the configured domain to get the backend services. Valid query types are A, AAAA and SRV with A being the default querytype. The type of DNS resolution done on the domains in SRV records is inherited from ipv6 argument.
 
 ### Read-only server metadata
 

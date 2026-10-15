@@ -47,6 +47,7 @@ In addition to the arguments, the following attributes are available:
   * NOINSPECTION - This does not forward incoming and outgoing packets to the Inspection device.
   * NSTRACE - capture current and further incoming packets on this transaction.
 * `id` - The id of the contentinspectionaction. It has the same value as the `name` attribute.
+* `wasmprofilename` - Name of the CI WASM profile to be attached to the contentInspection action.
 
 ### Read-only contentinspectionaction metadata
 

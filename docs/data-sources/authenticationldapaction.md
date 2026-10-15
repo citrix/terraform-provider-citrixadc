@@ -77,6 +77,7 @@ data "citrixadc_authenticationldapaction" "example" {
 - `subattributename` (String) LDAP group sub-attribute name. Used for group extraction from the LDAP server.
 - `svrtype` (String) The type of LDAP server.
 - `validateservercert` (String) When to validate LDAP server certs
+- `passwordlessmgmtaccess` (String) This feature configures NetScaler management access to use LDAP exclusively for retrieving user group information. It ensures that LDAP is not used for authenticating user logins (i.e., verifying passwords) for NetScaler management access.
 
 ### Read-Only
 

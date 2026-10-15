@@ -53,6 +53,7 @@ The following attributes are available:
 * `timezone` - Time zone used for date and timestamps in the logs. Available settings: GMT_TIME, LOCAL_TIME.
 * `urlfiltering` - Log URL filtering event information.
 * `userdefinedauditlog` - Log user-configurable log messages to syslog.
+* `denylistviolations` - Log denylist violations.
 
 ### Read-only auditsyslogparams metadata
 
