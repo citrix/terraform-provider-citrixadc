@@ -224,6 +224,7 @@ func (r *LbvserverResource) Update(ctx context.Context, req resource.UpdateReque
 	lbvserver.Servicetype = ""
 	lbvserver.Redirurlflags = false
 	lbvserver.State = ""
+	lbvserver.Aigwprofilename = ""
 
 	if lbvserverPayloadHasMutableFields(&lbvserver) {
 		_, err := r.client.UpdateResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)

@@ -125,6 +125,54 @@ func TestAccSslcertkey_basic(t *testing.T) {
 	})
 }
 
+const testAccSslcertkey_create_passplain_wo = `
+
+variable "sslcertkey_create_passplain_wo" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_sslcertkey" "regress" {
+  certkey              = "tf-acc-create-passplain-wo"
+  cert                 = "/nsconfig/ssl/servercert2.cert"
+  key                  = "/nsconfig/ssl/servercert2.key"
+  inform               = "PEM"
+  passplain_wo         = var.sslcertkey_create_passplain_wo
+  passplain_wo_version = 1
+}
+`
+
+// TestAccSslcertkey_createPassplainWo is a regression test for GH #1479: creating a
+// NEW sslcertkey from an encrypted key, supplying the pass phrase via the write-only
+// passplain_wo attribute, must succeed in a single apply. The Create path's post-create
+// "update" call previously read the pass phrase from the plan (where write-only
+// attributes are always null) instead of from config, so the appliance rejected the
+// still-encrypted key with NITRO errorcode 1537. A certkey name distinct from
+// TestAccSslcertkey_basic is used on purpose: that test only reaches passplain_wo via an
+// update of an existing certkey (the update path was never affected), so it does not
+// cover the create path this test guards.
+func TestAccSslcertkey_createPassplainWo(t *testing.T) {
+	// servercert2.key is an encrypted PEM key whose pass phrase is 123456.
+	t.Setenv("TF_VAR_sslcertkey_create_passplain_wo", "123456")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_create_passplain_wo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.regress", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.regress", "certkey", "tf-acc-create-passplain-wo"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_sslcertkey.regress", "key", "/nsconfig/ssl/servercert2.key"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSslcertkey_import(t *testing.T) {
 	const resAddr = "citrixadc_sslcertkey.foo"
 	resource.Test(t, resource.TestCase{

@@ -111,9 +111,16 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name of the certificate key that was bound to the corresponding SSL virtual server as the Certificate Authority for the device certificate",
 			},
 			"cginfrahomepageredirect": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional: true,
+				Computed: true,
+				// cginfrahomepageredirect is type-conditional: the appliance rejects it
+				// (errorcode 3725) on servicetype DTLS, so it must NOT carry a static Default
+				// that forces a value when config omits it — that broke DTLS vservers on the
+				// SDKv2->framework upgrade (GH #1476). UseStateForUnknown preserves the prior
+				// (or post-create API) value instead of forcing a type-invalid default.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "When client requests ShareFile resources and Citrix Gateway detects that the user is unauthenticated or the user session has expired, disabling this option takes the user to the originally requested ShareFile resource after authentication (instead of taking the user to the default VPN home page)",
 			},
 			"comment": schema.StringAttribute{
@@ -151,9 +158,14 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Close existing connections when the virtual server is marked DOWN, which means the server might have timed out. Disconnecting existing connections frees resources and in certain cases speeds recovery of overloaded load balancing setups. Enable this setting on servers in which the connections can safely be closed when they are marked DOWN.  Do not enable DOWN state flush on servers that must complete their transactions.",
 			},
 			"dtls": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("ON"),
+				Optional: true,
+				Computed: true,
+				// dtls is type-conditional: the appliance rejects it (errorcode 3725) on
+				// servicetype DTLS, so it must NOT carry a static Default (GH #1476). See
+				// cginfrahomepageredirect above.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "This option starts/stops the turn service on the vserver",
 			},
 			"failedlogintimeout": schema.Int64Attribute{

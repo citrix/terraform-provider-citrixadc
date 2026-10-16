@@ -123,10 +123,16 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 	if !data.Fipskey.IsNull() {
 		sslcertkeyUpdate.Fipskey = data.Fipskey.ValueString()
 	}
-	if !data.Passplain.IsNull() {
-		sslcertkeyUpdate.Passplain = data.Passplain.ValueString()
-	} else if !data.PassplainWo.IsNull() {
-		sslcertkeyUpdate.Passplain = data.PassplainWo.ValueString()
+	// The pass phrase must be read from config, not the plan: passplain_wo is a
+	// write-only attribute, so it is present only in req.Config and is always null
+	// in the plan (and state). Reading it from the plan here dropped the pass phrase
+	// on this post-create "update" call, so NITRO rejected the still-encrypted key
+	// with errorcode 1537 (GH #1479). This mirrors the create payload (built from
+	// config) and the Update path, which already read the pass phrase from config.
+	if !config.Passplain.IsNull() {
+		sslcertkeyUpdate.Passplain = config.Passplain.ValueString()
+	} else if !config.PassplainWo.IsNull() {
+		sslcertkeyUpdate.Passplain = config.PassplainWo.ValueString()
 	}
 
 	// Update resource using "update" action after create.
