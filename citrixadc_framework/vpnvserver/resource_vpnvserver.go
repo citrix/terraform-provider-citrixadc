@@ -47,9 +47,12 @@ func (r *VpnvserverResource) Configure(ctx context.Context, req resource.Configu
 
 func (r *VpnvserverResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data VpnvserverResourceModel
+	var config VpnvserverResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config too, to tell a schema-default value apart from one the user set
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -59,6 +62,35 @@ func (r *VpnvserverResource) Create(ctx context.Context, req resource.CreateRequ
 
 	// Create API request body from the model
 	vpnvserver := vpnvserverGetThePayloadFromthePlan(ctx, &data)
+
+	// Gateway-only attributes do not apply to DTLS vservers: the appliance rejects them
+	// on the idempotent create (NITRO errorcode 1092 / 3725). They are valid for SSL
+	// Gateway vservers, so for DTLS strip only the ones the user did NOT set — i.e. the
+	// values forced by the schema Default when the attribute is absent from config
+	// (GH #1476). NITRO does not return these for a DTLS vserver, so the post-create read
+	// leaves the planned default in state (no inconsistent-result error, no drift). An
+	// attribute the user explicitly set is left in the payload so the appliance returns
+	// its own clear error rather than the provider silently dropping the value.
+	if data.Servicetype.ValueString() == "DTLS" {
+		if config.Cginfrahomepageredirect.IsNull() {
+			vpnvserver.Cginfrahomepageredirect = ""
+		}
+		if config.Dtls.IsNull() {
+			vpnvserver.Dtls = ""
+		}
+		if config.Loginonce.IsNull() {
+			vpnvserver.Loginonce = ""
+		}
+		if config.Logoutonsmartcardremoval.IsNull() {
+			vpnvserver.Logoutonsmartcardremoval = ""
+		}
+		if config.Icmpvsrresponse.IsNull() {
+			vpnvserver.Icmpvsrresponse = ""
+		}
+		if config.Rhistate.IsNull() {
+			vpnvserver.Rhistate = ""
+		}
+	}
 
 	// Named resource - use AddResource
 	vpnvserverName := data.Name.ValueString()
