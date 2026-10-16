@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -235,6 +236,117 @@ func TestAccVpnvserver_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+const testAccVpnvserver_dtls = `
+	resource "citrixadc_vpnvserver" "dtls" {
+		name           = "tf-acc-dtls-vserver"
+		servicetype    = "DTLS"
+		ipv46          = "192.0.2.76"
+		port           = 443
+		downstateflush = "DISABLED"
+	}
+`
+
+// TestAccVpnvserver_dtlsDefaultUpgrade is a regression test for GH #1476. A DTLS
+// vpnvserver created by the SDKv2 provider (2.3.2) must upgrade to the framework
+// provider without a spurious, failing update. The framework schema previously put a
+// static Default on cginfrahomepageredirect ("ENABLED") and dtls ("ON"), which are
+// type-conditional and rejected by the appliance for servicetype DTLS (NITRO
+// errorcode 3725). The upgrade therefore planned DISABLED->ENABLED / OFF->ON and the
+// apply failed. With the defaults removed (UseStateForUnknown instead), step 2 is a
+// clean no-op. On the buggy schema step 2 fails with errorcode 3725.
+func TestAccVpnvserver_dtlsDefaultUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.3.2"},
+				},
+				Config: testAccVpnvserver_dtls,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverExist("citrixadc_vpnvserver.dtls", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_dtls,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserverExist("citrixadc_vpnvserver.dtls", nil),
+					testAccCheckVpnvserverADCValue("tf-acc-dtls-vserver", "servicetype", "DTLS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnvserver_dtls_fresh = `
+	resource "citrixadc_vpnvserver" "dtls_default" {
+		name           = "tf-acc-dtls-fresh"
+		servicetype    = "DTLS"
+		ipv46          = "192.0.2.77"
+		port           = 443
+		downstateflush = "DISABLED"
+	}
+`
+
+// TestAccVpnvserver_dtlsFreshCreate is a regression test for GH #1476 (fresh-create
+// path). Creating a DTLS vpnvserver in a single apply must succeed. The gateway-only
+// attributes (cginfrahomepageredirect, dtls, loginonce, logoutonsmartcardremoval,
+// icmpvsrresponse, rhistate) are forced into the create payload by their schema
+// Defaults but are rejected by the appliance for servicetype DTLS on the idempotent
+// create (NITRO errorcode 1092 / 3725). The Create path strips the default-forced ones
+// for DTLS, so the apply succeeds. Without the filter the apply fails. The implicit
+// post-apply plan asserts idempotency.
+func TestAccVpnvserver_dtlsFreshCreate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_dtls_fresh,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserverExist("citrixadc_vpnvserver.dtls_default", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver.dtls_default", "servicetype", "DTLS"),
+					testAccCheckVpnvserverADCValue("tf-acc-dtls-fresh", "servicetype", "DTLS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnvserver_dtls_explicit_gw = `
+	resource "citrixadc_vpnvserver" "dtls_gw" {
+		name        = "tf-acc-dtls-gw"
+		servicetype = "DTLS"
+		ipv46       = "192.0.2.80"
+		port        = 443
+		loginonce   = "ON"
+	}
+`
+
+// TestAccVpnvserver_dtlsExplicitGatewayAttr is the counterpart to the fresh-create fix:
+// a gateway-only attribute the user EXPLICITLY sets on a DTLS vserver must NOT be
+// silently dropped. Only the default-forced values are stripped (see
+// TestAccVpnvserver_dtlsFreshCreate); an explicit value is left in the create payload so
+// the appliance returns its own clear error (NITRO errorcode 1092 / 3725, "... type
+// DTLS") instead of the provider producing an inconsistent result.
+func TestAccVpnvserver_dtlsExplicitGatewayAttr(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVpnvserver_dtls_explicit_gw,
+				ExpectError: regexp.MustCompile(`DTLS`),
+			},
+		},
+	})
+}
+
 const testAccVpnvserverDataSource_basic = `
 	resource "citrixadc_ipset" "tf_ipset" {
 		name = "tf_test_ipset"
@@ -269,11 +381,12 @@ const testAccVpnvserver_unset_step1 = `
 		servicetype                  = "SSL"
 		ipv46                        = "5.5.5.5"
 		port                         = 443
+		# cginfrahomepageredirect and dtls are intentionally excluded: they are
+		# type-conditional (rejected on servicetype DTLS, GH #1476) and therefore NOT
+		# unset-eligible, so removing them must not revert to a static default.
 		appflowlog                   = "DISABLED"
-		cginfrahomepageredirect      = "DISABLED"
 		deviceposture                = "ENABLED"
 		downstateflush               = "DISABLED"
-		dtls                         = "OFF"
 		icmpvsrresponse              = "ACTIVE"
 		loginonce                    = "ON"
 		logoutonsmartcardremoval     = "ON"
@@ -305,10 +418,8 @@ func TestAccVpnvserver_unset(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserverExist("citrixadc_vpnvserver.tf_unset", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "appflowlog", "DISABLED"),
-					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "cginfrahomepageredirect", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "deviceposture", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "downstateflush", "DISABLED"),
-					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "dtls", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "icmpvsrresponse", "ACTIVE"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "loginonce", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "logoutonsmartcardremoval", "ON"),
@@ -324,10 +435,8 @@ func TestAccVpnvserver_unset(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserverExist("citrixadc_vpnvserver.tf_unset", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "appflowlog", "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "cginfrahomepageredirect", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "deviceposture", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "downstateflush", "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "dtls", "ON"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "icmpvsrresponse", "PASSIVE"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "loginonce", "OFF"),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "logoutonsmartcardremoval", "OFF"),
@@ -335,7 +444,6 @@ func TestAccVpnvserver_unset(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver.tf_unset", "secureprivateaccess", "DISABLED"),
 					// Independent appliance-level confirmation the unset took effect.
 					testAccCheckVpnvserverADCValue("tf_vpnvserver_unset", "downstateflush", "ENABLED"),
-					testAccCheckVpnvserverADCValue("tf_vpnvserver_unset", "dtls", "ON"),
 					testAccCheckVpnvserverADCValue("tf_vpnvserver_unset", "secureprivateaccess", "DISABLED"),
 				),
 			},
