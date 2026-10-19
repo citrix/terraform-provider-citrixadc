@@ -11,16 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SslCertKeyUpdateResource{}
 var _ resource.ResourceWithConfigure = (*SslCertKeyUpdateResource)(nil)
 var _ resource.ResourceWithImportState = (*SslCertKeyUpdateResource)(nil)
+var _ resource.ResourceWithUpgradeState = &SslCertKeyUpdateResource{}
 
 func NewSslCertKeyUpdateResource() resource.Resource {
 	return &SslCertKeyUpdateResource{}
@@ -33,16 +38,18 @@ type SslCertKeyUpdateResource struct {
 
 // SslCertKeyUpdateResourceModel describes the resource data model.
 type SslCertKeyUpdateResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Certkey         types.String `tfsdk:"certkey"`
-	Cert            types.String `tfsdk:"cert"`
-	Fipskey         types.String `tfsdk:"fipskey"`
-	Inform          types.String `tfsdk:"inform"`
-	Key             types.String `tfsdk:"key"`
-	NoDomainCheck   types.Bool   `tfsdk:"nodomaincheck"`
-	Passplain       types.String `tfsdk:"passplain"`
-	Password        types.Bool   `tfsdk:"password"`
-	LinkCertKeyName types.String `tfsdk:"linkcertkeyname"`
+	Id                 types.String `tfsdk:"id"`
+	Certkey            types.String `tfsdk:"certkey"`
+	Cert               types.String `tfsdk:"cert"`
+	Fipskey            types.String `tfsdk:"fipskey"`
+	Inform             types.String `tfsdk:"inform"`
+	Key                types.String `tfsdk:"key"`
+	NoDomainCheck      types.Bool   `tfsdk:"nodomaincheck"`
+	Passplain          types.String `tfsdk:"passplain"`
+	PassplainWo        types.String `tfsdk:"passplain_wo"`
+	PassplainWoVersion types.Int64  `tfsdk:"passplain_wo_version"`
+	Password           types.Bool   `tfsdk:"password"`
+	LinkCertKeyName    types.String `tfsdk:"linkcertkeyname"`
 }
 
 func (r *SslCertKeyUpdateResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -51,7 +58,7 @@ func (r *SslCertKeyUpdateResource) Metadata(ctx context.Context, req resource.Me
 
 func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Version:     1,
+		Version:     2,
 		Description: "Resource to update an existing SSL certificate key pair. This resource performs an update operation on an existing certificate.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -126,6 +133,25 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				},
 				Description: "Pass phrase used to encrypt the private-key. Required when updating an encrypted private-key in PEM format.",
 			},
+			"passplain_wo": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				WriteOnly:   true,
+				Description: "Pass phrase used to encrypt the private-key, supplied as a write-only (ephemeral) value that is never stored in Terraform state. Use together with passplain_wo_version. Mutually exclusive with passplain.",
+			},
+			"passplain_wo_version": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
+				PlanModifiers: []planmodifier.Int64{
+					// GH #1436 idiom used by this resource: carry the prior value forward, and
+					// re-run the update action only when the configured version changes. This is
+					// the only way to re-apply a changed passplain_wo (write-only -> never in plan).
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+				Description: "Increment this version to signal that passplain_wo changed so the certificate is re-updated.",
+			},
 			"password": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -161,9 +187,12 @@ func (r *SslCertKeyUpdateResource) Configure(ctx context.Context, req resource.C
 
 func (r *SslCertKeyUpdateResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data SslCertKeyUpdateResourceModel
+	var config SslCertKeyUpdateResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config too: write-only attributes (passplain_wo) are present only in config.
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -191,8 +220,13 @@ func (r *SslCertKeyUpdateResource) Create(ctx context.Context, req resource.Crea
 	if !data.Key.IsNull() {
 		sslcertkey.Key = data.Key.ValueString()
 	}
-	if !data.Passplain.IsNull() {
+	// Pass phrase: prefer plaintext passplain; otherwise the write-only passplain_wo,
+	// which must be read from CONFIG (write-only values are never present in the plan).
+	// GH #1480 (and the GH #1479 lesson: reading it from the plan would silently drop it).
+	if !data.Passplain.IsNull() && data.Passplain.ValueString() != "" {
 		sslcertkey.Passplain = data.Passplain.ValueString()
+	} else if !config.PassplainWo.IsNull() && config.PassplainWo.ValueString() != "" {
+		sslcertkey.Passplain = config.PassplainWo.ValueString()
 	}
 	if !data.Password.IsNull() {
 		sslcertkey.Password = data.Password.ValueBool()
@@ -239,6 +273,9 @@ func (r *SslCertKeyUpdateResource) Create(ctx context.Context, req resource.Crea
 	if data.Passplain.IsUnknown() {
 		data.Passplain = types.StringNull()
 	}
+	if data.PassplainWoVersion.IsUnknown() {
+		data.PassplainWoVersion = types.Int64Value(1)
+	}
 	if data.Password.IsUnknown() {
 		data.Password = types.BoolNull()
 	}
@@ -274,6 +311,25 @@ func (r *SslCertKeyUpdateResource) Delete(ctx context.Context, req resource.Dele
 
 func (r *SslCertKeyUpdateResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// UpgradeState seeds the write-only tracker passplain_wo_version to 1 for pre-write-only
+// state (schema v1 -> v2) so the schema Default does not plan a spurious "null -> 1"
+// replace after upgrading the provider. Mirrors the sslcertkey resource (GH #1441/#1480).
+func (r *SslCertKeyUpdateResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data SslCertKeyUpdateResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.PassplainWoVersion.IsNull() {
+			data.PassplainWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }
 
 // Helper function to handle linked certificate during update
