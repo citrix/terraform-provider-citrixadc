@@ -1,3 +1,22 @@
+## 3.0.3 (October 19, 2026)
+
+BUG FIXES
+
+* **citrixadc_sslcertkey**: Fixed create of an encrypted (pass-phrase protected) private key failing with NITRO errorcode 1537. [#1479]
+* **citrixadc_vpnvserver**: Fixed DTLS virtual servers failing on create and on the SDKv2→Framework upgrade with NITRO errorcode 3725/1092. [#1476]
+
+ENHANCEMENTS
+
+* **citrixadc_sslcertkey_update**: Added ephemeral (write-only) support for the pass phrase via `passplain_wo` / `passplain_wo_version`. [#1480]
+* **citrixadc_nsconfig_update**: Refreshed the resource with additional supported attributes (HTTP ports, connection limits, client-IP insertion, persistence-cookie, Path MTU, FTP/cache-redirection port ranges, timezone, quota, and secure-management settings), and added Unset support so removing an eligible optional attribute resets it to the appliance default.
+* **documentation**: Refreshed data-source documentation to add missing read-only attributes across many data sources (including service, servicegroup, lbvserver, vpnvserver, sslprofile, sslaction and vpnsessionaction).
+
+
+[#1476]: https://github.com/citrix/terraform-provider-citrixadc/issues/1476
+[#1479]: https://github.com/citrix/terraform-provider-citrixadc/issues/1479
+[#1480]: https://github.com/citrix/terraform-provider-citrixadc/issues/1480
+
+
 ## 3.0.2 (September 25, 2026)
 
 BUG FIXES
