@@ -119,7 +119,6 @@ github.com/golang/protobuf/ptypes/empty
 # github.com/google/go-cmp v0.7.0
 ## explicit; go 1.21
 github.com/google/go-cmp/cmp
-github.com/google/go-cmp/cmp/cmpopts
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
@@ -277,18 +276,11 @@ github.com/hashicorp/terraform-plugin-log/tflog
 github.com/hashicorp/terraform-plugin-log/tfsdklog
 # github.com/hashicorp/terraform-plugin-mux v0.21.0
 ## explicit; go 1.24.0
-github.com/hashicorp/terraform-plugin-mux/internal/logging
-github.com/hashicorp/terraform-plugin-mux/internal/tfprotov5tov6
-github.com/hashicorp/terraform-plugin-mux/internal/tfprotov6tov5
-github.com/hashicorp/terraform-plugin-mux/tf5to6server
-github.com/hashicorp/terraform-plugin-mux/tf6muxserver
 # github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.1
 ## explicit; go 1.24.0
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/id
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
-github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
-github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema
@@ -297,7 +289,6 @@ github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/hashcode
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/plans/objchange
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugin/convert
-github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest
 github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfdiags
 github.com/hashicorp/terraform-plugin-sdk/v2/meta
 github.com/hashicorp/terraform-plugin-sdk/v2/plugin
