@@ -62,19 +62,28 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				Description: "The name of the certificate key pair binding.",
 			},
 			"crlcheck": schema.StringAttribute{
-				// Optional-only (no Computed): the NITRO GET does not echo a
-				// server default for crlcheck, so a Computed value could never be
-				// resolved when omitted -> "unknown value after apply". An omitted
-				// crlcheck is simply null.
+				// Optional + Computed, NO static Default (GH #1487; kept
+				// identical to ocspcheck). NITRO can echo a server default
+				// ("Optional") for these on CA bindings even when the config
+				// omitted them; with Optional-only that read-back (vs a null
+				// plan) raised "inconsistent result after apply". Computed lets
+				// Read adopt the server value, or resolve to null when the GET
+				// omits it (readFromApi nulls the still-unknown value). A static
+				// Default is deliberately avoided: the default is
+				// type-conditional and would be sent on a non-CA create ->
+				// NITRO errorcode 1093 "Argument pre-requisite missing".
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
 			"ocspcheck": schema.StringAttribute{
-				// Optional-only (see crlcheck rationale).
+				// Optional + Computed, NO static Default (see crlcheck rationale;
+				// GH #1487 was reported against ocspcheck).
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},

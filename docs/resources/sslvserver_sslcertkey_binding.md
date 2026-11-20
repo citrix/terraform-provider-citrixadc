@@ -40,8 +40,8 @@ resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
 * `vservername` - (Required) Name of the SSL virtual server.
 * `certkeyname` - (Required) The name of the certificate key pair binding.
 * `ca` - (Optional) CA certificate. Defaults to `false`.
-* `crlcheck` - (Optional) The state of the CRL check parameter. Possible values: [ Mandatory, Optional ]
-* `ocspcheck` - (Optional) The state of the OCSP check parameter. Possible values: [ Mandatory, Optional ]
+* `crlcheck` - (Optional, Computed) The state of the CRL check parameter. Possible values: [ Mandatory, Optional ]. When left unset on a CA binding, the ADC supplies a default of `Optional`.
+* `ocspcheck` - (Optional, Computed) The state of the OCSP check parameter. Possible values: [ Mandatory, Optional ]. When left unset on a CA binding, the ADC supplies a default of `Optional`.
 * `snicert` - (Optional) The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing. Defaults to `false`.
 * `skipcaname` - (Optional) The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake. Defaults to `false`.
 
