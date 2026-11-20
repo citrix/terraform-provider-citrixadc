@@ -276,6 +276,67 @@ func TestAccSslvserver_sslcertkey_binding_cs(t *testing.T) {
 	})
 }
 
+// GH #1487 regression: a CA binding (ca=true) with ocspcheck/crlcheck left
+// UNSET. NITRO echoes ocspcheck="Optional" for CA bindings; before the
+// Optional+Computed schema fix the null plan value vs that server echo raised
+// "Provider produced inconsistent result after apply". The existing ca=true
+// cases above always set ocspcheck explicitly, so they never exercised this.
+const testAccSslvserver_sslcertkey_binding_gh1487_ocspcheckUnset = `
+resource "citrixadc_sslcertkey" "tf_cacertkey" {
+  certkey = "tf_cacertkey"
+  cert = "/nsconfig/ssl/rootcert1.cert"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  ipv46       = "10.10.10.44"
+  name        = "tf_lbvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_sslvserver_sslcertkey_binding" "tf_binding" {
+    vservername = citrixadc_lbvserver.tf_lbvserver.name
+    certkeyname = citrixadc_sslcertkey.tf_cacertkey.certkey
+    ca          = true
+    # ocspcheck / crlcheck intentionally unset
+}
+`
+
+// TestAccSslvserver_sslcertkey_binding_gh1487_ocspcheckUnset applies a CA binding
+// without ocspcheck set. A clean apply (the framework fails the step on an
+// inconsistent-result error) plus the implicit post-apply empty-plan check prove
+// the fix. ocspcheck is asserted to resolve to the server-computed "Optional".
+func TestAccSslvserver_sslcertkey_binding_gh1487_ocspcheckUnset(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslcertkey_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslcertkey_binding_gh1487_ocspcheckUnset,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslcertkey_bindingExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "ca", "true"),
+					// Server-computed default surfaced via the Computed attr.
+					resource.TestCheckResourceAttr(resAddr, "ocspcheck", "Optional"),
+				),
+			},
+			{
+				// Idempotency: re-applying the same config yields no diff.
+				Config: testAccSslvserver_sslcertkey_binding_gh1487_ocspcheckUnset,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserver_sslcertkey_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSslvserver_sslcertkey_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
