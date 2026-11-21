@@ -361,3 +361,75 @@ func TestAccSystemfileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccSystemfile_gh1141_partitionFilelocation is the regression test for GH #1141.
+// In an admin partition the ADC reports systemfile filelocation in partition-relative
+// normalized form (/var/tmp/) regardless of the path used to create or query it, so the
+// provider must NOT overwrite the user's configured filelocation with that GET echo.
+//
+// The file is created in partition context (provider do_login=true + partition=...) using
+// the ABSOLUTE path /var/partitions/<p>/tmp, exactly as the reporter did. Pre-fix the
+// apply fails with "Provider produced inconsistent result after apply (.filelocation: was
+// .../tmp, but now /var/tmp/)". Post-fix the configured filelocation is preserved and the
+// post-apply plan is empty (idempotent).
+func TestAccSystemfile_gh1141_partitionFilelocation(t *testing.T) {
+	if isCpxRun {
+		t.Skip("admin partitions are not supported on CPX")
+	}
+	const partName = "tf1141part"
+	const resAddr = "citrixadc_systemfile.tf1141"
+	absLoc := "/var/partitions/" + partName + "/tmp"
+
+	// Create the admin partition out-of-band (default context) BEFORE the
+	// partition-scoped provider configures and switches into it. Skip (not fail) if the
+	// appliance does not permit partition creation (e.g. a protected cluster/HA box), so
+	// the test is self-gating across the testbed.
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		t.Fatalf("gh1141: get client: %v", err)
+	}
+	if _, err := client.AddResource(service.Nspartition.Type(), partName,
+		map[string]interface{}{"partitionname": partName}); err != nil {
+		t.Skipf("gh1141: cannot create admin partition %q on this appliance: %v", partName, err)
+	}
+	t.Cleanup(func() {
+		// Best-effort teardown: removing the partition also removes any file left in it.
+		_ = client.DeleteResource(service.Nspartition.Type(), partName)
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemfile_gh1141(partName, absLoc),
+				Check: resource.ComposeTestCheckFunc(
+					// The configured absolute path must survive the read-back, NOT be
+					// replaced by the partition-normalized "/var/tmp/" echo.
+					resource.TestCheckResourceAttr(resAddr, "filelocation", absLoc),
+					resource.TestCheckResourceAttr(resAddr, "id", absLoc+"/tf1141.txt"),
+				),
+				// Idempotency: no diff after apply+refresh (guards the absolute-path and
+				// trailing-slash round-trip once the clobber is removed).
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+func testAccSystemfile_gh1141(partName, absLoc string) string {
+	return fmt.Sprintf(`
+provider "citrixadc" {
+  do_login  = true
+  partition = "%s"
+}
+
+resource "citrixadc_systemfile" "tf1141" {
+  filename     = "tf1141.txt"
+  filelocation = "%s"
+  filecontent  = "gh1141 partition filelocation"
+}
+`, partName, absLoc)
+}

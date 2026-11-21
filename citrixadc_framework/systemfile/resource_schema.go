@@ -172,10 +172,18 @@ func systemfileSetAttrFromGet(ctx context.Context, data *SystemfileResourceModel
 		data.Fileencoding = types.StringValue("BASE64")
 	}
 
-	if val, ok := getResponseData["filelocation"]; ok && val != nil {
-		data.Filelocation = types.StringValue(val.(string))
-	} else if data.Filelocation.IsUnknown() {
-		data.Filelocation = types.StringNull()
+	// Preserve the configured/prior filelocation; do NOT adopt the GET echo. In an
+	// admin partition the ADC normalizes the reported path (the configured
+	// /var/partitions/<p>/tmp or /var/tmp is echoed back as the partition-relative
+	// /var/tmp/), which would corrupt state and break the Required+ForceNew apply
+	// contract with "inconsistent result after apply" (GH #1141). The successful GET
+	// match already confirmed the file exists at the configured location, so there is
+	// nothing to reconcile. Only adopt the echo when we have no value yet
+	// (unknown/null), e.g. an import path that leaves filelocation unset.
+	if data.Filelocation.IsNull() || data.Filelocation.IsUnknown() {
+		if val, ok := getResponseData["filelocation"]; ok && val != nil {
+			data.Filelocation = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["filename"]; ok && val != nil {
 		data.Filename = types.StringValue(val.(string))
