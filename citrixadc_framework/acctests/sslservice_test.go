@@ -483,3 +483,171 @@ func TestAccSslserviceDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// testAccSslservice_nodefaultcipher creates an SSL service (which auto-binds the
+// built-in DEFAULT_BACKEND cipher) and a citrixadc_sslservice with
+// nodefaultcipherbindings=true, which must unbind that default. (GH #1166)
+const testAccSslservice_nodefaultcipher = `
+resource "citrixadc_service" "tf1166_svc" {
+	name        = "tf1166_svc"
+	servicetype = "SSL"
+	port        = 443
+	ip          = "10.77.33.99"
+}
+
+resource "citrixadc_sslservice" "tf1166" {
+	servicename             = citrixadc_service.tf1166_svc.name
+	nodefaultcipherbindings = true
+}
+`
+
+// TestAccSslservice_nodefaultcipherbindings is the feature test for GH #1166: the
+// nodefaultcipherbindings flag on citrixadc_sslservice must unbind the appliance's
+// built-in default cipher group (DEFAULT_BACKEND) that is auto-bound to every SSL
+// service, so a custom cipher group can take effect alone. Enumeration/verification
+// goes through the umbrella sslservice_binding endpoint (the typed
+// sslservice_sslcipher_binding GET returns empty on 14.1-73.x).
+func TestAccSslservice_nodefaultcipherbindings(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservice_nodefaultcipher,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslserviceExist("citrixadc_sslservice.tf1166", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf1166", "nodefaultcipherbindings", "true"),
+					// The built-in default cipher must be unbound from the service.
+					testAccCheckSslserviceNoDefaultCipher("tf1166_svc"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+// testAccCheckSslserviceNoDefaultCipher asserts (via the umbrella sslservice_binding
+// endpoint) that no built-in default cipher group (DEFAULT / DEFAULT_BACKEND) remains
+// bound to the SSL service.
+func testAccCheckSslserviceNoDefaultCipher(servicename string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		umbrella, err := client.FindResourceArrayWithParams(service.FindParams{
+			ResourceType:             service.Sslservice_binding.Type(),
+			ResourceName:             servicename,
+			ResourceMissingErrorCode: 258,
+		})
+		if err != nil {
+			return fmt.Errorf("reading sslservice_binding for %s: %v", servicename, err)
+		}
+		for _, svc := range umbrella {
+			raw, ok := svc["sslservice_sslciphersuite_binding"]
+			if !ok {
+				continue
+			}
+			rows, ok := raw.([]interface{})
+			if !ok {
+				continue
+			}
+			for _, cb := range rows {
+				m, ok := cb.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				name, _ := m["ciphername"].(string)
+				if name == "" {
+					name, _ = m["cipheraliasname"].(string)
+				}
+				if name == "DEFAULT_BACKEND" || name == "DEFAULT" {
+					return fmt.Errorf("default cipher %q is still bound to sslservice %s (nodefaultcipherbindings did not unbind it)", name, servicename)
+				}
+			}
+		}
+		return nil
+	}
+}
+
+// testAccSslservice_nodefaultecccurve creates an SSL service (which auto-binds the
+// built-in default ECC curves) and a citrixadc_sslservice with
+// nodefaultecccurvebindings=true, which must unbind all of them. (GH #1166)
+const testAccSslservice_nodefaultecccurve = `
+resource "citrixadc_service" "tf1166e_svc" {
+	name        = "tf1166e_svc"
+	servicetype = "SSL"
+	port        = 443
+	ip          = "10.77.33.98"
+}
+
+resource "citrixadc_sslservice" "tf1166e" {
+	servicename               = citrixadc_service.tf1166e_svc.name
+	nodefaultecccurvebindings = true
+}
+`
+
+// TestAccSslservice_nodefaultecccurvebindings is the feature test for GH #1166: the
+// nodefaultecccurvebindings flag on citrixadc_sslservice must unbind the appliance's
+// built-in default ECC curve bindings (P_256, P_384, X_25519, ...) that are auto-bound
+// to every SSL service.
+func TestAccSslservice_nodefaultecccurvebindings(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservice_nodefaultecccurve,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslserviceExist("citrixadc_sslservice.tf1166e", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf1166e", "nodefaultecccurvebindings", "true"),
+					// All built-in default ECC curves must be unbound from the service.
+					testAccCheckSslserviceNoDefaultEcccurve("tf1166e_svc"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+// testAccCheckSslserviceNoDefaultEcccurve asserts that no ECC curve remains bound to
+// the SSL service (the typed sslservice_ecccurve_binding GET reflects them).
+func testAccCheckSslserviceNoDefaultEcccurve(servicename string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		bindings, err := client.FindResourceArray(service.Sslservice_ecccurve_binding.Type(), servicename)
+		if err != nil {
+			// When every ECC curve has been unbound, NITRO returns a not-found error
+			// (no binding rows) rather than an empty list - that is the success case.
+			if strings.Contains(err.Error(), "No resource") || strings.Contains(err.Error(), "not found") {
+				return nil
+			}
+			return fmt.Errorf("reading sslservice_ecccurve_binding for %s: %v", servicename, err)
+		}
+		var names []string
+		for _, b := range bindings {
+			if n, ok := b["ecccurvename"].(string); ok {
+				names = append(names, n)
+			}
+		}
+		if len(names) != 0 {
+			return fmt.Errorf("ECC curves %v are still bound to sslservice %s (nodefaultecccurvebindings did not unbind them)", names, servicename)
+		}
+		return nil
+	}
+}

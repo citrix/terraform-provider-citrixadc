@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -19,23 +20,29 @@ import (
 
 // SslservicegroupResourceModel describes the resource data model.
 type SslservicegroupResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Commonname           types.String `tfsdk:"commonname"`
-	Ocspstapling         types.String `tfsdk:"ocspstapling"`
-	Sendclosenotify      types.String `tfsdk:"sendclosenotify"`
-	Serverauth           types.String `tfsdk:"serverauth"`
-	Servicegroupname     types.String `tfsdk:"servicegroupname"`
-	Sessreuse            types.String `tfsdk:"sessreuse"`
-	Sesstimeout          types.Int64  `tfsdk:"sesstimeout"`
-	Snienable            types.String `tfsdk:"snienable"`
-	Ssl3                 types.String `tfsdk:"ssl3"`
-	Sslclientlogs        types.String `tfsdk:"sslclientlogs"`
-	Sslprofile           types.String `tfsdk:"sslprofile"`
-	Strictsigdigestcheck types.String `tfsdk:"strictsigdigestcheck"`
-	Tls1                 types.String `tfsdk:"tls1"`
-	Tls11                types.String `tfsdk:"tls11"`
-	Tls12                types.String `tfsdk:"tls12"`
-	Tls13                types.String `tfsdk:"tls13"`
+	Id         types.String `tfsdk:"id"`
+	Commonname types.String `tfsdk:"commonname"`
+	// Nodefaultcipherbindings / Nodefaultecccurvebindings are provider-synthesized
+	// convenience flags (NOT NITRO attributes): when true, Create unbinds the
+	// appliance's built-in default cipher group(s) (DEFAULT / DEFAULT_BACKEND) resp.
+	// default ECC curve bindings from the SSL service group. See GH #1166.
+	Nodefaultcipherbindings   types.Bool   `tfsdk:"nodefaultcipherbindings"`
+	Nodefaultecccurvebindings types.Bool   `tfsdk:"nodefaultecccurvebindings"`
+	Ocspstapling              types.String `tfsdk:"ocspstapling"`
+	Sendclosenotify           types.String `tfsdk:"sendclosenotify"`
+	Serverauth                types.String `tfsdk:"serverauth"`
+	Servicegroupname          types.String `tfsdk:"servicegroupname"`
+	Sessreuse                 types.String `tfsdk:"sessreuse"`
+	Sesstimeout               types.Int64  `tfsdk:"sesstimeout"`
+	Snienable                 types.String `tfsdk:"snienable"`
+	Ssl3                      types.String `tfsdk:"ssl3"`
+	Sslclientlogs             types.String `tfsdk:"sslclientlogs"`
+	Sslprofile                types.String `tfsdk:"sslprofile"`
+	Strictsigdigestcheck      types.String `tfsdk:"strictsigdigestcheck"`
+	Tls1                      types.String `tfsdk:"tls1"`
+	Tls11                     types.String `tfsdk:"tls11"`
+	Tls12                     types.String `tfsdk:"tls12"`
+	Tls13                     types.String `tfsdk:"tls13"`
 }
 
 func (r *SslservicegroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -75,6 +82,23 @@ func (r *SslservicegroupResource) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the SSL service group for which to set advanced configuration.",
+			},
+			// GH #1166: provider-synthesized convenience flags (not NITRO attributes,
+			// so never returned by GET and retained from config). Mirror
+			// sslprofile.nodefaultcipherbindings / nodefaultecccurvebindings.
+			"nodefaultcipherbindings": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "When set to true, the provider unbinds the appliance's built-in default cipher group(s) (DEFAULT / DEFAULT_BACKEND) that are auto-bound to the SSL service group, so a custom cipher group can take effect alone. Applied at create time only; changing it forces re-creation. Not reverted on destroy (mirrors sslprofile nodefaultcipherbindings).",
+			},
+			"nodefaultecccurvebindings": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "When set to true, the provider unbinds the appliance's built-in default ECC curve bindings (for example P_256 / P_384 / X_25519) that are auto-bound to the SSL service group, so a custom set of ECC curves can take effect alone. Applied at create time only; changing it forces re-creation. Not reverted on destroy (mirrors sslprofile nodefaultecccurvebindings).",
 			},
 			"sessreuse": schema.StringAttribute{
 				Optional:    true,

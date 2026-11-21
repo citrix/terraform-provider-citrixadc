@@ -67,6 +67,22 @@ func (r *SslservicegroupResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	// GH #1166: unbind the appliance's built-in default cipher / ECC curve bindings
+	// auto-bound to the SSL service group when requested. Applied at create time only
+	// (both attributes are RequiresReplace).
+	if !data.Nodefaultcipherbindings.IsNull() && data.Nodefaultcipherbindings.ValueBool() {
+		if err := r.removeDefaultCipherBindings(ctx, sslservicegroupName); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove default cipher bindings for sslservicegroup %s, got error: %s", sslservicegroupName, err))
+			return
+		}
+	}
+	if !data.Nodefaultecccurvebindings.IsNull() && data.Nodefaultecccurvebindings.ValueBool() {
+		if err := r.removeDefaultEcccurveBindings(ctx, sslservicegroupName); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove default ECC curve bindings for sslservicegroup %s, got error: %s", sslservicegroupName, err))
+			return
+		}
+	}
+
 	// ID is the service group name (single unique attribute), matching SDK v2.
 	data.Id = types.StringValue(sslservicegroupName)
 
@@ -302,4 +318,84 @@ func (r *SslservicegroupResource) readSslservicegroupFromApi(ctx context.Context
 	sslservicegroupSetAttrFromGet(ctx, data, getResponseData)
 
 	return true
+}
+
+// defaultCipherGroupNames are the appliance's built-in cipher groups that NetScaler
+// auto-binds to an SSL service group. nodefaultcipherbindings unbinds these.
+var defaultCipherGroupNames = map[string]bool{
+	"DEFAULT":         true,
+	"DEFAULT_BACKEND": true,
+}
+
+// removeDefaultCipherBindings unbinds the built-in default cipher group(s)
+// (DEFAULT / DEFAULT_BACKEND) from the SSL service group (GH #1166). As with
+// sslservice, the bound ciphers are NOT reflected by the typed
+// sslservicegroup_sslcipher_binding GET on 14.1-73.x; they are only visible via the
+// umbrella sslservicegroup_binding endpoint under
+// sslservicegroup_sslciphersuite_binding[]. Only the names in defaultCipherGroupNames
+// are touched, so a custom cipher bound earlier in the same apply is never removed.
+func (r *SslservicegroupResource) removeDefaultCipherBindings(ctx context.Context, servicegroupname string) error {
+	umbrella, err := r.client.FindResourceArrayWithParams(service.FindParams{
+		ResourceType:             service.Sslservicegroup_binding.Type(),
+		ResourceName:             servicegroupname,
+		ResourceMissingErrorCode: 258,
+	})
+	if err != nil {
+		return err
+	}
+	for _, sg := range umbrella {
+		raw, ok := sg["sslservicegroup_sslciphersuite_binding"]
+		if !ok {
+			continue
+		}
+		rows, ok := raw.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, cb := range rows {
+			m, ok := cb.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			name := ""
+			if v, ok := m["ciphername"].(string); ok && v != "" {
+				name = v
+			} else if v, ok := m["cipheraliasname"].(string); ok && v != "" {
+				name = v
+			}
+			if !defaultCipherGroupNames[name] {
+				continue
+			}
+			argsMap := map[string]string{"ciphername": name}
+			if err := r.client.DeleteResourceWithArgsMap(service.Sslservicegroup_sslcipher_binding.Type(), servicegroupname, argsMap); err != nil {
+				return fmt.Errorf("unbind default cipher %q: %w", name, err)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Unbound default cipher %q from sslservicegroup %s", name, servicegroupname))
+		}
+	}
+	return nil
+}
+
+// removeDefaultEcccurveBindings unbinds the built-in default ECC curve bindings from
+// the SSL service group (GH #1166). The default curves ARE reflected by the typed
+// sslservicegroup_ecccurve_binding GET on 14.1-73.x, so enumerate it directly and
+// unbind each by ecccurvename. All currently-bound curves at create time are the
+// appliance defaults.
+func (r *SslservicegroupResource) removeDefaultEcccurveBindings(ctx context.Context, servicegroupname string) error {
+	bindings, err := r.client.FindResourceArray(service.Sslservicegroup_ecccurve_binding.Type(), servicegroupname)
+	if err != nil {
+		return err
+	}
+	for _, binding := range bindings {
+		ecccurvename, ok := binding["ecccurvename"].(string)
+		if !ok || ecccurvename == "" {
+			continue
+		}
+		args := []string{fmt.Sprintf("ecccurvename:%s", ecccurvename)}
+		if err := r.client.DeleteResourceWithArgs(service.Sslservicegroup_ecccurve_binding.Type(), servicegroupname, args); err != nil {
+			return fmt.Errorf("unbind default ECC curve %q: %w", ecccurvename, err)
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Unbound default ECC curve %q from sslservicegroup %s", ecccurvename, servicegroupname))
+	}
+	return nil
 }
