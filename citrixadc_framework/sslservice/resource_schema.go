@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -18,43 +19,49 @@ import (
 
 // SslserviceResourceModel describes the resource data model.
 type SslserviceResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Cipherredirect       types.String `tfsdk:"cipherredirect"`
-	Cipherurl            types.String `tfsdk:"cipherurl"`
-	Clientauth           types.String `tfsdk:"clientauth"`
-	Clientcert           types.String `tfsdk:"clientcert"`
-	Commonname           types.String `tfsdk:"commonname"`
-	Dh                   types.String `tfsdk:"dh"`
-	Dhcount              types.Int64  `tfsdk:"dhcount"`
-	Dhfile               types.String `tfsdk:"dhfile"`
-	Dhkeyexpsizelimit    types.String `tfsdk:"dhkeyexpsizelimit"`
-	Dtls1                types.String `tfsdk:"dtls1"`
-	Dtls12               types.String `tfsdk:"dtls12"`
-	Dtlsprofilename      types.String `tfsdk:"dtlsprofilename"`
-	Ersa                 types.String `tfsdk:"ersa"`
-	Ersacount            types.Int64  `tfsdk:"ersacount"`
-	Ocspstapling         types.String `tfsdk:"ocspstapling"`
-	Pushenctrigger       types.String `tfsdk:"pushenctrigger"`
-	Redirectportrewrite  types.String `tfsdk:"redirectportrewrite"`
-	Sendclosenotify      types.String `tfsdk:"sendclosenotify"`
-	Serverauth           types.String `tfsdk:"serverauth"`
-	Servicename          types.String `tfsdk:"servicename"`
-	Sessreuse            types.String `tfsdk:"sessreuse"`
-	Sesstimeout          types.Int64  `tfsdk:"sesstimeout"`
-	Snienable            types.String `tfsdk:"snienable"`
-	Ssl2                 types.String `tfsdk:"ssl2"`
-	Ssl3                 types.String `tfsdk:"ssl3"`
-	Sslclientlogs        types.String `tfsdk:"sslclientlogs"`
-	Sslprofile           types.String `tfsdk:"sslprofile"`
-	Sslredirect          types.String `tfsdk:"sslredirect"`
-	Sslv2redirect        types.String `tfsdk:"sslv2redirect"`
-	Sslv2url             types.String `tfsdk:"sslv2url"`
-	Strictclientekucheck types.String `tfsdk:"strictclientekucheck"`
-	Strictsigdigestcheck types.String `tfsdk:"strictsigdigestcheck"`
-	Tls1                 types.String `tfsdk:"tls1"`
-	Tls11                types.String `tfsdk:"tls11"`
-	Tls12                types.String `tfsdk:"tls12"`
-	Tls13                types.String `tfsdk:"tls13"`
+	Id                types.String `tfsdk:"id"`
+	Cipherredirect    types.String `tfsdk:"cipherredirect"`
+	Cipherurl         types.String `tfsdk:"cipherurl"`
+	Clientauth        types.String `tfsdk:"clientauth"`
+	Clientcert        types.String `tfsdk:"clientcert"`
+	Commonname        types.String `tfsdk:"commonname"`
+	Dh                types.String `tfsdk:"dh"`
+	Dhcount           types.Int64  `tfsdk:"dhcount"`
+	Dhfile            types.String `tfsdk:"dhfile"`
+	Dhkeyexpsizelimit types.String `tfsdk:"dhkeyexpsizelimit"`
+	Dtls1             types.String `tfsdk:"dtls1"`
+	Dtls12            types.String `tfsdk:"dtls12"`
+	Dtlsprofilename   types.String `tfsdk:"dtlsprofilename"`
+	Ersa              types.String `tfsdk:"ersa"`
+	Ersacount         types.Int64  `tfsdk:"ersacount"`
+	// Nodefaultcipherbindings / Nodefaultecccurvebindings are provider-synthesized
+	// convenience flags (NOT NITRO attributes): when true, Create unbinds the
+	// appliance's built-in default cipher group(s) (DEFAULT / DEFAULT_BACKEND) resp.
+	// default ECC curve bindings from the SSL service. See GH #1166.
+	Nodefaultcipherbindings   types.Bool   `tfsdk:"nodefaultcipherbindings"`
+	Nodefaultecccurvebindings types.Bool   `tfsdk:"nodefaultecccurvebindings"`
+	Ocspstapling              types.String `tfsdk:"ocspstapling"`
+	Pushenctrigger            types.String `tfsdk:"pushenctrigger"`
+	Redirectportrewrite       types.String `tfsdk:"redirectportrewrite"`
+	Sendclosenotify           types.String `tfsdk:"sendclosenotify"`
+	Serverauth                types.String `tfsdk:"serverauth"`
+	Servicename               types.String `tfsdk:"servicename"`
+	Sessreuse                 types.String `tfsdk:"sessreuse"`
+	Sesstimeout               types.Int64  `tfsdk:"sesstimeout"`
+	Snienable                 types.String `tfsdk:"snienable"`
+	Ssl2                      types.String `tfsdk:"ssl2"`
+	Ssl3                      types.String `tfsdk:"ssl3"`
+	Sslclientlogs             types.String `tfsdk:"sslclientlogs"`
+	Sslprofile                types.String `tfsdk:"sslprofile"`
+	Sslredirect               types.String `tfsdk:"sslredirect"`
+	Sslv2redirect             types.String `tfsdk:"sslv2redirect"`
+	Sslv2url                  types.String `tfsdk:"sslv2url"`
+	Strictclientekucheck      types.String `tfsdk:"strictclientekucheck"`
+	Strictsigdigestcheck      types.String `tfsdk:"strictsigdigestcheck"`
+	Tls1                      types.String `tfsdk:"tls1"`
+	Tls11                     types.String `tfsdk:"tls11"`
+	Tls12                     types.String `tfsdk:"tls12"`
+	Tls13                     types.String `tfsdk:"tls13"`
 }
 
 func (r *SslserviceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -173,6 +180,28 @@ func (r *SslserviceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			// GH #1166: provider-synthesized convenience flag (not a NITRO attribute,
+			// so it is never returned by GET and is retained from config). Mirrors
+			// sslprofile.nodefaultcipherbindings.
+			"nodefaultcipherbindings": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					// Applied at create time only; changing it re-creates the resource.
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "When set to true, the provider unbinds the appliance's built-in default cipher group(s) (DEFAULT / DEFAULT_BACKEND) that are auto-bound to the SSL service, so a custom cipher group can take effect alone. Applied at create time only; changing it forces re-creation. Not reverted on destroy (mirrors sslprofile nodefaultcipherbindings).",
+			},
+			// GH #1166: provider-synthesized convenience flag (not a NITRO attribute,
+			// so it is never returned by GET and is retained from config). Mirrors
+			// sslprofile.nodefaultecccurvebindings.
+			"nodefaultecccurvebindings": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					// Applied at create time only; changing it re-creates the resource.
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "When set to true, the provider unbinds the appliance's built-in default ECC curve bindings (for example P_256 / P_384 / X_25519) that are auto-bound to the SSL service, so a custom set of ECC curves can take effect alone. Applied at create time only; changing it forces re-creation. Not reverted on destroy (mirrors sslprofile nodefaultecccurvebindings).",
 			},
 			"sessreuse": schema.StringAttribute{
 				Optional:    true,

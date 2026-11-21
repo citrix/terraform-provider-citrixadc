@@ -66,6 +66,27 @@ func (r *SslserviceResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// GH #1166: when nodefaultcipherbindings is set, unbind the appliance's built-in
+	// default cipher group(s) (DEFAULT / DEFAULT_BACKEND) auto-bound to the SSL
+	// service, so a custom cipher group can take effect alone. Applied at create time
+	// only (the attribute is RequiresReplace).
+	if !data.Nodefaultcipherbindings.IsNull() && data.Nodefaultcipherbindings.ValueBool() {
+		if err := r.removeDefaultCipherBindings(ctx, data.Servicename.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove default cipher bindings for sslservice %s, got error: %s", data.Servicename.ValueString(), err))
+			return
+		}
+	}
+
+	// GH #1166: when nodefaultecccurvebindings is set, unbind the appliance's built-in
+	// default ECC curve bindings auto-bound to the SSL service. Applied at create time
+	// only (the attribute is RequiresReplace).
+	if !data.Nodefaultecccurvebindings.IsNull() && data.Nodefaultecccurvebindings.ValueBool() {
+		if err := r.removeDefaultEcccurveBindings(ctx, data.Servicename.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to remove default ECC curve bindings for sslservice %s, got error: %s", data.Servicename.ValueString(), err))
+			return
+		}
+	}
+
 	// ID is the plain servicename value (matches SDK v2 d.SetId(servicename))
 	data.Id = types.StringValue(data.Servicename.ValueString())
 
@@ -229,4 +250,86 @@ func (r *SslserviceResource) readSslserviceFromApi(ctx context.Context, data *Ss
 	sslserviceSetAttrFromGet(ctx, data, getResponseData)
 
 	return true
+}
+
+// defaultCipherGroupNames are the appliance's built-in cipher groups that NetScaler
+// auto-binds to an SSL service. nodefaultcipherbindings unbinds these.
+var defaultCipherGroupNames = map[string]bool{
+	"DEFAULT":         true,
+	"DEFAULT_BACKEND": true,
+}
+
+// removeDefaultCipherBindings unbinds the built-in default cipher group(s)
+// (DEFAULT / DEFAULT_BACKEND) from the SSL service (GH #1166). The bound ciphers are
+// NOT reflected by the typed sslservice_sslcipher_binding GET on 14.1-73.x (it
+// returns an empty body); they are only visible via the umbrella sslservice_binding
+// endpoint under sslservice_sslciphersuite_binding[]. So enumerate via the umbrella
+// and unbind each built-in default by ciphername. Only the names in
+// defaultCipherGroupNames are touched, so a custom cipher bound earlier in the same
+// apply is never removed.
+func (r *SslserviceResource) removeDefaultCipherBindings(ctx context.Context, servicename string) error {
+	umbrella, err := r.client.FindResourceArrayWithParams(service.FindParams{
+		ResourceType:             service.Sslservice_binding.Type(),
+		ResourceName:             servicename,
+		ResourceMissingErrorCode: 258,
+	})
+	if err != nil {
+		return err
+	}
+	for _, svc := range umbrella {
+		raw, ok := svc["sslservice_sslciphersuite_binding"]
+		if !ok {
+			continue
+		}
+		rows, ok := raw.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, cb := range rows {
+			m, ok := cb.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			name := ""
+			if v, ok := m["ciphername"].(string); ok && v != "" {
+				name = v
+			} else if v, ok := m["cipheraliasname"].(string); ok && v != "" {
+				name = v
+			}
+			if !defaultCipherGroupNames[name] {
+				continue
+			}
+			argsMap := map[string]string{"ciphername": name}
+			if err := r.client.DeleteResourceWithArgsMap(service.Sslservice_sslcipher_binding.Type(), servicename, argsMap); err != nil {
+				return fmt.Errorf("unbind default cipher %q: %w", name, err)
+			}
+			tflog.Debug(ctx, fmt.Sprintf("Unbound default cipher %q from sslservice %s", name, servicename))
+		}
+	}
+	return nil
+}
+
+// removeDefaultEcccurveBindings unbinds the appliance's built-in default ECC curve
+// bindings from the SSL service (GH #1166). Unlike the cipher case, the default ECC
+// curves ARE reflected by the typed sslservice_ecccurve_binding GET on 14.1-73.x, so
+// enumerate it directly (mirrors sslprofile.deleteDefaultEcccurveBindings) and unbind
+// each by ecccurvename. All currently-bound curves at create time are the appliance
+// defaults.
+func (r *SslserviceResource) removeDefaultEcccurveBindings(ctx context.Context, servicename string) error {
+	bindings, err := r.client.FindResourceArray(service.Sslservice_ecccurve_binding.Type(), servicename)
+	if err != nil {
+		return err
+	}
+	for _, binding := range bindings {
+		ecccurvename, ok := binding["ecccurvename"].(string)
+		if !ok || ecccurvename == "" {
+			continue
+		}
+		args := []string{fmt.Sprintf("ecccurvename:%s", ecccurvename)}
+		if err := r.client.DeleteResourceWithArgs(service.Sslservice_ecccurve_binding.Type(), servicename, args); err != nil {
+			return fmt.Errorf("unbind default ECC curve %q: %w", ecccurvename, err)
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Unbound default ECC curve %q from sslservice %s", ecccurvename, servicename))
+	}
+	return nil
 }
