@@ -384,3 +384,44 @@ func TestAccSslvserver_ecccurve_binding_selfHealing(t *testing.T) {
 		},
 	})
 }
+
+// TestAccSslvserver_ecccurve_binding_selfHealing_parentDeleted is the GH #1082
+// regression. It deletes the binding's PARENT vserver out-of-band (not just the
+// binding). A GET of a binding whose parent vserver is gone returns NITRO
+// errorcode 461 ("No such Vserver"); before the fix FindResourceArrayWithParams
+// surfaced that as a hard error ("non zero errorcode 461"), so the binding's Read
+// failed and the config could neither be applied nor destroyed. With 461 treated
+// as resource-missing, the Read self-heals (drops the object from state) and the
+// re-apply recreates both the vserver and the binding.
+func TestAccSslvserver_ecccurve_binding_selfHealing_parentDeleted(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_ecccurve_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing(parent): client: %v", err)
+					}
+					// Out-of-band delete of the PARENT vserver; this also removes the
+					// binding and makes the binding GET return errorcode 461.
+					if err := client.DeleteResource(service.Lbvserver.Type(), "tf_sslvserver"); err != nil {
+						t.Fatalf("self-healing(parent): out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_ecccurve_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

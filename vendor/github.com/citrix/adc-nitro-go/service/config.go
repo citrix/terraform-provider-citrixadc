@@ -700,9 +700,15 @@ func (c *NitroClient) FindResourceArrayWithParams(findParams FindParams) ([]map[
 
 	emptyRetval := make([]map[string]interface{}, 0)
 
-	// Resource missing errorcode returned
+	// Resource missing errorcode returned.
+	// NITRO errorcode 461 ("No such Vserver") is returned by any binding/array
+	// GET whose parent vserver was removed out-of-band. Treat it as a
+	// resource-missing signal everywhere - in addition to the per-resource
+	// ResourceMissingErrorCode - so framework reads self-heal (drop the object
+	// from state and let a later apply recreate it) instead of hard-erroring
+	// with "non zero errorcode 461". Local hand-edit for provider GH #1082.
 	missingErrcode := findParams.ResourceMissingErrorCode
-	if missingErrcode != 0 && missingErrcode == errorcode {
+	if (missingErrcode != 0 && missingErrcode == errorcode) || errorcode == 461 {
 		c.logger.Debug("FindResourceArrayWithParams: resource missing error code returned", "errorcode", errorcode)
 		return emptyRetval, nil
 	}
